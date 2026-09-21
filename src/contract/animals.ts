@@ -28,3 +28,10 @@ export const AnimalListResponseSchema = z.object({
 });
 
 export type AnimalListResponse = z.infer<typeof AnimalListResponseSchema>;
+
+/** GET /api/animals/by-ids. 못 찾은 id는 빠지고, 순서는 요청한 ids 순서를 따른다. */
+export const AnimalByIdsResponseSchema = z.object({
+  items: z.array(AnimalWireDtoSchema),
+});
+
+export type AnimalByIdsResponse = z.infer<typeof AnimalByIdsResponseSchema>;
