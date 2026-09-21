@@ -2,6 +2,7 @@
  * 아래 래퍼는 테스트용 합성 데이터다. 검증된 실제 응답이 아니다(architecture.md 12절 2).
  */
 import { describe, expect, it } from "vitest";
+import wrapperFixture from "../../../docs/fixtures/upstream-wrapper.json";
 import { extractPage } from "./extract";
 
 const wrap = (body: unknown, header: unknown = { resultCode: "00", resultMsg: "NORMAL SERVICE." }) => ({
@@ -55,5 +56,31 @@ describe("extractPage", () => {
     expect(extractPage(null)).toBeNull();
     expect(extractPage([])).toBeNull();
     expect(extractPage({ response: "x" })).toBeNull();
+  });
+});
+
+describe("extractPage: 프로브로 확인한 구조(docs/fixtures/upstream-wrapper.json, 값은 합성)", () => {
+  const { cases } = wrapperFixture;
+
+  it("다건: item 배열, totalCount number, resultCode 00", () => {
+    const page = extractPage(cases.multi.body);
+    expect(page?.items).toHaveLength(2);
+    expect(page?.totalCount).toBe(2);
+    expect(page?.resultCode).toBe("00");
+  });
+
+  it("1건도 길이 1 배열로 온다", () => {
+    const page = extractPage(cases.single.body);
+    expect(Array.isArray(cases.single.body.response.body.items.item)).toBe(true);
+    expect(page?.items).toHaveLength(1);
+    expect(page?.totalCount).toBe(1);
+  });
+
+  it("0건: items가 {}이면 빈 배열, totalCount 0, resultCode 00", () => {
+    expect(extractPage(cases.empty.body)).toEqual({ items: [], totalCount: 0, resultCode: "00" });
+  });
+
+  it("인증 오류 본문(OpenAPI_ServiceResponse)은 response가 없어 null", () => {
+    expect(extractPage(cases.authError.body)).toBeNull();
   });
 });

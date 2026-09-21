@@ -4,6 +4,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { createHttpClient, type FetchLike } from "@/shared/api/http-client";
 import fixture from "../../../docs/fixtures/upstream-items.json";
+import wrapperFixture from "../../../docs/fixtures/upstream-wrapper.json";
 import { createUpstreamClient, UPSTREAM_ENDPOINT, UpstreamError, type UpstreamClientOptions } from "./client";
 
 const FAKE_KEY = "test-key-a+b/c==";
@@ -240,6 +241,26 @@ describe("upstream client 오류", () => {
     it("같은 구조라도 403이 아니면 failed", async () => {
       const error = await failure(async () => new Response(authBody, { status: 500 }));
       expect(error.reason).toBe("failed");
+    });
+  });
+
+  describe("프로브로 확인한 구조(docs/fixtures/upstream-wrapper.json, 값은 합성)", () => {
+    const { cases } = wrapperFixture;
+    const serve = (c: { httpStatus: number; body: unknown }) => async () =>
+      Response.json(c.body, { status: c.httpStatus });
+
+    it("다건/1건/0건 응답을 모두 처리한다", async () => {
+      expect(await client(serve(cases.multi), { pageSize: 500 }).fetchAll({ species: "cat" })).toHaveLength(2);
+      expect(await client(serve(cases.empty), { pageSize: 500 }).fetchAll({ species: "cat" })).toEqual([]);
+      const single = await client(serve(cases.single)).fetchByDesertionNo("100000000000003");
+      expect(single?.processState).toBe("종료(안락사)");
+      expect(await client(serve(cases.empty)).fetchByDesertionNo("999")).toBeNull();
+    });
+
+    it("HTTP 403 인증 오류는 auth로 분류한다", async () => {
+      const error = await failure(serve(cases.authError));
+      expect(error.reason).toBe("auth");
+      expect(error.detail).toEqual({ kind: "auth", status: 403, returnReasonCode: "30", errMsg: "SERVICE ERROR" });
     });
   });
 
