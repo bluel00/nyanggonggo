@@ -21,5 +21,6 @@ export function getAnimalService(): AnimalService {
   return createAnimalService(createUpstreamAnimalSource(upstream, consoleLogger), {
     pageSize: SERVER_TUNING.listPageSize,
     byIdsConcurrency: SERVER_TUNING.byIdsConcurrency,
+    now: () => new Date(),
   });
 }

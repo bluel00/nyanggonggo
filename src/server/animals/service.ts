@@ -19,6 +19,8 @@ export type AnimalListParams = {
 export type AnimalServiceOptions = {
   pageSize: number;
   byIdsConcurrency: number;
+  /** 기준 시각. endingSoon 정렬의 "오늘(KST)" 판정에 쓴다. */
+  now: () => Date;
 };
 
 export type AnimalService = {
@@ -33,9 +35,10 @@ export function createAnimalService(source: AnimalSource, options: AnimalService
       const offset = cursor === undefined ? 0 : decodeCursor(cursor);
       const all = await source.list({ species, uprCd: region ?? "all" });
 
+      const today = kstYmd(options.now());
       const sorted = all
         .filter((animal) => status === "all" || animal.wire.status === status)
-        .sort(COMPARATORS[sort]);
+        .sort(sort === "latest" ? compareLatest : compareEndingSoon(today));
 
       const end = offset + options.pageSize;
       return {
@@ -63,16 +66,37 @@ type Comparator = (a: MappedAnimal, b: MappedAnimal) => number;
 
 const compareText = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
-const COMPARATORS: Record<AnimalListParams["sort"], Comparator> = {
-  // noticeSdt 내림차순, 동률이면 updTm 내림차순, 그다음 id 내림차순
-  latest: (a, b) =>
-    compareText(b.sortKeys.noticeSdt, a.sortKeys.noticeSdt) ||
-    compareText(b.sortKeys.updTm, a.sortKeys.updTm) ||
-    compareText(b.wire.id, a.wire.id),
-  // noticeEdt 오름차순, 동률이면 id 오름차순
-  endingSoon: (a, b) =>
-    compareText(a.sortKeys.noticeEdt, b.sortKeys.noticeEdt) || compareText(a.wire.id, b.wire.id),
-};
+/** noticeSdt 내림차순, 동률이면 updTm 내림차순, 그다음 id 내림차순 */
+const compareLatest: Comparator = (a, b) =>
+  compareText(b.sortKeys.noticeSdt, a.sortKeys.noticeSdt) ||
+  compareText(b.sortKeys.updTm, a.sortKeys.updTm) ||
+  compareText(b.wire.id, a.wire.id);
+
+/**
+ * 종료일이 오늘(KST) 이후인 공고(당일 포함)를 noticeEdt 오름차순으로 먼저,
+ * 지난 공고를 그 뒤에 noticeEdt 내림차순으로, 날짜 형식이 아닌 것은 맨 뒤에 둔다.
+ * 동률은 id 오름차순(architecture.md 5절).
+ */
+function compareEndingSoon(today: string): Comparator {
+  const group = (edt: string) => (!/^\d{8}$/.test(edt) ? 2 : edt < today ? 1 : 0);
+  return (a, b) => {
+    const ga = group(a.sortKeys.noticeEdt);
+    const gb = group(b.sortKeys.noticeEdt);
+    if (ga !== gb) return ga - gb;
+    const byDate =
+      ga === 1
+        ? compareText(b.sortKeys.noticeEdt, a.sortKeys.noticeEdt)
+        : compareText(a.sortKeys.noticeEdt, b.sortKeys.noticeEdt);
+    return byDate || compareText(a.wire.id, b.wire.id);
+  };
+}
+
+const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+
+/** 기준 시각의 KST 달력 날짜 `YYYYMMDD` */
+function kstYmd(date: Date): string {
+  return new Date(date.getTime() + KST_OFFSET_MS).toISOString().slice(0, 10).replaceAll("-", "");
+}
 
 /** 커서는 정렬된 결과의 offset을 base64url로 감싼 불투명 문자열이다. */
 export function encodeCursor(offset: number): string {

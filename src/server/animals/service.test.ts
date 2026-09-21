@@ -26,8 +26,11 @@ function fakeSource(list: MappedAnimal[] = mapped): AnimalSource {
   };
 }
 
-const service = (source = fakeSource(), pageSize = 20) =>
-  createAnimalService(source, { pageSize, byIdsConcurrency: 2 });
+/** 픽스처 스냅샷 날짜 2026-09-21 09:00 KST */
+const NOW = new Date("2026-09-21T09:00:00+09:00");
+
+const service = (source = fakeSource(), pageSize = 20, now = NOW) =>
+  createAnimalService(source, { pageSize, byIdsConcurrency: 2, now: () => now });
 
 const params = (overrides: Partial<AnimalListParams> = {}): AnimalListParams => ({
   species: "cat",
@@ -75,15 +78,59 @@ describe("list: 정렬", () => {
     ]);
   });
 
-  it("endingSoon: noticeEdt 오름차순, 동률이면 desertionNo 오름차순", async () => {
+  it("endingSoon: 미만료는 noticeEdt 오름차순(동률은 desertionNo 오름차순), 만료는 뒤로", async () => {
     expect(ids(await service().list(params({ status: "all", sort: "endingSoon" })))).toEqual([
-      ID.ended, // 0918
       ID.sexQ, // 0928
       ID.optionalSfe, // 1001, 445...
       ID.twoBrackets, // 1001, 448...
       ID.protectedCat, // 1001, 450...
       ID.dog, // 1006
+      ID.ended, // 0918, 오늘(0921)보다 이전
     ]);
+  });
+
+  describe("endingSoon: 만료/미만료가 섞인 입력", () => {
+    const at = (id: string, noticeEdt: string): MappedAnimal => ({
+      ...mapped[0],
+      wire: { ...mapped[0].wire, id },
+      sortKeys: { ...mapped[0].sortKeys, noticeEdt },
+    });
+    const mixed = [
+      at("1", "20260915"), // 만료
+      at("2", "20260925"),
+      at("3", "20260921"), // 당일 → 미만료
+      at("4", "20260920"), // 만료(어제)
+      at("5", "20260930"),
+      at("6", "20260910"), // 만료
+      at("7", "20260925"), // 2와 동률
+      at("8", ""), // 날짜 형식 아님
+    ];
+    const run = (now: Date) =>
+      service(fakeSource(mixed), 20, now)
+        .list(params({ status: "all", sort: "endingSoon" }))
+        .then(ids);
+
+    it("미만료 오름차순 → 만료 내림차순 → 날짜 없음, 당일은 미만료", async () => {
+      expect(await run(NOW)).toEqual(["3", "2", "7", "5", "4", "1", "6", "8"]);
+    });
+
+    it("KST 자정 직전과 직후로 결과가 바뀐다(UTC가 아니라 KST 기준)", async () => {
+      // 2026-09-21 23:59 KST = 14:59Z → 오늘은 0921
+      expect(await run(new Date("2026-09-21T14:59:00Z"))).toEqual(["3", "2", "7", "5", "4", "1", "6", "8"]);
+      // 2026-09-22 00:01 KST = 15:01Z → 0921도 만료
+      expect(await run(new Date("2026-09-21T15:01:00Z"))).toEqual(["2", "7", "5", "3", "4", "1", "6", "8"]);
+    });
+
+    it("기준 시각을 옮기면 만료 경계가 옮겨진다", async () => {
+      expect(await run(new Date("2026-09-10T12:00:00+09:00"))).toEqual(["6", "1", "4", "3", "2", "7", "5", "8"]);
+      expect(await run(new Date("2026-10-01T12:00:00+09:00"))).toEqual(["5", "2", "7", "3", "4", "1", "6", "8"]);
+    });
+
+    it("latest는 기준 시각과 무관하다", async () => {
+      const latest = (now: Date) =>
+        service(fakeSource(mapped), 20, now).list(params({ status: "all" })).then(ids);
+      expect(await latest(new Date("2030-01-01T00:00:00Z"))).toEqual(await latest(NOW));
+    });
   });
 
   it("입력 순서와 무관하게 결과가 같다", async () => {

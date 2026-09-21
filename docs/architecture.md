@@ -82,7 +82,7 @@ Route Handler (app/api/animals)                       # 얇게: 파싱 → servi
 - 캐시 키: `(upkind, upr_cd | all)`. `state` 파라미터는 **사용하지 않는다**(`notice`/`protect` 의미가 검증되지 않았고 `종료` 값이 없음). status는 서버에서 `processState`로 판정한다.
 - status 판정: `processState`가 `종료`로 시작하면 `ended`, 그 외는 `protected`. Zod는 `processState`를 enum이 아니라 `string`으로 받는다. 알 수 없는 값은 주입된 로거(`logger.warn`, 기본 no-op)로 남긴다.
 - status 필터: `protected`(기본), `ended`, `all`(10절).
-- 정렬 정의: `latest` = `noticeSdt` 내림차순, 동률이면 `updTm` 내림차순, 그다음 `desertionNo` 내림차순. `endingSoon` = `noticeEdt` 오름차순, 동률이면 `desertionNo` 오름차순. 정렬 키가 없으면 빈 문자열로 둔다. `sortKeys`는 응답에 넣지 않는다.
+- 정렬 정의: `latest` = `noticeSdt` 내림차순, 동률이면 `updTm` 내림차순, 그다음 `desertionNo` 내림차순. `endingSoon` = 기준 시각(서비스에 주입하는 clock)의 오늘(KST) 기준으로 `noticeEdt`가 지나지 않은 공고(당일 포함)를 `noticeEdt` 오름차순으로 먼저, 지난 공고를 그 뒤에 `noticeEdt` 내림차순으로 둔다. `noticeEdt`가 `YYYYMMDD` 형식이 아니면 맨 뒤. 동률은 `desertionNo` 오름차순. (보호중인데 종료일이 지난 공고가 42.1%라 단순 오름차순이면 임박순 앞쪽이 지난 공고로 채워진다, 12절.) 정렬 키가 없으면 빈 문자열로 둔다. `sortKeys`는 응답에 넣지 않는다.
 - 커서: 정렬된 결과의 offset을 base64url로 감싼 불투명 문자열. 잘못된 커서는 400, 범위를 넘으면 빈 목록. 마지막 페이지는 `nextCursor: null`. 캐시 갱신 중 페이지 사이에 중복/누락이 생길 수 있음을 알고 MVP에서 허용한다.
 - 상세: 개별 `desertion_no` 조회(캐시는 id별). 찜 목록(`GET /api/animals/by-ids?ids=a,b,c`, 응답 `{ items }`)도 1차는 id별 조회를 병렬(동시성 제한)로 하고, 조회되지 않는 id는 응답에서 제외하며 입력 순서를 유지한다. 중복 id는 한 번만 조회한다. 조회 중 업스트림 오류는 일부만 빼지 않고 요청 전체를 실패(502/504)로 돌려준다(찜이 조용히 사라지지 않게).
 - 캐시 방식(Next 데이터 캐시, `unstable_cache`, 인메모리, 외부 KV)은 **검증 필요**. `AnimalSource` 인터페이스 뒤에 숨겨서 교체 가능하게 만든다. 캐시 저장소에는 항목 크기 제한이 있을 수 있으니 원본이 아니라 Mapper를 거친 가벼운 목록을 저장한다.
