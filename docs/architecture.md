@@ -172,5 +172,8 @@ interface AnimalRepository {
 7. 카카오 피드 이미지 비율 제한, `next/og`(Satori)의 폰트 형식(woff2 미지원 가능성)과 CSS 변수 미지원 가능성
 8. UI 라벨 "보호소": `careNm`이 병원일 수 있어 "보호 장소" 등으로 바꿀지
 9. `ageText` 표기 정제(`2024(년생)` → "2살 추정" 등)
-10. `noticeEdt`가 지난 protected 공고의 D-day 정책
+10. `noticeEdt`가 지난 protected 공고의 D-day 정책. 현재 구현: `getDDay`는 0으로 clamp하고, `isSoon`은 protected이면서 `dDay <= 3`이라 지난 protected 공고도 임박(true)으로 판정된다. 정책 결정 필요
 11. 필터 적용 상태 표시(필터 버튼 점): 미정
+12. `upKindNm`이 `고양이`/`개`가 아닌 항목: WireDto `species`는 `cat | dog`뿐이라 서버 Mapper가 `null`을 반환하고 dev 로그를 남긴다(목록에서 제외하는 전제). 캐시 키가 `upkind` 단위라 실제로 섞여 오는지는 수집 후 확인
+13. 이미지 URL 인코딩: `encodeURI`는 `[` `]`를 `%5B` `%5D`로 인코딩한다(테스트로 확인). 다만 이미 인코딩된 `%`가 있으면 이중 인코딩된다(`%5B` → `%255B`). 픽스처에는 없으며, 실제 수집에서 `%`가 포함된 URL이 있는지 확인
+14. UpstreamDto 필수 필드 기준: 4절 필드 목록(optional 4종과 `popfileN` 제외)을 모두 필수로 두었다. 실제 응답에서 일부 item에 필드가 빠지면 목록 전체가 아니라 해당 item만 버릴지(item 단위 `safeParse`)를 서버 단계에서 결정
