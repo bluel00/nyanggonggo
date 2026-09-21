@@ -4,7 +4,8 @@
  */
 
 export const DEFAULT_TIMEOUT_MS = 10_000;
-const BODY_SNIPPET_MAX = 200;
+/** 오류 분류에 쓰도록 보관하는 본문 길이. 로그에 남길 때는 호출한 쪽이 더 줄이고 비밀값을 가린다. */
+const BODY_SNIPPET_MAX = 2_000;
 
 export type FetchLike = (input: string, init?: RequestInit) => Promise<Response>;
 
@@ -27,7 +28,7 @@ export class HttpError extends Error {
   /** origin + path. 쿼리스트링은 없다. */
   readonly endpoint: string;
   readonly status: number | null;
-  /** 응답 본문 앞부분(최대 200자). 호출한 쪽이 로그에 남기기 전에 비밀값을 가려야 한다. */
+  /** 응답 본문 앞부분(최대 2,000자). 호출한 쪽이 로그에 남기기 전에 줄이고 비밀값을 가려야 한다. */
   readonly bodySnippet: string | null;
 
   constructor(params: {

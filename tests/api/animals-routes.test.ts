@@ -77,6 +77,24 @@ describe("GET /api/animals", () => {
     expect(JSON.stringify(vi.mocked(console.warn).mock.calls)).not.toContain(FAKE_KEY);
   });
 
+  it("업스트림 403 인증 오류는 502이고, 서버 로그에는 코드와 errMsg만 있고 키가 없다", async () => {
+    const body = JSON.stringify({
+      OpenAPI_ServiceResponse: {
+        cmmMsgHeader: { errMsg: "SERVICE ERROR", returnAuthMsg: `MSG ${FAKE_KEY}`, returnReasonCode: "30" },
+      },
+    });
+    upstreamFetch.mockImplementationOnce(async () => new Response(body, { status: 403 }));
+    const response = await getList(req("/api/animals"));
+    expect(response.status).toBe(502);
+    expect((await response.json()).error.code).toBe("upstream_error");
+    const calls = vi.mocked(console.warn).mock.calls;
+    const authLog = calls.find(([message]) => String(message).includes("upstream auth/config error"));
+    expect(authLog?.[1]).toMatchObject({ returnReasonCode: "30", errMsg: "SERVICE ERROR" });
+    const logs = JSON.stringify(calls);
+    expect(logs).not.toContain(FAKE_KEY);
+    expect(logs).not.toContain("serviceKey");
+  });
+
   it("서비스키가 없으면 500이고 설정 상세를 노출하지 않는다", async () => {
     vi.stubEnv("DATA_GO_KR_SERVICE_KEY", "");
     const response = await getList(req("/api/animals"));

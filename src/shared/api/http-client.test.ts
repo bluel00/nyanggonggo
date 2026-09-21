@@ -56,12 +56,12 @@ describe("httpClient", () => {
     expectNoQuery(error);
   });
 
-  it("JSON 파싱 실패면 kind=parse, 본문 앞 200자만 담는다", async () => {
-    const xml = `<OpenAPI_ServiceResponse>${"x".repeat(500)}</OpenAPI_ServiceResponse>`;
+  it("JSON 파싱 실패면 kind=parse, 본문 앞 2,000자만 담는다", async () => {
+    const xml = `<OpenAPI_ServiceResponse>${"x".repeat(5000)}</OpenAPI_ServiceResponse>`;
     const client = createHttpClient({ fetch: respond(xml) });
     const error = await catchError(client.getJson(URL_WITH_KEY));
     expect(error).toMatchObject({ kind: "parse", status: 200 });
-    expect((error as HttpError).bodySnippet).toHaveLength(200);
+    expect((error as HttpError).bodySnippet).toHaveLength(2000);
     expectNoQuery(error);
   });
 

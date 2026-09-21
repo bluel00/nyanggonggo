@@ -19,6 +19,7 @@ describe("errorResponse", () => {
     [new NotFoundError(), 404, "not_found"],
     [new UpstreamError("failed", { kind: "status", status: 500 }), 502, "upstream_error"],
     [new UpstreamError("timeout", { kind: "timeout" }), 504, "upstream_timeout"],
+    [new UpstreamError("auth", { kind: "auth", status: 403 }), 502, "upstream_error"],
     [new ServerConfigError(["DATA_GO_KR_SERVICE_KEY"]), 500, "internal_error"],
     [new Error("boom"), 500, "internal_error"],
   ])("%s → %i %s", async (error, status, code) => {
@@ -26,6 +27,17 @@ describe("errorResponse", () => {
     expect(response.status).toBe(status);
     expect(body).toEqual({ error: { code, message: expect.any(String) } });
     expect(response.headers.get("Cache-Control")).toBe("no-store");
+  });
+
+  it("auth는 설정/인증 오류 메시지로 로그를 남기고 detail만 싣는다", async () => {
+    const { logger } = await run(new UpstreamError("auth", { kind: "auth", status: 403, returnReasonCode: "30", errMsg: "SERVICE ERROR" }));
+    expect(logger.warn).toHaveBeenCalledWith("upstream auth/config error", {
+      reason: "auth",
+      kind: "auth",
+      status: 403,
+      returnReasonCode: "30",
+      errMsg: "SERVICE ERROR",
+    });
   });
 
   it("계약 검증 실패(ZodError)는 500, 로그에는 경로만 남긴다", async () => {

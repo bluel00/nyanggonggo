@@ -205,6 +205,49 @@ describe("upstream client 오류", () => {
     expect((error as UpstreamError).reason).toBe("timeout");
   });
 
+  describe("HTTP 403 인증 오류(합성 본문)", () => {
+    // 프로브로 확인한 구조의 합성 본문. 값은 지어낸 것이다.
+    const authBody = JSON.stringify(
+      {
+        OpenAPI_ServiceResponse: {
+          cmmMsgHeader: {
+            errMsg: "SERVICE ERROR",
+            returnAuthMsg: `SERVICE_KEY_IS_NOT_REGISTERED_ERROR ${FAKE_KEY}`,
+            returnReasonCode: "30",
+          },
+        },
+      },
+      null,
+      4,
+    );
+
+    it("본문이 200자를 넘어도 auth로 분류하고, 로그용 detail에는 returnReasonCode와 errMsg만 둔다", async () => {
+      expect(authBody.length).toBeGreaterThan(200);
+      const error = await failure(async () => new Response(authBody, { status: 403 }));
+      expect(error.reason).toBe("auth");
+      expect(error.detail).toEqual({ kind: "auth", status: 403, returnReasonCode: "30", errMsg: "SERVICE ERROR" });
+      const serialized = `${error.message} ${JSON.stringify(error.detail)}`;
+      expect(serialized).not.toContain(FAKE_KEY);
+      expect(serialized).not.toContain("returnAuthMsg");
+    });
+
+    it("403이어도 이 구조가 아니면 failed", async () => {
+      const error = await failure(async () => new Response("<html>Forbidden</html>", { status: 403 }));
+      expect(error.reason).toBe("failed");
+      expect(error.detail).toMatchObject({ kind: "status", status: 403 });
+    });
+
+    it("같은 구조라도 403이 아니면 failed", async () => {
+      const error = await failure(async () => new Response(authBody, { status: 500 }));
+      expect(error.reason).toBe("failed");
+    });
+  });
+
+  it("로그용 bodySnippet은 200자 이하다", async () => {
+    const error = await failure(async () => new Response("x".repeat(3000), { status: 500 }));
+    expect((error.detail.bodySnippet as string).length).toBe(200);
+  });
+
   it("비 2xx는 failed", async () => {
     const error = await failure(async () => new Response("Bad Gateway", { status: 502 }));
     expect(error.reason).toBe("failed");

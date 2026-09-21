@@ -24,7 +24,14 @@ const KNOWN_ERROR_CODES = new Set([
   "01", "02", "04", "05", "10", "11", "12", "20", "22", "30", "31", "32", "33", "99",
 ]);
 
-export type UpstreamErrorReason = "timeout" | "failed";
+/**
+ * timeout: 타임아웃. auth: 서버 설정/인증 오류(서비스키 미등록 등). failed: 그 외 업스트림 실패.
+ * 클라이언트 응답은 auth와 failed 모두 502로 같다(구분은 서버 로그용).
+ */
+export type UpstreamErrorReason = "timeout" | "auth" | "failed";
+
+/** 로그에 남기는 업스트림 본문 최대 길이 */
+const LOG_SNIPPET_MAX = 200;
 
 /** 업스트림 실패. detail은 서버 로그용이며 비밀값이 가려져 있다. 클라이언트에 노출하지 않는다. */
 export class UpstreamError extends Error {
@@ -80,14 +87,7 @@ export function createUpstreamClient(options: UpstreamClientOptions): UpstreamCl
         next: { revalidate: options.revalidateSeconds },
       }));
     } catch (error) {
-      if (error instanceof HttpError) {
-        throw new UpstreamError(error.kind === "timeout" ? "timeout" : "failed", {
-          kind: error.kind,
-          status: error.status,
-          endpoint: error.endpoint,
-          bodySnippet: redact(error.bodySnippet, serviceKey),
-        });
-      }
+      if (error instanceof HttpError) throw toUpstreamError(error, serviceKey);
       throw error;
     }
 
@@ -95,7 +95,7 @@ export function createUpstreamClient(options: UpstreamClientOptions): UpstreamCl
     if (page === null) {
       throw new UpstreamError("failed", {
         kind: "shape",
-        bodySnippet: redact(JSON.stringify(json)?.slice(0, 200) ?? null, serviceKey),
+        bodySnippet: redact(JSON.stringify(json)?.slice(0, LOG_SNIPPET_MAX) ?? null, serviceKey),
       });
     }
     if (page.resultCode !== null && KNOWN_ERROR_CODES.has(page.resultCode)) {
@@ -161,6 +161,48 @@ export function createUpstreamClient(options: UpstreamClientOptions): UpstreamCl
   }
 
   return { fetchAll, fetchByDesertionNo };
+}
+
+function toUpstreamError(error: HttpError, serviceKey: string): UpstreamError {
+  if (error.kind === "timeout") return new UpstreamError("timeout", { kind: "timeout", endpoint: error.endpoint });
+
+  // HTTP 403 + OpenAPI_ServiceResponse.cmmMsgHeader: 서버 설정/인증 오류(2026-09-21 프로브로 확인).
+  // 로그에는 returnReasonCode와 errMsg만 남긴다.
+  const auth = error.status === 403 ? readAuthHeader(error.bodySnippet) : null;
+  if (auth) {
+    return new UpstreamError("auth", {
+      kind: "auth",
+      status: 403,
+      returnReasonCode: redact(auth.returnReasonCode, serviceKey),
+      errMsg: redact(auth.errMsg, serviceKey),
+    });
+  }
+
+  return new UpstreamError("failed", {
+    kind: error.kind,
+    status: error.status,
+    endpoint: error.endpoint,
+    bodySnippet: redact(error.bodySnippet?.slice(0, LOG_SNIPPET_MAX) ?? null, serviceKey),
+  });
+}
+
+/** `{ OpenAPI_ServiceResponse: { cmmMsgHeader: { returnReasonCode, errMsg } } }`에서 두 값만 읽는다. */
+function readAuthHeader(body: string | null): { returnReasonCode: string | null; errMsg: string | null } | null {
+  if (body === null) return null;
+  let json: unknown;
+  try {
+    json = JSON.parse(body);
+  } catch {
+    return null;
+  }
+  const header = pick(pick(json, "OpenAPI_ServiceResponse"), "cmmMsgHeader");
+  if (typeof header !== "object" || header === null) return null;
+  const text = (value: unknown) => (typeof value === "string" ? value.slice(0, 100) : null);
+  return { returnReasonCode: text(pick(header, "returnReasonCode")), errMsg: text(pick(header, "errMsg")) };
+}
+
+function pick(value: unknown, key: string): unknown {
+  return typeof value === "object" && value !== null ? (value as Record<string, unknown>)[key] : undefined;
 }
 
 /** 로그용 문자열에서 서비스키(원문, URL 인코딩 형태)를 가린다. */
