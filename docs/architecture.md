@@ -105,7 +105,7 @@ type Animal = {
 ```
 
 - 연락처(`careTel`, `careAddr`, `careOwnerNm`)와 종료 사유(`endReason`)는 WireDto와 Domain 어디에도 넣지 않는다(PRD: 보호소 연락 정보 비노출).
-- 파생값은 domain 서비스에서 계산한다: `dDay`(KST 기준, 기준 시각을 주입 가능하게), `isSoon`(D-day 3 이하). 종료 판정은 `processState`가 하고, `noticeEdt`가 지난 protected 공고의 처리는 정책 미정이라 `dDay`를 0으로 clamp하고 보고한다.
+- 파생값은 domain 서비스에서 계산한다: `dDay`(KST 기준, 기준 시각을 주입 가능하게), `isSoon`(D-day 3 이하). 종료 판정은 `processState`가 한다. `dDay`는 `number | null`이며 규칙은 10절을 따른다.
 - `sexCd`: `M`→male, `F`→female, 그 외(`Q` 포함)→unknown.
 - 이미지: `popfile1..N` 중 존재하는 것만 배열로. 파일명의 `[` `]`는 인코딩한다. `http`→`https` 처리는 별도 단계(`next/image` 원격 도메인 설정 또는 이미지 프록시)에서 다룬다.
 
@@ -148,6 +148,7 @@ interface AnimalRepository {
 ## 10. 종료 공고 정책
 
 - 종료 공고(안락사, 자연사 포함)는 status 필터(`ended`, `all`)로 표시한다. 기본은 `protected`.
+- D-day 정책(확정): 종료(`ended`) 공고, `noticeEndAt`이 없는 공고, `noticeEndAt`이 오늘(KST)보다 과거인 보호중 공고는 `dDay = null`, 당일은 0. `isSoon`은 `dDay !== null && dDay <= 3`. 종료일이 지난 보호중 공고는 서버에서 제외하지 않고, 배지는 "보호중"만 표시한다(D-day 없음).
 - 종료 사유는 UI, WireDto, Domain 어디에도 노출하지 않는다. 종료 카드는 회색 배지 + 사진 채도 소폭 낮춤(`saturate(.7)`).
 - 종료 상세의 찜/공유는 활성 상태로 둔다.
 - 우선 이 계획대로 구현하고, 이후 관찰한다: 종료 비율(`processState` 값 집계), 종료 카드의 진입률과 공유율(이벤트에 status 포함).
@@ -157,7 +158,7 @@ interface AnimalRepository {
 
 `docs/PRD.md`, `docs/기능명세서.md`에 **반영 완료**: 서버 프록시/캐시 MVP 승격, `page` URL 미포함, `status` 기본 `protected`, `region` 시도 코드, 찜 id만 저장, 종료 사유 비노출, 기준 폭 390과 4:5 cover 카드, 토스트 문구 "링크가 복사됐어요", 서버/클라이언트 Domain 분리와 응답 DTO, `pages` → `views`.
 
-명세의 나머지 "결정 필요" 항목(사진 없는 공고, D-day 지남 정책, 초기화 버튼, 목록 끝 표시, 카드 내 찜 아이콘)은 미정이다. 이 문서와 문서 간 새 불일치가 생기면 이 절에 적는다.
+명세의 나머지 "결정 필요" 항목(사진 없는 공고, 초기화 버튼, 목록 끝 표시, 카드 내 찜 아이콘)은 미정이다(D-day 지남 정책은 10절에서 결정됨). 이 문서와 문서 간 새 불일치가 생기면 이 절에 적는다.
 
 ## 12. 미확정 / 스파이크
 
@@ -172,7 +173,7 @@ interface AnimalRepository {
 7. 카카오 피드 이미지 비율 제한, `next/og`(Satori)의 폰트 형식(woff2 미지원 가능성)과 CSS 변수 미지원 가능성
 8. UI 라벨 "보호소": `careNm`이 병원일 수 있어 "보호 장소" 등으로 바꿀지
 9. `ageText` 표기 정제(`2024(년생)` → "2살 추정" 등)
-10. `noticeEdt`가 지난 protected 공고의 D-day 정책. 현재 구현: `getDDay`는 0으로 clamp하고, `isSoon`은 protected이면서 `dDay <= 3`이라 지난 protected 공고도 임박(true)으로 판정된다. 정책 결정 필요
+10. ~~`noticeEdt`가 지난 protected 공고의 D-day 정책~~ **결정됨**: `dDay = null`, `isSoon = false`, 서버에서 제외하지 않음(10절). 만료된 보호중 공고의 실제 비율은 수집 후 관찰
 11. 필터 적용 상태 표시(필터 버튼 점): 미정
 12. `upKindNm`이 `고양이`/`개`가 아닌 항목: WireDto `species`는 `cat | dog`뿐이라 서버 Mapper가 `null`을 반환하고 dev 로그를 남긴다(목록에서 제외하는 전제). 캐시 키가 `upkind` 단위라 실제로 섞여 오는지는 수집 후 확인
 13. 이미지 URL 인코딩: `encodeURI`는 `[` `]`를 `%5B` `%5D`로 인코딩한다(테스트로 확인). 다만 이미 인코딩된 `%`가 있으면 이중 인코딩된다(`%5B` → `%255B`). 픽스처에는 없으며, 실제 수집에서 `%`가 포함된 URL이 있는지 확인

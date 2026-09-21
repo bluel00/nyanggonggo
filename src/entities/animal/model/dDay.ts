@@ -10,14 +10,19 @@ const kstDayNumber = (date: Date) =>
 
 /**
  * 공고 종료일까지 남은 일수(KST 달력 기준). 당일은 0.
- * 종료일이 지난 경우도 0으로 clamp한다. 지남 처리 정책은 미정(architecture.md 12절 10).
+ * 종료 공고, 종료일이 없는 공고, 종료일이 지난 보호중 공고는 null(architecture.md 10절).
  */
-export function getDDay(noticeEndAt: Date, now: Date): number {
-  return Math.max(0, kstDayNumber(noticeEndAt) - kstDayNumber(now));
+export function getDDay(
+  animal: Pick<Animal, "status" | "noticeEndAt">,
+  now: Date,
+): number | null {
+  if (animal.status === "ended" || animal.noticeEndAt === null) return null;
+  const days = kstDayNumber(animal.noticeEndAt) - kstDayNumber(now);
+  return days < 0 ? null : days;
 }
 
-/** 보호 중이고 D-day가 3 이하일 때만 임박. 종료 공고와 종료일 없는 공고는 false. */
-export function isSoon(animal: Animal, now: Date): boolean {
-  if (animal.status !== "protected" || animal.noticeEndAt === null) return false;
-  return getDDay(animal.noticeEndAt, now) <= SOON_THRESHOLD_DAYS;
+/** D-day가 있고 3 이하일 때만 임박. */
+export function isSoon(animal: Pick<Animal, "status" | "noticeEndAt">, now: Date): boolean {
+  const dDay = getDDay(animal, now);
+  return dDay !== null && dDay <= SOON_THRESHOLD_DAYS;
 }

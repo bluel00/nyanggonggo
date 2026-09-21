@@ -43,6 +43,7 @@ describe("Upstream → Wire → Animal", () => {
   it("종료(안락사) → ended, 임박 아님", () => {
     const ended = byId("427346202600847");
     expect(ended.status).toBe("ended");
+    expect(getDDay(ended, NOW)).toBeNull();
     expect(isSoon(ended, NOW)).toBe(false);
   });
 
@@ -55,11 +56,11 @@ describe("Upstream → Wire → Animal", () => {
 
   it("기준일 2026-09-21, noticeEdt=20261001 → dDay 10, 임박 아님", () => {
     const animal = byId("450650202602282");
-    expect(getDDay(animal.noticeEndAt!, NOW)).toBe(10);
+    expect(getDDay(animal, NOW)).toBe(10);
     expect(isSoon(animal, NOW)).toBe(false);
   });
 
   it("noticeEdt=20260928 → dDay 7", () => {
-    expect(getDDay(byId("448536202600859").noticeEndAt!, NOW)).toBe(7);
+    expect(getDDay(byId("448536202600859"), NOW)).toBe(7);
   });
 });
