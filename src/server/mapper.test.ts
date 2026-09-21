@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { AnimalWireDtoSchema } from "@/contract/animals";
 import fixture from "../../docs/fixtures/upstream-items.json";
-import { mapUpstreamItem, type MappedAnimal } from "./mapper";
+import { encodeImageUrl, mapUpstreamItem, type MappedAnimal } from "./mapper";
 import { UpstreamAnimalItemSchema, type UpstreamAnimalItemDto } from "./upstream/dto";
 
 const dtos = fixture.items.map((item) => UpstreamAnimalItemSchema.parse(item));
@@ -145,7 +145,7 @@ describe("mapUpstreamItem", () => {
       }
     });
 
-    it("encodeURI는 URL 구조(스킴, 호스트, 경로 구분자)를 보존한다", () => {
+    it("URL 구조(스킴, 호스트, 경로 구분자)를 보존한다", () => {
       const [url] = map(TWO_BRACKETS).wire.images;
       const parsed = new URL(url);
       expect(parsed.protocol).toBe("http:");
@@ -177,6 +177,25 @@ describe("mapUpstreamItem", () => {
     it("사진이 없으면 빈 배열이다", () => {
       const { popfile1: _p1, popfile2: _p2, ...rest } = PROTECTED_CAT;
       expect(map(rest).wire.images).toEqual([]);
+    });
+  });
+
+  describe("encodeImageUrl", () => {
+    it("[1] 파일명을 인코딩한다", () => {
+      expect(encodeImageUrl("http://a.test/files/2026/09/1[1].jpg")).toBe(
+        "http://a.test/files/2026/09/1%5B1%5D.jpg",
+      );
+    });
+
+    it("이미 인코딩된 %20, %5B는 다시 인코딩하지 않는다", () => {
+      expect(encodeImageUrl("http://a.test/my%20cat[1].jpg")).toBe("http://a.test/my%20cat%5B1%5D.jpg");
+      expect(encodeImageUrl("http://a.test/1%5B1%5D.jpg")).toBe("http://a.test/1%5B1%5D.jpg");
+    });
+
+    it("두 번 적용해도 결과가 같다(멱등)", () => {
+      const once = encodeImageUrl("http://a.test/x%20y[1][2].jpg?v=[3]");
+      expect(encodeImageUrl(once)).toBe(once);
+      expect(once).toBe("http://a.test/x%20y%5B1%5D%5B2%5D.jpg?v=%5B3%5D");
     });
   });
 

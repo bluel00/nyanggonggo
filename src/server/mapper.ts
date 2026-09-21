@@ -102,7 +102,7 @@ function toSex(sexCd: string): AnimalWireDto["sex"] {
 
 const POPFILE_KEY = /^popfile(\d+)$/;
 
-/** `popfile1..N` 중 값이 있는 것만 번호순으로. 파일명의 `[` `]`는 encodeURI로 인코딩한다. */
+/** `popfile1..N` 중 값이 있는 것만 번호순으로. */
 function toImages(dto: UpstreamAnimalItemDto): string[] {
   return Object.entries(dto)
     .flatMap(([key, value]) => {
@@ -111,7 +111,15 @@ function toImages(dto: UpstreamAnimalItemDto): string[] {
       return [{ order: Number(match[1]), url: value.trim() }];
     })
     .sort((a, b) => a.order - b.order)
-    .map(({ url }) => encodeURI(url));
+    .map(({ url }) => encodeImageUrl(url));
+}
+
+/**
+ * 파일명의 `[` `]`만 `%5B` `%5D`로 바꾼다. 이미 인코딩된 `%xx`는 건드리지 않아
+ * 이중 인코딩이 없고, 여러 번 적용해도 결과가 같다.
+ */
+export function encodeImageUrl(url: string): string {
+  return url.replaceAll("[", "%5B").replaceAll("]", "%5D");
 }
 
 type Ymd = { year: number; month: number; day: number };
