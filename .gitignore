@@ -20,3 +20,5 @@ next-env.d.ts
 Thumbs.db
 *.log
 .vercel
+scripts/probe.ts
+probe-out.txt
