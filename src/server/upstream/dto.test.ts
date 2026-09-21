@@ -41,13 +41,23 @@ describe("UpstreamAnimalItemSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  it.each(["desertionNo", "processState", "noticeEdt", "orgNm"] as const)(
+  it.each(["desertionNo", "processState", "upKindNm", "noticeEdt", "orgNm"] as const)(
     "필수 필드 %s가 없으면 실패한다",
     (key) => {
       const { [key]: _omitted, ...rest } = first;
       expect(UpstreamAnimalItemSchema.safeParse(rest).success).toBe(false);
     },
   );
+
+  it("desertionNo가 빈 문자열이면 실패한다", () => {
+    expect(UpstreamAnimalItemSchema.safeParse({ ...first, desertionNo: "" }).success).toBe(false);
+  });
+
+  it("필수 5개만 있어도 통과한다(나머지는 optional)", () => {
+    const { desertionNo, processState, upKindNm, noticeEdt, orgNm } = first;
+    const minimal = { desertionNo, processState, upKindNm, noticeEdt, orgNm };
+    expect(UpstreamAnimalItemSchema.safeParse(minimal).success).toBe(true);
+  });
 
   it("값이 문자열이 아니면 실패한다(변환하지 않는다)", () => {
     const result = UpstreamAnimalItemSchema.safeParse({ ...first, desertionNo: 450650202602282 });

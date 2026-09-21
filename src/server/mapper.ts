@@ -2,7 +2,10 @@ import type { AnimalWireDto } from "@/contract/animals";
 import { noopLogger, type Logger } from "./logger";
 import type { UpstreamAnimalItemDto } from "./upstream/dto";
 
-/** 정렬용 원문 값. 형식이 고정 폭이라 문자열 비교로 정렬한다(architecture.md 5절). */
+/**
+ * 정렬용 원문 값. 형식이 고정 폭이라 문자열 비교로 정렬한다(architecture.md 5절).
+ * 원문에 없으면 빈 문자열이다(내림차순에서 맨 뒤).
+ */
 export type AnimalSortKeys = {
   /** `YYYYMMDD` */
   noticeSdt: string;
@@ -36,7 +39,7 @@ export function mapUpstreamItem(
     return null;
   }
 
-  const noticeStart = parseYmd(dto.noticeSdt);
+  const noticeStart = parseYmd(dto.noticeSdt ?? "");
   const noticeEnd = parseYmd(dto.noticeEdt);
 
   const wire: AnimalWireDto = {
@@ -45,7 +48,7 @@ export function mapUpstreamItem(
     images: toImages(dto),
     status: toStatus(dto, logger),
     noticeEndDate: noticeEnd ? formatIsoDate(noticeEnd) : null,
-    sex: toSex(dto.sexCd),
+    sex: toSex(dto.sexCd ?? ""),
     ageText: nonEmpty(dto.age),
     regionText: dto.orgNm.trim(),
     shelterName: nonEmpty(dto.careNm),
@@ -59,9 +62,9 @@ export function mapUpstreamItem(
   return {
     wire,
     sortKeys: {
-      noticeSdt: dto.noticeSdt,
+      noticeSdt: dto.noticeSdt ?? "",
       noticeEdt: dto.noticeEdt,
-      updTm: dto.updTm,
+      updTm: dto.updTm ?? "",
     },
   };
 }
@@ -144,7 +147,7 @@ function formatMonthDay({ month, day }: Ymd): string {
   return `${pad2(month)}.${pad2(day)}`;
 }
 
-function nonEmpty(value: string): string | null {
-  const trimmed = value.trim();
+function nonEmpty(value: string | undefined): string | null {
+  const trimmed = value?.trim() ?? "";
   return trimmed === "" ? null : trimmed;
 }

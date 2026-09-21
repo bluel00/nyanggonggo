@@ -58,6 +58,7 @@ src/
 - 규모(샘플 시점): 고양이 2,481건, 전체 7,249건. `numOfRows=1000`이면 고양이는 3회 호출로 전체 수집이 가능하다.
 - 기본 정렬은 `desertionNo` 내림차순으로 보인다(두 샘플에서 확인). 시간순이 아니라 지역 코드순으로 뭉쳐 나온다.
 - 응답 아이템 필드(XML 태그명 기준, DTO는 이름 그대로): `desertionNo, happenDt, happenPlace, kindFullNm, upKindCd, upKindNm, kindCd, kindNm, colorCd, age, weight, noticeNo, noticeSdt, noticeEdt, popfile1, popfile2, processState, sexCd, neuterYn, specialMark, careRegNo, careNm, careTel, careAddr, careOwnerNm, orgNm, updTm`. 일부 아이템에만 있는 optional: `vaccinationChk, sfeSoci, sfeHealth, endReason`. 사진은 `popfile1..N`(개수 가변, 없을 수 있음).
+- UpstreamDto 필수 필드(확정): 없으면 유효한 WireDto를 만들 수 없는 것만 필수다. `desertionNo`(id, 빈 문자열 불가), `processState`(status), `upKindNm`(species), `noticeEdt`(D-day, `endingSoon` 정렬 키), `orgNm`(`regionText`는 non-null). 나머지는 optional이고 Mapper가 `null`/빈 배열/빈 정렬 키로 처리한다. 파싱은 item 단위 `safeParse`로 하며, 실패한 item은 로그(`desertionNo`, 이슈 경로)를 남기고 건너뛴다.
 - 값의 특성(픽스처 `docs/fixtures/upstream-items.json` 참고): 날짜 `YYYYMMDD`, `updTm`은 `YYYY-MM-DD HH:mm:ss.S`, `age`는 `2024(년생)`, `2026(60일미만)(년생)`, `sexCd`는 `M`/`F`/`Q`, `neuterYn`은 `Y`/`N`/`U`, `processState`는 `보호중`, `종료(안락사)`, `종료(자연사)` 등. 사진 URL은 `http://`이고 파일명에 `[1]`이 있을 수 있다. `careNm`은 보호센터가 아니라 동물병원일 수 있다.
 - 결과가 1건일 때 `item`이 배열이 아닌 단일 객체로 올 수 있는 패턴이 공공 API에서 흔하다(**검증 필요**). DTO 파싱은 배열/단일 객체를 모두 받아 배열로 정규화한다.
 - JSON 응답의 래퍼 구조(`response.body.items.item` 등)는 **검증 필요**. 1단계에서는 item 단위 픽스처만 사용한다.
@@ -177,4 +178,4 @@ interface AnimalRepository {
 11. 필터 적용 상태 표시(필터 버튼 점): 미정
 12. `upKindNm`이 `고양이`/`개`가 아닌 항목: WireDto `species`는 `cat | dog`뿐이라 서버 Mapper가 `null`을 반환하고 dev 로그를 남긴다(목록에서 제외하는 전제). 캐시 키가 `upkind` 단위라 실제로 섞여 오는지는 수집 후 확인
 13. ~~이미지 URL 인코딩의 이중 인코딩~~ **결정됨**: `encodeURI` 대신 `[` `]`만 `%5B` `%5D`로 치환한다(이미 인코딩된 `%`는 유지, 멱등). 파일명에 다른 예약 문자(공백, 한글 등)가 원문 그대로 오는지는 수집 후 확인
-14. UpstreamDto 필수 필드 기준: 4절 필드 목록(optional 4종과 `popfileN` 제외)을 모두 필수로 두었다. 실제 응답에서 일부 item에 필드가 빠지면 목록 전체가 아니라 해당 item만 버릴지(item 단위 `safeParse`)를 서버 단계에서 결정
+14. ~~UpstreamDto 필수 필드 기준~~ **결정됨**: 4절. 실제 수집에서 필수 필드 누락으로 건너뛰는 item 수(`skippedCount`)를 관찰

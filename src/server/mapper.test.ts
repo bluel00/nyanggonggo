@@ -56,7 +56,8 @@ describe("mapUpstreamItem", () => {
       for (const key of ["careTel", "careAddr", "careOwnerNm"] as const) {
         expect(serialized).not.toContain(key);
         // careOwnerNm은 orgNm(regionText로 공개)과 같은 값일 수 있다(픽스처 1: 제주특별자치도).
-        if (dto[key] !== dto.orgNm) expect(serialized).not.toContain(dto[key].trim());
+        const value = dto[key]?.trim();
+        if (value && value !== dto.orgNm) expect(serialized).not.toContain(value);
       }
     }
   });
@@ -212,6 +213,25 @@ describe("mapUpstreamItem", () => {
       expect(wire.noticeEndDate).toBeNull();
       expect(wire.noticePeriodText).toBeNull();
     });
+  });
+
+  it("필수 필드만 있는 item도 유효한 WireDto가 된다", () => {
+    const { desertionNo, processState, upKindNm, noticeEdt, orgNm } = PROTECTED_CAT;
+    const result = map({ desertionNo, processState, upKindNm, noticeEdt, orgNm });
+    expect(AnimalWireDtoSchema.strict().parse(result.wire)).toEqual({
+      id: desertionNo,
+      species: "cat",
+      images: [],
+      status: "protected",
+      noticeEndDate: "2026-10-01",
+      sex: "unknown",
+      ageText: null,
+      regionText: "제주특별자치도",
+      shelterName: null,
+      foundPlaceText: null,
+      noticePeriodText: null,
+    });
+    expect(result.sortKeys).toEqual({ noticeSdt: "", noticeEdt: "20261001", updTm: "" });
   });
 
   it("sortKeys는 noticeSdt, noticeEdt, updTm 원문이다", () => {
