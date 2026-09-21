@@ -15,6 +15,15 @@ const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   {
+    rules: {
+      // 구조 분해로 필드를 빼낼 때 쓰는 _ 접두어 변수는 허용한다.
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { varsIgnorePattern: "^_", argsIgnorePattern: "^_", ignoreRestSiblings: true },
+      ],
+    },
+  },
+  {
     files: ["src/server/**"],
     rules: {
       "no-restricted-imports": [
