@@ -2,7 +2,8 @@
  * 공공 API JSON 응답 → item 배열.
  *
  * 래퍼 구조(`response.header`, `response.body.items.item`, `response.body.totalCount`)는
- * 검증되지 않은 가정이다(architecture.md 12절 2). 그래서 다음을 모두 견딘다:
+ * 2026-09-21 프로브로 확인했다(architecture.md 12.A P1~P3: 1건도 배열, 0건은 `items: {}`).
+ * 방어적으로 다음도 계속 견딘다:
  * `item`이 배열 / 단일 객체, `items`가 `""`, `items` 또는 `item` 누락 → 빈 배열,
  * `totalCount`가 숫자 / 숫자 문자열 / 없음.
  * 최상위에 `response` 객체가 없으면 모양을 알 수 없는 응답으로 보고 null을 반환한다.

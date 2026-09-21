@@ -55,13 +55,12 @@ src/
 
 - 서비스: `abandonmentPublicService_v2`, 유기동물 조회 `abandonmentPublic_v2`. 시도 `sido_v2`, 시군구 `sigungu_v2`, 보호소 `shelter_v2`, 품종 `kind_v2`.
 - 확인된 요청 변수: `serviceKey`, `bgnde`/`endde`(구조일), `upkind`(개 417000, 고양이 422400, 기타 429900), `kind`, `upr_cd`(시도), `org_cd`(시군구), `care_reg_no`, `state`(전체=빈값, 공고중=`notice`, 보호중=`protect`), `neuter_yn`, `pageNo`, `numOfRows`(최대 1,000, 기본 10), `_type`(xml 기본, `json` 지원), `bgupd`/`enupd`, `sex_cd`, `rfid_cd`, `desertion_no`, `notice_no`. **정렬 파라미터는 없다.**
-- 규모(샘플 시점): 고양이 2,481건, 전체 7,249건. `numOfRows=1000`이면 고양이는 3회 호출로 전체 수집이 가능하다.
+- 규모: 고양이 2,529건(2026-09-21 프로브. 이전 샘플은 고양이 2,481건, 전체 7,249건). `numOfRows=500`(5절)이면 고양이는 6회 호출이다(첫 페이지 후 나머지 5회를 동시성 3으로 병렬).
 - 기본 정렬은 `desertionNo` 내림차순으로 보인다(두 샘플에서 확인). 시간순이 아니라 지역 코드순으로 뭉쳐 나온다.
-- 응답 아이템 필드(XML 태그명 기준, DTO는 이름 그대로): `desertionNo, happenDt, happenPlace, kindFullNm, upKindCd, upKindNm, kindCd, kindNm, colorCd, age, weight, noticeNo, noticeSdt, noticeEdt, popfile1, popfile2, processState, sexCd, neuterYn, specialMark, careRegNo, careNm, careTel, careAddr, careOwnerNm, orgNm, updTm`. 일부 아이템에만 있는 optional: `vaccinationChk, sfeSoci, sfeHealth, endReason`. 사진은 `popfile1..N`(개수 가변, 없을 수 있음).
+- 응답 아이템 필드(XML 태그명 기준, DTO는 이름 그대로): `desertionNo, happenDt, happenPlace, kindFullNm, upKindCd, upKindNm, kindCd, kindNm, colorCd, age, weight, noticeNo, noticeSdt, noticeEdt, popfile1, popfile2, processState, sexCd, neuterYn, specialMark, careRegNo, careNm, careTel, careAddr, careOwnerNm, orgNm, updTm`. 일부 아이템에만 있는 optional: `vaccinationChk, sfeSoci, sfeHealth, endReason`. 사진은 `popfile1..N`(개수 가변, 프로브에서 최대 8). 문서에 없는 optional 필드(`healthChk`, `adptn*`, `srvc*`, `rfidCd`, `etcBigo`)도 오며 무시한다(12.A).
 - UpstreamDto 필수 필드(확정): 없으면 유효한 WireDto를 만들 수 없는 것만 필수다. `desertionNo`(id, 빈 문자열 불가), `processState`(status), `upKindNm`(species), `noticeEdt`(D-day, `endingSoon` 정렬 키), `orgNm`(`regionText`는 non-null). 나머지는 optional이고 Mapper가 `null`/빈 배열/빈 정렬 키로 처리한다. 파싱은 item 단위 `safeParse`로 하며, 실패한 item은 로그(`desertionNo`, 이슈 경로)를 남기고 건너뛴다.
 - 값의 특성(픽스처 `docs/fixtures/upstream-items.json` 참고): 날짜 `YYYYMMDD`, `updTm`은 `YYYY-MM-DD HH:mm:ss.S`, `age`는 `2024(년생)`, `2026(60일미만)(년생)`, `sexCd`는 `M`/`F`/`Q`, `neuterYn`은 `Y`/`N`/`U`, `processState`는 `보호중`, `종료(안락사)`, `종료(자연사)` 등. 사진 URL은 `http://`이고 파일명에 `[1]`이 있을 수 있다. `careNm`은 보호센터가 아니라 동물병원일 수 있다.
-- 결과가 1건일 때 `item`이 배열이 아닌 단일 객체로 올 수 있는 패턴이 공공 API에서 흔하다(**검증 필요**). DTO 파싱은 배열/단일 객체를 모두 받아 배열로 정규화한다.
-- JSON 응답의 래퍼 구조(`response.body.items.item` 등)는 **검증 필요**. 1단계에서는 item 단위 픽스처만 사용한다.
+- JSON 응답 래퍼(확정, 12.A): `response.header { reqNo, resultCode, resultMsg }`, `response.body { items: { item: [...] }, numOfRows, pageNo, totalCount }`. 결과 1건도 길이 1 배열, 0건은 `items: {}`. 인증 오류는 HTTP 403 + `OpenAPI_ServiceResponse.cmmMsgHeader`. 구조의 합성 픽스처: `docs/fixtures/upstream-wrapper.json`. 방어적으로 단일 객체와 `items: ""`도 계속 받는다.
 - 서비스키는 **디코딩된 키**를 환경변수로 두고 `URLSearchParams`가 인코딩하게 한다. 인코딩된 키를 그대로 넣으면 이중 인코딩된다.
 
 ## 5. 서버 계층 동작
@@ -71,7 +70,7 @@ Route Handler (app/api/animals)                       # 얇게: 파싱 → servi
   → 입력 검증(Zod, server/animals/query): species, region, status, sort, cursor
   → AnimalService.list (server/animals/service, 순수, 소스 주입)
       → AnimalSource.list(species, uprCd | all)       # (upkind, upr_cd) 단위 전체 수집 + 캐시
-          → upstream client: 페이지 순회 → extract → parseUpstreamItems(item 단위 safeParse)
+          → upstream client: 1페이지(totalCount) → 나머지 페이지 병렬(동시성 3) → extract → parseUpstreamItems(item 단위 safeParse)
           → 서버 Mapper: UpstreamDto → { wire: AnimalWireDto, sortKeys }
       → 필터(status) → 정렬 → 커서 자르기
   → AnimalListResponse { items: AnimalWireDto[], nextCursor: string | null } 를 Zod로 검증 후 응답
@@ -88,15 +87,16 @@ Route Handler (app/api/animals)                       # 얇게: 파싱 → servi
 - 캐시 방식(Next 데이터 캐시, `unstable_cache`, 인메모리, 외부 KV)은 **검증 필요**. `AnimalSource` 인터페이스 뒤에 숨겨서 교체 가능하게 만든다. 캐시 저장소에는 항목 크기 제한이 있을 수 있으니 원본이 아니라 Mapper를 거친 가벼운 목록을 저장한다.
 - 캐시는 두 겹이다. 서버 재검증 주기와 클라이언트 `staleTime`을 문서 한 곳에 숫자로 정해 둔다. 원칙: 클라이언트 `staleTime`은 서버 재검증 주기보다 길지 않게. 초기값은 스파이크에서 정한다.
 - 공공 API 호출에는 `AbortSignal.timeout`을 건다. 실패 시 표준화된 에러를 반환한다.
-- 오류 응답은 `{ error: { code, message } }`. 입력 오류 400(`invalid_request`), 없음 404(`not_found`), 업스트림 실패 502(`upstream_error`), 타임아웃 504(`upstream_timeout`), 설정 누락/계약 위반/기타 500(`internal_error`). 메시지에 키, URL, 업스트림 본문, 설정 상세를 넣지 않고 상세는 서버 로그에만 남긴다. 오류 응답은 `Cache-Control: no-store`.
+- 오류 응답은 `{ error: { code, message } }`. 입력 오류 400(`invalid_request`), 없음 404(`not_found`), 업스트림 실패 502(`upstream_error`, 인증/설정 오류 포함. 서버 로그에서는 `upstream auth/config error`로 구분하고 `returnReasonCode`, `errMsg`만 남긴다), 타임아웃 504(`upstream_timeout`), 설정 누락/계약 위반/기타 500(`internal_error`). 메시지에 키, URL, 업스트림 본문, 설정 상세를 넣지 않고 상세는 서버 로그에만 남긴다. 오류 응답은 `Cache-Control: no-store`.
 - 튜닝 숫자는 `src/server/config.ts`의 `SERVER_TUNING` 한 곳에 둔다(초기값, 12절 스파이크에서 조정):
 
 | 항목 | 값 |
 |---|---|
 | upstream fetch `revalidate` | 300초 |
 | upstream 타임아웃 | 10,000ms |
-| `numOfRows` | 1,000 |
-| 조합당 최대 페이지 | 20 |
+| `numOfRows` | 500 (1,000건 페이지가 fetch 캐시 한도의 94.5%, 12절 3) |
+| 나머지 페이지 동시 호출 수 | 3 |
+| 조합당 최대 페이지 | 20 (500 × 20 = 10,000건) |
 | 목록 페이지 크기 | 20 |
 | by-ids 최대 / 동시성 | 50 / 5 |
 | 성공 응답 `Cache-Control` | `public, s-maxage=60, stale-while-revalidate=300` |
@@ -183,27 +183,51 @@ interface AnimalRepository {
 
 각 항목은 추측하지 말고, 해당 단계에서 검증한 뒤 이 절을 갱신한다.
 
-1. `processState`의 실제 값 목록과 비율(고양이 전체 수집 후 집계)
-2. JSON 응답의 래퍼 구조와 단일 객체/배열 처리. 현재 가정(`server/upstream/extract.ts`, 추측): `response.header.resultCode`, `response.body.items.item`(배열 또는 단일 객체), `items`가 `""`이거나 `items`/`item`이 없으면 빈 배열, `response.body.totalCount`는 숫자 또는 숫자 문자열. 최상위 `response` 객체가 없으면 업스트림 오류(502)로 본다. **확인 방법**: 로컬에서 실제 호출 1회(결과 여러 건 / 1건 / 0건)로 JSON 원문을 받아 구조를 확인하고 이 항목과 테스트의 합성 래퍼를 갱신
+### 12.A 확정됨(2026-09-21 프로브)
+
+로컬에서 실제 호출한 결과다(`scripts/probe.ts`, 커밋하지 않음). 고양이(`upkind=422400`) 전체 스냅샷 기준이며, 값은 시점에 따라 바뀐다.
+
+| # | 항목 | 결과 |
+|---|---|---|
+| P1 | JSON 래퍼 | `response.header { reqNo(number), resultCode(string), resultMsg }`, `response.body { items: { item: [...] }, numOfRows, pageNo, totalCount }`. 성공 `resultCode`는 `"00"`, `totalCount`는 number |
+| P2 | 결과 1건 / 0건 | 1건도 `item`은 길이 1 배열. 0건은 `items: {}`, `totalCount: 0`, `resultCode: "00"`(존재하지 않는 `desertion_no` 조회) |
+| P3 | 인증 오류 | 잘못된 키: HTTP 403, `application/json`, `{ OpenAPI_ServiceResponse: { cmmMsgHeader: { errMsg, returnAuthMsg, returnReasonCode } } }`(212바이트). `_type=json`이면 XML이 아니라 JSON |
+| P4 | 규모와 크기 | 고양이 전체 2,529건. `numOfRows=1000` 페이지 원본 1,445,511 / 1,486,827 바이트(1.45~1.49MB), 마지막 529건 763,248 바이트. base64 추정 최대 1,982,436자(2MB 한도의 94.5%). 전체 순회 3회 1,901ms(페이지당 474~725ms). 픽스처로 한 추정(1.4~1.5MB)보다 컸다(실제 item은 필드가 더 많다) |
+| P5 | `processState` 분포 | 보호중 1,371(54.2%) / 종료(자연사) 754(29.8%) / 종료(입양) 233(9.2%) / 종료(방사) 57(2.3%) / 종료(안락사) 53(2.1%) / 종료(기증) 39(1.5%) / 종료(반환) 22(0.9%). `보호중`과 `종료(...)` 외 값 없음 |
+| P6 | 만료된 보호중 | 보호중 1,371건 중 `noticeEdt`가 오늘(KST 2026-09-21) 이전인 공고 577건(42.1%) |
+| P7 | 사진 | 사진 0장 공고 없음(모두 2장 이상, 2장 91.9%, 최대 8장). 이미지 URL 5,512개 전부 `http://`, `[` 포함 628개, `%`/공백/비ASCII 포함 0개 |
+| P8 | 기타 값 | `sexCd` M 1,019 / F 985 / Q 525. `neuterYn` N 1,893 / U 519 / Y 117. `upKindNm` 전부 `고양이` |
+| P9 | 단건 조회 | 종료(안락사) 공고 1건의 `desertion_no` 조회 성공(길이 1 배열, id 일치). 오래된 공고 전반은 미검증 |
+| P10 | 미문서화 필드 | `healthChk`(4.3%), `adptnTitle/adptnSDate/adptnEDate/adptnConditionLimitTxt/adptnTxt/adptnImg`, `srvcTitle/srvcSDate/srvcEDate/srvcConditionLimitTxt/srvcTxt`(각 0.6%), `rfidCd`(0.2%), `etcBigo`(0.1%). DTO에 선언하지 않고 무시한다. 문서의 기본 27개 필드는 2,529건 모두에 있었다 |
+
+### 12.B 미확정 목록
+
+확정된 항목은 번호를 유지하고 12.A를 가리킨다(코드 주석이 번호로 참조한다).
+
+1. ~~`processState`의 실제 값 목록과 비율~~ **확정됨(2026-09-21 프로브)**: 12.A P5. 개는 미검증. 종료 사유별 표시 문제는 21
+2. ~~JSON 응답의 래퍼 구조와 단일 객체/배열 처리~~ **확정됨(2026-09-21 프로브)**: 12.A P1~P3, 픽스처 `docs/fixtures/upstream-wrapper.json`(구조만 실제, 값은 합성). `extract.ts`는 방어적으로 단일 객체, `items: ""`, 누락도 계속 받고, 최상위 `response`가 없으면 업스트림 오류로 본다
 3. 서버 캐시 방식과 항목 크기 제한, 재검증 주기 값, 서버리스 콜드스타트에서 전체 수집 시 실행 시간
    - 현재: upstream 페이지 fetch에 Next `revalidate: 300`(데이터 캐시). 조립은 요청마다 메모리에서 한다. Route Handler는 `request.url`을 읽어 동적이며, 명시적 `revalidate`를 준 fetch가 동적 핸들러에서도 캐시되는지는 실제 로그로 확인 필요
-   - 크기 제한은 **코드로 확인됨**(Next 16.3.5 `dist/server/lib/incremental-cache/index.js`): fetch 캐시 항목의 `JSON.stringify(data).length`가 2MB(2 × 1024 × 1024)를 넘으면 캐시하지 않는다(커스텀 cache handler를 쓰면 예외). 응답 본문은 base64로 저장되므로(`patch-fetch.js`) 측정값은 UTF-8 바이트의 약 4/3이다. 픽스처 item은 UTF-8 약 1.0~1.15KB → base64 약 1.3~1.54K자라 `numOfRows=1000` 한 페이지는 약 1.4~1.5MB로 추정된다(픽스처 6건 기준 추정, 실제 응답 미측정). 제한까지 여유가 크지 않다
-   - **보안 위험(코드로 확인됨)**: 제한을 넘으면 Next가 `Failed to set Next.js data cache for ${fetchUrl} ...`를 dev에서는 예외로 던지고 prod에서는 `console.warn`으로 남긴다. `fetchUrl`은 쿼리스트링(서비스키)을 포함한 전체 URL이다. 우리 로거는 예상 못 한 오류의 메시지를 남기지 않지만 Next 자체 로그는 막지 못한다. 배포 전에 한 페이지가 2MB를 넘지 않음을 확인하거나 `numOfRows`를 낮춰야 한다
-   - **확인 방법**: 로컬에서 고양이 전체(`upkind=422400`, `numOfRows=1000`) 1페이지를 실제로 받아 응답 본문의 UTF-8 바이트 수를 측정하고 × 4/3(base64)이 2,097,152에 가까우면(예: 1.5MB 초과) `numOfRows`를 500 등으로 낮춘다. 콜드스타트 전체 수집 시간은 Vercel 로그에서 측정
-4. Vercel 함수 리전(서울 가능 여부)과 공공 API 응답 속도, 해외 IP 제한 여부, 함수 실행 시간 제한(전체 수집 3회 호출 + 타임아웃 10초 × 페이지). **확인 방법**: Vercel 프로젝트 설정의 Functions Region, 배포 후 함수 로그의 실행 시간, 리전별 upstream 응답 시간
-5. `desertion_no`로 조회 시 종료/오래된 공고가 조회되는지. 이 파라미터가 무시되고 목록이 오는 경우에 대비해 결과를 id로 한 번 더 거른다. `upkind` 없이 조회해도 되는지도 미검증
-6. 이미지 `http` 처리 방식(원격 도메인 설정 vs 프록시)
+   - 크기 제한은 **코드로 확인됨**(Next 16.3.5 `dist/server/lib/incremental-cache/index.js`): fetch 캐시 항목의 `JSON.stringify(data).length`가 2MB(2 × 1024 × 1024)를 넘으면 캐시하지 않는다(커스텀 cache handler를 쓰면 예외). 응답 본문은 base64로 저장되므로(`patch-fetch.js`) 측정값은 UTF-8 바이트의 약 4/3이다
+   - **보안 위험(코드로 확인됨)**: 제한을 넘으면 Next가 `Failed to set Next.js data cache for ${fetchUrl} ...`를 dev에서는 예외로 던지고 prod에서는 `console.warn`으로 남긴다. `fetchUrl`은 쿼리스트링(서비스키)을 포함한 전체 URL이다. 우리 로거로는 막을 수 없다
+   - **`numOfRows` 결정(2026-09-21)**: 1,000건 페이지가 base64 추정 1,982,436자로 한도의 94.5%(12.A P4)라 여유가 없어 **500**으로 낮췄다. 500건이면 원본 약 0.75MB, base64 약 1.0MB(약 48%)로 추정된다(1,000건 측정값의 절반, 미측정). 호출 수는 고양이 3회 → 6회가 되어 첫 페이지 후 나머지를 동시성 3으로 병렬 수집한다
+   - 남은 확인: 500건 페이지의 실제 크기, 동적 핸들러에서 캐시 적중 여부, 콜드스타트 전체 수집 시간(Vercel 로그), 재검증 주기 300초의 적정성
+4. Vercel 함수 리전(서울 가능 여부)과 공공 API 응답 속도, 해외 IP 제한 여부, 함수 실행 시간 제한(고양이 전체 수집 6회 호출: 1회 + 나머지 5회 병렬, 호출당 타임아웃 10초). **확인 방법**: Vercel 프로젝트 설정의 Functions Region, 배포 후 함수 로그의 실행 시간, 리전별 upstream 응답 시간. 로컬 기준 1,000건 페이지 474~725ms(12.A P4). 병렬 수집(동시성 3)이 공공 API의 호출 간격 제한에 걸리는지도 확인
+5. `desertion_no`로 조회 시 종료/오래된 공고가 조회되는지. 종료(안락사) 1건은 `upkind` 없이 조회 성공(12.A P9). **오래된 공고 전반은 미검증**. 결과는 계속 id로 한 번 더 거른다
+6. 이미지 `http` 처리 방식(원격 도메인 설정 vs 프록시). 이미지 URL은 모두 `http://`(12.A P7). **같은 경로가 `https`로도 제공되는지는 미검증**
 7. 카카오 피드 이미지 비율 제한, `next/og`(Satori)의 폰트 형식(woff2 미지원 가능성)과 CSS 변수 미지원 가능성
 8. UI 라벨 "보호소": `careNm`이 병원일 수 있어 "보호 장소" 등으로 바꿀지
 9. `ageText` 표기 정제(`2024(년생)` → "2살 추정" 등)
-10. ~~`noticeEdt`가 지난 protected 공고의 D-day 정책~~ **결정됨**: `dDay = null`, `isSoon = false`, 서버에서 제외하지 않음(10절). 만료된 보호중 공고의 실제 비율은 수집 후 관찰
+10. ~~`noticeEdt`가 지난 protected 공고의 D-day 정책~~ **결정됨**: `dDay = null`, `isSoon = false`, 서버에서 제외하지 않음(10절). 고양이 보호중의 42.1%(577건)가 해당한다(12.A P6). endingSoon 정렬은 이들을 뒤로 보낸다(5절)
 11. 필터 적용 상태 표시(필터 버튼 점): 미정
-12. `upKindNm`이 `고양이`/`개`가 아닌 항목: WireDto `species`는 `cat | dog`뿐이라 서버 Mapper가 `null`을 반환하고 로거로 남긴다(목록에서 제외하는 전제). 캐시 키가 `upkind` 단위라 실제로 섞여 오는지는 수집 후 확인
-13. ~~이미지 URL 인코딩의 이중 인코딩~~ **결정됨**: `encodeURI` 대신 `[` `]`만 `%5B` `%5D`로 치환한다(이미 인코딩된 `%`는 유지, 멱등). 파일명에 다른 예약 문자(공백, 한글 등)가 원문 그대로 오는지는 수집 후 확인
-14. ~~UpstreamDto 필수 필드 기준~~ **결정됨**: 4절. 실제 수집에서 필수 필드 누락으로 건너뛰는 item 수(`skippedCount`)를 관찰
-15. `resultCode` 오류 판정: 정상 코드 값이 검증되지 않아 "코드가 있고 공공데이터포털 공통 오류 코드(`01, 02, 04, 05, 10, 11, 12, 20, 22, 30, 31, 32, 33, 99`)일 때만" 오류로 본다. `03`(NODATA)은 빈 결과. 이 목록 자체가 이 API에서 검증되지 않은 추측이다. 인증 오류가 `_type=json`에도 XML로 오는지도 미검증(오면 parse 오류 → 502)
+12. `upKindNm`이 `고양이`/`개`가 아닌 항목: WireDto `species`는 `cat | dog`뿐이라 서버 Mapper가 `null`을 반환하고 로거로 남긴다(목록에서 제외). 고양이 조회는 전부 `고양이`였다(12.A P8). 개 조회는 미검증
+13. ~~이미지 URL 인코딩의 이중 인코딩~~ **결정됨**: `encodeURI` 대신 `[` `]`만 `%5B` `%5D`로 치환한다(이미 인코딩된 `%`는 유지, 멱등). 고양이 이미지 URL 5,512개 중 `[` 포함 628개, `%`/공백/비ASCII는 0개(12.A P7)
+14. ~~UpstreamDto 필수 필드 기준~~ **결정됨**: 4절. 고양이 2,529건 모두 문서의 기본 27개 필드가 있어 필수 필드 누락은 없었다(12.A P10)
+15. `resultCode` 오류 판정: 성공은 `"00"`, 0건도 `"00"`(12.A P1, P2). 인증 오류는 `resultCode`가 아니라 HTTP 403 + `OpenAPI_ServiceResponse`로 온다(P3, `reason=auth`로 분류). "코드가 있고 공공데이터포털 공통 오류 코드(`01, 02, 04, 05, 10, 11, 12, 20, 22, 30, 31, 32, 33, 99`)일 때만 오류" 규칙은 유지하지만, 200 응답에 이 코드들이 실제로 오는지는 여전히 미검증. `returnReasonCode` 값 목록도 미검증
 16. `region`(시도 코드 `upr_cd`)과 `id`(`desertionNo`)의 형식: 숫자 문자열(1~32자리)만 검사한다. 실제 코드 목록(`sido_v2`)과 자릿수는 미검증
 17. 오프셋 커서의 밀림: 서버 캐시(재검증 300초)가 갱신되는 사이에 페이지를 넘기면 중복/누락이 생길 수 있다. MVP에서 허용
 18. `Cache-Control`(`s-maxage=60, stale-while-revalidate=300`) 값은 초기값이며 튜닝 필요. CDN 캐시 키에 쿼리스트링이 포함되는지(Vercel) 확인
-19. 최대 페이지 가드(조합당 20페이지 = 20,000건): 넘으면 잘린 목록을 돌려주고 경고 로그를 남긴다. 실제 전체 건수 대비 적정한지 확인
+19. 최대 페이지 가드(조합당 20페이지, `numOfRows=500`이면 10,000건): 넘으면 잘린 목록을 돌려주고 경고 로그를 남긴다. 고양이 2,529건은 6페이지. 개 규모는 22
 20. by-ids의 id별 upstream 호출: 찜 50개면 캐시 미스 시 최대 50회 호출. 공공 API 일일 트래픽 한도와 호출 간격 제한은 미검증
+21. 종료 공고 정책: 종료 공고의 대부분은 사망이 아니다. 종료(입양) 233, 방사 57, 기증 39, 반환 22건이 자연사 754, 안락사 53건과 같은 "종료" 배지로 보인다(12.A P5). 종료 사유 비노출(10절)은 유지하고 **결정 보류**, 다음 UI 단계에서 재검토
+22. 개(`upkind=417000`) 규모와 페이지 수, 페이지 크기: 미측정(이전 샘플 전체 7,249건에서 역산하면 5천 건 미만으로 보이나 추정). 최대 페이지 가드와 수집 시간 확인 필요
