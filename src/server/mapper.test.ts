@@ -32,8 +32,10 @@ const WIRE_KEYS = [
   "status",
 ];
 
-function map(dto: UpstreamAnimalItemDto, log = vi.fn()): MappedAnimal {
-  const result = mapUpstreamItem(dto, { log });
+const spyLogger = () => ({ warn: vi.fn() });
+
+function map(dto: UpstreamAnimalItemDto, logger = spyLogger()): MappedAnimal {
+  const result = mapUpstreamItem(dto, { logger });
   if (!result) throw new Error("expected mapped result");
   return result;
 }
@@ -60,34 +62,42 @@ describe("mapUpstreamItem", () => {
   });
 
   it("종료(안락사)는 ended이고, 결과 어디에도 endReason 값이 없다", () => {
-    const log = vi.fn();
-    const result = map(ENDED_EUTHANASIA, log);
+    const logger = spyLogger();
+    const result = map(ENDED_EUTHANASIA, logger);
     expect(result.wire.status).toBe("ended");
     expect(ENDED_EUTHANASIA.endReason).toBeTruthy();
     const serialized = JSON.stringify(result);
     expect(serialized).not.toContain("endReason");
     expect(serialized).not.toContain(ENDED_EUTHANASIA.endReason!);
-    expect(log).not.toHaveBeenCalled();
+    expect(logger.warn).not.toHaveBeenCalled();
   });
 
   it("종료로 시작하는 다른 값도 ended이다", () => {
-    const log = vi.fn();
-    expect(map({ ...PROTECTED_CAT, processState: "종료(자연사)" }, log).wire.status).toBe("ended");
-    expect(map({ ...PROTECTED_CAT, processState: "종료(입양)" }, log).wire.status).toBe("ended");
-    expect(log).not.toHaveBeenCalled();
+    const logger = spyLogger();
+    expect(map({ ...PROTECTED_CAT, processState: "종료(자연사)" }, logger).wire.status).toBe("ended");
+    expect(map({ ...PROTECTED_CAT, processState: "종료(입양)" }, logger).wire.status).toBe("ended");
+    expect(logger.warn).not.toHaveBeenCalled();
   });
 
   it("보호중은 protected이고 로그를 남기지 않는다", () => {
-    const log = vi.fn();
-    expect(map(PROTECTED_CAT, log).wire.status).toBe("protected");
-    expect(log).not.toHaveBeenCalled();
+    const logger = spyLogger();
+    expect(map(PROTECTED_CAT, logger).wire.status).toBe("protected");
+    expect(logger.warn).not.toHaveBeenCalled();
   });
 
   it("알 수 없는 processState는 protected로 두고 로그를 남긴다", () => {
-    const log = vi.fn();
-    expect(map({ ...PROTECTED_CAT, processState: "공고중" }, log).wire.status).toBe("protected");
-    expect(log).toHaveBeenCalledOnce();
-    expect(log.mock.calls[0][1]).toMatchObject({ processState: "공고중" });
+    const logger = spyLogger();
+    expect(map({ ...PROTECTED_CAT, processState: "공고중" }, logger).wire.status).toBe("protected");
+    expect(logger.warn).toHaveBeenCalledOnce();
+    expect(logger.warn.mock.calls[0][1]).toMatchObject({ processState: "공고중" });
+  });
+
+  it("로거를 주지 않으면 아무것도 출력하지 않는다(기본 no-op)", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    mapUpstreamItem({ ...PROTECTED_CAT, processState: "공고중" });
+    mapUpstreamItem({ ...PROTECTED_CAT, upKindNm: "기타축종" });
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
   });
 
   it("sexCd: M→male, F→female, Q→unknown, 그 외→unknown", () => {
@@ -103,9 +113,9 @@ describe("mapUpstreamItem", () => {
   });
 
   it("upKindNm이 고양이/개가 아니면 null을 반환하고 로그를 남긴다", () => {
-    const log = vi.fn();
-    expect(mapUpstreamItem({ ...PROTECTED_CAT, upKindNm: "기타축종" }, { log })).toBeNull();
-    expect(log).toHaveBeenCalledOnce();
+    const logger = spyLogger();
+    expect(mapUpstreamItem({ ...PROTECTED_CAT, upKindNm: "기타축종" }, { logger })).toBeNull();
+    expect(logger.warn).toHaveBeenCalledOnce();
   });
 
   it("optional 필드가 있는 항목과 없는 항목 모두 매핑된다", () => {
@@ -113,7 +123,7 @@ describe("mapUpstreamItem", () => {
     expect(DOG_VACCINATION.vaccinationChk).toBeDefined();
     expect(PROTECTED_CAT.sfeSoci).toBeUndefined();
     for (const dto of [OPTIONAL_SFE, DOG_VACCINATION, PROTECTED_CAT]) {
-      expect(mapUpstreamItem(dto, { log: vi.fn() })).not.toBeNull();
+      expect(mapUpstreamItem(dto)).not.toBeNull();
     }
   });
 

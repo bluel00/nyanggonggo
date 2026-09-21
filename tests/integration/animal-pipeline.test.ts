@@ -2,7 +2,7 @@
  * 픽스처 6건을 서버 Mapper → 계약(Zod) → 클라이언트 Mapper로 통과시킨다.
  * 서버와 FSD 계층을 함께 import하므로 src 밖에 둔다.
  */
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { AnimalListResponseSchema } from "@/contract/animals";
 import { getDDay, isSoon, toAnimal, type Animal } from "@/entities/animal";
 import { mapUpstreamItem } from "@/server/mapper";
@@ -13,7 +13,7 @@ const dtos = fixture.items.map((item) => UpstreamAnimalItemSchema.parse(item));
 const response = AnimalListResponseSchema.parse(
   JSON.parse(
     JSON.stringify({
-      items: dtos.map((dto) => mapUpstreamItem(dto, { log: vi.fn() })?.wire),
+      items: dtos.map((dto) => mapUpstreamItem(dto)?.wire),
       nextCursor: null,
     }),
   ),

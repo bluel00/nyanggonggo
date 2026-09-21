@@ -1,5 +1,5 @@
 import type { AnimalWireDto } from "@/contract/animals";
-import { devLog } from "./devLog";
+import { noopLogger, type Logger } from "./logger";
 import type { UpstreamAnimalItemDto } from "./upstream/dto";
 
 /** 정렬용 원문 값. 형식이 고정 폭이라 문자열 비교로 정렬한다(architecture.md 5절). */
@@ -17,9 +17,7 @@ export type MappedAnimal = {
   sortKeys: AnimalSortKeys;
 };
 
-export type MapperLog = (message: string, detail?: Record<string, unknown>) => void;
-
-type MapOptions = { log?: MapperLog };
+type MapOptions = { logger?: Logger };
 
 /**
  * UpstreamDto → { wire, sortKeys }.
@@ -27,11 +25,11 @@ type MapOptions = { log?: MapperLog };
  */
 export function mapUpstreamItem(
   dto: UpstreamAnimalItemDto,
-  { log = devLog }: MapOptions = {},
+  { logger = noopLogger }: MapOptions = {},
 ): MappedAnimal | null {
   const species = toSpecies(dto.upKindNm);
   if (species === null) {
-    log("unknown upKindNm, item skipped", {
+    logger.warn("unknown upKindNm, item skipped", {
       desertionNo: dto.desertionNo,
       upKindNm: dto.upKindNm,
     });
@@ -45,7 +43,7 @@ export function mapUpstreamItem(
     id: dto.desertionNo,
     species,
     images: toImages(dto),
-    status: toStatus(dto, log),
+    status: toStatus(dto, logger),
     noticeEndDate: noticeEnd ? formatIsoDate(noticeEnd) : null,
     sex: toSex(dto.sexCd),
     ageText: nonEmpty(dto.age),
@@ -79,11 +77,11 @@ function toSpecies(upKindNm: string): AnimalWireDto["species"] | null {
   }
 }
 
-function toStatus(dto: UpstreamAnimalItemDto, log: MapperLog): AnimalWireDto["status"] {
+function toStatus(dto: UpstreamAnimalItemDto, logger: Logger): AnimalWireDto["status"] {
   const state = dto.processState.trim();
   if (state.startsWith("종료")) return "ended";
   if (state !== "보호중") {
-    log("unknown processState, treated as protected", {
+    logger.warn("unknown processState, treated as protected", {
       desertionNo: dto.desertionNo,
       processState: dto.processState,
     });
