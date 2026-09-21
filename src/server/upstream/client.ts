@@ -1,5 +1,6 @@
 import type { AnimalWireDto } from "@/contract/animals";
 import { HttpError, type HttpClient } from "@/shared/api/http-client";
+import { mapWithConcurrency } from "../lib/concurrency";
 import { noopLogger, type Logger } from "../logger";
 import type { UpstreamAnimalItemDto } from "./dto";
 import { extractPage } from "./extract";
@@ -43,6 +44,8 @@ export type UpstreamClientOptions = {
   revalidateSeconds: number;
   timeoutMs: number;
   pageSize: number;
+  /** 첫 페이지 이후 나머지 페이지의 동시 호출 수 */
+  concurrency: number;
   maxPages: number;
 };
 
@@ -53,7 +56,10 @@ export type UpstreamListParams = {
 };
 
 export type UpstreamClient = {
-  /** (upkind, upr_cd) 조합의 전체 목록. 페이지를 순회한다. */
+  /**
+   * (upkind, upr_cd) 조합의 전체 목록. 첫 페이지로 totalCount를 얻은 뒤 나머지 페이지를
+   * 동시성 상한 안에서 병렬로 받는다. 한 페이지라도 실패하면 전체가 실패한다.
+   */
   fetchAll(params: UpstreamListParams): Promise<UpstreamAnimalItemDto[]>;
   /** desertion_no 단건. 없으면 null. */
   fetchByDesertionNo(desertionNo: string): Promise<UpstreamAnimalItemDto | null>;
@@ -105,14 +111,30 @@ export function createUpstreamClient(options: UpstreamClientOptions): UpstreamCl
       ...(uprCd ? { upr_cd: uprCd } : {}),
     };
 
-    const raw: unknown[] = [];
-    let complete = false;
-    for (let pageNo = 1; pageNo <= options.maxPages; pageNo += 1) {
-      const page = await fetchPage({ ...base, pageNo: String(pageNo) });
-      raw.push(...page.items);
-      if (page.items.length === 0 || (page.totalCount !== null && raw.length >= page.totalCount)) {
-        complete = true;
-        break;
+    const fetchPageNo = (pageNo: number) => fetchPage({ ...base, pageNo: String(pageNo) });
+    const first = await fetchPageNo(1);
+    const raw: unknown[] = [...first.items];
+    let complete: boolean;
+
+    if (first.items.length === 0) {
+      complete = true;
+    } else if (first.totalCount !== null) {
+      const needed = Math.ceil(first.totalCount / options.pageSize);
+      const last = Math.min(needed, options.maxPages);
+      const rest = Array.from({ length: Math.max(0, last - 1) }, (_, i) => i + 2);
+      const pages = await mapWithConcurrency(rest, options.concurrency, fetchPageNo);
+      for (const page of pages) raw.push(...page.items);
+      complete = needed <= options.maxPages;
+    } else {
+      // totalCount를 모르면 빈 페이지가 나올 때까지 순서대로 받는다.
+      complete = false;
+      for (let pageNo = 2; pageNo <= options.maxPages; pageNo += 1) {
+        const page = await fetchPageNo(pageNo);
+        raw.push(...page.items);
+        if (page.items.length === 0) {
+          complete = true;
+          break;
+        }
       }
     }
     if (!complete) {

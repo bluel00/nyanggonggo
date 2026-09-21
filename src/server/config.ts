@@ -11,8 +11,13 @@ export const SERVER_TUNING = {
   upstreamRevalidateSeconds: 300,
   /** 공공 API 호출 타임아웃(ms) */
   upstreamTimeoutMs: 10_000,
-  /** 공공 API 페이지 크기(numOfRows, 최대 1000) */
-  upstreamPageSize: 1000,
+  /**
+   * 공공 API 페이지 크기(numOfRows, 최대 1000). 1000건 페이지는 base64 추정 1.98MB로
+   * Next fetch 캐시 항목 한도(2MB)의 94.5%라 500으로 낮췄다(architecture.md 12절 3).
+   */
+  upstreamPageSize: 500,
+  /** 첫 페이지 이후 나머지 페이지의 동시 호출 수 */
+  upstreamConcurrency: 3,
   /** 한 (upkind, upr_cd) 조합의 최대 페이지 수. 무한 루프 방지 */
   upstreamMaxPages: 20,
   /** 목록 응답의 페이지 크기 */

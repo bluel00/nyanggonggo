@@ -1,5 +1,6 @@
 import type { AnimalListResponse, AnimalWireDto } from "@/contract/animals";
 import type { MappedAnimal } from "../mapper";
+import { mapWithConcurrency } from "../lib/concurrency";
 import type { AnimalSource } from "../source/animal-source";
 import { InvalidRequestError, NotFoundError } from "./errors";
 
@@ -85,22 +86,4 @@ export function decodeCursor(cursor: string): number {
     throw new InvalidRequestError("Invalid cursor");
   }
   return offset;
-}
-
-/** 결과는 입력 순서를 따른다. */
-async function mapWithConcurrency<T, R>(
-  inputs: T[],
-  concurrency: number,
-  task: (input: T) => Promise<R>,
-): Promise<R[]> {
-  const results = new Array<R>(inputs.length);
-  let next = 0;
-  const worker = async () => {
-    while (next < inputs.length) {
-      const index = next++;
-      results[index] = await task(inputs[index]);
-    }
-  };
-  await Promise.all(Array.from({ length: Math.min(concurrency, inputs.length) }, worker));
-  return results;
 }

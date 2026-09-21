@@ -32,6 +32,7 @@ function client(fetch: FetchLike, overrides: Partial<UpstreamClientOptions> = {}
     revalidateSeconds: 300,
     timeoutMs: 1000,
     pageSize: 2,
+    concurrency: 3,
     maxPages: 10,
     ...overrides,
   });
@@ -66,6 +67,65 @@ describe("upstream client fetchAll", () => {
       "upstream max pages reached, list truncated",
       expect.objectContaining({ maxPages: 3 }),
     );
+  });
+
+  describe("병렬 페이지 수집", () => {
+    // 12건(6페이지)을 만든다. desertionNo만 바꾼 합성 데이터
+    const twelve = Array.from({ length: 12 }, (_, n) => ({
+      ...items[n % items.length],
+      desertionNo: String(900000000000000 + n),
+    }));
+
+    function tracedUpstream(totalCount: unknown, failPage?: number) {
+      const events: string[] = [];
+      let running = 0;
+      let peak = 0;
+      const fetch = vi.fn<FetchLike>(async (input) => {
+        const pageNo = Number(new URL(input).searchParams.get("pageNo"));
+        events.push(`start:${pageNo}`);
+        running += 1;
+        if (pageNo > 1) peak = Math.max(peak, running);
+        await new Promise((r) => setTimeout(r, pageNo === 1 ? 5 : 2 + (pageNo % 3)));
+        running -= 1;
+        events.push(`end:${pageNo}`);
+        if (pageNo === failPage) return new Response("Bad Gateway", { status: 502 });
+        return Response.json(page(twelve.slice((pageNo - 1) * 2, pageNo * 2), totalCount));
+      });
+      return { fetch, events, peak: () => peak };
+    }
+
+    it("6페이지: 첫 호출이 먼저 끝나고, 나머지는 동시성 상한(3) 이내로 나간다", async () => {
+      const { fetch, events, peak } = tracedUpstream(12);
+      const result = await client(fetch, { pageSize: 2, concurrency: 3 }).fetchAll({ species: "cat" });
+
+      expect(fetch).toHaveBeenCalledTimes(6);
+      expect(events.slice(0, 2)).toEqual(["start:1", "end:1"]);
+      expect(peak()).toBe(3);
+      // 결과는 페이지 순서를 유지한다
+      expect(result.map((i) => i.desertionNo)).toEqual(twelve.map((i) => i.desertionNo));
+      const pageNos = fetch.mock.calls.map(([input]) => new URL(input).searchParams.get("pageNo"));
+      expect([...pageNos].sort()).toEqual(["1", "2", "3", "4", "5", "6"]);
+    });
+
+    it("totalCount가 문자열이어도 페이지 수를 계산한다", async () => {
+      const { fetch } = tracedUpstream("12");
+      const result = await client(fetch, { pageSize: 2 }).fetchAll({ species: "cat" });
+      expect(fetch).toHaveBeenCalledTimes(6);
+      expect(result).toHaveLength(12);
+    });
+
+    it("중간 페이지가 실패하면 전체가 실패한다", async () => {
+      const { fetch } = tracedUpstream(12, 4);
+      await expect(client(fetch, { pageSize: 2 }).fetchAll({ species: "cat" })).rejects.toBeInstanceOf(
+        UpstreamError,
+      );
+    });
+
+    it("첫 페이지가 비면 추가 호출이 없다", async () => {
+      const fetch = vi.fn<FetchLike>(async () => Response.json(page([], 0)));
+      await expect(client(fetch).fetchAll({ species: "cat" })).resolves.toEqual([]);
+      expect(fetch).toHaveBeenCalledOnce();
+    });
   });
 
   it("요청 URL: _type=json, upkind, numOfRows, pageNo가 있고 state는 없다", async () => {

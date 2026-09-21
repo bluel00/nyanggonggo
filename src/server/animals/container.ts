@@ -15,6 +15,7 @@ export function getAnimalService(): AnimalService {
     revalidateSeconds: SERVER_TUNING.upstreamRevalidateSeconds,
     timeoutMs: SERVER_TUNING.upstreamTimeoutMs,
     pageSize: SERVER_TUNING.upstreamPageSize,
+    concurrency: SERVER_TUNING.upstreamConcurrency,
     maxPages: SERVER_TUNING.upstreamMaxPages,
   });
   return createAnimalService(createUpstreamAnimalSource(upstream, consoleLogger), {
