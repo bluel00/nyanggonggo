@@ -39,6 +39,8 @@ describe("AnimalCard", () => {
     expect(card.getAttribute("data-status")).toBe("protected");
     expect(badge.textContent).toBe("보호중 · D-10");
     expect(badge.className).toContain("text-status-protected-text");
+    // 글자 크기 토큰이 색 토큰과 병합되며 사라지지 않는다(cn 테마 설정)
+    expect(badge.className).toContain("text-badge");
     const img = screen.getByRole("img", { name: "고양이 사진, 제주특별자치도" }) as HTMLImageElement;
     expect(img.getAttribute("src")).toBe(`/api/image-proxy?src=${encodeURIComponent(IMG)}`);
     expect(img.getAttribute("loading")).toBe("lazy");

@@ -51,6 +51,13 @@ describe("AnimalFilterSheet", () => {
     expect(screen.getByRole("radio", { name: "고양이" }).getAttribute("aria-checked")).toBe("true");
   });
 
+  it("트리거 Chip은 body 글자 크기와 text 색을 함께 가진다(cn 테마 설정)", () => {
+    render(<AnimalFilterSheet filter={FILTER} />);
+    const trigger = screen.getByRole("button", { name: "필터" });
+    expect(trigger.className).toContain("text-body");
+    expect(trigger.className).toContain("text-text");
+  });
+
   it("열면 현재 필터가 선택되어 있다", () => {
     render(<AnimalFilterSheet filter={{ species: "dog", region: "6110000", status: "ended", sort: "endingSoon" }} />);
     open();
