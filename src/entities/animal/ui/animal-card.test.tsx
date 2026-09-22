@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Animal } from "../model/animal";
 import { AnimalCard } from "./animal-card";
 import { statusBadgeText } from "./status-badge";
@@ -91,6 +91,31 @@ describe("AnimalCard", () => {
   it("href가 있으면 링크", () => {
     const { container } = render(<AnimalCard animal={animal()} now={NOW} href="/animals/1" />);
     expect(container.querySelector("a")?.getAttribute("href")).toBe("/animals/1");
+  });
+
+  it("action은 링크 밖(형제)에 두어 클릭이 카드 이동을 일으키지 않는다", () => {
+    const linkClick = vi.fn();
+    const actionClick = vi.fn();
+    const { container } = render(
+      <AnimalCard
+        animal={animal()}
+        now={NOW}
+        href="/animals/1"
+        action={
+          <button type="button" onClick={actionClick}>
+            찜하기
+          </button>
+        }
+      />,
+    );
+    const link = container.querySelector("a")!;
+    link.addEventListener("click", linkClick);
+    const action = screen.getByRole("button", { name: "찜하기" });
+    expect(link.contains(action)).toBe(false);
+
+    fireEvent.click(action);
+    expect(actionClick).toHaveBeenCalledOnce();
+    expect(linkClick).not.toHaveBeenCalled();
   });
 });
 

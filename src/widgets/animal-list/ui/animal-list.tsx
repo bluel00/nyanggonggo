@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { AnimalCard, SPECIES_LABEL, useAnimalsInfinite, type AnimalListFilter } from "@/entities/animal";
+import { FavoriteButton } from "@/features/animal-favorite";
 import { scrollAppToTop } from "@/shared/ui/app-column";
 import { Button } from "@/shared/ui/button";
 import { SkeletonCard } from "@/shared/ui/skeleton-card";
@@ -57,7 +58,13 @@ export function AnimalList({ filter }: { filter: AnimalListFilter }) {
   return (
     <FeedList>
       {animals.map((animal, index) => (
-        <AnimalCard key={animal.id} animal={animal} now={now} priority={index < EAGER_CARDS} />
+        <AnimalCard
+          key={animal.id}
+          animal={animal}
+          now={now}
+          priority={index < EAGER_CARDS}
+          action={<FavoriteButton animalId={animal.id} variant="overlay" />}
+        />
       ))}
       {query.isFetchingNextPage && <SkeletonCard />}
       {query.isFetchNextPageError && (
