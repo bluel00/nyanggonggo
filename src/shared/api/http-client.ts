@@ -49,26 +49,33 @@ export class HttpError extends Error {
 
 export type HttpResponse<T> = { status: number; data: T };
 
+export type HttpBytesResponse = HttpResponse<ArrayBuffer> & { contentType: string | null };
+
 export type HttpClient = {
   getText(url: string, options?: HttpRequestOptions): Promise<HttpResponse<string>>;
   getJson(url: string, options?: HttpRequestOptions): Promise<HttpResponse<unknown>>;
+  /** 이미지 등 바이너리 본문 */
+  getBytes(url: string, options?: HttpRequestOptions): Promise<HttpBytesResponse>;
 };
 
 export function createHttpClient({
   fetch: fetchImpl = (input, init) => globalThis.fetch(input, init),
   timeoutMs: defaultTimeoutMs = DEFAULT_TIMEOUT_MS,
 }: { fetch?: FetchLike; timeoutMs?: number } = {}): HttpClient {
-  async function getText(url: string, options: HttpRequestOptions = {}) {
+  /** GET 요청 공통: 타임아웃, 취소, 오류 정규화. 2xx면 read로 본문을 읽고, 아니면 본문 앞부분을 오류에 담는다. */
+  async function send<T>(url: string, options: HttpRequestOptions, read: (response: Response) => Promise<T>) {
     const { timeoutMs = defaultTimeoutMs, signal: callerSignal, ...init } = options;
     const endpoint = stripQuery(url);
     const timeoutSignal = AbortSignal.timeout(timeoutMs);
     const signal = callerSignal ? AbortSignal.any([callerSignal, timeoutSignal]) : timeoutSignal;
 
     let response: Response;
-    let text: string;
+    let body: T | undefined;
+    let errorText = "";
     try {
       response = await fetchImpl(url, { ...init, method: "GET", signal } as RequestInit);
-      text = await response.text();
+      if (response.ok) body = await read(response);
+      else errorText = await response.text();
     } catch {
       if (timeoutSignal.aborted) throw new HttpError({ kind: "timeout", endpoint });
       // 호출한 쪽의 취소(AbortError)는 그대로 전달한다. 쿼리스트링이 담긴 원래 오류는 싣지 않는다.
@@ -81,10 +88,15 @@ export function createHttpClient({
         kind: "status",
         endpoint,
         status: response.status,
-        bodySnippet: snippet(text),
+        bodySnippet: snippet(errorText),
       });
     }
-    return { status: response.status, data: text };
+    return { response, body: body as T };
+  }
+
+  async function getText(url: string, options: HttpRequestOptions = {}) {
+    const { response, body } = await send(url, options, (r) => r.text());
+    return { status: response.status, data: body };
   }
 
   async function getJson(url: string, options?: HttpRequestOptions) {
@@ -96,7 +108,12 @@ export function createHttpClient({
     }
   }
 
-  return { getText, getJson };
+  async function getBytes(url: string, options: HttpRequestOptions = {}) {
+    const { response, body } = await send(url, options, (r) => r.arrayBuffer());
+    return { status: response.status, data: body, contentType: response.headers.get("content-type") };
+  }
+
+  return { getText, getJson, getBytes };
 }
 
 /** 쿼리스트링과 해시를 뗀 origin + path. 상대 경로도 처리한다. */

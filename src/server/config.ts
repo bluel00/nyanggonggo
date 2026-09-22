@@ -26,6 +26,17 @@ export const SERVER_TUNING = {
   byIdsConcurrency: 5,
   /** /api/animals 응답의 Cache-Control */
   cacheControl: "public, s-maxage=60, stale-while-revalidate=300",
+  /**
+   * /api/image-proxy 성공 응답의 Cache-Control. 원본 파일명에 등록 시각이 들어 있어 URL별로 내용이 바뀌지 않는다고 보고
+   * 길게 둔다(검증 필요, architecture.md 12절).
+   */
+  imageProxyCacheControl: "public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400",
+  /** 원본 실패 시 대체 이미지 응답은 캐시하지 않는다(다음 요청에서 다시 시도) */
+  imageProxyFallbackCacheControl: "no-store",
+  /** 원본 이미지 호출 타임아웃(ms) */
+  imageProxyTimeoutMs: 8_000,
+  /** 원본 이미지 최대 크기(바이트). 넘으면 대체 이미지 */
+  imageProxyMaxBytes: 10 * 1024 * 1024,
 } as const;
 
 const EnvSchema = z.object({
