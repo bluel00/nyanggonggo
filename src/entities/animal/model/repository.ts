@@ -2,8 +2,10 @@ import type { Animal, AnimalPage } from "./animal";
 
 export type AnimalListParams = {
   species: Animal["species"];
-  /** 시도 코드(upr_cd) */
+  /** 시도 코드(upr_cd). 없으면 전국 */
   region?: string;
+  /** 시군구 코드(org_cd). region이 있을 때만 */
+  district?: string;
   status: Animal["status"] | "all";
   sort: "latest" | "endingSoon";
   cursor?: string;

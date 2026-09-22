@@ -2,15 +2,15 @@ import { infiniteQueryOptions, queryOptions, useInfiniteQuery, useQuery } from "
 import type { AnimalListParams, AnimalRepository } from "../model/repository";
 import { animalRepository } from "./animal-repository";
 
-/** 목록 필터 4종. URL search params(species, region, status, sort)와 같다. 커서는 내부 상태라 넣지 않는다. */
+/** 목록 필터. URL search params(species, region, district, status, sort)와 같다. 커서는 내부 상태라 넣지 않는다. */
 export type AnimalListFilter = Omit<AnimalListParams, "cursor">;
 
-/** 쿼리 키 팩토리. 목록 키는 필터 4종으로 정해진다(상세 → 뒤로가기 때 같은 키로 캐시를 되살린다). */
+/** 쿼리 키 팩토리. 목록 키는 필터 5종(species, region, district, status, sort)으로 정해진다(상세 → 뒤로가기 때 같은 키로 캐시를 되살린다). */
 export const animalKeys = {
   all: ["animals"] as const,
   lists: () => [...animalKeys.all, "list"] as const,
-  list: ({ species, region, status, sort }: AnimalListFilter) =>
-    [...animalKeys.lists(), { species, region: region ?? null, status, sort }] as const,
+  list: ({ species, region, district, status, sort }: AnimalListFilter) =>
+    [...animalKeys.lists(), { species, region: region ?? null, district: district ?? null, status, sort }] as const,
   details: () => [...animalKeys.all, "detail"] as const,
   detail: (id: string) => [...animalKeys.details(), id] as const,
   byIds: (ids: readonly string[]) => [...animalKeys.all, "by-ids", [...ids]] as const,

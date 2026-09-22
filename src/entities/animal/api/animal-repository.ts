@@ -28,9 +28,10 @@ export function createAnimalRepository({
   baseUrl = "",
 }: AnimalRepositoryOptions = {}): AnimalRepository {
   return {
-    async getAnimals({ species, region, status, sort, cursor }, options) {
+    async getAnimals({ species, region, district, status, sort, cursor }, options) {
       const query = new URLSearchParams({ species, status, sort });
       if (region) query.set("region", region);
+      if (region && district) query.set("district", district);
       if (cursor) query.set("cursor", cursor);
       const response = await getValidated(http, `${baseUrl}/api/animals?${query}`, AnimalListResponseSchema, options);
       return { items: response.items.map(toAnimal), nextCursor: response.nextCursor };

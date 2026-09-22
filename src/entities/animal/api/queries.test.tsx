@@ -54,7 +54,7 @@ describe("animalKeys", () => {
     expect(animalKeys.list({ species: "cat", status: "protected", sort: "latest" })).toEqual([
       "animals",
       "list",
-      { species: "cat", region: null, status: "protected", sort: "latest" },
+      { species: "cat", region: null, district: null, status: "protected", sort: "latest" },
     ]);
   });
 });

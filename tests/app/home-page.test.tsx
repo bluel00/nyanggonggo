@@ -12,8 +12,14 @@ async function renderPage(searchParams: Record<string, string | string[] | undef
 }
 
 describe("app/page", () => {
-  it("파라미터가 없으면 기본 필터", async () => {
-    expect(await renderPage({})).toEqual({ species: "cat", status: "protected", sort: "latest" });
+  it("파라미터가 없으면 기본 필터(서울/종로구)", async () => {
+    expect(await renderPage({})).toEqual({
+      species: "cat",
+      region: "6110000",
+      district: "3000000",
+      status: "protected",
+      sort: "latest",
+    });
   });
 
   it("URL 값을 필터로 넘긴다(page는 무시)", async () => {

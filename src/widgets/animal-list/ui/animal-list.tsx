@@ -114,7 +114,7 @@ function useLoadMore({ enabled, onLoadMore }: { enabled: boolean; onLoadMore: ()
 
 /** 필터가 바뀌면 내부 스크롤 컨테이너를 맨 위로(첫 렌더는 제외) */
 function useScrollTopOnFilterChange(filter: AnimalListFilter) {
-  const key = `${filter.species}|${filter.region ?? ""}|${filter.status}|${filter.sort}`;
+  const key = `${filter.species}|${filter.region ?? ""}|${filter.district ?? ""}|${filter.status}|${filter.sort}`;
   const previous = useRef(key);
   useEffect(() => {
     if (previous.current === key) return;

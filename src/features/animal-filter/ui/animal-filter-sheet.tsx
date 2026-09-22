@@ -3,13 +3,14 @@
 import { SlidersHorizontal } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { SPECIES_LABEL, type AnimalListFilter } from "@/entities/animal";
-import { REGIONS } from "@/shared/config/regions";
+import { DISTRICTS, SIDO } from "@/shared/config/regions";
 import { Button } from "@/shared/ui/button";
 import { Chip } from "@/shared/ui/chip";
 import { NativeSelect } from "@/shared/ui/native-select";
 import { RadioOption } from "@/shared/ui/radio-option";
 import { Segmented } from "@/shared/ui/segmented";
 import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "@/shared/ui/sheet";
+import { REGION_ALL } from "../model/filter";
 import { useApplyAnimalFilter } from "../model/use-apply-animal-filter";
 
 const SPECIES_OPTIONS = [
@@ -17,8 +18,13 @@ const SPECIES_OPTIONS = [
   { value: "dog", label: SPECIES_LABEL.dog },
 ] as const;
 
-const REGION_ALL = "";
-const REGION_OPTIONS = [{ value: REGION_ALL, label: "전체 지역" }, ...REGIONS.map((r) => ({ value: r.code, label: r.label }))];
+const SIDO_OPTIONS = [{ value: REGION_ALL, label: "전체 시/도" }, ...SIDO.map((s) => ({ value: s.code, label: s.name }))];
+const DISTRICT_ALL = "";
+
+function districtOptions(region: string | undefined) {
+  const districts = region ? (DISTRICTS[region] ?? []) : [];
+  return [{ value: DISTRICT_ALL, label: "전체 시/군/구" }, ...districts.map((d) => ({ value: d.code, label: d.name }))];
+}
 
 const STATUS_OPTIONS = [
   { value: "protected", label: "보호중" },
@@ -95,12 +101,22 @@ export function AnimalFilterSheet({ filter }: { filter: AnimalListFilter }) {
         </Section>
 
         <Section label="지역">
-          <NativeSelect
-            label="지역"
-            options={REGION_OPTIONS}
-            value={draft.region ?? REGION_ALL}
-            onChange={(value) => update({ region: value === REGION_ALL ? undefined : value })}
-          />
+          {/* 2단계: 시도를 바꾸면 시군구는 "전체"로 돌아간다. 전국이거나 시군구가 없는 시도(세종)면 시군구는 비활성 */}
+          <div className="flex flex-col gap-2">
+            <NativeSelect
+              label="시/도"
+              options={SIDO_OPTIONS}
+              value={draft.region ?? REGION_ALL}
+              onChange={(value) => update({ region: value === REGION_ALL ? undefined : value, district: undefined })}
+            />
+            <NativeSelect
+              label="시/군/구"
+              options={districtOptions(draft.region)}
+              value={draft.district ?? DISTRICT_ALL}
+              disabled={!draft.region || (DISTRICTS[draft.region]?.length ?? 0) === 0}
+              onChange={(value) => update({ district: value === DISTRICT_ALL ? undefined : value })}
+            />
+          </div>
         </Section>
 
         <Section label="보호 상태">

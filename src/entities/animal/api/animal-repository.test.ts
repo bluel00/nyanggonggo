@@ -47,6 +47,15 @@ describe("createAnimalRepository", () => {
       expect(page.items[1].status).toBe("ended");
     });
 
+    it("district는 region과 함께 보내고, region이 없으면 보내지 않는다", async () => {
+      const { fetch, repository } = setup({ items: [], nextCursor: null });
+      await repository.getAnimals({ species: "cat", region: "6110000", district: "3000000", status: "protected", sort: "latest" });
+      await repository.getAnimals({ species: "cat", district: "3000000", status: "protected", sort: "latest" });
+      const [first, second] = fetch.mock.calls.map(([input]) => new URL(input, "http://localhost"));
+      expect(first.searchParams.get("district")).toBe("3000000");
+      expect(second.searchParams.has("district")).toBe(false);
+    });
+
     it("region과 cursor가 없으면 보내지 않는다", async () => {
       const { repository, requested } = setup({ items: [], nextCursor: null });
       await repository.getAnimals({ species: "dog", status: "protected", sort: "latest" });
