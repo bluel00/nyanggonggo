@@ -1,1 +1,94 @@
 @import "tailwindcss";
+
+/* ── 디자인 토큰: docs/design/tokens.css 그대로(수정하지 않는다) ── */
+:root,[data-theme="light"]{--bg:#FFFFFF;--canvas:#F5F5F5;--text:#111111;--text-2:#666666;--border:#EEEEEE;--control-border:#8A8A8A;--on-text:#FFFFFF;--status-protected:#2E9F6B;--status-protected-bg:#E6F6EE;--status-protected-text:#1F7A50;--status-soon:#F08A24;--status-soon-bg:#FDF0E1;--status-soon-text:#A85508;--status-ended:#8A8A8A;--status-ended-bg:#EFEFEF;--status-ended-text:#666666;--photo-pill:rgba(255,255,255,0.9);--kakao:#FEE500;--on-kakao:#191919;--viewer-bg:#000000;--on-viewer:#FFFFFF;--text-disabled:#A3A3A3;--disabled-bg:#EEEEEE;--focus-ring:#111111;}
+:root{--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-6:24px;--touch:44px;--frame-w:390px;--column-max:480px;--safe-top:47px;--safe-bottom:34px;--radius-card:16px;--radius-control:12px;--radius-pill:999px;--press-duration:100ms;--sheet-duration:250ms;--ease-out:cubic-bezier(0, 0, 0.2, 1);--press-scale:0.98;--font-sans:"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;}
+.title{font-family:var(--font-sans);font-size:20px;line-height:28px;font-weight:700;}
+.card-title{font-family:var(--font-sans);font-size:16px;line-height:24px;font-weight:600;}
+.body{font-family:var(--font-sans);font-size:14px;line-height:20px;font-weight:400;}
+.caption{font-family:var(--font-sans);font-size:12px;line-height:16px;font-weight:400;}
+.badge{font-family:var(--font-sans);font-size:12px;line-height:16px;font-weight:600;}
+/* ── 토큰 끝 ── */
+
+/*
+ * Tailwind v4 매핑(docs/design/handoff.md (a) 표를 CSS-first @theme으로 옮김). 값은 모두 토큰 var()를 참조한다.
+ * 괄호 안의 shadcn 별칭(background, foreground, primary, …)도 같은 토큰을 가리킨다.
+ * 토큰과 Tailwind 테마 변수 이름이 같은 항목(--radius-card, --radius-control, --radius-pill, --font-sans, --ease-out)은
+ * 위의 레이어 밖 토큰 선언이 @layer theme보다 우선하므로 토큰 값이 쓰인다.
+ * 라이트 모드만 다룬다.
+ */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-background: var(--bg);
+  --color-canvas: var(--canvas);
+  --color-text: var(--text);
+  --color-foreground: var(--text);
+  --color-primary: var(--text);
+  --color-on-text: var(--on-text);
+  --color-primary-foreground: var(--on-text);
+  --color-text-2: var(--text-2);
+  --color-muted-foreground: var(--text-2);
+  --color-border: var(--border);
+  --color-control-border: var(--control-border);
+  --color-input: var(--control-border);
+
+  --color-status-protected: var(--status-protected);
+  --color-status-protected-bg: var(--status-protected-bg);
+  --color-status-protected-text: var(--status-protected-text);
+  --color-status-soon: var(--status-soon);
+  --color-status-soon-bg: var(--status-soon-bg);
+  --color-status-soon-text: var(--status-soon-text);
+  --color-status-ended: var(--status-ended);
+  --color-status-ended-bg: var(--status-ended-bg);
+  --color-status-ended-text: var(--status-ended-text);
+
+  --color-photo-pill: var(--photo-pill);
+  --color-kakao: var(--kakao);
+  --color-kakao-fg: var(--on-kakao);
+  --color-viewer-bg: var(--viewer-bg);
+  --color-viewer-fg: var(--on-viewer);
+  --color-disabled-text: var(--text-disabled);
+  --color-disabled-bg: var(--disabled-bg);
+  --color-ring: var(--focus-ring);
+
+  --radius-card: var(--radius-card);
+  --radius-control: var(--radius-control);
+  --radius-pill: var(--radius-pill);
+
+  --spacing-feed-gap: var(--space-3);
+  --spacing-page: var(--space-4);
+  --spacing-touch: var(--touch);
+
+  --container-column: var(--column-max);
+
+  --ease-out: var(--ease-out);
+  --font-sans: var(--font-sans);
+
+  /* Type scale: 값은 tokens.css의 .title/.card-title/.body/.caption/.badge와 같다 */
+  --text-title: 20px;
+  --text-title--line-height: 28px;
+  --text-title--font-weight: 700;
+  --text-card-title: 16px;
+  --text-card-title--line-height: 24px;
+  --text-card-title--font-weight: 600;
+  --text-body: 14px;
+  --text-body--line-height: 20px;
+  --text-body--font-weight: 400;
+  --text-caption: 12px;
+  --text-caption--line-height: 16px;
+  --text-caption--font-weight: 400;
+  --text-badge: 12px;
+  --text-badge--line-height: 16px;
+  --text-badge--font-weight: 600;
+}
+
+/* Tailwind v4에 이름 있는 duration/scale 테마 키가 없어 유틸리티로 둔다(handoff: transitionDuration.press/sheet, scale.press) */
+@utility duration-press {
+  transition-duration: var(--press-duration);
+}
+@utility duration-sheet {
+  transition-duration: var(--sheet-duration);
+}
+@utility scale-press {
+  scale: var(--press-scale);
+}
