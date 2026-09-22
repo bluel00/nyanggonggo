@@ -16,6 +16,7 @@ import { cn } from "@/shared/lib/utils";
 import { scrollAppToTop } from "@/shared/ui/app-column";
 import { Button } from "@/shared/ui/button";
 import { ImageCarousel } from "./image-carousel";
+import { ImageViewer } from "./image-viewer";
 
 const STATUS_TEXT = {
   protected: "text-status-protected-text",
@@ -34,6 +35,8 @@ export function AnimalDetail({ id }: { id: string }) {
   const [now] = useState(() => new Date());
   // 메인 사진의 현재 위치. 뷰어를 닫으면 뷰어의 마지막 위치로 맞춘다
   const [photoIndex, setPhotoIndex] = useState(0);
+  // 열린 뷰어의 시작 위치. null이면 닫힘
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const goBack = useGoBack();
 
   // 내부 스크롤 컨테이너는 화면을 옮겨도 유지되므로 상세 진입 시 맨 위로
@@ -77,7 +80,7 @@ export function AnimalDetail({ id }: { id: string }) {
           ended={ended}
           index={photoIndex}
           onIndexChange={setPhotoIndex}
-          onOpen={setPhotoIndex}
+          onOpen={setViewerIndex}
         />
         <div className="absolute top-[calc(var(--space-3)+env(safe-area-inset-top,0px))] left-page">
           <BackButton onClick={goBack} />
@@ -115,6 +118,18 @@ export function AnimalDetail({ id }: { id: string }) {
       >
         <FavoriteButton animalId={animal.id} />
       </div>
+
+      {viewerIndex !== null && (
+        <ImageViewer
+          images={animal.images}
+          alt={alt}
+          initialIndex={viewerIndex}
+          onClose={(lastIndex) => {
+            setPhotoIndex(lastIndex);
+            setViewerIndex(null);
+          }}
+        />
+      )}
     </article>
   );
 }

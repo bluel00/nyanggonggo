@@ -105,6 +105,32 @@ describe("AnimalDetail", () => {
     expect(screen.getByText("성별 미상 · 나이 미상")).toBeTruthy();
   });
 
+  it("사진을 탭하면 뷰어가 열리고, 닫으면 메인 사진이 뷰어의 마지막 위치로 간다", async () => {
+    const images = [1, 2, 3].map((n) => `http://openapi.animal.go.kr/openapi/files/${n}.jpg`);
+    fetchMock.mockResolvedValue(Response.json(wire({ images })));
+    const { container } = renderDetail();
+    await screen.findByRole("heading");
+
+    fireEvent.click(screen.getByRole("button", { name: "사진 크게 보기 (2/3)" }));
+    expect(screen.getByRole("dialog", { name: "사진 크게 보기" })).toBeTruthy();
+    expect(screen.getByText("2/3")).toBeTruthy();
+
+    const viewerTrack = document.querySelector<HTMLElement>('[data-slot="image-viewer"] > div')!;
+    Object.defineProperty(viewerTrack, "clientWidth", { configurable: true, value: 390 });
+    Object.defineProperty(viewerTrack, "scrollLeft", { configurable: true, writable: true, value: 780 });
+    fireEvent.scroll(viewerTrack);
+
+    const carousel = container.querySelector<HTMLElement>('[data-slot="image-carousel"]')!;
+    Object.defineProperty(carousel, "clientWidth", { configurable: true, value: 390 });
+    carousel.scrollTo = vi.fn();
+    fireEvent.click(screen.getByRole("button", { name: "닫기" }));
+
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(carousel.scrollTo).toHaveBeenCalledWith({ left: 780 });
+    const dots = [...container.querySelectorAll('[data-slot="carousel-dots"] span')].map((d) => d.getAttribute("data-current"));
+    expect(dots).toEqual(["false", "false", "true"]);
+  });
+
   it("오류면 문구와 [뒤로가기]", async () => {
     fetchMock.mockResolvedValue(
       Response.json({ error: { code: "upstream_error", message: "공고 정보를 불러오지 못했어요." } }, { status: 502 }),
