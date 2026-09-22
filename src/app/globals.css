@@ -92,3 +92,11 @@
 @utility scale-press {
   scale: var(--press-scale);
 }
+
+/* 컬럼 밖과 오버스크롤 영역도 canvas로 보이게 한다 */
+@layer base {
+  html {
+    background-color: var(--canvas);
+    color: var(--text);
+  }
+}
