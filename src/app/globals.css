@@ -35,6 +35,17 @@
   --color-control-border: var(--control-border);
   --color-input: var(--control-border);
 
+  /* handoff 매핑표에 없는 shadcn 색. 토큰 원본(tokens.css)은 바꾸지 않고 여기서만 연결한다 */
+  --color-card: var(--bg);
+  --color-card-foreground: var(--text);
+  --color-popover: var(--bg);
+  --color-popover-foreground: var(--text);
+  --color-accent: var(--border);
+  --color-accent-foreground: var(--text);
+  /* 디자인 미정, 실제 사용 시 확인 필요: Tailwind 기본 red-600 / red-50 값을 임시로 둔다 */
+  --color-destructive: oklch(57.7% 0.245 27.325);
+  --color-destructive-foreground: oklch(97.1% 0.013 17.38);
+
   --color-status-protected: var(--status-protected);
   --color-status-protected-bg: var(--status-protected-bg);
   --color-status-protected-text: var(--status-protected-text);
