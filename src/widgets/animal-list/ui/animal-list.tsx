@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { AnimalCard, SPECIES_LABEL, useAnimalsInfinite, type AnimalListFilter } from "@/entities/animal";
 import { FavoriteButton } from "@/features/animal-favorite";
-import { scrollAppToTop } from "@/shared/ui/app-column";
+import { scrollAppToTop, useAppScrollRestoration } from "@/shared/ui/app-column";
 import { Button } from "@/shared/ui/button";
 import { SkeletonCard } from "@/shared/ui/skeleton-card";
 
@@ -25,6 +25,8 @@ export function AnimalList({ filter }: { filter: AnimalListFilter }) {
   const species = SPECIES_LABEL[filter.species];
 
   useScrollTopOnFilterChange(filter);
+  // 상세에서 뒤로 오면 캐시된 페이지(같은 쿼리 키)와 함께 스크롤 위치를 되살린다
+  useAppScrollRestoration(filterKey(filter), query.isSuccess);
   const sentinelRef = useLoadMore({
     enabled: query.hasNextPage && !query.isFetchingNextPage && !query.isFetchNextPageError,
     onLoadMore: () => void query.fetchNextPage(),
@@ -63,6 +65,7 @@ export function AnimalList({ filter }: { filter: AnimalListFilter }) {
           animal={animal}
           now={now}
           priority={index < EAGER_CARDS}
+          href={`/animals/${animal.id}`}
           action={<FavoriteButton animalId={animal.id} variant="overlay" />}
         />
       ))}
@@ -120,8 +123,12 @@ function useLoadMore({ enabled, onLoadMore }: { enabled: boolean; onLoadMore: ()
 }
 
 /** 필터가 바뀌면 내부 스크롤 컨테이너를 맨 위로(첫 렌더는 제외) */
+function filterKey(filter: AnimalListFilter): string {
+  return `${filter.species}|${filter.region ?? ""}|${filter.district ?? ""}|${filter.status}|${filter.sort}`;
+}
+
 function useScrollTopOnFilterChange(filter: AnimalListFilter) {
-  const key = `${filter.species}|${filter.region ?? ""}|${filter.district ?? ""}|${filter.status}|${filter.sort}`;
+  const key = filterKey(filter);
   const previous = useRef(key);
   useEffect(() => {
     if (previous.current === key) return;

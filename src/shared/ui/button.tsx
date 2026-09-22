@@ -18,6 +18,9 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         link: "text-primary underline-offset-4 hover:underline",
+        /** 사진 위 아이콘 버튼(bundle.css .cn-btn--overlay). size="icon-touch"와 함께 쓴다 */
+        overlay:
+          "rounded-pill bg-photo-pill text-text transition-transform duration-press ease-out active:not-disabled:scale-press active:not-disabled:bg-bg focus-visible:border-transparent focus-visible:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
         /** 디자인 Primary(bundle.css .cn-btn--primary). size="touch"와 함께 쓴다 */
         primary:
           "rounded-pill bg-primary text-primary-foreground transition-transform duration-press ease-out active:not-disabled:scale-press active:not-disabled:bg-black focus-visible:border-transparent focus-visible:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:bg-disabled-bg disabled:text-disabled-text disabled:opacity-100",
@@ -36,6 +39,8 @@ const buttonVariants = cva(
         "icon-lg": "size-9",
         /** 44px 터치 높이, 좌우 24px, card-title 글자(bundle.css .cn-btn) */
         touch: "min-h-touch gap-1 px-6 text-card-title",
+        /** 44x44 아이콘 버튼 */
+        "icon-touch": "size-touch [&_svg:not([class*='size-'])]:size-[22px]",
       },
     },
     defaultVariants: {

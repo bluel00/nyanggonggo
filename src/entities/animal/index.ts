@@ -15,5 +15,6 @@ export {
   type AnimalListFilter,
 } from "./api/queries";
 export { AnimalCard } from "./ui/animal-card";
+export { AnimalPhoto } from "./ui/animal-photo";
 export { StatusBadge, statusBadgeText } from "./ui/status-badge";
-export { SPECIES_LABEL } from "./ui/labels";
+export { SEX_LABEL, SPECIES_LABEL } from "./ui/labels";
