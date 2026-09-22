@@ -8,9 +8,9 @@ const html = renderToStaticMarkup(
   </AppShell>,
 );
 
-/** 렌더 결과의 div class 목록(바깥 → 컬럼 순) */
+/** 렌더 결과의 div class 목록(바깥 → 컬럼 → 스크롤 순) */
 const classLists = [...html.matchAll(/<div[^>]*class="([^"]*)"/g)].map((m) => m[1].split(" "));
-const [outer, column] = classLists;
+const [outer, column, scroll] = classLists;
 
 describe("AppShell", () => {
   it("바깥은 뷰포트 높이의 canvas 배경", () => {
@@ -22,12 +22,13 @@ describe("AppShell", () => {
     expect(html).toContain('data-slot="app-column"');
   });
 
-  it("컬럼이 absolute/sticky 요소의 기준(position: relative)이고 fixed를 쓰지 않는다", () => {
-    expect(column).toContain("relative");
+  it("컬럼은 화면 높이로 고정되고(h-dvh, overflow-hidden) absolute 요소의 기준(relative)이며 fixed를 쓰지 않는다", () => {
+    expect(column).toEqual(expect.arrayContaining(["relative", "h-dvh", "overflow-hidden"]));
     expect(classLists.flat()).not.toContain("fixed");
   });
 
-  it("children을 컬럼 안에 그린다", () => {
-    expect(html).toMatch(/data-slot="app-column"[^>]*><p>내용<\/p><\/div>/);
+  it("스크롤은 컬럼 안쪽 app-scroll이 맡고 children은 그 안에 그린다", () => {
+    expect(scroll).toEqual(expect.arrayContaining(["flex-1", "overflow-y-auto"]));
+    expect(html).toMatch(/data-slot="app-scroll"[^>]*><p>내용<\/p><\/div>/);
   });
 });
