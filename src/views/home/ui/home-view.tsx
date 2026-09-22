@@ -1,4 +1,5 @@
 import type { AnimalListFilter } from "@/entities/animal";
+import { FavoritesLink } from "@/features/animal-favorite";
 import { AnimalFilterSheet } from "@/features/animal-filter";
 import { AnimalList, AnimalListHeader } from "@/widgets/animal-list";
 
@@ -6,7 +7,15 @@ import { AnimalList, AnimalListHeader } from "@/widgets/animal-list";
 export function HomeView({ filter }: { filter: AnimalListFilter }) {
   return (
     <main>
-      <AnimalListHeader species={filter.species} actions={<AnimalFilterSheet filter={filter} />} />
+      <AnimalListHeader
+        species={filter.species}
+        actions={
+          <>
+            <FavoritesLink />
+            <AnimalFilterSheet filter={filter} />
+          </>
+        }
+      />
       <AnimalList filter={filter} />
     </main>
   );

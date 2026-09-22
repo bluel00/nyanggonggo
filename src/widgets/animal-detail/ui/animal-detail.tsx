@@ -1,7 +1,5 @@
 "use client";
 
-import { ChevronLeft } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   getDDay,
@@ -15,6 +13,7 @@ import { FavoriteButton } from "@/features/animal-favorite";
 import { ShareButton } from "@/features/animal-share";
 import { cn } from "@/shared/lib/utils";
 import { scrollAppToTop } from "@/shared/ui/app-column";
+import { BackButton, useGoBack } from "@/shared/ui/back-button";
 import { Button } from "@/shared/ui/button";
 import { ImageCarousel } from "./image-carousel";
 import { ImageViewer } from "./image-viewer";
@@ -136,14 +135,6 @@ export function AnimalDetail({ id }: { id: string }) {
   );
 }
 
-function BackButton({ onClick, className }: { onClick: () => void; className?: string }) {
-  return (
-    <Button variant="overlay" size="icon-touch" aria-label="뒤로가기" onClick={onClick} className={className}>
-      <ChevronLeft aria-hidden strokeWidth={1.8} />
-    </Button>
-  );
-}
-
 /** 명세 7.1: 상단 이미지 영역 + 텍스트 줄 스켈레톤(움직임 없음) */
 function DetailSkeleton() {
   return (
@@ -156,16 +147,4 @@ function DetailSkeleton() {
       </div>
     </div>
   );
-}
-
-/**
- * 뒤로가기. 앱 안에서 들어왔으면(history가 있으면) 이전 화면으로, 링크로 바로 열었으면 목록으로.
- * 외부 사이트에서 같은 탭으로 들어온 경우까지 구분하지는 않는다(12절).
- */
-function useGoBack() {
-  const router = useRouter();
-  return () => {
-    if (window.history.length > 1) router.back();
-    else router.push("/");
-  };
 }
