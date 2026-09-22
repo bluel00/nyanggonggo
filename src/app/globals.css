@@ -129,6 +129,11 @@
   scale: var(--press-scale);
 }
 
+/* 하단 CTA 바가 있는 화면에서는 토스트를 CTA 위로 올린다(handoff 화면 6: touch + space-3 × 3 + safe area) */
+[data-slot="app-column"]:has([data-slot="bottom-cta"]) {
+  --toast-offset: calc(var(--touch) + var(--space-3) * 3);
+}
+
 /* 컬럼 밖과 오버스크롤 영역도 canvas로 보이게 한다 */
 @layer base {
   html {

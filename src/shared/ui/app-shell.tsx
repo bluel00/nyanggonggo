@@ -11,7 +11,7 @@ import type { ReactNode } from "react";
 export const APP_COLUMN_SELECTOR = '[data-slot="app-column"]';
 export const APP_SCROLL_SELECTOR = '[data-slot="app-scroll"]';
 
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell({ children, overlay }: { children: ReactNode; overlay?: ReactNode }) {
   return (
     <div className="min-h-dvh bg-canvas">
       <div
@@ -21,6 +21,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div data-slot="app-scroll" className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
           {children}
         </div>
+        {/* 스크롤 영역 밖, 컬럼 안: 토스트 등 컬럼 기준 absolute 요소 */}
+        {overlay}
       </div>
     </div>
   );
