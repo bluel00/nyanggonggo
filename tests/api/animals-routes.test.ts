@@ -62,6 +62,14 @@ describe("GET /api/animals", () => {
     expect(upstreamFetch).not.toHaveBeenCalled();
   });
 
+  it("region과 district를 upr_cd, org_cd로 전달한다. district만 있으면 400", async () => {
+    await getList(req("/api/animals?region=6110000&district=3000000"));
+    const url = new URL(String(upstreamFetch.mock.calls[0][0]));
+    expect(url.searchParams.get("upr_cd")).toBe("6110000");
+    expect(url.searchParams.get("org_cd")).toBe("3000000");
+    expect((await getList(req("/api/animals?district=3000000"))).status).toBe(400);
+  });
+
   it("잘못된 커서는 400", async () => {
     expect((await getList(req("/api/animals?cursor=!!"))).status).toBe(400);
   });

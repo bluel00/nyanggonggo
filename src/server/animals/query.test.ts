@@ -27,6 +27,15 @@ describe("parseListQuery", () => {
     });
   });
 
+  it("district는 region과 함께 받는다", () => {
+    expect(parseListQuery(qs("region=6110000&district=3000000"))).toMatchObject({ region: "6110000", district: "3000000" });
+  });
+
+  it("district만 있으면 InvalidRequestError, district도 숫자만", () => {
+    expect(() => parseListQuery(qs("district=3000000"))).toThrow(InvalidRequestError);
+    expect(() => parseListQuery(qs("region=6110000&district=jongno"))).toThrow(InvalidRequestError);
+  });
+
   it("status=all을 받는다(architecture.md 10절)", () => {
     expect(parseListQuery(qs("status=all")).status).toBe("all");
   });

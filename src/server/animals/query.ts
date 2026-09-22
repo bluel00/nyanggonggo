@@ -4,16 +4,21 @@ import type { AnimalListParams } from "./service";
 
 /**
  * 요청 파라미터 검증. 빈 문자열은 값이 없는 것으로 본다.
- * region(시도 코드)과 id(desertionNo)의 형식은 검증되지 않아 숫자 문자열만 확인한다(architecture.md 12절).
+ * region(시도 코드), district(시군구 코드), id(desertionNo)는 숫자 문자열만 확인한다(architecture.md 12절).
+ * district는 region과 함께만 받는다(시군구만 오면 400).
  */
 const DIGITS = /^\d{1,32}$/;
 
 const ListQuerySchema = z.object({
   species: z.enum(["cat", "dog"]).default("cat"),
   region: z.string().regex(DIGITS).optional(),
+  district: z.string().regex(DIGITS).optional(),
   status: z.enum(["protected", "ended", "all"]).default("protected"),
   sort: z.enum(["latest", "endingSoon"]).default("latest"),
   cursor: z.string().max(64).optional(),
+}).refine((query) => query.district === undefined || query.region !== undefined, {
+  path: ["district"],
+  message: "district requires region",
 });
 
 const IdSchema = z.string().regex(DIGITS);
@@ -22,6 +27,7 @@ export function parseListQuery(searchParams: URLSearchParams): AnimalListParams 
   const result = ListQuerySchema.safeParse({
     species: read(searchParams, "species"),
     region: read(searchParams, "region"),
+    district: read(searchParams, "district"),
     status: read(searchParams, "status"),
     sort: read(searchParams, "sort"),
     cursor: read(searchParams, "cursor"),

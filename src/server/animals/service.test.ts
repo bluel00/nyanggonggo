@@ -64,6 +64,12 @@ describe("list: 상태 필터", () => {
     expect(source.list).toHaveBeenNthCalledWith(1, { species: "cat", uprCd: "6260000" });
     expect(source.list).toHaveBeenNthCalledWith(2, { species: "cat", uprCd: "all" });
   });
+
+  it("district는 소스 키의 orgCd로 전달한다", async () => {
+    const source = fakeSource();
+    await service(source).list(params({ region: "6110000", district: "3000000" }));
+    expect(source.list).toHaveBeenCalledWith({ species: "cat", uprCd: "6110000", orgCd: "3000000" });
+  });
 });
 
 describe("list: 정렬", () => {

@@ -60,11 +60,13 @@ export type UpstreamListParams = {
   species: AnimalWireDto["species"];
   /** 시도 코드. 없으면 전체 */
   uprCd?: string;
+  /** 시군구 코드. 없으면 시도 전체 */
+  orgCd?: string;
 };
 
 export type UpstreamClient = {
   /**
-   * (upkind, upr_cd) 조합의 전체 목록. 첫 페이지로 totalCount를 얻은 뒤 나머지 페이지를
+   * (upkind, upr_cd, org_cd) 조합의 전체 목록. 첫 페이지로 totalCount를 얻은 뒤 나머지 페이지를
    * 동시성 상한 안에서 병렬로 받는다. 한 페이지라도 실패하면 전체가 실패한다.
    */
   fetchAll(params: UpstreamListParams): Promise<UpstreamAnimalItemDto[]>;
@@ -104,11 +106,12 @@ export function createUpstreamClient(options: UpstreamClientOptions): UpstreamCl
     return page;
   }
 
-  async function fetchAll({ species, uprCd }: UpstreamListParams) {
+  async function fetchAll({ species, uprCd, orgCd }: UpstreamListParams) {
     const base: Record<string, string> = {
       upkind: UPKIND_BY_SPECIES[species],
       numOfRows: String(options.pageSize),
       ...(uprCd ? { upr_cd: uprCd } : {}),
+      ...(uprCd && orgCd ? { org_cd: orgCd } : {}),
     };
 
     const fetchPageNo = (pageNo: number) => fetchPage({ ...base, pageNo: String(pageNo) });
@@ -141,6 +144,7 @@ export function createUpstreamClient(options: UpstreamClientOptions): UpstreamCl
       logger.warn("upstream max pages reached, list truncated", {
         species,
         uprCd: uprCd ?? "all",
+        orgCd: orgCd ?? "all",
         maxPages: options.maxPages,
         collected: raw.length,
       });
@@ -148,7 +152,7 @@ export function createUpstreamClient(options: UpstreamClientOptions): UpstreamCl
 
     const { items, skippedCount } = parseUpstreamItems(raw, logger);
     if (skippedCount > 0) {
-      logger.warn("upstream items skipped", { species, uprCd: uprCd ?? "all", skippedCount });
+      logger.warn("upstream items skipped", { species, uprCd: uprCd ?? "all", orgCd: orgCd ?? "all", skippedCount });
     }
     return items;
   }

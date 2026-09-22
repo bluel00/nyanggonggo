@@ -142,6 +142,17 @@ describe("upstream client fetchAll", () => {
     expect(url.searchParams.has("state")).toBe(false);
   });
 
+  it("org_cd: 시도와 함께면 보내고, 시도 없이 오면 보내지 않는다", async () => {
+    const fetch = fakeUpstream(items, 10);
+    // 한 번에 1페이지로 끝나도록 pageSize를 넉넉히 둔다
+    await client(fetch, { pageSize: 10 }).fetchAll({ species: "cat", uprCd: "6110000", orgCd: "3000000" });
+    await client(fetch, { pageSize: 10 }).fetchAll({ species: "cat", orgCd: "3000000" });
+    const [withSido, withoutSido] = requestedUrls(fetch);
+    expect(withSido.searchParams.get("upr_cd")).toBe("6110000");
+    expect(withSido.searchParams.get("org_cd")).toBe("3000000");
+    expect(withoutSido.searchParams.has("org_cd")).toBe(false);
+  });
+
   it("upr_cd가 없으면 파라미터를 보내지 않고, cat은 upkind 422400", async () => {
     const fetch = fakeUpstream(items, 10);
     await client(fetch).fetchAll({ species: "cat" });

@@ -10,7 +10,10 @@ import { InvalidRequestError, NotFoundError } from "./errors";
 
 export type AnimalListParams = {
   species: AnimalWireDto["species"];
+  /** 시도 코드(upr_cd) */
   region?: string;
+  /** 시군구 코드(org_cd). region과 함께만 온다 */
+  district?: string;
   status: AnimalWireDto["status"] | "all";
   sort: "latest" | "endingSoon";
   cursor?: string;
@@ -31,9 +34,9 @@ export type AnimalService = {
 
 export function createAnimalService(source: AnimalSource, options: AnimalServiceOptions): AnimalService {
   return {
-    async list({ species, region, status, sort, cursor }) {
+    async list({ species, region, district, status, sort, cursor }) {
       const offset = cursor === undefined ? 0 : decodeCursor(cursor);
-      const all = await source.list({ species, uprCd: region ?? "all" });
+      const all = await source.list({ species, uprCd: region ?? "all", ...(district ? { orgCd: district } : {}) });
 
       const today = kstYmd(options.now());
       const sorted = all

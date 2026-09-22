@@ -29,6 +29,15 @@ describe("createUpstreamAnimalSource", () => {
     expect(upstream.fetchAll).toHaveBeenNthCalledWith(2, { species: "dog", uprCd: "6260000" });
   });
 
+  it("list: orgCd는 시도가 있을 때만 전달하고, 시도 전체(all)에는 붙이지 않는다", async () => {
+    const upstream = fakeUpstream();
+    const source = createUpstreamAnimalSource(upstream);
+    await source.list({ species: "cat", uprCd: "6110000", orgCd: "3000000" });
+    await source.list({ species: "cat", uprCd: "all", orgCd: "3000000" });
+    expect(upstream.fetchAll).toHaveBeenNthCalledWith(1, { species: "cat", uprCd: "6110000", orgCd: "3000000" });
+    expect(upstream.fetchAll).toHaveBeenNthCalledWith(2, { species: "cat", uprCd: undefined });
+  });
+
   it("list: species를 판정할 수 없는 item은 빼고 로그를 남긴다", async () => {
     const logger = { warn: vi.fn() };
     const upstream = fakeUpstream({

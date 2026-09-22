@@ -12,8 +12,13 @@ export function createUpstreamAnimalSource(
   logger: Logger = noopLogger,
 ): AnimalSource {
   return {
-    async list({ species, uprCd }) {
-      const dtos = await upstream.fetchAll({ species, uprCd: uprCd === "all" ? undefined : uprCd });
+    async list({ species, uprCd, orgCd }) {
+      const dtos = await upstream.fetchAll({
+        species,
+        uprCd: uprCd === "all" ? undefined : uprCd,
+        // 시도 전체(all)에는 시군구를 붙이지 않는다
+        ...(uprCd !== "all" && orgCd ? { orgCd } : {}),
+      });
       return dtos.flatMap((dto) => mapUpstreamItem(dto, { logger }) ?? []);
     },
 
