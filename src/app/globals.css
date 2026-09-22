@@ -113,11 +113,16 @@
   --text-badge--font-weight: 600;
 }
 
-/* Tailwind v4에 이름 있는 duration/scale 테마 키가 없어 유틸리티로 둔다(handoff: transitionDuration.press/sheet, scale.press) */
+/*
+ * Tailwind v4에 이름 있는 duration/scale 테마 키가 없어 유틸리티로 둔다(handoff: transitionDuration.press/sheet, scale.press).
+ * --tw-duration도 함께 설정해 tw-animate-css의 animate-in/out도 같은 시간을 쓴다.
+ */
 @utility duration-press {
+  --tw-duration: var(--press-duration);
   transition-duration: var(--press-duration);
 }
 @utility duration-sheet {
+  --tw-duration: var(--sheet-duration);
   transition-duration: var(--sheet-duration);
 }
 @utility scale-press {

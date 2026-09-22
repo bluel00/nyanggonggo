@@ -10,6 +10,8 @@ const layerImport = (layers) => [
 
 const FSD_FOR_SERVER = "entities|features|widgets|views|shared/ui";
 const SERVER = "server";
+/** 위(views)에서 아래(shared) 순서 */
+const FSD_LAYERS = ["views", "widgets", "features", "entities", "shared"];
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -37,20 +39,33 @@ const eslintConfig = defineConfig([
       ],
     },
   },
-  {
-    files: ["src/{views,widgets,features,entities,shared}/**"],
-    rules: {
-      "no-restricted-imports": [
-        "error",
-        {
-          patterns: layerImport(SERVER).map((p) => ({
-            ...p,
-            message: "FSD 계층은 src/server를 import하지 않는다. 공유는 src/contract만.",
-          })),
-        },
-      ],
-    },
-  },
+  // FSD 계층: src/server 금지 + 계층 방향(views → widgets → features → entities → shared, 아래로만).
+  // 같은 파일에 no-restricted-imports를 두 번 걸면 나중 설정이 덮어쓰므로 계층마다 한 번에 합친다.
+  ...FSD_LAYERS.map((layer, index) => {
+    const upper = FSD_LAYERS.slice(0, index);
+    return {
+      files: [`src/${layer}/**`],
+      rules: {
+        "no-restricted-imports": [
+          "error",
+          {
+            patterns: [
+              ...layerImport(SERVER).map((p) => ({
+                ...p,
+                message: "FSD 계층은 src/server를 import하지 않는다. 공유는 src/contract만.",
+              })),
+              ...(upper.length
+                ? layerImport(upper.join("|")).map((p) => ({
+                    ...p,
+                    message: `FSD 계층 방향 위반: ${layer}는 ${upper.join(", ")}를 import하지 않는다(views → widgets → features → entities → shared).`,
+                  }))
+                : []),
+            ],
+          },
+        ],
+      },
+    };
+  }),
   {
     files: ["src/contract/**"],
     rules: {
