@@ -4,9 +4,7 @@ import { ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
-  AnimalPhoto,
   getDDay,
-  getPrimaryImage,
   getStatusVariant,
   SEX_LABEL,
   SPECIES_LABEL,
@@ -17,6 +15,7 @@ import { FavoriteButton } from "@/features/animal-favorite";
 import { cn } from "@/shared/lib/utils";
 import { scrollAppToTop } from "@/shared/ui/app-column";
 import { Button } from "@/shared/ui/button";
+import { ImageCarousel } from "./image-carousel";
 
 const STATUS_TEXT = {
   protected: "text-status-protected-text",
@@ -33,6 +32,8 @@ const STATUS_TEXT = {
 export function AnimalDetail({ id }: { id: string }) {
   const query = useAnimal(id);
   const [now] = useState(() => new Date());
+  // 메인 사진의 현재 위치. 뷰어를 닫으면 뷰어의 마지막 위치로 맞춘다
+  const [photoIndex, setPhotoIndex] = useState(0);
   const goBack = useGoBack();
 
   // 내부 스크롤 컨테이너는 화면을 옮겨도 유지되므로 상세 진입 시 맨 위로
@@ -70,9 +71,14 @@ export function AnimalDetail({ id }: { id: string }) {
   return (
     <article data-slot="animal-detail" className="flex min-h-full flex-col">
       <div className="relative">
-        <div className="aspect-4/5 bg-status-ended-bg">
-          <AnimalPhoto src={getPrimaryImage(animal)} alt={alt} ended={ended} priority />
-        </div>
+        <ImageCarousel
+          images={animal.images}
+          alt={alt}
+          ended={ended}
+          index={photoIndex}
+          onIndexChange={setPhotoIndex}
+          onOpen={setPhotoIndex}
+        />
         <div className="absolute top-[calc(var(--space-3)+env(safe-area-inset-top,0px))] left-page">
           <BackButton onClick={goBack} />
         </div>
