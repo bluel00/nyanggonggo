@@ -1,11 +1,12 @@
 import { z } from "zod";
+import { ApiErrorResponseSchema, type ApiErrorResponse } from "@/contract/animals";
 import { InvalidRequestError, NotFoundError } from "../animals/errors";
 import { ServerConfigError } from "../config";
 import type { Logger } from "../logger";
 import { UpstreamError } from "../upstream/client";
 
 /**
- * Route Handler 공용 응답. 오류 응답은 `{ error: { code, message } }`로 통일하고,
+ * Route Handler 공용 응답. 오류 응답은 계약 `ApiErrorResponse`(`{ error: { code, message } }`, src/contract)로 통일하고,
  * 메시지에 키, URL, 업스트림 본문, 설정 상세를 넣지 않는다. 상세는 서버 로그에만 남긴다.
  */
 
@@ -26,7 +27,9 @@ export function jsonResponse(body: unknown, cacheControl: string): Response {
 export function errorResponse(error: unknown, logger: Logger): Response {
   const code = classify(error, logger);
   const { status, message } = ERRORS[code];
-  return Response.json({ error: { code, message } }, { status, headers: { "Cache-Control": "no-store" } });
+  // 성공 응답처럼 보내기 직전에 계약으로 검증한다.
+  const body: ApiErrorResponse = ApiErrorResponseSchema.parse({ error: { code, message } });
+  return Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
 }
 
 function classify(error: unknown, logger: Logger): ErrorCode {

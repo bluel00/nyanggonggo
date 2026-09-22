@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
+import { ApiErrorResponseSchema } from "@/contract/animals";
 import { InvalidRequestError, NotFoundError } from "../animals/errors";
 import { ServerConfigError } from "../config";
 import { UpstreamError } from "../upstream/client";
@@ -26,6 +27,7 @@ describe("errorResponse", () => {
     const { response, body } = await run(error);
     expect(response.status).toBe(status);
     expect(body).toEqual({ error: { code, message: expect.any(String) } });
+    expect(ApiErrorResponseSchema.strict().safeParse(body).success).toBe(true);
     expect(response.headers.get("Cache-Control")).toBe("no-store");
   });
 
