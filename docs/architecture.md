@@ -54,6 +54,7 @@ src/
 ## 4. 공공 API 계약
 
 - 서비스: `abandonmentPublicService_v2`, 유기동물 조회 `abandonmentPublic_v2`. 시도 `sido_v2`, 시군구 `sigungu_v2`, 보호소 `shelter_v2`, 품종 `kind_v2`.
+- 지역 코드(확정, 2026-09-22 실측, 12.A P11): 시도 `sido_v2`와 시군구 `sigungu_v2`(`upr_cd`로 조회, 페이지 있음)의 항목은 `orgCd`, `orgdownNm`(시군구는 `uprCd` 포함). 앱은 이 결과를 정적 파일 `src/shared/config/regions.ts`(시도 16, 시군구 237)로 굳혀 쓰며 **런타임에 두 operation을 호출하지 않는다**. 실제 구가 아닌 항목(코드가 시도 코드와 같음, `ddd99dd` 코드, 이름 없음: 19개)은 제외했다. 목록을 바꾸려면 로컬 프로브를 다시 실행해 파일을 다시 만든다(방법은 파일 상단 주석).
 - 확인된 요청 변수: `serviceKey`, `bgnde`/`endde`(구조일), `upkind`(개 417000, 고양이 422400, 기타 429900), `kind`, `upr_cd`(시도), `org_cd`(시군구), `care_reg_no`, `state`(전체=빈값, 공고중=`notice`, 보호중=`protect`), `neuter_yn`, `pageNo`, `numOfRows`(최대 1,000, 기본 10), `_type`(xml 기본, `json` 지원), `bgupd`/`enupd`, `sex_cd`, `rfid_cd`, `desertion_no`, `notice_no`. **정렬 파라미터는 없다.**
 - 규모: 고양이 2,529건(2026-09-21 프로브. 이전 샘플은 고양이 2,481건, 전체 7,249건). `numOfRows=500`(5절)이면 고양이는 6회 호출이다(첫 페이지 후 나머지 5회를 동시성 3으로 병렬).
 - 기본 정렬은 `desertionNo` 내림차순으로 보인다(두 샘플에서 확인). 시간순이 아니라 지역 코드순으로 뭉쳐 나온다.
@@ -78,7 +79,7 @@ Route Handler (app/api/animals)                       # 얇게: 파싱 → servi
 
 구현 위치: `src/shared/api/http-client.ts`, `src/shared/lib/concurrency.ts`(서버와 클라이언트 공용 동시성 헬퍼), `src/server/{config,logger,mapper}.ts`, `src/server/upstream/{client,extract,parse,dto}.ts`, `src/server/source/*`, `src/server/animals/{service,query,container,errors}.ts`, `src/server/http/respond.ts`, `src/app/api/animals/**`.
 
-- 캐시 키: `(upkind, upr_cd | all)`. `state` 파라미터는 **사용하지 않는다**(`notice`/`protect` 의미가 검증되지 않았고 `종료` 값이 없음). status는 서버에서 `processState`로 판정한다.
+- 캐시 키: `(upkind, upr_cd | all, org_cd | all)`. 요청의 `region`은 `upr_cd`, `district`는 `org_cd`로 보낸다. `district`는 `region`과 함께만 받는다(시군구만 오면 400). 전국(`region` 없음)에는 `upr_cd`/`org_cd`를 보내지 않는다(가짜 코드에 의존하지 않음). `state` 파라미터는 **사용하지 않는다**(`notice`/`protect` 의미가 검증되지 않았고 `종료` 값이 없음). status는 서버에서 `processState`로 판정한다.
 - status 판정: `processState`가 `종료`로 시작하면 `ended`, 그 외는 `protected`. Zod는 `processState`를 enum이 아니라 `string`으로 받는다. 알 수 없는 값은 주입된 로거(`logger.warn`, 기본 no-op)로 남긴다.
 - status 필터: `protected`(기본), `ended`, `all`(10절).
 - 정렬 정의: `latest` = `noticeSdt` 내림차순, 동률이면 `updTm` 내림차순, 그다음 `desertionNo` 내림차순. `endingSoon` = 기준 시각(서비스에 주입하는 clock)의 오늘(KST) 기준으로 `noticeEdt`가 지나지 않은 공고(당일 포함)를 `noticeEdt` 오름차순으로 먼저, 지난 공고를 그 뒤에 `noticeEdt` 내림차순으로 둔다. `noticeEdt`가 `YYYYMMDD` 형식이 아니면 맨 뒤. 동률은 `desertionNo` 오름차순. (보호중인데 종료일이 지난 공고가 42.1%라 단순 오름차순이면 임박순 앞쪽이 지난 공고로 채워진다, 12절.) 정렬 키가 없으면 빈 문자열로 둔다. `sortKeys`는 응답에 넣지 않는다.
@@ -156,7 +157,10 @@ interface AnimalRepository {
   - 적용은 `router.replace`(히스토리를 쌓지 않음, `scroll: false`). URL이 바뀌면 서버 컴포넌트가 새 searchParams로 다시 렌더되고 목록 위젯이 내부 스크롤을 맨 위로 올린다.
   - 필터 시트의 `useState`는 열림 여부와 [적용하기] 전 draft만. 열 때 현재 URL 값으로 채우고 닫으면 버린다.
 - 상세에서 뒤로 왔을 때 목록 복원: TanStack Query 캐시(같은 queryKey = 필터 4종)로 로드된 페이지를 복원하고, 스크롤 위치는 세션 스토리지 등에 저장한다.
-- `region` URL 값은 시도 코드(`upr_cd`). 라벨은 UI에서 매핑. 시군구 필터는 MVP 이후.
+- 지역(확정, 2026-09-22): URL의 `region`은 시도 코드(`upr_cd`), `district`는 시군구 코드(`org_cd`, 선택). 라벨은 정적 목록(`src/shared/config/regions.ts`)에서 매핑한다. 필터 시트는 시도 → 시군구 2단계 select이며 시도를 바꾸면 시군구는 "전체"로 돌아간다.
+  - **기본 지역은 서울특별시/종로구**(`region=6110000`, `district=3000000`). URL에 `region`이 없을 때만 적용한다. 결정: 사용자 지시(단계 3b-2). 효과: 첫 화면이 시군구 단위 수집(가장 작은 캐시 키)으로 시작한다. 위험: 해당 시군구 공고가 적거나 0건이면 첫 화면이 빈 상태가 된다(12절 27).
+  - 전국은 `region=all`로 URL에 남긴다(생략하면 기본 지역이 되므로). `region`만 있으면 그 시도 전체. 목록에 없는 `region`(옛 코드 등)은 기본 지역, 그 시도에 없는 `district`는 버린다.
+  - 기본 지역과 같으면 URL에서 생략한다(기본 상태의 URL은 `/`).
 
 ## 8. 찜
 
@@ -210,6 +214,7 @@ interface AnimalRepository {
 | P8 | 기타 값 | `sexCd` M 1,019 / F 985 / Q 525. `neuterYn` N 1,893 / U 519 / Y 117. `upKindNm` 전부 `고양이` |
 | P9 | 단건 조회 | 종료(안락사) 공고 1건의 `desertion_no` 조회 성공(길이 1 배열, id 일치). 오래된 공고 전반은 미검증 |
 | P10 | 미문서화 필드 | `healthChk`(4.3%), `adptnTitle/adptnSDate/adptnEDate/adptnConditionLimitTxt/adptnTxt/adptnImg`, `srvcTitle/srvcSDate/srvcEDate/srvcConditionLimitTxt/srvcTxt`(각 0.6%), `rfidCd`(0.2%), `etcBigo`(0.1%). DTO에 선언하지 않고 무시한다. 문서의 기본 27개 필드는 2,529건 모두에 있었다 |
+| P11 | 지역 코드(2026-09-22) | `sido_v2` 16건(1페이지): 광주광역시(6290000)와 전라남도(6460000)는 없고 **전남광주통합특별시(6130000)** 하나로 온다. 강원은 강원특별자치도 6530000, 전북은 전북특별자치도 6540000(옛 6420000/6450000 없음). `sigungu_v2`(`upr_cd`) 256건 중 실제 구가 아닌 19건 제외 → 237건. 제외: 시도 자기 자신(16, 세종 5690000 포함 → 세종은 시군구 0), `ddd99dd` 코드(6119999 가정보호, 6119998 서울특별시, 6419998 경기도, 6479998 경상북도), 이름 없음(6489999). 인천은 2026 개편 구(검단구, 서해구, 영종구, 제물포구)가 온다 |
 
 ### 12.B 미확정 목록
 
@@ -235,7 +240,7 @@ interface AnimalRepository {
 13. ~~이미지 URL 인코딩의 이중 인코딩~~ **결정됨**: `encodeURI` 대신 `[` `]`만 `%5B` `%5D`로 치환한다(이미 인코딩된 `%`는 유지, 멱등). 고양이 이미지 URL 5,512개 중 `[` 포함 628개, `%`/공백/비ASCII는 0개(12.A P7)
 14. ~~UpstreamDto 필수 필드 기준~~ **결정됨**: 4절. 고양이 2,529건 모두 문서의 기본 27개 필드가 있어 필수 필드 누락은 없었다(12.A P10)
 15. `resultCode` 오류 판정: 성공은 `"00"`, 0건도 `"00"`(12.A P1, P2). 인증 오류는 `resultCode`가 아니라 HTTP 403 + `OpenAPI_ServiceResponse`로 온다(P3, `reason=auth`로 분류). "코드가 있고 공공데이터포털 공통 오류 코드(`01, 02, 04, 05, 10, 11, 12, 20, 22, 30, 31, 32, 33, 99`)일 때만 오류" 규칙은 유지하지만, 200 응답에 이 코드들이 실제로 오는지는 여전히 미검증. `returnReasonCode` 값 목록도 미검증
-16. `region`(시도 코드 `upr_cd`)과 `id`(`desertionNo`)의 형식: 숫자 문자열(1~32자리)만 검사한다. 필터의 시도 목록(`src/shared/config/regions.ts`, 17개)은 공개 문서 기준이며 `sido_v2` 응답으로 **검증 필요**. 특히 강원(6530000)·전북(6540000)은 특별자치도 전환 뒤 코드로 적었고, 이전 코드(6420000, 6450000)로 오는지 확인해야 한다. 확인 방법: 프로브에서 `sido_v2`(`numOfRows=100`) 1회 호출 후 코드·이름 목록 비교, 각 코드로 `upr_cd` 목록 조회 시 0건이 아닌지 확인
+16. ~~시도 코드 목록 검증~~ **확정됨(2026-09-22 실측, 12.A P11)**: 정적 파일 `src/shared/config/regions.ts`. 서버는 `region`, `district`, `id`의 형식(숫자 문자열 1~32자리)만 검사한다
 17. 오프셋 커서의 밀림: 서버 캐시(재검증 300초)가 갱신되는 사이에 페이지를 넘기면 중복/누락이 생길 수 있다. MVP에서 허용
 18. `Cache-Control`(`s-maxage=60, stale-while-revalidate=300`) 값은 초기값이며 튜닝 필요. CDN 캐시 키에 쿼리스트링이 포함되는지(Vercel) 확인
 19. 최대 페이지 가드(조합당 20페이지, `numOfRows=500`이면 10,000건): 넘으면 잘린 목록을 돌려주고 경고 로그를 남긴다. 고양이 2,529건은 6페이지. 개 규모는 22
@@ -245,3 +250,6 @@ interface AnimalRepository {
 23. 이미지 프록시(`/api/image-proxy`)와 `next/image` 미사용: 카드 이미지는 plain `<img loading="lazy">`가 프록시를 가리킨다. Vercel Image Optimization을 함께 쓰면 최적화 호출과 대역폭 비용이 이중으로 들 수 있어, 지금은 프록시 응답의 CDN 캐시(`SERVER_TUNING.imageProxyCacheControl`: `max-age=86400, s-maxage=604800, stale-while-revalidate=86400`)로 충분하다고 본다. **튜닝 필요**: 원본 이미지 크기(리사이즈 없이 내려받는 바이트), 목록 스크롤 시 데이터 사용량, CDN 적중률을 보고 `next/image`(또는 리사이즈) 도입 여부를 다시 판단. 원본 파일명에 등록 시각이 있어 URL별 내용이 바뀌지 않는다는 가정(긴 캐시의 근거)도 검증 필요
 24. 이미지 프록시 실패 처리와 제약: 원본 4xx/5xx/타임아웃/이미지가 아닌 응답/10MB 초과는 200 + 투명 1x1 PNG(`Cache-Control: no-store`, `X-Image-Proxy: fallback`)로 내려 카드 사진 영역의 배경색이 보이게 한다. 리다이렉트는 따라가지 않는다(`redirect: "error"`). 원본이 정상적으로 리다이렉트하는 경우가 있는지, 실패 비율은 얼마인지 로그로 확인 필요. 사진 없는 공고의 플레이스홀더 디자인은 미정(handoff)
 25. 필터 바텀시트 스와이프 다운 닫기(명세 4.2.1): 미구현. shadcn Sheet(Radix Dialog)에는 제스처가 없다. 배경 탭, 핸들 탭, Esc로 닫는다. 제스처가 필요하면 vaul(shadcn Drawer) 도입(새 의존성) 또는 직접 구현을 결정해야 한다
+26. 지역 코드의 이상 항목: 경남 창원시가 코드 3개(5280000, 5320000, 5670000)로 오고(통합 전 마산·진해 코드로 보임, 추정), 충남에 연기군(4560000, 2012년 세종 편입)이 남아 있다. 정적 목록에는 그대로 두고 창원시는 라벨에 코드를 붙였다. 어느 코드로 공고가 조회되는지(`org_cd`)는 미검증
+27. 기본 지역(서울/종로구) 첫 화면의 공고 수: 종로구 고양이 보호중 공고가 적거나 0건이면 첫 화면이 빈 상태다. 실제 건수 확인 후 기본값이나 빈 상태 문구(예: 지역 넓히기 안내)를 재검토
+28. `org_cd` 필터의 서버 동작: `upr_cd`와 함께 보낸 `org_cd`로 공고가 시군구 단위로 걸러지는지 실측 필요(파라미터 자체는 4절 확인된 요청 변수)
