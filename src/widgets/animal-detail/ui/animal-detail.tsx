@@ -12,6 +12,7 @@ import {
   useAnimal,
 } from "@/entities/animal";
 import { FavoriteButton } from "@/features/animal-favorite";
+import { ShareButton } from "@/features/animal-share";
 import { cn } from "@/shared/lib/utils";
 import { scrollAppToTop } from "@/shared/ui/app-column";
 import { Button } from "@/shared/ui/button";
@@ -117,6 +118,7 @@ export function AnimalDetail({ id }: { id: string }) {
         className="sticky bottom-0 z-10 flex gap-2 border-t border-border bg-bg px-page pt-3 pb-[calc(var(--space-3)+env(safe-area-inset-bottom,0px))]"
       >
         <FavoriteButton animalId={animal.id} />
+        <ShareButton animal={animal} />
       </div>
 
       {viewerIndex !== null && (
