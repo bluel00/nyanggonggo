@@ -2,7 +2,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Animal } from "@/entities/animal";
-import { ShareButton } from "./share-button";
+import { KAKAO_SDK_INTEGRITY, KAKAO_SDK_URL, ShareButton } from "./share-button";
 
 const showToast = vi.fn();
 vi.mock("@/shared/ui/toast", () => ({ showToast: (message: string) => showToast(message) }));
@@ -31,6 +31,13 @@ const animal: Animal = {
   foundPlaceText: null,
   noticePeriodText: null,
 };
+
+describe("카카오 SDK 상수", () => {
+  it("Full SDK(minified) 2.8.3과 sha384 integrity를 함께 둔다", () => {
+    expect(KAKAO_SDK_URL).toBe("https://t1.kakaocdn.net/kakao_js_sdk/2.8.3/kakao.min.js");
+    expect(KAKAO_SDK_INTEGRITY).toBe("sha384-oroumrnFVE0xtgqyDZJARgERibXg2C28380uaUZz2kHDS5CR7tu20eGiOU6GkTpy");
+  });
+});
 
 describe("ShareButton", () => {
   it("키가 없으면(기본값 NEXT_PUBLIC_KAKAO_JS_KEY 미설정) SDK를 불러오지 않고 링크를 복사한다", async () => {

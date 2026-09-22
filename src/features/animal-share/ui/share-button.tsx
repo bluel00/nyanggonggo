@@ -11,10 +11,13 @@ import { shareAnimal, type KakaoSdk } from "../model/share";
 import { buildShareContent } from "../model/share-content";
 
 /**
- * 카카오 JavaScript SDK. 버전과 주소는 카카오 개발자 문서 기준으로 확인이 필요하다(architecture.md 12절).
- * 무결성 해시(integrity)는 확인한 값이 없어 넣지 않았다.
+ * 카카오 JavaScript SDK(Full SDK, minified). 2.8.3으로 고정한다.
+ * integrity는 카카오 개발자 다운로드 페이지의 "integrity 값만 복사"로 받은 값이다(2026-09-22). 재계산하거나 고치지 않는다.
+ * **SDK 버전을 바꾸면 URL과 integrity를 반드시 같이 갱신한다.** 해시가 맞지 않으면 브라우저가 스크립트를 차단하고,
+ * 공유는 조용히 링크 복사로 폴백한다(SRI 오류는 개발자 도구 콘솔에만 보인다).
  */
-export const KAKAO_SDK_URL = "https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js";
+export const KAKAO_SDK_URL = "https://t1.kakaocdn.net/kakao_js_sdk/2.8.3/kakao.min.js";
+export const KAKAO_SDK_INTEGRITY = "sha384-oroumrnFVE0xtgqyDZJARgERibXg2C28380uaUZz2kHDS5CR7tu20eGiOU6GkTpy";
 
 const getKakao = () => (window as unknown as { Kakao?: KakaoSdk }).Kakao;
 
@@ -37,7 +40,15 @@ export function ShareButton({ animal, kakaoKey = KAKAO_JS_KEY }: { animal: Anima
 
   return (
     <>
-      {kakaoKey && <Script id="kakao-sdk" src={KAKAO_SDK_URL} strategy="lazyOnload" crossOrigin="anonymous" />}
+      {kakaoKey && (
+        <Script
+          id="kakao-sdk"
+          src={KAKAO_SDK_URL}
+          integrity={KAKAO_SDK_INTEGRITY}
+          crossOrigin="anonymous"
+          strategy="lazyOnload"
+        />
+      )}
       <button
         type="button"
         onClick={handleClick}
