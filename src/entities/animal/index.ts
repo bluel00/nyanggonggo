@@ -14,3 +14,6 @@ export {
   useAnimalsInfinite,
   type AnimalListFilter,
 } from "./api/queries";
+export { AnimalCard } from "./ui/animal-card";
+export { StatusBadge, statusBadgeText } from "./ui/status-badge";
+export { SPECIES_LABEL } from "./ui/labels";
