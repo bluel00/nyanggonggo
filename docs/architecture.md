@@ -145,11 +145,16 @@ interface AnimalRepository {
 | 종류 | 담당 | 규칙 |
 |---|---|---|
 | 서버 상태(목록, 상세, 찜 목록) | TanStack Query (`useInfiniteQuery` 등) | 다른 저장소나 `useState`로 복사 금지. 가공은 `select` 또는 렌더 시 파생 |
-| 필터/정렬 | URL search params | `species`, `region`, `status`, `sort`만. 기본 `species=cat`, `status=protected`, `sort=latest`. **`page`는 URL에 넣지 않는다**(내부 커서) |
+| 필터/정렬 | URL search params | `species`, `region`, `status`, `sort`만. 기본 `species=cat`, `status=protected`, `sort=latest`. **`page`는 URL에 넣지 않는다**(내부 커서). 구현 규칙은 아래 |
 | 찜 목록 | localStorage + 작은 훅 | id 배열만 저장. 읽을 때 Zod로 검증 |
 | 일시적 UI(필터 시트 draft, 뷰어 index, 토스트) | 컴포넌트 로컬 state | 시트 draft는 [적용하기]에서만 URL 반영, 닫히면 버림 |
 
 - 전역 스토어(Redux, Zustand, Recoil 등)를 도입하지 않는다.
+- URL 필터 구현 규칙(`features/animal-filter/model/filter.ts`, 확정):
+  - 읽기: `app/page.tsx`(서버 컴포넌트)가 searchParams를 파싱해 `views/home`에 넘긴다. 없거나 잘못된 값은 기본값으로 본다(화면은 깨지지 않고, API는 400을 유지).
+  - 쓰기: 기본값과 다른 값만 URL에 넣는다(기본 상태는 `/`). 같은 필터는 같은 URL, 같은 쿼리 키. `page`/`cursor`는 적용 시 지우고, 필터와 무관한 파라미터(예: `utm_*`)는 보존한다.
+  - 적용은 `router.replace`(히스토리를 쌓지 않음, `scroll: false`). URL이 바뀌면 서버 컴포넌트가 새 searchParams로 다시 렌더되고 목록 위젯이 내부 스크롤을 맨 위로 올린다.
+  - 필터 시트의 `useState`는 열림 여부와 [적용하기] 전 draft만. 열 때 현재 URL 값으로 채우고 닫으면 버린다.
 - 상세에서 뒤로 왔을 때 목록 복원: TanStack Query 캐시(같은 queryKey = 필터 4종)로 로드된 페이지를 복원하고, 스크롤 위치는 세션 스토리지 등에 저장한다.
 - `region` URL 값은 시도 코드(`upr_cd`). 라벨은 UI에서 매핑. 시군구 필터는 MVP 이후.
 
@@ -178,7 +183,12 @@ interface AnimalRepository {
 
 `docs/PRD.md`, `docs/기능명세서.md`에 **반영 완료**: 서버 프록시/캐시 MVP 승격, `page` URL 미포함, `status` 기본 `protected`, `region` 시도 코드, 찜 id만 저장, 종료 사유 비노출, 기준 폭 390과 4:5 cover 카드, 토스트 문구 "링크가 복사됐어요", 서버/클라이언트 Domain 분리와 응답 DTO, `pages` → `views`.
 
-명세의 나머지 "결정 필요" 항목(사진 없는 공고, 초기화 버튼, 목록 끝 표시, 카드 내 찜 아이콘)은 미정이다(D-day 지남 정책은 10절에서 결정됨). 이 문서와 문서 간 새 불일치가 생기면 이 절에 적는다.
+명세의 나머지 "결정 필요" 항목(사진 없는 공고, 초기화 버튼, 카드 내 찜 아이콘)은 미정이다(D-day 지남 정책은 10절에서 결정됨).
+
+단계 3b에서 명세와 다르게 구현했거나 명세 옵션을 고른 점:
+- 목록 끝 표시: 명세 4.1.4 옵션 A(표시 없이 로드 중단)
+- 카드 2줄: 명세 4.1.3은 "1줄 이름(없으면 지역명) / 2줄 지역 · 보호소"다. Domain에 이름이 없어 1줄이 지역이 되므로, 2줄은 지역을 반복하지 않고 보호소(없으면 발견 장소)만 둔다
+- 목록 헤더의 찜(하트) 버튼(handoff)은 `/favorites`와 함께 다음 단계에서 넣는다. 카드 클릭 → 상세 링크도 상세 화면과 함께 넣는다(`AnimalCard`의 `href`) 이 문서와 문서 간 새 불일치가 생기면 이 절에 적는다.
 
 ## 12. 미확정 / 스파이크
 
@@ -225,7 +235,7 @@ interface AnimalRepository {
 13. ~~이미지 URL 인코딩의 이중 인코딩~~ **결정됨**: `encodeURI` 대신 `[` `]`만 `%5B` `%5D`로 치환한다(이미 인코딩된 `%`는 유지, 멱등). 고양이 이미지 URL 5,512개 중 `[` 포함 628개, `%`/공백/비ASCII는 0개(12.A P7)
 14. ~~UpstreamDto 필수 필드 기준~~ **결정됨**: 4절. 고양이 2,529건 모두 문서의 기본 27개 필드가 있어 필수 필드 누락은 없었다(12.A P10)
 15. `resultCode` 오류 판정: 성공은 `"00"`, 0건도 `"00"`(12.A P1, P2). 인증 오류는 `resultCode`가 아니라 HTTP 403 + `OpenAPI_ServiceResponse`로 온다(P3, `reason=auth`로 분류). "코드가 있고 공공데이터포털 공통 오류 코드(`01, 02, 04, 05, 10, 11, 12, 20, 22, 30, 31, 32, 33, 99`)일 때만 오류" 규칙은 유지하지만, 200 응답에 이 코드들이 실제로 오는지는 여전히 미검증. `returnReasonCode` 값 목록도 미검증
-16. `region`(시도 코드 `upr_cd`)과 `id`(`desertionNo`)의 형식: 숫자 문자열(1~32자리)만 검사한다. 실제 코드 목록(`sido_v2`)과 자릿수는 미검증
+16. `region`(시도 코드 `upr_cd`)과 `id`(`desertionNo`)의 형식: 숫자 문자열(1~32자리)만 검사한다. 필터의 시도 목록(`src/shared/config/regions.ts`, 17개)은 공개 문서 기준이며 `sido_v2` 응답으로 **검증 필요**. 특히 강원(6530000)·전북(6540000)은 특별자치도 전환 뒤 코드로 적었고, 이전 코드(6420000, 6450000)로 오는지 확인해야 한다. 확인 방법: 프로브에서 `sido_v2`(`numOfRows=100`) 1회 호출 후 코드·이름 목록 비교, 각 코드로 `upr_cd` 목록 조회 시 0건이 아닌지 확인
 17. 오프셋 커서의 밀림: 서버 캐시(재검증 300초)가 갱신되는 사이에 페이지를 넘기면 중복/누락이 생길 수 있다. MVP에서 허용
 18. `Cache-Control`(`s-maxage=60, stale-while-revalidate=300`) 값은 초기값이며 튜닝 필요. CDN 캐시 키에 쿼리스트링이 포함되는지(Vercel) 확인
 19. 최대 페이지 가드(조합당 20페이지, `numOfRows=500`이면 10,000건): 넘으면 잘린 목록을 돌려주고 경고 로그를 남긴다. 고양이 2,529건은 6페이지. 개 규모는 22
@@ -234,3 +244,4 @@ interface AnimalRepository {
 22. 개(`upkind=417000`) 규모와 페이지 수, 페이지 크기: 미측정(이전 샘플 전체 7,249건에서 역산하면 5천 건 미만으로 보이나 추정). 최대 페이지 가드와 수집 시간 확인 필요
 23. 이미지 프록시(`/api/image-proxy`)와 `next/image` 미사용: 카드 이미지는 plain `<img loading="lazy">`가 프록시를 가리킨다. Vercel Image Optimization을 함께 쓰면 최적화 호출과 대역폭 비용이 이중으로 들 수 있어, 지금은 프록시 응답의 CDN 캐시(`SERVER_TUNING.imageProxyCacheControl`: `max-age=86400, s-maxage=604800, stale-while-revalidate=86400`)로 충분하다고 본다. **튜닝 필요**: 원본 이미지 크기(리사이즈 없이 내려받는 바이트), 목록 스크롤 시 데이터 사용량, CDN 적중률을 보고 `next/image`(또는 리사이즈) 도입 여부를 다시 판단. 원본 파일명에 등록 시각이 있어 URL별 내용이 바뀌지 않는다는 가정(긴 캐시의 근거)도 검증 필요
 24. 이미지 프록시 실패 처리와 제약: 원본 4xx/5xx/타임아웃/이미지가 아닌 응답/10MB 초과는 200 + 투명 1x1 PNG(`Cache-Control: no-store`, `X-Image-Proxy: fallback`)로 내려 카드 사진 영역의 배경색이 보이게 한다. 리다이렉트는 따라가지 않는다(`redirect: "error"`). 원본이 정상적으로 리다이렉트하는 경우가 있는지, 실패 비율은 얼마인지 로그로 확인 필요. 사진 없는 공고의 플레이스홀더 디자인은 미정(handoff)
+25. 필터 바텀시트 스와이프 다운 닫기(명세 4.2.1): 미구현. shadcn Sheet(Radix Dialog)에는 제스처가 없다. 배경 탭, 핸들 탭, Esc로 닫는다. 제스처가 필요하면 vaul(shadcn Drawer) 도입(새 의존성) 또는 직접 구현을 결정해야 한다
