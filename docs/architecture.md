@@ -166,13 +166,22 @@ interface AnimalRepository {
 
 - localStorage에는 animal id 배열만 저장한다(확정: 스냅샷 저장 안 함, 진실은 서버 하나).
 - `/favorites` 진입 시 `getAnimalsByIds`로 조회한다. 조회되지 않는 id는 화면에서 제외하고 저장은 유지한다(관찰 후 결정).
+- 구현(확정, 단계 4~6): `features/animal-favorite`. 키 `nyanggonggo:favorites`, 읽을 때 Zod(숫자 문자열 id 배열)로 검증하고 깨진 값은 빈 배열로 본다(다음 쓰기에서 덮는다). 같은 id는 한 번만, 순서는 최근에 찜한 것이 앞. `useSyncExternalStore`로 카드와 상세가 같은 상태를 쓰고 다른 탭의 변경(`storage` 이벤트)도 반영한다. 토글하면 토스트("찜에 저장했어요" / "찜을 해제했어요").
+- 카드에 찜 하트를 둔다(확정, 명세 4.1.3의 결정 필요 항목). 사진 우상단, 링크와 형제 요소로 두어 카드 이동과 겹치지 않는다. 모양은 사진 위 overlay 버튼(photo-pill)을 따랐다(디자인 시안 없음).
+- `/favorites`: 목록과 같은 카드, 빈 상태는 명세 4.5.2 문구 그대로("아직 찜한 고양이가 없어요" / "마음에 드는 고양이를 저장해보세요 🐾". 🐾는 디자인 README가 허용한 유일한 이모지). 목록 헤더의 하트 버튼이 유일한 진입 경로다(handoff).
 
 ## 9. HTTP, 환경변수, 배포
 
 - 서버와 클라이언트 모두 `shared`의 얇은 `httpClient`(네이티브 `fetch` 래퍼, `src/shared/api/http-client.ts`)를 쓴다: 타임아웃(`AbortSignal.timeout`, 호출별 override), HTTP 에러의 예외화, 에러 표준화(`HttpError`: timeout / network / status / parse). Next `fetch`의 `next: { revalidate }`, `cache` 옵션을 그대로 전달한다. 테스트는 `fetch` 구현을 주입한다. 오류 메시지와 예외에는 URL의 origin+path만 남기고 쿼리스트링(서비스키)과 원래 오류 메시지/`cause`는 싣지 않는다.
-- 환경변수: `DATA_GO_KR_SERVICE_KEY`(서버 전용, `NEXT_PUBLIC_` 금지, 디코딩된 키. `process.env`는 `src/server/config.ts`에서만 요청 시점에 읽는다. 없으면 500이며 import/빌드 시점에는 실패하지 않는다), `NEXT_PUBLIC_KAKAO_JS_KEY`(도메인 제한이 있는 공개 키라 허용). `.env.local`은 커밋하지 않고 `.env.example`만 커밋한다. 배포 환경은 Vercel 환경변수. GitHub Secrets는 CI에서 실제 API를 호출할 때만 필요하며 MVP에서는 픽스처로 테스트하므로 쓰지 않는다.
+- 환경변수: `DATA_GO_KR_SERVICE_KEY`(서버 전용, `NEXT_PUBLIC_` 금지, 디코딩된 키. `process.env`는 `src/server/config.ts`에서만 요청 시점에 읽는다. 없으면 500이며 import/빌드 시점에는 실패하지 않는다), `NEXT_PUBLIC_KAKAO_JS_KEY`(도메인 제한이 있는 공개 키라 허용. `.env.example`에 있음. 읽는 곳은 `src/shared/config/public-env.ts` 한 곳이고, 비어 있으면 SDK를 불러오지 않고 공유가 링크 복사로 동작한다). `.env.local`은 커밋하지 않고 `.env.example`만 커밋한다. 배포 환경은 Vercel 환경변수. GitHub Secrets는 CI에서 실제 API를 호출할 때만 필요하며 MVP에서는 픽스처로 테스트하므로 쓰지 않는다.
 - 배포: Vercel Hobby(비상업용 약관 확인). 함수 리전(서울 가능 여부), 실행 시간 제한은 **검증 필요**(12절 스파이크).
 - 서비스키가 로그, 테스트, 픽스처, 커밋에 들어가지 않게 한다. 이미 대화에 노출된 키는 재발급한 것으로 가정한다.
+
+- 공유(확정, 단계 4~6, `features/animal-share`): 키가 있을 때만 `next/script`로 카카오 SDK를 불러오고 `Kakao.init` 후 feed 템플릿(상세 링크, 제목 "지역 + 축종", 설명 "상태 배지 · 보호소", 썸네일은 대표 사진의 이미지 프록시 절대 URL, 없으면 OG 이미지)으로 공유한다. 키 없음, SDK 미로드, init 실패, `Share` 미지원, `sendDefault` 예외는 링크 복사 + "링크가 복사됐어요"(handoff 문구)로 폴백하고, 복사까지 실패하면 "공유에 실패했어요. 링크로 대신 공유해보세요"(명세 7.3).
+- OG 이미지(확정, 단계 4~6): `app/animals/[id]/opengraph-image.tsx`(next/og, 1200x630, handoff 화면 7). 원본 사진은 서버가 직접 받아 data URL로 넣는다(이미지 프록시 미경유, 허용 원본만, 5MB 이하). 조회나 사진이 실패해도 오류 대신 사진 없는 카드 또는 서비스명만 있는 기본 이미지를 그린다. 캐시는 1시간(`revalidate = 3600`, `SERVER_TUNING.ogImageCacheControl`): D-day가 KST 자정에 바뀌므로 하루보다 짧게, 렌더 비용 때문에 1시간. satori는 CSS 변수를 지원하지 않아 토큰 hex 값을 `og-model.ts`에 옮겨 쓴다.
+- OG 폰트(확정): `pretendard` 패키지가 정적 단일 weight otf(`dist/public/static/Pretendard-Regular.otf`, `-Bold.otf`)를 함께 배포하므로 `node_modules`에서 그대로 읽는다. **저장소에 폰트 파일을 추가하지 않았다**(예외 파일 불필요). satori는 woff2를 읽지 못해 가변 woff2(dynamic subset)는 쓸 수 없다. 배포 번들 포함은 `next.config.ts`의 `outputFileTracingIncludes`로 명시했고, 경로를 정적 문자열로 적어 추적 범위를 두 파일로 한정했다(변수 경로는 프로젝트 전체를 추적 대상으로 만든다는 Turbopack 경고가 있었다). 읽기에 실패하면 satori 기본 폰트로 조용히 대체되며, 이때 한글이 빈 칸으로 보일 수 있다(12절 30).
+- 토스트(확정): sonner를 480px 컬럼 안(AppShell의 overlay 자리)에 `position: absolute`로 둔다. 하단 CTA(`data-slot="bottom-cta"`)가 있는 화면은 CSS `:has()`로 토스트를 CTA 위로 올린다. 다크 모드용 `next-themes`는 제거했다.
+- 풀스크린 뷰어(확정): 컬럼에 포털하고 컬럼 전체를 absolute로 덮는다(PC에서도 컬럼 안, handoff 화면 8c). 스와이프로 닫기와 핀치줌은 만들지 않는다(명세 후순위). FSD 같은 레이어 import를 피하려고 handoff의 `widgets/image-viewer` 대신 상세 위젯 slice 안에 둔다.
 
 ## 10. 종료 공고 정책
 
@@ -187,7 +196,7 @@ interface AnimalRepository {
 
 `docs/PRD.md`, `docs/기능명세서.md`에 **반영 완료**: 서버 프록시/캐시 MVP 승격, `page` URL 미포함, `status` 기본 `protected`, `region` 시도 코드, 찜 id만 저장, 종료 사유 비노출, 기준 폭 390과 4:5 cover 카드, 토스트 문구 "링크가 복사됐어요", 서버/클라이언트 Domain 분리와 응답 DTO, `pages` → `views`.
 
-명세의 나머지 "결정 필요" 항목(사진 없는 공고, 초기화 버튼, 카드 내 찜 아이콘)은 미정이다(D-day 지남 정책은 10절에서 결정됨).
+명세의 나머지 "결정 필요" 항목 중 초기화 버튼은 미정이다. 카드 내 찜 아이콘은 넣기로 확정(8절), 사진 없는 공고는 배경 + 아이콘의 최소 대체 UI(디자인 미정)로 둔다(D-day 지남 정책은 10절에서 결정됨).
 
 단계 3b에서 명세와 다르게 구현했거나 명세 옵션을 고른 점:
 - 목록 끝 표시: 명세 4.1.4 옵션 A(표시 없이 로드 중단)
@@ -231,7 +240,7 @@ interface AnimalRepository {
 4. Vercel 함수 리전(서울 가능 여부)과 공공 API 응답 속도, 해외 IP 제한 여부, 함수 실행 시간 제한(고양이 전체 수집 6회 호출: 1회 + 나머지 5회 병렬, 호출당 타임아웃 10초). **확인 방법**: Vercel 프로젝트 설정의 Functions Region, 배포 후 함수 로그의 실행 시간, 리전별 upstream 응답 시간. 로컬 기준 1,000건 페이지 474~725ms(12.A P4). 병렬 수집(동시성 3)이 공공 API의 호출 간격 제한에 걸리는지도 확인
 5. `desertion_no`로 조회 시 종료/오래된 공고가 조회되는지. 종료(안락사) 1건은 `upkind` 없이 조회 성공(12.A P9). **오래된 공고 전반은 미검증**. 결과는 계속 id로 한 번 더 거른다
 6. 이미지 `http` 처리 방식(원격 도메인 설정 vs 프록시). 이미지 URL은 모두 `http://`(12.A P7). **같은 경로가 `https`로도 제공되는지는 미검증**
-7. 카카오 피드 이미지 비율 제한, `next/og`(Satori)의 폰트 형식(woff2 미지원 가능성)과 CSS 변수 미지원 가능성
+7. 카카오 피드 이미지 비율 제한은 미확인. `next/og`(satori)의 폰트 형식은 ttf/otf/woff만 지원(woff2 불가)이고 CSS 변수도 쓸 수 없음을 Next 문서로 확인해 otf + hex로 대응했다(9절)
 8. UI 라벨 "보호소": `careNm`이 병원일 수 있어 "보호 장소" 등으로 바꿀지
 9. `ageText` 표기 정제(`2024(년생)` → "2살 추정" 등)
 10. ~~`noticeEdt`가 지난 protected 공고의 D-day 정책~~ **결정됨**: `dDay = null`, `isSoon = false`, 서버에서 제외하지 않음(10절). 고양이 보호중의 42.1%(577건)가 해당한다(12.A P6). endingSoon 정렬은 이들을 뒤로 보낸다(5절)
@@ -253,3 +262,8 @@ interface AnimalRepository {
 26. 지역 코드의 이상 항목: 경남 창원시가 코드 3개(5280000, 5320000, 5670000)로 오고(통합 전 마산·진해 코드로 보임, 추정), 충남에 연기군(4560000, 2012년 세종 편입)이 남아 있다. 정적 목록에는 그대로 두고 창원시는 라벨에 코드를 붙였다. 어느 코드로 공고가 조회되는지(`org_cd`)는 미검증
 27. 기본 지역(서울/종로구) 첫 화면의 공고 수: 종로구 고양이 보호중 공고가 적거나 0건이면 첫 화면이 빈 상태다. 실제 건수 확인 후 기본값이나 빈 상태 문구(예: 지역 넓히기 안내)를 재검토
 28. `org_cd` 필터의 서버 동작: `upr_cd`와 함께 보낸 `org_cd`로 공고가 시군구 단위로 걸러지는지 실측 필요(파라미터 자체는 4절 확인된 요청 변수)
+29. 카카오 공유 실사용: 카카오 키 발급과 사이트 도메인 등록 후 실제 `sendDefault` 동작, SDK 주소와 버전(`KAKAO_SDK_URL`, 현재 2.7.4로 적음)과 무결성 해시(현재 넣지 않음)를 카카오 개발자 문서로 확인. 썸네일로 쓰는 이미지 프록시 URL을 카카오가 가져갈 수 있는지(https, 응답 시간), 피드 이미지 비율 제한도 확인
+30. OG 이미지 실제 렌더: 실제 공고(사진 fetch 포함)로 렌더 결과, Vercel 배포 번들에 폰트 두 개가 포함되는지, otf(각 약 1.5MB) 파싱 시간과 메모리, 종료 공고 사진의 채도 낮춤(satori `filter` 지원 여부, 현재 미적용) 확인. 로컬에서는 기본 이미지와 합성 데이터 카드로 한글 렌더를 확인했다
+31. 상세 페이지의 서버 조회 중복: `generateMetadata`(링크 미리보기 제목)와 클라이언트 `useAnimal`이 같은 공고를 각각 조회한다. 서버 쪽은 upstream fetch 캐시(300초)를 거치지만 호출 수를 관찰
+32. 뒤로가기: `history.length > 1`이면 `router.back()`, 아니면 목록으로 간다. 외부 사이트에서 같은 탭으로 상세에 들어온 경우 뒤로가기가 외부로 나간다. 필요하면 앱 내 이동 여부를 따로 기록
+33. 카드 하트와 사진 없음 플레이스홀더의 디자인: 시안이 없어 overlay 버튼 모양과 아이콘만 둔 대체 UI로 임시 구현
