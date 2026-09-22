@@ -33,6 +33,10 @@ export default async function Image({ params }: { params: Promise<{ id: string }
   return renderOgImage(model, photo, fonts, { "Cache-Control": SERVER_TUNING.ogImageCacheControl });
 }
 
+/**
+ * OG 이미지는 상세 페이지와 별도 요청(크롤러가 따로 가져감)이라 React cache(getAnimalForRequest)를 공유하지 못한다.
+ * 그래서 서비스를 직접 부르고, 중복은 upstream fetch의 데이터 캐시(300초)가 흡수한다.
+ */
 async function loadModel(id: string): Promise<OgModel | null> {
   try {
     return buildOgModel(toAnimal(await getAnimalService().getById(id)), new Date());
