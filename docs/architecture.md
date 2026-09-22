@@ -76,7 +76,7 @@ Route Handler (app/api/animals)                       # 얇게: 파싱 → servi
   → AnimalListResponse { items: AnimalWireDto[], nextCursor: string | null } 를 Zod로 검증 후 응답
 ```
 
-구현 위치: `src/shared/api/http-client.ts`, `src/server/{config,logger,mapper}.ts`, `src/server/upstream/{client,extract,parse,dto}.ts`, `src/server/source/*`, `src/server/animals/{service,query,container,errors}.ts`, `src/server/http/respond.ts`, `src/app/api/animals/**`.
+구현 위치: `src/shared/api/http-client.ts`, `src/shared/lib/concurrency.ts`(서버와 클라이언트 공용 동시성 헬퍼), `src/server/{config,logger,mapper}.ts`, `src/server/upstream/{client,extract,parse,dto}.ts`, `src/server/source/*`, `src/server/animals/{service,query,container,errors}.ts`, `src/server/http/respond.ts`, `src/app/api/animals/**`.
 
 - 캐시 키: `(upkind, upr_cd | all)`. `state` 파라미터는 **사용하지 않는다**(`notice`/`protect` 의미가 검증되지 않았고 `종료` 값이 없음). status는 서버에서 `processState`로 판정한다.
 - status 판정: `processState`가 `종료`로 시작하면 `ended`, 그 외는 `protected`. Zod는 `processState`를 enum이 아니라 `string`으로 받는다. 알 수 없는 값은 주입된 로거(`logger.warn`, 기본 no-op)로 남긴다.
@@ -87,7 +87,7 @@ Route Handler (app/api/animals)                       # 얇게: 파싱 → servi
 - 캐시 방식(Next 데이터 캐시, `unstable_cache`, 인메모리, 외부 KV)은 **검증 필요**. `AnimalSource` 인터페이스 뒤에 숨겨서 교체 가능하게 만든다. 캐시 저장소에는 항목 크기 제한이 있을 수 있으니 원본이 아니라 Mapper를 거친 가벼운 목록을 저장한다.
 - 캐시는 두 겹이다. 서버 재검증 주기와 클라이언트 `staleTime`을 문서 한 곳에 숫자로 정해 둔다. 원칙: 클라이언트 `staleTime`은 서버 재검증 주기보다 길지 않게. 초기값은 스파이크에서 정한다.
 - 공공 API 호출에는 `AbortSignal.timeout`을 건다. 실패 시 표준화된 에러를 반환한다.
-- 오류 응답은 `{ error: { code, message } }`. 입력 오류 400(`invalid_request`), 없음 404(`not_found`), 업스트림 실패 502(`upstream_error`, 인증/설정 오류 포함. 서버 로그에서는 `upstream auth/config error`로 구분하고 `returnReasonCode`, `errMsg`만 남긴다), 타임아웃 504(`upstream_timeout`), 설정 누락/계약 위반/기타 500(`internal_error`). 메시지에 키, URL, 업스트림 본문, 설정 상세를 넣지 않고 상세는 서버 로그에만 남긴다. 오류 응답은 `Cache-Control: no-store`.
+- 오류 응답은 계약 `ApiErrorResponse`(`{ error: { code, message } }`, `src/contract/animals.ts`)로 통일한다. 서버(`server/http/respond.ts`)는 보내기 전에 이 스키마로 검증하고, 클라이언트(`shared/api/api-request.ts`)는 같은 스키마로 `code`와 `message`를 읽어 `ApiError`로 바꾼다. 입력 오류 400(`invalid_request`), 없음 404(`not_found`), 업스트림 실패 502(`upstream_error`, 인증/설정 오류 포함. 서버 로그에서는 `upstream auth/config error`로 구분하고 `returnReasonCode`, `errMsg`만 남긴다), 타임아웃 504(`upstream_timeout`), 설정 누락/계약 위반/기타 500(`internal_error`). 메시지에 키, URL, 업스트림 본문, 설정 상세를 넣지 않고 상세는 서버 로그에만 남긴다. 오류 응답은 `Cache-Control: no-store`.
 - 튜닝 숫자는 `src/server/config.ts`의 `SERVER_TUNING` 한 곳에 둔다(초기값, 12절 스파이크에서 조정):
 
 | 항목 | 값 |
@@ -98,7 +98,8 @@ Route Handler (app/api/animals)                       # 얇게: 파싱 → servi
 | 나머지 페이지 동시 호출 수 | 3 |
 | 조합당 최대 페이지 | 20 (500 × 20 = 10,000건) |
 | 목록 페이지 크기 | 20 |
-| by-ids 최대 / 동시성 | 50 / 5 |
+| by-ids 최대 | 50(`ANIMAL_BY_IDS_MAX`, `src/contract`. 서버는 넘으면 400, 클라이언트는 이 단위로 나눠 동시 3개씩 요청하고 입력 순서대로 합친다) |
+| by-ids 서버 동시 조회 수 | 5 |
 | 성공 응답 `Cache-Control` | `public, s-maxage=60, stale-while-revalidate=300` |
 | 클라이언트 `staleTime` | 60초(`src/shared/api/query-client.ts` `QUERY_STALE_TIME_MS`). 서버 재검증 주기(300초)보다 길지 않게, CDN `s-maxage=60`과 맞춤. 재시도 1회(타임아웃/네트워크/5xx만), `refetchOnWindowFocus: false`, `gcTime` 5분 |
 

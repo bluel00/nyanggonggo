@@ -49,7 +49,7 @@ Type scale (`fontSize`): `title` 20/28/700, `card-title` 16/24/600, `body` 14/20
 | `shared/ui` | Icon, Button, Chip, Segmented, Radio, Select, BottomSheet, Toast, SkeletonCard | 도메인 모름. shadcn `button`, `drawer`(vaul) 또는 `sonner`를 래핑해도 되지만 토큰은 위 매핑만 사용 |
 | `entities/animal` | AnimalCard, StatusBadge, `getBadgeVariant(animal)` | Domain `Animal`만 props로 받는다. D-day 3일 이내는 UI가 아니라 domain 서비스에서 판정해도 됨 |
 | `features/filter-sheet` | 필터 시트 조립 (Segmented + Select + Chip + Radio + 적용하기) | 값은 URL search params를 읽고, [적용하기]에서만 `router.replace`. 시트 안 draft state는 "적용 전 임시 값"이라 허용, 닫히면 버림 |
-| `features/favorite-toggle` | FavoriteButton + localStorage 훅 | 저장은 id + 카드 최소 캐시(썸네일/상태/지역/보호소) |
+| `features/favorite-toggle` | FavoriteButton + localStorage 훅 | 저장은 id만(architecture.md 8절). `/favorites` 진입 시 서버에서 다시 조회 |
 | `features/share-button` | ShareButton + Kakao SDK + 링크 복사 폴백 + Toast | 실패 시 "링크가 복사됐어요" |
 | `widgets/animal-feed` | 헤더(타이틀 / 하트 / 필터) + AnimalCard 리스트 + SkeletonCard + 에러 | `useInfiniteQuery` 커서 |
 | `widgets/animal-detail` | 스와이프 이미지 + 정보 + 하단 CTA | |
