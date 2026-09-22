@@ -177,7 +177,7 @@ interface AnimalRepository {
 - 배포: Vercel Hobby(비상업용 약관 확인). 함수 리전(서울 가능 여부), 실행 시간 제한은 **검증 필요**(12절 스파이크).
 - 서비스키가 로그, 테스트, 픽스처, 커밋에 들어가지 않게 한다. 이미 대화에 노출된 키는 재발급한 것으로 가정한다.
 
-- 공유(확정, 단계 4~6, `features/animal-share`): 키가 있을 때만 `next/script`로 카카오 SDK를 불러오고 `Kakao.init` 후 feed 템플릿(상세 링크, 제목 "지역 + 축종", 설명 "상태 배지 · 보호소", 썸네일은 대표 사진의 이미지 프록시 절대 URL, 없으면 OG 이미지)으로 공유한다. 키 없음, SDK 미로드, init 실패, `Share` 미지원, `sendDefault` 예외는 링크 복사 + "링크가 복사됐어요"(handoff 문구)로 폴백하고, 복사까지 실패하면 "공유에 실패했어요. 링크로 대신 공유해보세요"(명세 7.3).
+- 공유(확정, 단계 4~6, `features/animal-share`): 키가 있을 때만 `next/script`로 카카오 SDK(2.8.3, integrity sha384, 12절 29)를 불러오고 `Kakao.init` 후 feed 템플릿(상세 링크, 제목 "지역 + 축종", 설명 "상태 배지 · 보호소", 썸네일은 대표 사진의 이미지 프록시 절대 URL, 없으면 OG 이미지)으로 공유한다. 키 없음, SDK 미로드, init 실패, `Share` 미지원, `sendDefault` 예외는 링크 복사 + "링크가 복사됐어요"(handoff 문구)로 폴백하고, 복사까지 실패하면 "공유에 실패했어요. 링크로 대신 공유해보세요"(명세 7.3).
 - OG 이미지(확정, 단계 4~6): `app/animals/[id]/opengraph-image.tsx`(next/og, 1200x630, handoff 화면 7). 원본 사진은 서버가 직접 받아 data URL로 넣는다(이미지 프록시 미경유, 허용 원본만, 5MB 이하). 조회나 사진이 실패해도 오류 대신 사진 없는 카드 또는 서비스명만 있는 기본 이미지를 그린다. 캐시는 1시간(`revalidate = 3600`, `SERVER_TUNING.ogImageCacheControl`): D-day가 KST 자정에 바뀌므로 하루보다 짧게, 렌더 비용 때문에 1시간. satori는 CSS 변수를 지원하지 않아 토큰 hex 값을 `og-model.ts`에 옮겨 쓴다.
 - OG 폰트(확정): `pretendard` 패키지가 정적 단일 weight otf(`dist/public/static/Pretendard-Regular.otf`, `-Bold.otf`)를 함께 배포하므로 `node_modules`에서 그대로 읽는다. **저장소에 폰트 파일을 추가하지 않았다**(예외 파일 불필요). satori는 woff2를 읽지 못해 가변 woff2(dynamic subset)는 쓸 수 없다. 배포 번들 포함은 `next.config.ts`의 `outputFileTracingIncludes`로 명시했고, 경로를 정적 문자열로 적어 추적 범위를 두 파일로 한정했다(변수 경로는 프로젝트 전체를 추적 대상으로 만든다는 Turbopack 경고가 있었다). 읽기에 실패하면 satori 기본 폰트로 조용히 대체되며, 이때 한글이 빈 칸으로 보일 수 있다(12절 30).
 - 토스트(확정): sonner를 480px 컬럼 안(AppShell의 overlay 자리)에 `position: absolute`로 둔다. 하단 CTA(`data-slot="bottom-cta"`)가 있는 화면은 CSS `:has()`로 토스트를 CTA 위로 올린다. 다크 모드용 `next-themes`는 제거했다.
@@ -262,8 +262,8 @@ interface AnimalRepository {
 26. 지역 코드의 이상 항목: 경남 창원시가 코드 3개(5280000, 5320000, 5670000)로 오고(통합 전 마산·진해 코드로 보임, 추정), 충남에 연기군(4560000, 2012년 세종 편입)이 남아 있다. 정적 목록에는 그대로 두고 창원시는 라벨에 코드를 붙였다. 어느 코드로 공고가 조회되는지(`org_cd`)는 미검증
 27. 기본 지역(서울/종로구) 첫 화면의 공고 수: 종로구 고양이 보호중 공고가 적거나 0건이면 첫 화면이 빈 상태다. 실제 건수 확인 후 기본값이나 빈 상태 문구(예: 지역 넓히기 안내)를 재검토
 28. `org_cd` 필터의 서버 동작: `upr_cd`와 함께 보낸 `org_cd`로 공고가 시군구 단위로 걸러지는지 실측 필요(파라미터 자체는 4절 확인된 요청 변수)
-29. 카카오 공유 실사용: 카카오 키 발급과 사이트 도메인 등록 후 실제 `sendDefault` 동작, SDK 주소와 버전(`KAKAO_SDK_URL`, 현재 2.7.4로 적음)과 무결성 해시(현재 넣지 않음)를 카카오 개발자 문서로 확인. 썸네일로 쓰는 이미지 프록시 URL을 카카오가 가져갈 수 있는지(https, 응답 시간), 피드 이미지 비율 제한도 확인
+29. ~~카카오 SDK 버전과 무결성 해시~~ **확정됨(2026-09-22)**: 버전 2.8.3(Full SDK, `kakao.min.js`) + integrity(sha384) 적용 확정. 값은 카카오 개발자 다운로드 페이지에서 직접 복사, 2026-09-22 기준(`KAKAO_SDK_URL`, `KAKAO_SDK_INTEGRITY`). SDK 버전 업그레이드 시 integrity 값도 반드시 같이 갱신 필요. 남은 확인: 카카오 키 발급과 사이트 도메인 등록 후 실제 공유 시트가 뜨는지, 콘솔에 SRI 오류가 없는지, 썸네일(이미지 프록시 URL)을 카카오가 가져갈 수 있는지와 피드 이미지 비율 제한
 30. OG 이미지 실제 렌더: 실제 공고(사진 fetch 포함)로 렌더 결과, Vercel 배포 번들에 폰트 두 개가 포함되는지, otf(각 약 1.5MB) 파싱 시간과 메모리, 종료 공고 사진의 채도 낮춤(satori `filter` 지원 여부, 현재 미적용) 확인. 로컬에서는 기본 이미지와 합성 데이터 카드로 한글 렌더를 확인했다
-31. 상세 페이지의 서버 조회 중복: `generateMetadata`(링크 미리보기 제목)와 클라이언트 `useAnimal`이 같은 공고를 각각 조회한다. 서버 쪽은 upstream fetch 캐시(300초)를 거치지만 호출 수를 관찰
+31. ~~상세 페이지의 서버 조회 중복~~ **해결됨(2026-09-22)**: `generateMetadata`와 페이지가 React `cache`로 감싼 `getAnimalForRequest`를 함께 써서 요청당 서버 조회 1회. 페이지는 결과를 TanStack Query 캐시(상세 쿼리 키)로 미리 채워 넘겨 클라이언트 `useAnimal`이 `/api`를 다시 부르지 않는다. OG 이미지 라우트는 별도 요청이라 이 캐시를 공유하지 않고 upstream fetch 캐시(300초)만 공유한다
 32. 뒤로가기: `history.length > 1`이면 `router.back()`, 아니면 목록으로 간다. 외부 사이트에서 같은 탭으로 상세에 들어온 경우 뒤로가기가 외부로 나간다. 필요하면 앱 내 이동 여부를 따로 기록
 33. 카드 하트와 사진 없음 플레이스홀더의 디자인: 시안이 없어 overlay 버튼 모양과 아이콘만 둔 대체 UI로 임시 구현
