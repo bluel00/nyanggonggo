@@ -1,6 +1,6 @@
 import type { AnimalListResponse, AnimalWireDto } from "@/contract/animals";
 import type { MappedAnimal } from "../mapper";
-import { mapWithConcurrency } from "../lib/concurrency";
+import { mapWithConcurrency } from "@/shared/lib/concurrency";
 import type { AnimalSource } from "../source/animal-source";
 import { InvalidRequestError, NotFoundError } from "./errors";
 

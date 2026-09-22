@@ -22,8 +22,6 @@ export const SERVER_TUNING = {
   upstreamMaxPages: 20,
   /** 목록 응답의 페이지 크기 */
   listPageSize: 20,
-  /** by-ids 최대 id 수 */
-  byIdsMax: 50,
   /** by-ids 동시 조회 수 */
   byIdsConcurrency: 5,
   /** /api/animals 응답의 Cache-Control */

@@ -29,6 +29,9 @@ export const AnimalListResponseSchema = z.object({
 
 export type AnimalListResponse = z.infer<typeof AnimalListResponseSchema>;
 
+/** GET /api/animals/by-ids 한 번에 보낼 수 있는 id 최대 개수. 서버는 넘으면 400, 클라이언트는 이 단위로 나눠 보낸다. */
+export const ANIMAL_BY_IDS_MAX = 50;
+
 /** GET /api/animals/by-ids. 못 찾은 id는 빠지고, 순서는 요청한 ids 순서를 따른다. */
 export const AnimalByIdsResponseSchema = z.object({
   items: z.array(AnimalWireDtoSchema),

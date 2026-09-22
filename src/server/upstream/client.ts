@@ -1,6 +1,6 @@
 import type { AnimalWireDto } from "@/contract/animals";
 import { HttpError, type HttpClient } from "@/shared/api/http-client";
-import { mapWithConcurrency } from "../lib/concurrency";
+import { mapWithConcurrency } from "@/shared/lib/concurrency";
 import { noopLogger, type Logger } from "../logger";
 import type { UpstreamAnimalItemDto } from "./dto";
 import { extractPage } from "./extract";
