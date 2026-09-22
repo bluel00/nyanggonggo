@@ -35,3 +35,16 @@ export const AnimalByIdsResponseSchema = z.object({
 });
 
 export type AnimalByIdsResponse = z.infer<typeof AnimalByIdsResponseSchema>;
+
+/**
+ * 모든 /api/** 오류 응답(4xx/5xx)의 본문. message는 사용자에게 보여도 되는 문구이며,
+ * 키, URL, 업스트림 본문, 설정 상세를 담지 않는다(architecture.md 5절).
+ */
+export const ApiErrorResponseSchema = z.object({
+  error: z.object({
+    code: z.string(),
+    message: z.string(),
+  }),
+});
+
+export type ApiErrorResponse = z.infer<typeof ApiErrorResponseSchema>;

@@ -1,4 +1,5 @@
 import { QueryClient } from "@tanstack/react-query";
+import { ApiError } from "./api-request";
 import { HttpError } from "./http-client";
 
 /**
@@ -16,6 +17,9 @@ export const QUERY_GC_TIME_MS = 5 * 60_000;
 export const QUERY_MAX_RETRIES = 1;
 
 export function isRetryableError(error: unknown): boolean {
+  if (error instanceof ApiError) {
+    return error.kind === "timeout" || error.kind === "network" || (error.status ?? 0) >= 500;
+  }
   if (error instanceof HttpError) {
     return error.kind === "timeout" || error.kind === "network" || (error.status ?? 0) >= 500;
   }
