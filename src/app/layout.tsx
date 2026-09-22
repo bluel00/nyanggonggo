@@ -6,6 +6,7 @@ import { AppShell } from "@/shared/ui/app-shell";
 // 폰트 파일은 저장소에 두지 않고 pretendard 패키지에서 번들한다. font-family는 토큰 --font-sans의 첫 항목과 같다.
 import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 import "./globals.css";
+import { Providers } from "./providers";
 
 export const metadata: Metadata = {
   title: SERVICE_NAME,
@@ -24,7 +25,9 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body>
-        <AppShell>{children}</AppShell>
+        <Providers>
+          <AppShell>{children}</AppShell>
+        </Providers>
       </body>
     </html>
   );

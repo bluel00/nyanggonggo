@@ -100,7 +100,7 @@ Route Handler (app/api/animals)                       # 얇게: 파싱 → servi
 | 목록 페이지 크기 | 20 |
 | by-ids 최대 / 동시성 | 50 / 5 |
 | 성공 응답 `Cache-Control` | `public, s-maxage=60, stale-while-revalidate=300` |
-| 클라이언트 `staleTime` | 미정(TanStack Query 단계). 서버 재검증 주기(300초)보다 길지 않게 |
+| 클라이언트 `staleTime` | 60초(`src/shared/api/query-client.ts` `QUERY_STALE_TIME_MS`). 서버 재검증 주기(300초)보다 길지 않게, CDN `s-maxage=60`과 맞춤. 재시도 1회(타임아웃/네트워크/5xx만), `refetchOnWindowFocus: false`, `gcTime` 5분 |
 
 ## 6. 클라이언트 Domain과 Port
 
