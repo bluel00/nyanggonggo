@@ -49,6 +49,16 @@ describe("ShareButton", () => {
     expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/animals/1`);
   });
 
+  it("키가 있으면 SDK 스크립트를 넣는다(고정 버전 + integrity)", () => {
+    render(<ShareButton animal={animal} kakaoKey="test-kakao-key" />);
+    const script = document.querySelector<HTMLScriptElement>("script#kakao-sdk")!;
+    expect(script).toBeTruthy();
+    // jsdom은 integrity IDL 속성을 구현하지 않아 속성값으로 확인한다
+    expect(script.getAttribute("src")).toBe(KAKAO_SDK_URL);
+    expect(script.getAttribute("integrity")).toBe(KAKAO_SDK_INTEGRITY);
+    expect(script.getAttribute("crossorigin")).toBe("anonymous");
+  });
+
   it("키가 있어도 SDK가 로드되지 않았으면 링크 복사로 폴백한다", async () => {
     render(<ShareButton animal={animal} kakaoKey="test-kakao-key" />);
     fireEvent.click(screen.getByRole("button", { name: "카카오톡 공유" }));

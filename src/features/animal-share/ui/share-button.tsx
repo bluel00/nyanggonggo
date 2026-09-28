@@ -1,13 +1,14 @@
 "use client";
 
 import Script from "next/script";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import type { Animal } from "@/entities/animal";
 import { KAKAO_JS_KEY } from "@/shared/config/public-env";
 import { copyText } from "@/shared/lib/clipboard";
+import { describeError, fingerprint, infoClientDev, warnClient } from "@/shared/lib/client-log";
 import { cn } from "@/shared/lib/utils";
 import { showToast } from "@/shared/ui/toast";
-import { shareAnimal, type KakaoSdk } from "../model/share";
+import { initKakao, shareAnimal, type KakaoSdk } from "../model/share";
 import { buildShareContent } from "../model/share-content";
 
 /**
@@ -23,16 +24,30 @@ const getKakao = () => (window as unknown as { Kakao?: KakaoSdk }).Kakao;
 
 /**
  * 카카오톡 공유 버튼(bundle.css .cn-btn--share: kakao 배경, on-kakao 글자, 남은 폭).
- * 키가 있을 때만 SDK를 불러오고, 없으면 바로 링크 복사로 동작한다.
+ *
+ * 키가 있을 때만 SDK를 불러오고, **불러온 직후 바로 Kakao.init을 호출한다**(onLoad/onReady).
+ * 예전에는 공유를 누를 때만 init해서 새로고침 직후 `Kakao.isInitialized()`가 계속 false였다.
+ * 로드 전략도 lazyOnload(아주 늦게 로드)에서 afterInteractive로 바꿔, 버튼을 일찍 눌러도 SDK가 준비되게 한다.
+ * 실패는 조용히 넘어가지 않고 콘솔 경고로 남긴다.
  */
 export function ShareButton({ animal, kakaoKey = KAKAO_JS_KEY }: { animal: Animal; kakaoKey?: string }) {
   const [busy, setBusy] = useState(false);
+
+  const onIssue = useCallback((message: string, detail?: Record<string, unknown>) => {
+    warnClient("share", message, detail);
+  }, []);
+
+  const initialize = useCallback(() => {
+    if (initKakao(kakaoKey, getKakao(), onIssue)) {
+      infoClientDev("share", "카카오 SDK 초기화 완료", { key: fingerprint(kakaoKey) });
+    }
+  }, [kakaoKey, onIssue]);
 
   async function handleClick() {
     setBusy(true);
     try {
       const content = buildShareContent(animal, window.location.origin, new Date());
-      await shareAnimal(content, { kakaoKey, getKakao, copy: copyText, notify: showToast });
+      await shareAnimal(content, { kakaoKey, getKakao, copy: copyText, notify: showToast, onIssue });
     } finally {
       setBusy(false);
     }
@@ -46,7 +61,10 @@ export function ShareButton({ animal, kakaoKey = KAKAO_JS_KEY }: { animal: Anima
           src={KAKAO_SDK_URL}
           integrity={KAKAO_SDK_INTEGRITY}
           crossOrigin="anonymous"
-          strategy="lazyOnload"
+          strategy="afterInteractive"
+          onLoad={initialize}
+          onReady={initialize}
+          onError={(error) => onIssue("카카오 SDK를 불러오지 못했습니다(SRI 불일치, 네트워크 차단 등)", describeError(error))}
         />
       )}
       <button
