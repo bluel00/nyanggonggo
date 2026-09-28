@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_ANIMAL_FILTER,
-  DEFAULT_DISTRICT,
   DEFAULT_REGION,
   isSameFilter,
   parseAnimalFilter,
@@ -17,14 +16,15 @@ const BUSAN = "6260000";
 const BUSAN_JUNG = "3250000";
 
 describe("기본값", () => {
-  it("서울/종로구(정적 목록에 있는 코드)", () => {
+  it("서울 전체(시군구 없음)", () => {
     expect(DEFAULT_REGION).toBe(SEOUL);
-    expect(DEFAULT_DISTRICT).toBe(JONGNO);
+    expect(DEFAULT_ANIMAL_FILTER).toEqual({ species: "cat", region: SEOUL, status: "protected", sort: "latest" });
+    expect(DEFAULT_ANIMAL_FILTER).not.toHaveProperty("district");
   });
 });
 
 describe("parseAnimalFilter", () => {
-  it("값이 없으면 기본값(cat/서울/종로구/protected/latest)", () => {
+  it("값이 없으면 기본값(cat/서울 전체/protected/latest)", () => {
     expect(parseAnimalFilter(qs(""))).toEqual(DEFAULT_ANIMAL_FILTER);
     expect(parseAnimalFilter({})).toEqual(DEFAULT_ANIMAL_FILTER);
   });
@@ -34,9 +34,9 @@ describe("parseAnimalFilter", () => {
     expect(parseAnimalFilter(qs(`region=all&district=${JONGNO}`))).not.toHaveProperty("district");
   });
 
-  it("region만 있으면 그 시도 전체(기본 시군구를 붙이지 않는다)", () => {
-    expect(parseAnimalFilter(qs(`region=${SEOUL}`))).toEqual({ ...DEFAULT_ANIMAL_FILTER, district: undefined, region: SEOUL });
-    expect(parseAnimalFilter(qs(`region=${SEOUL}`))).not.toHaveProperty("district");
+  it("region만 있으면 그 시도 전체(시군구를 붙이지 않는다)", () => {
+    expect(parseAnimalFilter(qs(`region=${BUSAN}`))).toEqual({ ...DEFAULT_ANIMAL_FILTER, region: BUSAN });
+    expect(parseAnimalFilter(qs(`region=${BUSAN}`))).not.toHaveProperty("district");
   });
 
   it("region + 그 시도의 district", () => {
@@ -49,9 +49,9 @@ describe("parseAnimalFilter", () => {
     expect(parsed).not.toHaveProperty("district");
   });
 
-  it("목록에 없는 region(옛 코드 등)이나 district만 있으면 기본 지역", () => {
-    expect(parseAnimalFilter(qs("region=6290000"))).toMatchObject({ region: SEOUL, district: JONGNO });
-    expect(parseAnimalFilter(qs(`district=${GANGNAM}`))).toMatchObject({ region: SEOUL, district: JONGNO });
+  it("목록에 없는 region(옛 코드 등)이나 district만 있으면 기본 지역(서울 전체)", () => {
+    expect(parseAnimalFilter(qs("region=6290000"))).toEqual(DEFAULT_ANIMAL_FILTER);
+    expect(parseAnimalFilter(qs(`district=${GANGNAM}`))).toEqual(DEFAULT_ANIMAL_FILTER);
   });
 
   it("URL 값을 읽는다(Next searchParams 객체, 배열이면 첫 값)", () => {
@@ -75,8 +75,9 @@ describe("toFilterQuery / toFilterHref", () => {
     expect(toFilterQuery({ species: "cat", status: "protected", sort: "latest" })).toBe("region=all");
   });
 
-  it("서울 전체는 region만, 다른 시군구는 region+district", () => {
-    expect(toFilterQuery({ ...DEFAULT_ANIMAL_FILTER, district: undefined })).toBe(`region=${SEOUL}`);
+  it("기본 지역(서울 전체)은 생략하고, 시군구를 고르면 region+district", () => {
+    expect(toFilterQuery(DEFAULT_ANIMAL_FILTER)).toBe("");
+    expect(toFilterQuery({ ...DEFAULT_ANIMAL_FILTER, district: JONGNO })).toBe(`region=${SEOUL}&district=${JONGNO}`);
     expect(toFilterQuery({ ...DEFAULT_ANIMAL_FILTER, district: GANGNAM })).toBe(`region=${SEOUL}&district=${GANGNAM}`);
   });
 
@@ -99,6 +100,8 @@ describe("isSameFilter", () => {
   it("region/district 없음과 undefined를 같게 본다", () => {
     const nationwide = { species: "cat", status: "protected", sort: "latest" } as const;
     expect(isSameFilter(nationwide, { ...nationwide, region: undefined, district: undefined })).toBe(true);
-    expect(isSameFilter(DEFAULT_ANIMAL_FILTER, { ...DEFAULT_ANIMAL_FILTER, district: undefined })).toBe(false);
+    expect(isSameFilter(DEFAULT_ANIMAL_FILTER, { ...DEFAULT_ANIMAL_FILTER, district: undefined })).toBe(true);
+    // 시군구를 고른 필터는 시도 전체와 다르다
+    expect(isSameFilter(DEFAULT_ANIMAL_FILTER, { ...DEFAULT_ANIMAL_FILTER, district: JONGNO })).toBe(false);
   });
 });

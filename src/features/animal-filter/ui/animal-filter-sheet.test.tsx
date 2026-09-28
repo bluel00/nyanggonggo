@@ -72,11 +72,12 @@ describe("AnimalFilterSheet", () => {
     expect(select("시/군/구").value).toBe("");
   });
 
-  it("기본 필터로 열면 서울/종로구가 선택되어 있다", () => {
-    render(<AnimalFilterSheet filter={FILTER} />);
+  it("기본 필터(서울 전체)로 열면 시도는 서울, 시군구는 '전체'", () => {
+    render(<AnimalFilterSheet filter={{ species: "cat", region: "6110000", status: "protected", sort: "latest" }} />);
     open();
     expect(select("시/도").value).toBe("6110000");
-    expect(select("시/군/구").value).toBe("3000000");
+    expect(select("시/군/구").value).toBe("");
+    expect(select("시/군/구").disabled).toBe(false);
   });
 
   it("시도를 바꾸면 시군구 목록이 그 시도로 바뀌고 '전체'로 돌아간다", () => {

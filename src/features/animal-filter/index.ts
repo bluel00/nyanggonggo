@@ -1,6 +1,5 @@
 export {
   DEFAULT_ANIMAL_FILTER,
-  DEFAULT_DISTRICT,
   DEFAULT_REGION,
   REGION_ALL,
   isSameFilter,

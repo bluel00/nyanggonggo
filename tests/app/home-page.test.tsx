@@ -12,11 +12,10 @@ async function renderPage(searchParams: Record<string, string | string[] | undef
 }
 
 describe("app/page", () => {
-  it("파라미터가 없으면 기본 필터(서울/종로구)", async () => {
+  it("파라미터가 없으면 기본 필터(서울 전체, 시군구 없음)", async () => {
     expect(await renderPage({})).toEqual({
       species: "cat",
       region: "6110000",
-      district: "3000000",
       status: "protected",
       sort: "latest",
     });
