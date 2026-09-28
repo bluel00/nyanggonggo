@@ -267,3 +267,4 @@ interface AnimalRepository {
 31. ~~상세 페이지의 서버 조회 중복~~ **해결됨(2026-09-22)**: `generateMetadata`와 페이지가 React `cache`로 감싼 `getAnimalForRequest`를 함께 써서 요청당 서버 조회 1회. 페이지는 결과를 TanStack Query 캐시(상세 쿼리 키)로 미리 채워 넘겨 클라이언트 `useAnimal`이 `/api`를 다시 부르지 않는다. OG 이미지 라우트는 별도 요청이라 이 캐시를 공유하지 않고 upstream fetch 캐시(300초)만 공유한다
 32. 뒤로가기: `history.length > 1`이면 `router.back()`, 아니면 목록으로 간다. 외부 사이트에서 같은 탭으로 상세에 들어온 경우 뒤로가기가 외부로 나간다. 필요하면 앱 내 이동 여부를 따로 기록
 33. 카드 하트와 사진 없음 플레이스홀더의 디자인: 시안이 없어 overlay 버튼 모양과 아이콘만 둔 대체 UI로 임시 구현
+34. ~~이미지 프록시의 이미지 판별~~ **확정됨(2026-09-27 로컬 재현)**: 공공데이터포털 `fileDownloadSrvc` 파일 다운로드 엔드포인트는 실제 이미지 파일을 내려주면서 `Content-Type`을 `application/octet-stream`으로 잘못 표기한다. 그래서 이미지 프록시와 OG 이미지 fetch는 `Content-Type` 헤더를 믿지 않고 응답 바이트의 매직 넘버(JPEG `FF D8 FF`, PNG, GIF8, RIFF…WEBP)로 이미지 여부를 판별하고, 응답 `Content-Type`도 판별한 값으로 직접 설정한다(`src/server/images/image-type.ts`). 허용 호스트 검증은 그대로다. 매직 넘버가 맞지 않으면 기존처럼 투명 1x1 PNG로 폴백한다(로그 `reason: not_image`에 업스트림 헤더와 앞부분 바이트만 남긴다)
