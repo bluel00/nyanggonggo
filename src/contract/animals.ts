@@ -18,6 +18,8 @@ export const AnimalWireDtoSchema = z.object({
   foundPlaceText: z.string().nullable(),
   /** `MM.DD ~ MM.DD` */
   noticePeriodText: z.string().nullable(),
+  /** 특이사항(specialMark). 공백뿐이면 null */
+  specialMarkText: z.string().nullable(),
 });
 
 export type AnimalWireDto = z.infer<typeof AnimalWireDtoSchema>;

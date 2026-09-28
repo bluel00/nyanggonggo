@@ -69,6 +69,7 @@ export function AnimalDetail({ id }: { id: string }) {
     ["보호소", animal.shelterName],
     ["발견 장소", animal.foundPlaceText],
     ["공고 기간", animal.noticePeriodText],
+    ["특이사항", animal.specialMarkText],
   ].filter((row): row is [string, string] => row[1] !== null);
 
   return (

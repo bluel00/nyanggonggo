@@ -122,6 +122,7 @@ type Animal = {
   shelterName: string | null         // careNm. UI 라벨("보호소")은 미정(12절)
   foundPlaceText: string | null      // happenPlace
   noticePeriodText: string | null    // "MM.DD ~ MM.DD"
+  specialMarkText: string | null     // specialMark(특이사항). 상세에서만 노출
 }
 ```
 
@@ -191,6 +192,7 @@ interface AnimalRepository {
 - 종료 상세의 찜/공유는 활성 상태로 둔다.
 - 우선 이 계획대로 구현하고, 이후 관찰한다: 종료 비율(`processState` 값 집계), 종료 카드의 진입률과 공유율(이벤트에 status 포함).
 - Mapper는 알 수 없는 `processState` 값을 주입된 로거로 남긴다(Mapper는 `process.env`를 읽지 않는다).
+- 특이사항(`specialMark`)은 상세에서 보여 주지만, **종료 사유(`endReason`)와 같은 문구이면 내보내지 않는다**. 보호소가 두 필드에 같은 문장을 적는 경우가 있어(픽스처 `427346202600847`) 그대로 내보내면 종료 사유가 특이사항 칸으로 드러난다. 판정은 서버 Mapper에서 한다(공백 차이 무시).
 
 ## 11. 문서 반영 현황 (PRD, 기능명세서)
 
@@ -268,3 +270,4 @@ interface AnimalRepository {
 32. 뒤로가기: `history.length > 1`이면 `router.back()`, 아니면 목록으로 간다. 외부 사이트에서 같은 탭으로 상세에 들어온 경우 뒤로가기가 외부로 나간다. 필요하면 앱 내 이동 여부를 따로 기록
 33. 카드 하트와 사진 없음 플레이스홀더의 디자인: 시안이 없어 overlay 버튼 모양과 아이콘만 둔 대체 UI로 임시 구현
 34. ~~이미지 프록시의 이미지 판별~~ **확정됨(2026-09-27 로컬 재현)**: 공공데이터포털 `fileDownloadSrvc` 파일 다운로드 엔드포인트는 실제 이미지 파일을 내려주면서 `Content-Type`을 `application/octet-stream`으로 잘못 표기한다. 그래서 이미지 프록시와 OG 이미지 fetch는 `Content-Type` 헤더를 믿지 않고 응답 바이트의 매직 넘버(JPEG `FF D8 FF`, PNG, GIF8, RIFF…WEBP)로 이미지 여부를 판별하고, 응답 `Content-Type`도 판별한 값으로 직접 설정한다(`src/server/images/image-type.ts`). 허용 호스트 검증은 그대로다. 매직 넘버가 맞지 않으면 기존처럼 투명 1x1 PNG로 폴백한다(로그 `reason: not_image`에 업스트림 헤더와 앞부분 바이트만 남긴다)
+35. ~~`state` 파라미터 의미~~ **확정됨(2026-09-28 라이브 확인)**: `state`(`notice`/`protect`)는 `processState` 필드 텍스트("보호중" 등)와 무관하고, 공고 기간 경과 여부로 계산되는 것으로 보인다. 서울(`upr_cd=6110000`) 종로구(`org_cd=3000000`) 고양이 조회에서 `state` 없이 6건(보호중 5, 종료(자연사) 1)이 오는데, 같은 조건에 `state=protect`를 붙이면 0건이다. 보호중 5건은 모두 `noticeEdt`가 조회일(공고 마지막 날)이었다. 우리 서버는 처음부터 `state`를 보내지 않고 `processState`가 `종료`로 시작하는지로 직접 분류하므로(5절) 영향이 없다. `notice`/`protect`의 정확한 계산 규칙은 여전히 미검증이며, 앞으로도 이 파라미터에 의존하지 않는다

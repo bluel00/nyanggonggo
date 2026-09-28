@@ -32,6 +32,7 @@ const wire: AnimalWireDto = {
   shelterName: "제2동물보호센터",
   foundPlaceText: null,
   noticePeriodText: null,
+  specialMarkText: null,
 };
 
 const clientFetch = vi.fn();

@@ -24,6 +24,7 @@ const wire = (overrides: Partial<AnimalWireDto> = {}): AnimalWireDto => ({
   shelterName: "제2동물보호센터",
   foundPlaceText: "서귀포시 남원읍",
   noticePeriodText: "09.21 ~ 10.01",
+  specialMarkText: null,
   ...overrides,
 });
 
@@ -95,6 +96,21 @@ describe("AnimalDetail", () => {
     expect(container.querySelector('[data-slot="status-badge"]')?.textContent).toBe("종료");
     expect(container.querySelector('[data-slot="d-day"]')).toBeNull();
     expect(screen.getByRole("img").className).toContain("saturate-70");
+  });
+
+  it("특이사항이 있으면 정보 행에 보여 준다", async () => {
+    fetchMock.mockResolvedValue(Response.json(wire({ specialMarkText: "보호센터 내 출산" })));
+    renderDetail();
+    await screen.findByRole("heading");
+    expect(screen.getByText("특이사항")).toBeTruthy();
+    expect(screen.getByText("보호센터 내 출산")).toBeTruthy();
+  });
+
+  it("특이사항이 없으면 행 자체를 그리지 않는다", async () => {
+    fetchMock.mockResolvedValue(Response.json(wire({ specialMarkText: null })));
+    renderDetail();
+    await screen.findByRole("heading");
+    expect(screen.queryByText("특이사항")).toBeNull();
   });
 
   it("비어 있는 정보 행은 그리지 않고, 나이가 없으면 '나이 미상'", async () => {

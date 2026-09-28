@@ -15,7 +15,14 @@ export function toAnimal(wire: AnimalWireDto): Animal {
     shelterName: wire.shelterName,
     foundPlaceText: wire.foundPlaceText,
     noticePeriodText: wire.noticePeriodText,
+    // 빈 문자열이나 공백만 있으면 null. UI에서 값 없이 "특이사항" 라벨만 뜨지 않게 한다
+    specialMarkText: normalizeText(wire.specialMarkText),
   };
+}
+
+function normalizeText(value: string | null): string | null {
+  const trimmed = value?.trim() ?? "";
+  return trimmed === "" ? null : trimmed;
 }
 
 /** `YYYY-MM-DD`(KST 달력 날짜) → 그날 00:00 KST. 형식이 다르면 null. */

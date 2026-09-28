@@ -16,6 +16,7 @@ const animal = (overrides: Partial<Animal> = {}): Animal => ({
   shelterName: "제2동물보호센터",
   foundPlaceText: null,
   noticePeriodText: null,
+  specialMarkText: null,
   ...overrides,
 });
 const NOW = kst("2026-09-21T09:00:00");

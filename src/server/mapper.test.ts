@@ -28,6 +28,7 @@ const WIRE_KEYS = [
   "regionText",
   "sex",
   "shelterName",
+  "specialMarkText",
   "species",
   "status",
 ];
@@ -230,6 +231,7 @@ describe("mapUpstreamItem", () => {
       shelterName: null,
       foundPlaceText: null,
       noticePeriodText: null,
+      specialMarkText: null,
     });
     expect(result.sortKeys).toEqual({ noticeSdt: "", noticeEdt: "20261001", updTm: "" });
   });
@@ -239,6 +241,28 @@ describe("mapUpstreamItem", () => {
       noticeSdt: "20260921",
       noticeEdt: "20261001",
       updTm: "2026-09-21 11:29:37.0",
+    });
+  });
+
+  describe("특이사항(specialMark)", () => {
+    it("원문을 그대로 싣는다(앞뒤 공백만 제거)", () => {
+      expect(map(PROTECTED_CAT).wire.specialMarkText).toBe("개체관리번호 26501 - 척추손상에 의한 후구마비");
+    });
+
+    it("종료 사유와 같은 문구면 내보내지 않는다(종료 사유 비노출, architecture.md 10절)", () => {
+      expect(ENDED_EUTHANASIA.specialMark).toBe(ENDED_EUTHANASIA.endReason);
+      expect(map(ENDED_EUTHANASIA).wire.specialMarkText).toBeNull();
+    });
+
+    it("종료 공고라도 문구가 다르면 특이사항은 보낸다", () => {
+      const wire = map({ ...ENDED_EUTHANASIA, specialMark: "사람을 잘 따름" }).wire;
+      expect(wire.specialMarkText).toBe("사람을 잘 따름");
+    });
+
+    it("비어 있거나 공백뿐이면 null", () => {
+      expect(map({ ...PROTECTED_CAT, specialMark: "   " }).wire.specialMarkText).toBeNull();
+      const { specialMark: _omitted, ...withoutSpecialMark } = PROTECTED_CAT;
+      expect(map(withoutSpecialMark).wire.specialMarkText).toBeNull();
     });
   });
 

@@ -57,6 +57,7 @@ export function mapUpstreamItem(
       noticeStart && noticeEnd
         ? `${formatMonthDay(noticeStart)} ~ ${formatMonthDay(noticeEnd)}`
         : null,
+    specialMarkText: specialMarkWithoutEndReason(dto),
   };
 
   return {
@@ -67,6 +68,17 @@ export function mapUpstreamItem(
       updTm: dto.updTm ?? "",
     },
   };
+}
+
+/**
+ * 특이사항. 보호소가 종료 사유(endReason)와 같은 문구를 특이사항에도 적는 경우가 있어(픽스처 427346202600847),
+ * 그대로 내보내면 노출하지 않기로 한 종료 사유가 특이사항 칸으로 드러난다(PRD, architecture.md 10절).
+ * 두 값이 같으면(공백 차이 무시) 내보내지 않는다. 문구가 다르면 특이사항은 그대로 보낸다.
+ */
+function specialMarkWithoutEndReason(dto: UpstreamAnimalItemDto): string | null {
+  const specialMark = nonEmpty(dto.specialMark);
+  const endReason = nonEmpty(dto.endReason);
+  return specialMark !== null && specialMark === endReason ? null : specialMark;
 }
 
 function toSpecies(upKindNm: string): AnimalWireDto["species"] | null {

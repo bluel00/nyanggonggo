@@ -17,6 +17,8 @@ export type Animal = {
   foundPlaceText: string | null;
   /** `MM.DD ~ MM.DD` */
   noticePeriodText: string | null;
+  /** 특이사항(specialMark). 상세에서만 보여 준다 */
+  specialMarkText: string | null;
 };
 
 export type AnimalPage = {

@@ -23,6 +23,7 @@ const animal = (overrides: Partial<Animal> = {}): Animal => ({
   shelterName: "제2동물보호센터",
   foundPlaceText: "서귀포시 남원읍",
   noticePeriodText: "09.21 ~ 10.01",
+  specialMarkText: null,
   ...overrides,
 });
 

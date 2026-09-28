@@ -14,6 +14,7 @@ const wire: AnimalWireDto = {
   shelterName: "제2동물보호센터",
   foundPlaceText: "서귀포시 남원읍 의귀리1537",
   noticePeriodText: "09.21 ~ 10.01",
+  specialMarkText: null,
 };
 
 describe("toAnimal", () => {
@@ -27,6 +28,15 @@ describe("toAnimal", () => {
     expect(toAnimal({ ...wire, noticeEndDate: null }).noticeEndAt).toBeNull();
     expect(toAnimal({ ...wire, noticeEndDate: "20261001" }).noticeEndAt).toBeNull();
     expect(toAnimal({ ...wire, noticeEndDate: "2026-13-45" }).noticeEndAt).toBeNull();
+  });
+
+  it.each([
+    ["값이 있으면 앞뒤 공백만 제거", "  보호센터 내 출산 ", "보호센터 내 출산"],
+    ["빈 문자열은 null", "", null],
+    ["공백뿐이면 null", "   ", null],
+    ["null은 null", null, null],
+  ] as [string, string | null, string | null][])("특이사항: %s", (_label, input, expected) => {
+    expect(toAnimal({ ...wire, specialMarkText: input }).specialMarkText).toBe(expected);
   });
 
   it("나머지 필드는 그대로 옮기고 images는 복사한다", () => {

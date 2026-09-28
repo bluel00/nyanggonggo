@@ -23,6 +23,7 @@ const wire = (id: string): AnimalWireDto => ({
   shelterName: null,
   foundPlaceText: null,
   noticePeriodText: null,
+  specialMarkText: null,
 });
 
 /** 서버처럼: 요청 순서를 유지하고 없는 id(9로 시작)는 뺀다 */

@@ -30,6 +30,7 @@ const animal: Animal = {
   shelterName: null,
   foundPlaceText: null,
   noticePeriodText: null,
+  specialMarkText: null,
 };
 
 describe("카카오 SDK 상수", () => {
