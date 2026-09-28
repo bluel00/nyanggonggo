@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { initKakao, SHARE_MESSAGES, shareAnimal, type KakaoSdk, type ShareDeps } from "./share";
+import { initKakao, isShareableLink, SHARE_MESSAGES, shareAnimal, type KakaoSdk, type ShareDeps } from "./share";
 
 const CONTENT = {
   url: "https://example.test/animals/1",
@@ -120,6 +120,19 @@ describe("shareAnimal", () => {
     expect(notify).toHaveBeenCalledWith("링크가 복사됐어요");
   });
 
+  it("링크가 폰에서 열 수 없는 주소(localhost)면 카카오 공유를 건너뛰고 링크 복사로 간다", async () => {
+    const { kakao, sendDefault } = fakeKakao();
+    const { copy, onIssue, deps: d } = deps({ getKakao: () => kakao });
+    const local = { ...CONTENT, url: "http://localhost:3000/animals/1" };
+    await expect(shareAnimal(local, d)).resolves.toBe("copied");
+    expect(sendDefault).not.toHaveBeenCalled();
+    expect(copy).toHaveBeenCalledWith(local.url);
+    expect(onIssue).toHaveBeenCalledWith(
+      expect.stringContaining("카카오에서 열 수 없는 주소"),
+      expect.objectContaining({ url: local.url }),
+    );
+  });
+
   it("링크 복사도 실패하면 '공유에 실패했어요. 링크로 대신 공유해보세요'", async () => {
     const { notify, deps: d } = deps({
       kakaoKey: "",
@@ -170,5 +183,27 @@ describe("initKakao", () => {
     const { kakao } = fakeKakao({ isInitialized: () => false, init: () => {} });
     expect(initKakao(FAKE_KEY, kakao, onIssue)).toBe(false);
     expect(onIssue).toHaveBeenCalledWith(expect.stringContaining("초기화되지 않았습니다"), expect.any(Object));
+  });
+});
+
+describe("isShareableLink", () => {
+  it.each([
+    "https://nyang.example/animals/1",
+    "http://nyang.example/animals/1",
+  ])("외부에서 열 수 있는 절대 URL: %s", (url) => {
+    expect(isShareableLink(url)).toBe(true);
+  });
+
+  it.each([
+    ["로컬", "http://localhost:3000/animals/1"],
+    ["로컬 IP", "http://127.0.0.1:3000/animals/1"],
+    ["0.0.0.0", "http://0.0.0.0:3000/animals/1"],
+    [".local 도메인", "http://my-mac.local/animals/1"],
+    ["상대 경로", "/animals/1"],
+    ["빈 값", ""],
+    ["undefined가 섞인 주소", "https://undefined/animals/1"],
+    ["다른 프로토콜", "javascript:alert(1)"],
+  ])("공유할 수 없는 주소: %s", (_label, url) => {
+    expect(isShareableLink(url)).toBe(false);
   });
 });

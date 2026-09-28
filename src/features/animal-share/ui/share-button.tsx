@@ -3,13 +3,13 @@
 import Script from "next/script";
 import { useCallback, useState } from "react";
 import type { Animal } from "@/entities/animal";
-import { KAKAO_JS_KEY } from "@/shared/config/public-env";
+import { KAKAO_JS_KEY, SITE_URL } from "@/shared/config/public-env";
 import { copyText } from "@/shared/lib/clipboard";
 import { describeError, fingerprint, infoClientDev, warnClient } from "@/shared/lib/client-log";
 import { cn } from "@/shared/lib/utils";
 import { showToast } from "@/shared/ui/toast";
 import { initKakao, shareAnimal, type KakaoSdk } from "../model/share";
-import { buildShareContent } from "../model/share-content";
+import { buildShareContent, resolveShareOrigin } from "../model/share-content";
 
 /**
  * 카카오 JavaScript SDK(Full SDK, minified). 2.8.3으로 고정한다.
@@ -30,7 +30,16 @@ const getKakao = () => (window as unknown as { Kakao?: KakaoSdk }).Kakao;
  * 로드 전략도 lazyOnload(아주 늦게 로드)에서 afterInteractive로 바꿔, 버튼을 일찍 눌러도 SDK가 준비되게 한다.
  * 실패는 조용히 넘어가지 않고 콘솔 경고로 남긴다.
  */
-export function ShareButton({ animal, kakaoKey = KAKAO_JS_KEY }: { animal: Animal; kakaoKey?: string }) {
+export function ShareButton({
+  animal,
+  kakaoKey = KAKAO_JS_KEY,
+  siteUrl = SITE_URL,
+}: {
+  animal: Animal;
+  kakaoKey?: string;
+  /** 공유 링크의 기준 주소. 비면 현재 접속한 주소 */
+  siteUrl?: string;
+}) {
   const [busy, setBusy] = useState(false);
 
   const onIssue = useCallback((message: string, detail?: Record<string, unknown>) => {
@@ -46,7 +55,8 @@ export function ShareButton({ animal, kakaoKey = KAKAO_JS_KEY }: { animal: Anima
   async function handleClick() {
     setBusy(true);
     try {
-      const content = buildShareContent(animal, window.location.origin, new Date());
+      const content = buildShareContent(animal, resolveShareOrigin(window.location.origin, siteUrl), new Date());
+      infoClientDev("share", "공유 링크", { url: content.url, imageUrl: content.imageUrl });
       await shareAnimal(content, { kakaoKey, getKakao, copy: copyText, notify: showToast, onIssue });
     } finally {
       setBusy(false);

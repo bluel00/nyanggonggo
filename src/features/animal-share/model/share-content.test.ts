@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Animal } from "@/entities/animal";
-import { buildShareContent } from "./share-content";
+import { buildShareContent, resolveShareOrigin } from "./share-content";
 
 const kst = (iso: string) => new Date(`${iso}+09:00`);
 const IMG = "http://openapi.animal.go.kr/openapi/files/1%5B1%5D.jpg";
@@ -41,5 +41,14 @@ describe("buildShareContent", () => {
     expect(buildShareContent(animal({ images: [] }), "https://nyang.test", NOW).imageUrl).toBe(
       "https://nyang.test/animals/450650202602282/opengraph-image",
     );
+  });
+});
+
+describe("resolveShareOrigin", () => {
+  it("NEXT_PUBLIC_SITE_URL이 있으면 그 값(끝 슬래시 제거), 없으면 현재 주소", () => {
+    expect(resolveShareOrigin("http://localhost:3000", "https://nyang.example")).toBe("https://nyang.example");
+    expect(resolveShareOrigin("http://localhost:3000", "https://nyang.example/")).toBe("https://nyang.example");
+    expect(resolveShareOrigin("https://nyang.example", "")).toBe("https://nyang.example");
+    expect(resolveShareOrigin("https://nyang.example", "   ")).toBe("https://nyang.example");
   });
 });

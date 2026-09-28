@@ -30,6 +30,26 @@ export const SHARE_MESSAGES = {
   failed: "공유에 실패했어요. 링크로 대신 공유해보세요",
 } as const;
 
+/** 카카오 공유에 쓸 수 없는 호스트(폰에서 열 수 없다) */
+const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "0.0.0.0", "::1", "[::1]"]);
+
+/**
+ * 공유 링크로 쓸 수 있는 절대 URL인지. http(s)여야 하고, 로컬 주소는 쓸 수 없다.
+ * 링크가 없는(또는 열리지 않는) 카드를 보내느니 링크 복사로 폴백하는 편이 낫다.
+ */
+export function isShareableLink(url: string): boolean {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return false;
+  }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return false;
+  const host = parsed.hostname.toLowerCase();
+  if (LOCAL_HOSTS.has(host) || host.endsWith(".localhost") || host.endsWith(".local")) return false;
+  return !url.includes("undefined") && !url.includes("null");
+}
+
 /** 폴백 이유를 알리는 콜백. 키 원문 같은 값은 넣지 않는다 */
 export type ShareIssue = (message: string, detail?: Record<string, unknown>) => void;
 
@@ -92,6 +112,12 @@ function tryKakao(content: ShareContent, deps: ShareDeps): boolean {
   if (!initKakao(deps.kakaoKey, kakao, onIssue)) return false;
   if (!kakao?.Share) {
     onIssue("이 환경에서는 Kakao.Share를 쓸 수 없습니다");
+    return false;
+  }
+  if (!isShareableLink(content.url)) {
+    onIssue("공유 링크가 카카오에서 열 수 없는 주소라 카카오톡 공유를 건너뜁니다(로컬 주소 등). 링크 복사로 대신합니다", {
+      url: content.url,
+    });
     return false;
   }
   const link = { mobileWebUrl: content.url, webUrl: content.url };

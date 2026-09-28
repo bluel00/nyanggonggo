@@ -1,5 +1,6 @@
 export {
   initKakao,
+  isShareableLink,
   SHARE_MESSAGES,
   shareAnimal,
   type KakaoSdk,
@@ -7,5 +8,5 @@ export {
   type ShareIssue,
   type ShareResult,
 } from "./model/share";
-export { buildShareContent } from "./model/share-content";
+export { buildShareContent, resolveShareOrigin } from "./model/share-content";
 export { KAKAO_SDK_INTEGRITY, KAKAO_SDK_URL, ShareButton } from "./ui/share-button";

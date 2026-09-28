@@ -65,13 +65,33 @@ describe("ShareButton", () => {
     await waitFor(() => expect(showToast).toHaveBeenCalledWith("링크가 복사됐어요"));
   });
 
-  it("SDK가 있으면 카카오톡 공유를 호출하고 토스트는 띄우지 않는다", async () => {
+  it("SDK가 있으면 카카오톡 공유를 호출하고 토스트는 띄우지 않는다(링크는 공유 가능한 도메인)", async () => {
     const sendDefault = vi.fn();
     (window as unknown as { Kakao: unknown }).Kakao = { isInitialized: () => true, init: vi.fn(), Share: { sendDefault } };
-    render(<ShareButton animal={animal} kakaoKey="test-kakao-key" />);
+    render(<ShareButton animal={animal} kakaoKey="test-kakao-key" siteUrl="https://nyang.example" />);
     fireEvent.click(screen.getByRole("button", { name: "카카오톡 공유" }));
     await waitFor(() => expect(sendDefault).toHaveBeenCalledOnce());
     expect(showToast).not.toHaveBeenCalled();
     expect(writeText).not.toHaveBeenCalled();
+
+    // 카드의 링크가 상세 페이지 절대 URL이어야 카드를 눌렀을 때 우리 화면으로 간다
+    const payload = sendDefault.mock.calls[0][0] as {
+      content: { link: { webUrl: string; mobileWebUrl: string } };
+      buttons: { link: { webUrl: string } }[];
+    };
+    expect(payload.content.link).toEqual({
+      webUrl: "https://nyang.example/animals/1",
+      mobileWebUrl: "https://nyang.example/animals/1",
+    });
+    expect(payload.buttons[0].link.webUrl).toBe("https://nyang.example/animals/1");
+  });
+
+  it("기준 주소가 로컬이면(배포 도메인 미설정) 카카오 공유 대신 링크 복사로 간다", async () => {
+    const sendDefault = vi.fn();
+    (window as unknown as { Kakao: unknown }).Kakao = { isInitialized: () => true, init: vi.fn(), Share: { sendDefault } };
+    render(<ShareButton animal={animal} kakaoKey="test-kakao-key" />);
+    fireEvent.click(screen.getByRole("button", { name: "카카오톡 공유" }));
+    await waitFor(() => expect(showToast).toHaveBeenCalledWith("링크가 복사됐어요"));
+    expect(sendDefault).not.toHaveBeenCalled();
   });
 });
