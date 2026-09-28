@@ -37,9 +37,10 @@ describe("loadOgFonts", () => {
 describe("fetchOgImage", () => {
   const http = (fetch: FetchLike) => createHttpClient({ fetch });
 
-  it("허용된 원본을 받아 data URL로(프록시 없이 서버가 직접)", async () => {
-    const fetch = vi.fn<FetchLike>(async () => new Response(new Uint8Array([0xff, 0xd8]), { headers: { "content-type": "image/jpeg" } }));
-    await expect(fetchOgImage(SRC, http(fetch), { timeoutMs: 1000 })).resolves.toBe("data:image/jpeg;base64,/9g=");
+  it("허용된 원본을 받아 data URL로(프록시 없이 서버가 직접). 업스트림 Content-Type이 틀려도 바이트로 판별한다", async () => {
+    const jpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xe0]);
+    const fetch = vi.fn<FetchLike>(async () => new Response(jpeg, { headers: { "content-type": "application/octet-stream" } }));
+    await expect(fetchOgImage(SRC, http(fetch), { timeoutMs: 1000 })).resolves.toBe("data:image/jpeg;base64,/9j/4A==");
     expect(fetch.mock.calls[0][0]).toBe(SRC);
   });
 
@@ -52,7 +53,7 @@ describe("fetchOgImage", () => {
 
   it.each([
     ["404", async () => new Response("x", { status: 404 })],
-    ["이미지가 아님", async () => new Response("<html>", { headers: { "content-type": "text/html" } })],
+    ["이미지 바이트가 아님", async () => new Response("<html>", { headers: { "content-type": "image/jpeg" } })],
     ["네트워크 오류", async () => Promise.reject(new TypeError("fetch failed"))],
   ] as [string, FetchLike][])("%s → null(사진 없이 그린다)", async (_label, fetch) => {
     await expect(fetchOgImage(SRC, http(fetch), { timeoutMs: 1000 })).resolves.toBeNull();

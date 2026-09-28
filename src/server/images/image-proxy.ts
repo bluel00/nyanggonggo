@@ -1,13 +1,16 @@
 import { isAllowedImageSource } from "@/contract/images";
 import { HttpError, type HttpClient } from "@/shared/api/http-client";
 import { noopLogger, type Logger } from "../logger";
+import { bytesPrefixHex, detectImageType } from "./image-type";
 
 /**
  * 이미지 프록시. 공공 API 이미지(http)를 서버에서 받아 같은 origin(https)으로 내려준다.
  *
  * - 원본은 IMAGE_SOURCE_PREFIX로 시작하는 URL만 허용한다. 그 외는 400(오픈 프록시 방지).
  * - 리다이렉트를 따라가지 않는다(허용된 호스트가 다른 호스트로 보내는 경우 차단).
- * - 원본 실패(4xx/5xx, 타임아웃, 네트워크, 이미지가 아닌 응답, 크기 초과)는 502 대신 200 + 투명 1x1 PNG를
+ * - 이미지 여부는 응답 바이트의 매직 넘버로 판별하고 Content-Type도 그 값으로 직접 설정한다. 업스트림 헤더는 믿지 않는다
+ *   (fileDownloadSrvc가 실제 이미지를 application/octet-stream으로 표기한다, architecture.md 12절).
+ * - 원본 실패(4xx/5xx, 타임아웃, 네트워크, 이미지 바이트가 아님, 크기 초과)는 502 대신 200 + 투명 1x1 PNG를
  *   캐시 없이 내려준다. 카드의 사진 영역 배경(토큰 색)이 그대로 보여 깨진 이미지 아이콘이 나오지 않는다.
  *   구분은 `X-Image-Proxy: fallback` 헤더와 서버 로그로 한다.
  */
@@ -57,12 +60,15 @@ export function createImageProxy(options: ImageProxyOptions) {
         // 바이트를 Next 데이터 캐시(항목 2MB 한도)에 넣지 않는다. 캐시는 응답 Cache-Control(CDN)이 맡는다.
         cache: "no-store",
       });
-      if (!contentType?.toLowerCase().startsWith("image/")) return fallback("not_image", { contentType });
+      const imageType = detectImageType(data);
+      if (imageType === null) {
+        return fallback("not_image", { upstreamContentType: contentType, bytes: data.byteLength, prefix: bytesPrefixHex(data) });
+      }
       if (data.byteLength > options.maxBytes) return fallback("too_large", { bytes: data.byteLength });
       return new Response(data, {
         status: 200,
         headers: {
-          "Content-Type": contentType,
+          "Content-Type": imageType,
           "Content-Length": String(data.byteLength),
           "Cache-Control": options.cacheControl,
           "X-Content-Type-Options": "nosniff",

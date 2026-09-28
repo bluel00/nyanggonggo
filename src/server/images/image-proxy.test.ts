@@ -4,7 +4,11 @@ import { createHttpClient, type FetchLike } from "@/shared/api/http-client";
 import { createImageProxy } from "./image-proxy";
 
 const SRC = "http://openapi.animal.go.kr/openapi/service/rest/fileDownloadSrvc/files/shelter/2026/09/1%5B1%5D.jpg";
+/** 실제 JPEG 시그니처(FF D8 FF) */
 const JPEG = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3]);
+const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2]);
+const GIF = new Uint8Array([0x47, 0x49, 0x46, 0x38, 0x39, 0x61]);
+const WEBP = new Uint8Array([0x52, 0x49, 0x46, 0x46, 1, 2, 3, 4, 0x57, 0x45, 0x42, 0x50]);
 
 function setup(fetchImpl: FetchLike, overrides: { maxBytes?: number; timeoutMs?: number } = {}) {
   const fetch = vi.fn(fetchImpl);
@@ -20,7 +24,8 @@ function setup(fetchImpl: FetchLike, overrides: { maxBytes?: number; timeoutMs?:
   return { fetch, logger, proxy };
 }
 
-const jpeg = async () => new Response(JPEG, { status: 200, headers: { "content-type": "image/jpeg" } });
+/** 업스트림은 실제 이미지를 주면서 Content-Type을 application/octet-stream으로 잘못 표기한다(2026-09-27 확인) */
+const jpeg = async () => new Response(JPEG, { status: 200, headers: { "content-type": "application/octet-stream" } });
 
 async function expectFallback(response: Response) {
   expect(response.status).toBe(200);
@@ -44,7 +49,7 @@ describe("image proxy", () => {
     },
   );
 
-  it("정상 응답은 content-type과 바이트를 그대로, Cache-Control을 붙여 내려준다", async () => {
+  it("업스트림 Content-Type이 octet-stream이어도 바이트로 판별해 image/jpeg로 내려준다", async () => {
     const { fetch, proxy } = setup(jpeg);
     const response = await proxy(SRC);
     expect(response.status).toBe(200);
@@ -62,12 +67,38 @@ describe("image proxy", () => {
     ["404", async () => new Response("not found", { status: 404 })],
     ["500", async () => new Response("boom", { status: 500 })],
     ["네트워크 오류", async () => Promise.reject(new TypeError("fetch failed"))],
-    ["이미지가 아닌 응답", async () => new Response("<html>", { status: 200, headers: { "content-type": "text/html" } })],
-    ["content-type 없음", async () => new Response(JPEG, { status: 200 })],
+    ["이미지 바이트가 아닌 응답(헤더는 image/jpeg)", async () => new Response("<html>", { status: 200, headers: { "content-type": "image/jpeg" } })],
+    ["너무 짧아 시그니처를 확인할 수 없음", async () => new Response(new Uint8Array([0xff, 0xd8]), { status: 200 })],
   ] as [string, FetchLike][])("원본 실패(%s) → 투명 PNG 대체 응답(캐시 없음)", async (_label, fetchImpl) => {
     const { logger, proxy } = setup(fetchImpl);
     await expectFallback(await proxy(SRC));
     expect(logger.warn).toHaveBeenCalledWith("image proxy fallback", expect.any(Object));
+  });
+
+  it.each([
+    ["PNG", PNG, "image/png"],
+    ["GIF", GIF, "image/gif"],
+    ["WebP", WEBP, "image/webp"],
+  ] as [string, BodyInit, string][])("%s 시그니처도 형식을 판별해 내려준다", async (_label, bytes, expected) => {
+    const { proxy } = setup(async () => new Response(bytes, { status: 200 }), { maxBytes: 1024 });
+    const response = await proxy(SRC);
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toBe(expected);
+    expect(response.headers.get("x-image-proxy")).toBeNull();
+  });
+
+  it("content-type이 없어도 바이트가 이미지면 내려준다", async () => {
+    const { proxy } = setup(async () => new Response(JPEG, { status: 200 }));
+    expect((await proxy(SRC)).headers.get("content-type")).toBe("image/jpeg");
+  });
+
+  it("이미지가 아니면 로그에 업스트림 헤더와 앞부분 바이트를 남긴다(본문은 남기지 않는다)", async () => {
+    const { logger, proxy } = setup(async () => new Response("<html>secret</html>", { status: 200, headers: { "content-type": "image/png" } }));
+    await proxy(SRC);
+    const [, detail] = logger.warn.mock.calls[0];
+    expect(detail).toMatchObject({ reason: "not_image", upstreamContentType: "image/png" });
+    expect(String(detail.prefix)).toMatch(/^[0-9a-f]{2}( [0-9a-f]{2})*$/);
+    expect(JSON.stringify(detail)).not.toContain("secret");
   });
 
   it("타임아웃 → 대체 응답", async () => {

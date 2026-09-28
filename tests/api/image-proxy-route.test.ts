@@ -4,9 +4,11 @@ import { GET } from "@/app/api/image-proxy/route";
 import { toImageProxyUrl } from "@/contract/images";
 
 const SRC = "http://openapi.animal.go.kr/openapi/service/rest/fileDownloadSrvc/files/shelter/2026/09/1%5B1%5D.jpg";
+/** 실제 JPEG 시그니처(FF D8 FF). 업스트림은 Content-Type을 octet-stream으로 잘못 준다 */
+const JPEG = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10]);
 const upstream = vi.fn(
   async (_input: string | URL | Request) =>
-    new Response(new Uint8Array([1, 2, 3]), { headers: { "content-type": "image/jpeg" } }),
+    new Response(JPEG, { headers: { "content-type": "application/octet-stream" } }),
 );
 
 beforeEach(() => {
@@ -23,6 +25,7 @@ describe("GET /api/image-proxy", () => {
   it("클라이언트가 만든 프록시 URL(toImageProxyUrl)을 그대로 받아 원본을 전달한다", async () => {
     const response = await GET(new Request(`http://localhost${toImageProxyUrl(SRC)}`));
     expect(response.status).toBe(200);
+    // 업스트림 헤더(octet-stream)가 아니라 바이트로 판별한 형식을 우리가 설정한다
     expect(response.headers.get("content-type")).toBe("image/jpeg");
     expect(response.headers.get("cache-control")).toContain("max-age");
     expect(String(upstream.mock.calls[0][0])).toBe(SRC);
