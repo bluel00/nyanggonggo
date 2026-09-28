@@ -46,6 +46,7 @@ const wire = (id: string): AnimalWireDto => ({
   shelterName: `보호소${id}`,
   foundPlaceText: null,
   noticePeriodText: null,
+  specialMarkText: null,
 });
 
 const fetchMock = vi.fn<(input: string | URL | Request) => Promise<Response>>();
@@ -113,6 +114,14 @@ describe("AnimalList", () => {
     fireEvent.click(screen.getByRole("button", { name: "다시 시도" }));
     await screen.findByText("지역1");
     expect(listRequests()).toHaveLength(2);
+  });
+
+  it("응답의 항목을 빠짐없이 그린다(2026-09-28 종로구 5건 회귀)", async () => {
+    const ids = ["411300202600527", "411300202600526", "411300202600525", "411300202600524", "411300202600523"];
+    fetchMock.mockResolvedValue(Response.json({ items: ids.map(wire), nextCursor: null }));
+    const { container } = renderList();
+    await screen.findByText("지역411300202600527");
+    expect(container.querySelectorAll('[data-slot="animal-card"]')).toHaveLength(ids.length);
   });
 
   it("결과가 0건이면 빈 상태 문구", async () => {
