@@ -9,6 +9,8 @@ export function FavoritesLink() {
     <Link
       href="/favorites"
       aria-label="찜 목록"
+      // 목록의 스크롤 위치 저장값이 덮이지 않게 한다(찜 목록은 직접 맨 위로 올린다)
+      scroll={false}
       className="inline-flex size-touch items-center justify-center rounded-pill text-text transition-transform duration-press ease-out active:scale-press focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
     >
       <Heart aria-hidden className="size-[22px]" strokeWidth={1.8} />

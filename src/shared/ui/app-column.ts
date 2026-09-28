@@ -14,44 +14,98 @@ export function useAppColumn(): HTMLElement | null {
   );
 }
 
+function appScrollContainer(): HTMLElement | null {
+  return document.querySelector<HTMLElement>(APP_SCROLL_SELECTOR);
+}
+
 /** 내부 스크롤 컨테이너를 맨 위로 */
 export function scrollAppToTop(): void {
-  document.querySelector<HTMLElement>(APP_SCROLL_SELECTOR)?.scrollTo({ top: 0 });
+  const container = appScrollContainer();
+  if (!container) return;
+  // jsdom 등 scrollTo가 없는 환경도 있다
+  if (typeof container.scrollTo === "function") container.scrollTo({ top: 0 });
+  else container.scrollTop = 0;
 }
 
 const SCROLL_KEY_PREFIX = "nyanggonggo:scroll:";
+/** 복원할 때 목록 높이가 아직 모자랄 수 있어 몇 프레임까지 다시 시도한다 */
+const RESTORE_FRAMES = 10;
+
+function saveScroll(key: string, top: number): void {
+  try {
+    sessionStorage.setItem(SCROLL_KEY_PREFIX + key, String(top));
+  } catch {
+    // 저장 실패는 무시(복원만 안 된다)
+  }
+}
+
+function readScroll(key: string): number {
+  try {
+    return Number(sessionStorage.getItem(SCROLL_KEY_PREFIX + key) ?? 0);
+  } catch {
+    return 0;
+  }
+}
 
 /**
- * 내부 스크롤 컨테이너의 위치를 key별로 sessionStorage에 저장하고, 화면이 다시 마운트되어 ready가 되면 한 번 복원한다.
- * 목록 → 상세 → 뒤로가기 때 목록 위치를 되살린다(architecture.md 7절). 저장소 접근이 막혀도 동작은 계속한다.
+ * 내부 스크롤 컨테이너의 위치를 key별로 sessionStorage에 저장하고, 화면이 다시 마운트되어 ready가 되면 복원한다.
+ * 목록 → 상세 → 뒤로가기 때 목록 위치를 되살린다(architecture.md 7절).
+ *
+ * 복원은 마운트 직후 한 번만 한다(같은 화면에서 필터를 바꾸면 복원하지 않고 맨 위로 간다).
+ * 저장은 스크롤할 때(프레임당 한 번)와 화면을 떠날 때(정리 시점, pagehide) 한다. 정리 시점에 한 번 더 저장해,
+ * 마지막 스크롤 이벤트가 아직 전달되지 않았어도 위치를 놓치지 않는다.
+ * 목록 카드 링크는 `scroll={false}`라 Next가 이동 중에 컨테이너를 건드리지 않는다(그러면 저장값이 0으로 덮인다).
  */
 export function useAppScrollRestoration(key: string, ready: boolean): void {
+  // 복원은 마운트 시점의 key에만 한다. 마운트 중에 필터가 바뀌면 맨 위로 가는 게 맞다(useScrollTopOnFilterChange)
+  const mountKey = useRef(key);
   const restored = useRef(false);
 
   useEffect(() => {
-    const container = document.querySelector<HTMLElement>(APP_SCROLL_SELECTOR);
+    const container = appScrollContainer();
     if (!container) return;
-    const save = () => {
-      try {
-        sessionStorage.setItem(SCROLL_KEY_PREFIX + key, String(container.scrollTop));
-      } catch {
-        // 저장 실패는 무시(복원만 안 된다)
-      }
+    let frame = 0;
+    const save = () => saveScroll(key, container.scrollTop);
+    const onScroll = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        save();
+      });
     };
-    container.addEventListener("scroll", save, { passive: true });
-    return () => container.removeEventListener("scroll", save);
+    container.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("pagehide", save);
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      container.removeEventListener("scroll", onScroll);
+      window.removeEventListener("pagehide", save);
+      // 화면을 떠나는 시점(상세로 이동, 필터 변경)의 위치를 저장한다
+      save();
+    };
   }, [key]);
 
   useEffect(() => {
-    if (!ready || restored.current) return;
+    if (!ready || restored.current || key !== mountKey.current) return;
     restored.current = true;
-    const container = document.querySelector<HTMLElement>(APP_SCROLL_SELECTOR);
-    let saved: string | null = null;
-    try {
-      saved = sessionStorage.getItem(SCROLL_KEY_PREFIX + key);
-    } catch {
-      return;
-    }
-    if (container && saved) container.scrollTop = Number(saved);
+    const target = readScroll(key);
+    if (target <= 0) return;
+
+    let frames = 0;
+    let id = 0;
+    const apply = () => {
+      const container = appScrollContainer();
+      if (container) {
+        container.scrollTop = target;
+        // 목록이 충분히 길어 목표 위치에 도달했으면 끝낸다
+        if (Math.abs(container.scrollTop - target) < 1) return;
+      }
+      if (frames >= RESTORE_FRAMES) return;
+      frames += 1;
+      id = requestAnimationFrame(apply);
+    };
+    apply();
+    return () => {
+      if (id) cancelAnimationFrame(id);
+    };
   }, [ready, key]);
 }

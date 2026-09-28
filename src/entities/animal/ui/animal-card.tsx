@@ -62,6 +62,9 @@ export function AnimalCard({
       {href ? (
         <Link
           href={href}
+          // Next가 이동할 때 새 화면을 보이게 하려고 내부 스크롤 컨테이너를 건드리지 않게 한다.
+          // (건드리면 목록의 스크롤 위치 저장값이 0으로 덮여 뒤로 왔을 때 맨 위로 간다. 상세는 직접 맨 위로 올린다)
+          scroll={false}
           className={cn(
             className,
             "transition-transform duration-press ease-out active:scale-press focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",

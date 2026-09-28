@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AnimalWireDto } from "@/contract/animals";
 import type { AnimalListFilter } from "@/entities/animal";
 import { createQueryClient } from "@/shared/api/query-client";
+import { scrollAppToTop } from "@/shared/ui/app-column";
 import { AnimalList } from "./animal-list";
 
 /** 가짜 IntersectionObserver: 테스트가 trigger()로 교차를 흉내 낸다 */
@@ -159,5 +160,61 @@ describe("AnimalList 찜 하트", () => {
     fireEvent.click(buttons[0]);
     expect(screen.getAllByRole("button", { name: "찜 해제" })).toHaveLength(1);
     expect(JSON.parse(localStorage.getItem("nyanggonggo:favorites")!)).toEqual(["1"]);
+  });
+});
+
+describe("AnimalList 스크롤 복원", () => {
+  const filter: AnimalListFilter = { species: "cat", status: "protected", sort: "latest" };
+
+  /** AppShell과 같은 구조를 만들고, 화면마다 별도 host에 그려 이동을 흉내 낸다 */
+  function openShell() {
+    document.body.innerHTML = `<div data-slot="app-column"><div data-slot="app-scroll"></div></div>`;
+    const scroll = document.querySelector<HTMLElement>('[data-slot="app-scroll"]')!;
+    const client = createQueryClient();
+    const open = () => {
+      const host = document.createElement("div");
+      scroll.appendChild(host);
+      return render(<AnimalList filter={filter} />, {
+        container: host,
+        wrapper: ({ children }: { children: ReactNode }) => <QueryClientProvider client={client}>{children}</QueryClientProvider>,
+      });
+    };
+    return { scroll, open };
+  }
+
+  it("무한 스크롤로 2페이지를 본 뒤 상세로 갔다 돌아오면 카드와 스크롤 위치가 그대로다", async () => {
+    fetchMock.mockImplementation(async (input) => {
+      const cursor = new URL(String(input), "http://localhost").searchParams.get("cursor");
+      return Response.json(
+        cursor === null ? { items: [wire("1"), wire("2")], nextCursor: "Mg" } : { items: [wire("3")], nextCursor: null },
+      );
+    });
+    const { scroll, open } = openShell();
+
+    const list = open();
+    await screen.findByText("지역1");
+    await triggerSentinel();
+    await screen.findByText("지역3"); // 2페이지까지 로드
+
+    // 사용자가 스크롤(jsdom은 스크롤 이벤트를 자동으로 내지 않는다)
+    scroll.scrollTop = 1200;
+    await act(async () => {
+      scroll.dispatchEvent(new Event("scroll"));
+      await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+    });
+
+    // 상세로 이동: 목록이 사라지고 상세가 맨 위로 올린다
+    list.unmount();
+    scrollAppToTop();
+    expect(scroll.scrollTop).toBe(0);
+    const requestsBeforeBack = listRequests().length;
+
+    // 뒤로가기: 같은 QueryClient라 캐시된 2페이지가 그대로 나온다
+    await act(async () => {
+      open();
+    });
+    expect(screen.getByText("지역3")).toBeTruthy();
+    expect(scroll.scrollTop).toBe(1200);
+    expect(listRequests()).toHaveLength(requestsBeforeBack); // 다시 불러오지 않는다(staleTime)
   });
 });
