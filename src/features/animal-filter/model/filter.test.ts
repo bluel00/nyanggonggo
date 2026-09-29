@@ -66,24 +66,26 @@ describe("parseAnimalFilter", () => {
 });
 
 describe("toFilterQuery / toFilterHref", () => {
-  it("기본값은 URL에 넣지 않는다(기본 상태는 경로만)", () => {
-    expect(toFilterQuery(DEFAULT_ANIMAL_FILTER)).toBe("");
-    expect(toFilterHref("/", DEFAULT_ANIMAL_FILTER)).toBe("/");
+  it("species/status/sort의 기본값은 URL에 넣지 않는다", () => {
+    expect(toFilterQuery(DEFAULT_ANIMAL_FILTER)).toBe(`region=${SEOUL}`);
+    expect(toFilterHref("/", DEFAULT_ANIMAL_FILTER)).toBe(`/?region=${SEOUL}`);
   });
 
   it("전국은 region=all로 남긴다(생략하면 기본 지역이 되므로)", () => {
     expect(toFilterQuery({ species: "cat", status: "protected", sort: "latest" })).toBe("region=all");
   });
 
-  it("기본 지역(서울 전체)은 생략하고, 시군구를 고르면 region+district", () => {
-    expect(toFilterQuery(DEFAULT_ANIMAL_FILTER)).toBe("");
+  it("지역은 기본값(서울 전체)이어도 늘 쓴다(생략하면 기억된 지역이 끼어든다)", () => {
+    expect(toFilterQuery(DEFAULT_ANIMAL_FILTER)).toBe(`region=${SEOUL}`);
     expect(toFilterQuery({ ...DEFAULT_ANIMAL_FILTER, district: JONGNO })).toBe(`region=${SEOUL}&district=${JONGNO}`);
     expect(toFilterQuery({ ...DEFAULT_ANIMAL_FILTER, district: GANGNAM })).toBe(`region=${SEOUL}&district=${GANGNAM}`);
   });
 
   it("필터와 무관한 파라미터는 보존하고, 이전 필터 값과 page/cursor는 지운다", () => {
     const base = qs(`utm_source=kakao&species=dog&region=${BUSAN}&district=${BUSAN_JUNG}&page=3&cursor=MjA`);
-    expect(toFilterHref("/", { ...DEFAULT_ANIMAL_FILTER, status: "ended" }, base)).toBe("/?utm_source=kakao&status=ended");
+    expect(toFilterHref("/", { ...DEFAULT_ANIMAL_FILTER, status: "ended" }, base)).toBe(
+      `/?utm_source=kakao&region=${SEOUL}&status=ended`,
+    );
   });
 
   it.each([
