@@ -15,7 +15,8 @@ const ListQuerySchema = z.object({
   district: z.string().regex(DIGITS).optional(),
   status: z.enum(["protected", "ended", "all"]).default("protected"),
   sort: z.enum(["latest", "endingSoon"]).default("latest"),
-  cursor: z.string().max(64).optional(),
+  // 커서는 앞 페이지 마지막 항목의 정렬 키를 base64url로 감싼 값이다(service.ts). 여유를 두고 128자까지 받는다
+  cursor: z.string().max(128).optional(),
 }).refine((query) => query.district === undefined || query.region !== undefined, {
   path: ["district"],
   message: "district requires region",

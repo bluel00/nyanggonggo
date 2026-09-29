@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { AnimalCard, SPECIES_LABEL, useAnimalsInfinite, type AnimalListFilter } from "@/entities/animal";
 import { FavoriteButton } from "@/features/animal-favorite";
 import { markListVisited } from "@/shared/lib/app-navigation";
-import { scrollAppToTop, useAppScrollRestoration } from "@/shared/ui/app-column";
+import { rememberSelectedAnimal, scrollAppToTop, useAnimalScrollRestoration } from "@/shared/ui/app-column";
 import { Button } from "@/shared/ui/button";
 import { SkeletonCard } from "@/shared/ui/skeleton-card";
 
@@ -28,8 +28,9 @@ export function AnimalList({ filter }: { filter: AnimalListFilter }) {
   // 목록을 거쳤다는 표시. 상세의 뒤로가기가 목록으로 돌아갈지 판단한다(shared/lib/app-navigation)
   useEffect(() => markListVisited(), []);
   useScrollTopOnFilterChange(filter);
-  // 상세에서 뒤로 오면 캐시된 페이지(같은 쿼리 키)와 함께 스크롤 위치를 되살린다
-  useAppScrollRestoration(filterKey(filter), query.isSuccess);
+  // 상세에서 뒤로 오면 캐시된 페이지(같은 쿼리 키)와 함께 열었던 카드로 되돌아간다
+  const listKey = filterKey(filter);
+  useAnimalScrollRestoration(listKey, query.isSuccess);
   const sentinelRef = useLoadMore({
     enabled: query.hasNextPage && !query.isFetchingNextPage && !query.isFetchNextPageError,
     onLoadMore: () => void query.fetchNextPage(),
@@ -69,6 +70,7 @@ export function AnimalList({ filter }: { filter: AnimalListFilter }) {
           now={now}
           priority={index < EAGER_CARDS}
           href={`/animals/${animal.id}`}
+          onSelect={() => rememberSelectedAnimal(listKey, animal.id)}
           action={<FavoriteButton animalId={animal.id} variant="overlay" />}
         />
       ))}

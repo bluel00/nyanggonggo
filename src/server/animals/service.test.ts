@@ -170,20 +170,72 @@ describe("list: 커서", () => {
     expect(second.nextCursor).toBeNull();
   });
 
-  it("범위를 넘는 커서는 빈 목록", async () => {
-    const result = await service().list(params({ cursor: encodeCursor(100) }));
+  it("목록 맨 끝을 가리키는 커서는 빈 목록", async () => {
+    const all = await service().list(params({ status: "all" }));
+    const lastId = ids(all).at(-1)!;
+    const last = mapped.find((m) => m.wire.id === lastId)!;
+    const result = await service().list(params({ status: "all", cursor: encodeCursor(last) }));
     expect(result).toEqual({ items: [], nextCursor: null });
   });
 
-  it.each(["", "!!!", "abc", encodeCursor(1) + "x", Buffer.from("-1").toString("base64url"), Buffer.from("1.5").toString("base64url")])(
-    "잘못된 커서 %j → InvalidRequestError",
-    async (cursor) => {
-      await expect(service().list(params({ cursor }))).rejects.toBeInstanceOf(InvalidRequestError);
-    },
-  );
+  it.each([
+    "",
+    "!!!",
+    "abc",
+    encodeCursor(mapped[0]!) + "x",
+    Buffer.from("1|2|3").toString("base64url"),
+    Buffer.from("|20260921|20261001|11:29").toString("base64url"),
+  ])("잘못된 커서 %j → InvalidRequestError", async (cursor) => {
+    await expect(service().list(params({ cursor }))).rejects.toBeInstanceOf(InvalidRequestError);
+  });
 
   it("encode/decode 왕복", () => {
-    for (const offset of [0, 20, 12345]) expect(decodeCursor(encodeCursor(offset))).toBe(offset);
+    for (const animal of mapped) {
+      expect(decodeCursor(encodeCursor(animal))).toEqual({ wire: { id: animal.wire.id }, sortKeys: animal.sortKeys });
+    }
+  });
+
+  it("다음 페이지를 받기 전에 새 공고가 끼어들어도 앞 페이지 항목이 다시 나오지 않는다", async () => {
+    // 목록은 요청마다 업스트림에서 새로 조립한다. 사이에 새 공고가 하나 추가되면 offset 커서는 한 칸 밀려 중복이 난다
+    const inserted: MappedAnimal = {
+      ...mapped[0]!,
+      wire: { ...mapped[0]!.wire, id: "999999999999999", status: "protected" },
+      sortKeys: { ...mapped[0]!.sortKeys, noticeSdt: "20260922" }, // 최신순에서 맨 앞
+    };
+    const source = fakeSource();
+    const svc = service(source, 2);
+
+    const first = await svc.list(params({ status: "all" }));
+    source.list = vi.fn(async () => [inserted, ...mapped]); // 다음 요청부터 새 공고가 섞인다
+    const second = await svc.list(params({ status: "all", cursor: first.nextCursor! }));
+
+    expect(ids(second)).not.toContain(ids(first)[1]); // 경계 항목이 또 나오지 않는다
+    expect(new Set([...ids(first), ...ids(second)]).size).toBe(ids(first).length + ids(second).length);
+  });
+
+  it("새 공고가 끼어들어도 뒤 항목이 건너뛰어지지 않는다", async () => {
+    const inserted: MappedAnimal = {
+      ...mapped[0]!,
+      wire: { ...mapped[0]!.wire, id: "999999999999999", status: "protected" },
+      sortKeys: { ...mapped[0]!.sortKeys, noticeSdt: "20260922" },
+    };
+    const source = fakeSource();
+    const svc = service(source, 2);
+    const full = ids(await service().list(params({ status: "all" })));
+
+    const collected: string[] = [];
+    let cursor: string | null = null;
+    for (let page = 0; page < 10; page += 1) {
+      const result: Awaited<ReturnType<typeof svc.list>> = await svc.list(
+        params({ status: "all", ...(cursor ? { cursor } : {}) }),
+      );
+      collected.push(...ids(result));
+      source.list = vi.fn(async () => [inserted, ...mapped]); // 매 페이지 사이에 계속 밀린다
+      cursor = result.nextCursor;
+      if (!cursor) break;
+    }
+    // 처음 목록의 항목이 하나도 빠지지 않는다(끼어든 새 공고는 앞쪽이라 보이지 않을 수 있다)
+    expect(collected).toEqual(full);
   });
 });
 

@@ -35,18 +35,18 @@ export type AnimalService = {
 export function createAnimalService(source: AnimalSource, options: AnimalServiceOptions): AnimalService {
   return {
     async list({ species, region, district, status, sort, cursor }) {
-      const offset = cursor === undefined ? 0 : decodeCursor(cursor);
+      const anchor = cursor === undefined ? null : decodeCursor(cursor);
       const all = await source.list({ species, uprCd: region ?? "all", ...(district ? { orgCd: district } : {}) });
 
-      const today = kstYmd(options.now());
-      const sorted = all
-        .filter((animal) => status === "all" || animal.wire.status === status)
-        .sort(sort === "latest" ? compareLatest : compareEndingSoon(today));
+      const compare = sort === "latest" ? compareLatest : compareEndingSoon(kstYmd(options.now()));
+      const sorted = all.filter((animal) => status === "all" || animal.wire.status === status).sort(compare);
 
-      const end = offset + options.pageSize;
+      const start = anchor === null ? 0 : firstIndexAfter(sorted, compare, anchor);
+      const page = sorted.slice(start, start + options.pageSize);
+      const last = page.at(-1);
       return {
-        items: sorted.slice(offset, end).map((animal) => animal.wire),
-        nextCursor: end < sorted.length ? encodeCursor(end) : null,
+        items: page.map((animal) => animal.wire),
+        nextCursor: last && start + page.length < sorted.length ? encodeCursor(toAnchor(last)) : null,
       };
     },
 
@@ -65,7 +65,10 @@ export function createAnimalService(source: AnimalSource, options: AnimalService
   };
 }
 
-type Comparator = (a: MappedAnimal, b: MappedAnimal) => number;
+/** 정렬에 쓰는 최소 형태. MappedAnimal과 커서가 가리키는 항목(anchor)이 모두 이 모양이다. */
+type SortItem = { sortKeys: MappedAnimal["sortKeys"]; wire: { id: string } };
+
+type Comparator = (a: SortItem, b: SortItem) => number;
 
 const compareText = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
@@ -101,16 +104,44 @@ function kstYmd(date: Date): string {
   return new Date(date.getTime() + KST_OFFSET_MS).toISOString().slice(0, 10).replaceAll("-", "");
 }
 
-/** 커서는 정렬된 결과의 offset을 base64url로 감싼 불투명 문자열이다. */
-export function encodeCursor(offset: number): string {
-  return Buffer.from(String(offset), "utf8").toString("base64url");
+/**
+ * 커서는 **앞 페이지 마지막 항목의 정렬 키**를 base64url로 감싼 불투명 문자열이다(offset이 아니다).
+ * 목록은 요청마다 업스트림에서 새로 조립하므로, 두 요청 사이에 공고가 하나만 추가되거나 상태가 바뀌어도
+ * offset은 한 칸씩 밀려 경계의 항목이 다음 페이지에 또 나오거나(중복 key) 빠졌다(12절 38).
+ * 정렬 키를 기준으로 하면 "이 항목보다 뒤"를 정확히 집어낼 수 있어 밀림에 영향받지 않는다.
+ */
+export type CursorAnchor = SortItem;
+
+const CURSOR_SEPARATOR = "|";
+
+function toAnchor({ sortKeys, wire }: SortItem): CursorAnchor {
+  return { sortKeys: { ...sortKeys }, wire: { id: wire.id } };
 }
 
-export function decodeCursor(cursor: string): number {
-  const decoded = Buffer.from(cursor, "base64url").toString("utf8");
-  const offset = /^\d{1,9}$/.test(decoded) ? Number(decoded) : NaN;
-  if (!Number.isSafeInteger(offset) || encodeCursor(offset) !== cursor) {
-    throw new InvalidRequestError("Invalid cursor");
+export function encodeCursor(anchor: CursorAnchor): string {
+  const { noticeSdt, noticeEdt, updTm } = anchor.sortKeys;
+  const raw = [anchor.wire.id, noticeSdt, noticeEdt, updTm].join(CURSOR_SEPARATOR);
+  return Buffer.from(raw, "utf8").toString("base64url");
+}
+
+export function decodeCursor(cursor: string): CursorAnchor {
+  const parts = Buffer.from(cursor, "base64url").toString("utf8").split(CURSOR_SEPARATOR);
+  const [id, noticeSdt, noticeEdt, updTm] = parts;
+  if (parts.length !== 4 || !id) throw new InvalidRequestError("Invalid cursor");
+  const anchor: CursorAnchor = { wire: { id }, sortKeys: { noticeSdt: noticeSdt!, noticeEdt: noticeEdt!, updTm: updTm! } };
+  // 같은 값으로 다시 만들어 보고 다르면(잘못된 base64, 덧붙은 문자 등) 거부한다
+  if (encodeCursor(anchor) !== cursor) throw new InvalidRequestError("Invalid cursor");
+  return anchor;
+}
+
+/** 정렬된 목록에서 anchor보다 뒤에 오는 첫 항목의 위치(이분 탐색). 없으면 목록 길이 */
+function firstIndexAfter(sorted: SortItem[], compare: Comparator, anchor: CursorAnchor): number {
+  let low = 0;
+  let high = sorted.length;
+  while (low < high) {
+    const mid = (low + high) >>> 1;
+    if (compare(anchor, sorted[mid]!) < 0) high = mid;
+    else low = mid + 1;
   }
-  return offset;
+  return low;
 }

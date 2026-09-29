@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { cn } from "@/shared/lib/utils";
+import { ANIMAL_ID_ATTRIBUTE } from "@/shared/ui/app-column";
 import type { Animal } from "../model/animal";
 import { getDDay } from "../model/dDay";
 import { getPrimaryImage, getStatusVariant } from "../model/status";
@@ -17,7 +18,7 @@ import { StatusBadge } from "./status-badge";
  * - 배지: 사진 좌상단(12px), photo-pill 배경. 종료 공고는 "종료"만, 그 외는 D-day가 있을 때만 붙인다
  * - 텍스트: Domain에 이름이 없어 1줄은 지역(regionText), 2줄은 보호소(없으면 발견 장소). 명세의 "지역 · 보호소"를
  *   그대로 쓰면 1줄과 지역이 겹쳐서 2줄에는 보호소만 둔다
- * - href가 있으면 링크, 없으면 정적 article
+ * - href가 있으면 링크, 없으면 정적 article. 링크를 누르면 onSelect로 알린다(목록이 그 카드를 기억해 뒤로 왔을 때 되돌아간다)
  * - action(예: 찜 버튼)은 사진 우상단에 둔다. 링크 안에 버튼을 넣지 않도록 링크와 형제로 두어 카드 이동과 겹치지 않는다
  */
 export function AnimalCard({
@@ -26,6 +27,7 @@ export function AnimalCard({
   href,
   priority = false,
   action,
+  onSelect,
 }: {
   animal: Animal;
   /** D-day 기준 시각 */
@@ -35,6 +37,8 @@ export function AnimalCard({
   priority?: boolean;
   /** 사진 우상단 액션(entities는 features를 모르므로 위젯이 넣는다) */
   action?: ReactNode;
+  /** 카드를 눌러 상세로 갈 때 */
+  onSelect?: () => void;
 }) {
   const variant = getStatusVariant(animal, now);
   const ended = variant === "ended";
@@ -58,12 +62,12 @@ export function AnimalCard({
 
   const className = "block w-full overflow-hidden rounded-card bg-bg text-left text-inherit";
   return (
-    <div data-slot="animal-card" data-status={variant} className="relative">
+    <div data-slot="animal-card" data-status={variant} {...{ [ANIMAL_ID_ATTRIBUTE]: animal.id }} className="relative">
       {href ? (
         <Link
           href={href}
-          // Next가 이동할 때 새 화면을 보이게 하려고 내부 스크롤 컨테이너를 건드리지 않게 한다.
-          // (건드리면 목록의 스크롤 위치 저장값이 0으로 덮여 뒤로 왔을 때 맨 위로 간다. 상세는 직접 맨 위로 올린다)
+          onClick={onSelect}
+          // Next가 이동할 때 내부 스크롤 컨테이너를 건드리지 않게 한다(새 화면은 각자 맨 위로 올린다)
           scroll={false}
           className={cn(
             className,

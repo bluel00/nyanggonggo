@@ -6,7 +6,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AnimalWireDto } from "@/contract/animals";
 import type { AnimalListFilter } from "@/entities/animal";
 import { createQueryClient } from "@/shared/api/query-client";
-import { scrollAppToTop } from "@/shared/ui/app-column";
 import { AnimalList } from "./animal-list";
 
 /** 가짜 IntersectionObserver: 테스트가 trigger()로 교차를 흉내 낸다 */
@@ -165,14 +164,22 @@ describe("AnimalList 찜 하트", () => {
 
 describe("AnimalList 스크롤 복원", () => {
   const filter: AnimalListFilter = { species: "cat", status: "protected", sort: "latest" };
+  const CARD_HEIGHT = 400;
+  const CONTAINER_HEIGHT = 600;
+  const realRect = Element.prototype.getBoundingClientRect;
 
   /** AppShell과 같은 구조를 만들고, 화면마다 별도 host에 그려 이동을 흉내 낸다 */
   function openShell() {
     document.body.innerHTML = `<div data-slot="app-column"><div data-slot="app-scroll"></div></div>`;
     const scroll = document.querySelector<HTMLElement>('[data-slot="app-scroll"]')!;
-    // jsdom에는 레이아웃이 없다. 실제 브라우저처럼 "카드가 있으면 스크롤할 수 있다"를 흉내 낸다
-    Object.defineProperty(scroll, "clientHeight", { configurable: true, value: 600 });
-    Object.defineProperty(scroll, "scrollHeight", { configurable: true, get: () => (scroll.textContent ? 3000 : 600) });
+    // jsdom에는 레이아웃이 없다. 카드가 400px씩 쌓인 목록을 흉내 낸다
+    Element.prototype.getBoundingClientRect = function (this: Element) {
+      if (this === scroll) return { top: 0, height: CONTAINER_HEIGHT } as DOMRect;
+      const cards = [...scroll.querySelectorAll("[data-animal-id]")];
+      const index = cards.indexOf(this);
+      if (index < 0) return { top: 0, height: 0 } as DOMRect;
+      return { top: index * CARD_HEIGHT - scroll.scrollTop, height: CARD_HEIGHT } as DOMRect;
+    };
     const client = createQueryClient();
     const open = () => {
       const host = document.createElement("div");
@@ -185,11 +192,18 @@ describe("AnimalList 스크롤 복원", () => {
     return { scroll, open };
   }
 
-  it("무한 스크롤로 2페이지를 본 뒤 상세로 갔다 돌아오면 카드와 스크롤 위치가 그대로다", async () => {
+  afterEach(() => {
+    Element.prototype.getBoundingClientRect = realRect;
+    sessionStorage.clear();
+  });
+
+  it("무한 스크롤로 2페이지를 본 뒤 상세로 갔다 돌아오면 카드가 그대로 있고 열었던 카드로 돌아간다", async () => {
     fetchMock.mockImplementation(async (input) => {
       const cursor = new URL(String(input), "http://localhost").searchParams.get("cursor");
       return Response.json(
-        cursor === null ? { items: [wire("1"), wire("2")], nextCursor: "Mg" } : { items: [wire("3")], nextCursor: null },
+        cursor === null
+          ? { items: [wire("1"), wire("2"), wire("3")], nextCursor: "c2" }
+          : { items: [wire("4"), wire("5")], nextCursor: null },
       );
     });
     const { scroll, open } = openShell();
@@ -197,28 +211,36 @@ describe("AnimalList 스크롤 복원", () => {
     const list = open();
     await screen.findByText("지역1");
     await triggerSentinel();
-    await screen.findByText("지역3"); // 2페이지까지 로드
+    await screen.findByText("지역5"); // 2페이지까지 로드
 
-    // 사용자가 스크롤(jsdom은 스크롤 이벤트를 자동으로 내지 않는다)
-    scroll.scrollTop = 1200;
-    await act(async () => {
-      scroll.dispatchEvent(new Event("scroll"));
-      await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
-    });
-
-    // 상세로 이동: 목록 DOM이 지워지면 브라우저가 컨테이너 스크롤을 0으로 누른다(실제 동작)
-    scroll.scrollTop = 0;
-    list.unmount();
-    scrollAppToTop();
-    expect(scroll.scrollTop).toBe(0);
+    // 2페이지의 카드를 눌러 상세로 간다
+    fireEvent.click(screen.getByText("지역4"));
     const requestsBeforeBack = listRequests().length;
+    list.unmount();
+    scroll.scrollTop = 0; // 상세 화면(맨 위)
 
     // 뒤로가기: 같은 QueryClient라 캐시된 2페이지가 그대로 나온다
     await act(async () => {
       open();
     });
-    expect(screen.getByText("지역3")).toBeTruthy();
-    expect(scroll.scrollTop).toBe(1200);
+    expect(screen.getByText("지역5")).toBeTruthy();
+    // 지역4는 네 번째 카드(1200~1600). 가운데가 컨테이너 가운데에 오도록
+    expect(scroll.scrollTop).toBe(1100);
     expect(listRequests()).toHaveLength(requestsBeforeBack); // 다시 불러오지 않는다(staleTime)
+  });
+
+  it("카드를 누르지 않고 돌아오면 맨 위에 둔다", async () => {
+    fetchMock.mockImplementation(async () => Response.json({ items: [wire("1"), wire("2")], nextCursor: null }));
+    const { scroll, open } = openShell();
+
+    const list = open();
+    await screen.findByText("지역1");
+    list.unmount();
+    scroll.scrollTop = 0;
+
+    await act(async () => {
+      open();
+    });
+    expect(scroll.scrollTop).toBe(0);
   });
 });

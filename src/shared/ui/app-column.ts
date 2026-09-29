@@ -27,107 +27,92 @@ export function scrollAppToTop(): void {
   else container.scrollTop = 0;
 }
 
-/**
- * 사용자가 스크롤할 수 있는 상태인지. 화면을 떠나 목록 DOM이 지워지면 scrollHeight가 컨테이너 높이로 줄고
- * 브라우저가 scrollTop을 0으로 누르는데, 그때 오는 이벤트를 사용자의 스크롤로 착각하지 않으려는 판단이다.
- * 레이아웃이 없는 환경(jsdom 등)은 scrollHeight가 0이라 판단할 수 없으므로 그대로 받는다.
- */
-function hasScrollableContent(el: HTMLElement): boolean {
-  return el.scrollHeight === 0 || el.scrollHeight > el.clientHeight;
-}
+/** 카드 요소에 붙는 공고 id 속성. 이 속성으로 카드를 찾아 스크롤한다 */
+export const ANIMAL_ID_ATTRIBUTE = "data-animal-id";
 
-const SCROLL_KEY_PREFIX = "nyanggonggo:scroll:";
-/** 복원할 때 목록 높이가 아직 모자랄 수 있어 몇 프레임까지 다시 시도한다 */
-const RESTORE_FRAMES = 10;
+const SELECTED_KEY_PREFIX = "nyanggonggo:selected:";
+/** 카드가 나타날 때까지 기다리는 최대 프레임(캐시된 페이지가 그려질 시간) */
+const FIND_FRAMES = 30;
 
-function saveScroll(key: string, top: number): void {
+/** 목록에서 연 카드를 기억한다. 뒤로 왔을 때 그 카드로 돌아가기 위한 것이라 목록(필터)별로 따로 둔다. */
+export function rememberSelectedAnimal(listKey: string, animalId: string): void {
   try {
-    sessionStorage.setItem(SCROLL_KEY_PREFIX + key, String(top));
+    sessionStorage.setItem(SELECTED_KEY_PREFIX + listKey, animalId);
   } catch {
     // 저장 실패는 무시(복원만 안 된다)
   }
 }
 
-function readScroll(key: string): number {
+function takeSelectedAnimal(listKey: string): string | null {
   try {
-    return Number(sessionStorage.getItem(SCROLL_KEY_PREFIX + key) ?? 0);
+    const id = sessionStorage.getItem(SELECTED_KEY_PREFIX + listKey);
+    sessionStorage.removeItem(SELECTED_KEY_PREFIX + listKey);
+    return id;
   } catch {
-    return 0;
+    return null;
   }
 }
 
 /**
- * 내부 스크롤 컨테이너의 위치를 key별로 sessionStorage에 저장하고, 화면이 다시 마운트되어 ready가 되면 복원한다.
- * 목록 → 상세 → 뒤로가기 때 목록 위치를 되살린다(architecture.md 7절).
- *
- * 복원은 마운트 시점의 key에만 한다(같은 화면에서 필터를 바꾸면 복원하지 않고 맨 위로 간다).
- * 저장은 스크롤할 때(프레임당 한 번)와 화면을 떠날 때(정리 시점, pagehide) 한다.
- *
- * **떠날 때는 스크롤할 내용이 남아 있을 때만 컨테이너를 다시 읽고, 아니면 마지막으로 본 값을 저장한다.**
- * 화면이 사라지는 순간에는 목록 DOM이 이미 지워져 스크롤할 내용이 없고, 브라우저가 scrollTop을 0으로 눌러 버린다.
- * 그때 읽으면 0이 저장된다. 같은 이유로 스크롤할 내용이 없는 상태에서 온 스크롤 이벤트도 무시한다(12절 37).
- *
- * 목록 카드 링크는 `scroll={false}`라 Next가 이동 중에 컨테이너를 건드리지 않는다(그러면 저장값이 덮인다).
+ * id로 카드를 찾아 스크롤 컨테이너의 가운데쯤 오게 한다. 카드가 아직 없으면 false.
+ * 뒤로가기 복원과 (앞으로 추가할) 공유 링크의 focus 파라미터가 같이 쓴다.
  */
-export function useAppScrollRestoration(key: string, ready: boolean): void {
-  // 복원은 마운트 시점의 key에만 한다. 마운트 중에 필터가 바뀌면 맨 위로 가는 게 맞다(useScrollTopOnFilterChange)
-  const mountKey = useRef(key);
-  const restored = useRef(false);
-  /** 마지막으로 본 스크롤 위치(컨테이너가 비워진 뒤에는 이 값을 저장한다) */
-  const lastTop = useRef(0);
+export function scrollAppToAnimal(animalId: string): boolean {
+  const container = appScrollContainer();
+  // 선택자에 id를 넣지 않고(이스케이프 규칙에 기대지 않는다) 속성값을 직접 비교한다
+  const cards = container?.querySelectorAll<HTMLElement>(`[${ANIMAL_ID_ATTRIBUTE}]`) ?? [];
+  const card = [...cards].find((element) => element.getAttribute(ANIMAL_ID_ATTRIBUTE) === animalId);
+  if (!container || !card) return false;
+
+  const containerBox = container.getBoundingClientRect();
+  const cardBox = card.getBoundingClientRect();
+  const centered = cardBox.top - containerBox.top - (containerBox.height - cardBox.height) / 2;
+  container.scrollTop += centered; // 브라우저가 0 ~ 최대 스크롤로 잘라 준다
+  return true;
+}
+
+/**
+ * 목록 → 상세 → 뒤로 왔을 때, 열었던 카드가 보이도록 되돌린다(architecture.md 7절).
+ *
+ * 픽셀(scrollTop) 대신 **카드 id**를 기억한다. 내부 스크롤 컨테이너는 화면이 바뀌는 순간 내용이 비어
+ * 스크롤 값이 0으로 눌리고, 복원 시점에는 아직 높이가 모자라 픽셀 값이 자주 틀어졌다(12절 37).
+ * 카드가 그려질 때까지 몇 프레임 기다렸다가 찾고, 찾으면(또는 시간이 지나면) 기억한 값을 지운다.
+ * 데이터에서 빠진 공고(상태가 바뀐 경우 등)는 조용히 포기하고 맨 위에 둔다.
+ */
+export function useAnimalScrollRestoration(listKey: string, ready: boolean): void {
+  /** 아직 찾는 중인 카드. 저장소에서는 바로 지우고 여기에 들고 있는다(effect가 다시 붙어도 이어서 찾는다) */
+  const pending = useRef<{ listKey: string; animalId: string } | null>(null);
+  const finishedKey = useRef<string | null>(null);
 
   useEffect(() => {
-    const container = appScrollContainer();
-    if (!container) return;
-    let frame = 0;
-    const onScroll = () => {
-      if (!hasScrollableContent(container)) return;
-      lastTop.current = container.scrollTop;
-      if (frame) return; // 저장은 프레임당 한 번
-      frame = requestAnimationFrame(() => {
-        frame = 0;
-        saveScroll(key, lastTop.current);
-      });
-    };
-    // 아직 스크롤할 수 있으면 지금 위치를, 내용이 지워진 뒤면 마지막으로 본 위치를 저장한다
-    const persist = () => {
-      if (hasScrollableContent(container)) lastTop.current = container.scrollTop;
-      saveScroll(key, lastTop.current);
-    };
-    container.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("pagehide", persist);
-    return () => {
-      if (frame) cancelAnimationFrame(frame);
-      container.removeEventListener("scroll", onScroll);
-      window.removeEventListener("pagehide", persist);
-      persist(); // 화면을 떠나는 시점(상세로 이동, 필터 변경)
-    };
-  }, [key]);
+    if (!ready || finishedKey.current === listKey) return;
+    if (pending.current?.listKey !== listKey) {
+      const animalId = takeSelectedAnimal(listKey);
+      if (!animalId) {
+        finishedKey.current = listKey;
+        return;
+      }
+      pending.current = { listKey, animalId };
+    }
 
-  useEffect(() => {
-    if (!ready || restored.current || key !== mountKey.current) return;
-    restored.current = true;
-    const target = readScroll(key);
-    if (target <= 0) return;
-
+    const { animalId } = pending.current;
     let frames = 0;
     let id = 0;
-    const apply = () => {
-      const container = appScrollContainer();
-      if (container) {
-        container.scrollTop = target;
-        // 목록이 충분히 길어 목표 위치에 도달했으면 끝낸다
-        if (Math.abs(container.scrollTop - target) < 1) return;
-      }
-      if (frames >= RESTORE_FRAMES) return;
-      frames += 1;
-      id = requestAnimationFrame(apply);
+    const finish = () => {
+      pending.current = null;
+      finishedKey.current = listKey;
     };
-    apply();
+    const find = () => {
+      if (scrollAppToAnimal(animalId) || frames >= FIND_FRAMES) {
+        finish(); // 찾았거나, 데이터에서 빠진 공고라 포기한다(맨 위에 그대로 둔다)
+        return;
+      }
+      frames += 1;
+      id = requestAnimationFrame(find);
+    };
+    find();
     return () => {
       if (id) cancelAnimationFrame(id);
-      // effect가 다시 붙으면(개발 모드의 이중 호출 등) 다시 복원할 수 있게 둔다
-      restored.current = false;
     };
-  }, [ready, key]);
+  }, [ready, listKey]);
 }
