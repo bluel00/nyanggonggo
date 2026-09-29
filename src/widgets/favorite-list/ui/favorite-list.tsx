@@ -4,6 +4,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import { AnimalCard, animalsByIdsOptions } from "@/entities/animal";
 import { FavoriteButton, useFavoriteIds } from "@/features/animal-favorite";
+import { markListVisited } from "@/shared/lib/app-navigation";
 import { scrollAppToTop } from "@/shared/ui/app-column";
 import { BackButton, useGoBack } from "@/shared/ui/back-button";
 import { Button } from "@/shared/ui/button";
@@ -25,7 +26,10 @@ export function FavoriteList() {
   const [now] = useState(() => new Date());
   const goBack = useGoBack();
 
-  useEffect(() => scrollAppToTop(), []);
+  useEffect(() => {
+    markListVisited(); // 상세의 뒤로가기가 이 화면으로 돌아올 수 있게(shared/lib/app-navigation)
+    scrollAppToTop();
+  }, []);
 
   const header = (
     <header className="sticky top-0 z-10 flex items-center gap-1 bg-bg px-2 pt-[calc(var(--space-3)+env(safe-area-inset-top,0px))] pb-3">

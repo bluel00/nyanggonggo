@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { AnimalCard, SPECIES_LABEL, useAnimalsInfinite, type AnimalListFilter } from "@/entities/animal";
 import { FavoriteButton } from "@/features/animal-favorite";
+import { markListVisited } from "@/shared/lib/app-navigation";
 import { scrollAppToTop, useAppScrollRestoration } from "@/shared/ui/app-column";
 import { Button } from "@/shared/ui/button";
 import { SkeletonCard } from "@/shared/ui/skeleton-card";
@@ -24,6 +25,8 @@ export function AnimalList({ filter }: { filter: AnimalListFilter }) {
   const [now] = useState(() => new Date());
   const species = SPECIES_LABEL[filter.species];
 
+  // 목록을 거쳤다는 표시. 상세의 뒤로가기가 목록으로 돌아갈지 판단한다(shared/lib/app-navigation)
+  useEffect(() => markListVisited(), []);
   useScrollTopOnFilterChange(filter);
   // 상세에서 뒤로 오면 캐시된 페이지(같은 쿼리 키)와 함께 스크롤 위치를 되살린다
   useAppScrollRestoration(filterKey(filter), query.isSuccess);
