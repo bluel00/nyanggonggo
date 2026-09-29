@@ -12,13 +12,14 @@ export default defineConfig({
   workers: 1,
   reporter: [["list"]],
   use: {
+    // 브라우저는 localhost로 연다(개발 서버가 127.0.0.1을 다른 오리진으로 보고 dev 리소스를 막는다)
     baseURL: "http://localhost:3000",
     ...devices["Pixel 7"], // 모바일 뷰포트(412x915)
     trace: "retain-on-failure",
   },
   webServer: {
     command: "pnpm dev",
-    url: "http://localhost:3000",
+    url: "http://127.0.0.1:3000",
     reuseExistingServer: true,
     timeout: 120_000,
   },
