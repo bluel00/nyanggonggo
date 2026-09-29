@@ -31,6 +31,12 @@ beforeEach(() => {
   // AppShell과 같은 구조: 480px 컬럼 + 내부 스크롤 컨테이너
   document.body.innerHTML = `<div data-slot="app-column"><div data-slot="app-scroll"></div></div>`;
   container = document.querySelector<HTMLElement>('[data-slot="app-scroll"]')!;
+  // jsdom에는 레이아웃이 없다. 실제 브라우저처럼 "내용이 있으면 스크롤할 수 있고, 내용이 지워지면 없다"를 흉내 낸다
+  Object.defineProperty(container, "clientHeight", { configurable: true, value: 600 });
+  Object.defineProperty(container, "scrollHeight", {
+    configurable: true,
+    get: () => (container.textContent ? 3000 : 600),
+  });
 });
 afterEach(() => {
   cleanup();
@@ -55,16 +61,48 @@ describe("useAppScrollRestoration", () => {
     expect(container.scrollTop).toBe(800);
   });
 
-  it("스크롤 이벤트가 전달되기 전에 떠나도(정리 시점 저장) 위치를 잃지 않는다", async () => {
+  it("탭을 닫거나 새로고침할 때(pagehide)는 지금 위치를 다시 읽어 저장한다", async () => {
     const list = openScreen({ filterKey: "k" });
-    container.scrollTop = 450; // 이벤트 없이 위치만 바뀐 상태
+    container.scrollTop = 450; // 스크롤 이벤트가 아직 전달되지 않은 상태
+
+    await act(async () => {
+      window.dispatchEvent(new Event("pagehide"));
+    });
     list.unmount();
-    scrollAppToTop();
 
     await act(async () => {
       openScreen({ filterKey: "k" });
     });
     expect(container.scrollTop).toBe(450);
+  });
+
+  it("떠날 때 컨테이너가 0으로 눌려도(목록 DOM이 지워짐) 마지막 위치를 저장한다", async () => {
+    const list = openScreen({ filterKey: "k" });
+    await userScrollTo(800);
+
+    // 실제 브라우저: 목록 DOM이 지워지면 스크롤할 내용이 없어져 브라우저가 scrollTop을 0으로 누른다
+    container.scrollTop = 0;
+    list.unmount();
+
+    await act(async () => {
+      openScreen({ filterKey: "k" });
+    });
+    expect(container.scrollTop).toBe(800);
+  });
+
+  it("스크롤할 내용이 없는 상태의 스크롤 이벤트는 사용자의 스크롤로 보지 않는다", async () => {
+    const list = openScreen({ filterKey: "k" });
+    await userScrollTo(800);
+
+    // 내용이 지워져 더 스크롤할 수 없게 된 상태에서 온 이벤트(브라우저가 scrollTop을 0으로 누른다)
+    Object.defineProperty(container, "scrollHeight", { configurable: true, value: 600 });
+    await userScrollTo(0);
+    list.unmount();
+
+    await act(async () => {
+      openScreen({ filterKey: "k" });
+    });
+    expect(container.scrollTop).toBe(800);
   });
 
   it("데이터가 아직 없으면(ready=false) 복원하지 않고, 준비되면 복원한다", async () => {

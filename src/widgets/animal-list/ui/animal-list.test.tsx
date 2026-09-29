@@ -170,6 +170,9 @@ describe("AnimalList 스크롤 복원", () => {
   function openShell() {
     document.body.innerHTML = `<div data-slot="app-column"><div data-slot="app-scroll"></div></div>`;
     const scroll = document.querySelector<HTMLElement>('[data-slot="app-scroll"]')!;
+    // jsdom에는 레이아웃이 없다. 실제 브라우저처럼 "카드가 있으면 스크롤할 수 있다"를 흉내 낸다
+    Object.defineProperty(scroll, "clientHeight", { configurable: true, value: 600 });
+    Object.defineProperty(scroll, "scrollHeight", { configurable: true, get: () => (scroll.textContent ? 3000 : 600) });
     const client = createQueryClient();
     const open = () => {
       const host = document.createElement("div");
@@ -203,7 +206,8 @@ describe("AnimalList 스크롤 복원", () => {
       await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
     });
 
-    // 상세로 이동: 목록이 사라지고 상세가 맨 위로 올린다
+    // 상세로 이동: 목록 DOM이 지워지면 브라우저가 컨테이너 스크롤을 0으로 누른다(실제 동작)
+    scroll.scrollTop = 0;
     list.unmount();
     scrollAppToTop();
     expect(scroll.scrollTop).toBe(0);
