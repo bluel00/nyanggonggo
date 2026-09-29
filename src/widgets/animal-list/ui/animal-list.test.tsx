@@ -8,6 +8,10 @@ import type { AnimalListFilter } from "@/entities/animal";
 import { createQueryClient } from "@/shared/api/query-client";
 import { AnimalList } from "./animal-list";
 
+/** focus를 처리한 뒤 URL에서 지울 때 쓴다(app router가 없는 환경) */
+const replace = vi.fn();
+vi.mock("next/navigation", () => ({ useRouter: () => ({ replace }) }));
+
 /** 가짜 IntersectionObserver: 테스트가 trigger()로 교차를 흉내 낸다 */
 class FakeIntersectionObserver {
   static instances: FakeIntersectionObserver[] = [];
@@ -64,6 +68,7 @@ afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
   fetchMock.mockReset();
+  replace.mockReset();
 });
 
 function renderList(filter: AnimalListFilter = { species: "cat", status: "protected", sort: "latest" }) {
@@ -181,10 +186,10 @@ describe("AnimalList 스크롤 복원", () => {
       return { top: index * CARD_HEIGHT - scroll.scrollTop, height: CARD_HEIGHT } as DOMRect;
     };
     const client = createQueryClient();
-    const open = () => {
+    const open = (focusId: string | null = null) => {
       const host = document.createElement("div");
       scroll.appendChild(host);
-      return render(<AnimalList filter={filter} />, {
+      return render(<AnimalList filter={filter} focusId={focusId} />, {
         container: host,
         wrapper: ({ children }: { children: ReactNode }) => <QueryClientProvider client={client}>{children}</QueryClientProvider>,
       });
@@ -227,6 +232,46 @@ describe("AnimalList 스크롤 복원", () => {
     // 지역4는 네 번째 카드(1200~1600). 가운데가 컨테이너 가운데에 오도록
     expect(scroll.scrollTop).toBe(1100);
     expect(listRequests()).toHaveLength(requestsBeforeBack); // 다시 불러오지 않는다(staleTime)
+  });
+
+  it("focus로 들어오면 아직 안 받은 페이지까지 이어 받아 그 카드로 스크롤하고 URL에서 focus를 지운다", async () => {
+    // 한 페이지 2건, focus 대상은 3페이지에 있다
+    const pages = [
+      { items: [wire("1"), wire("2")], nextCursor: "c1" },
+      { items: [wire("3"), wire("4")], nextCursor: "c2" },
+      { items: [wire("5"), wire("6")], nextCursor: null },
+    ];
+    fetchMock.mockImplementation(async (input) => {
+      const cursor = new URL(String(input), "http://localhost").searchParams.get("cursor");
+      const index = cursor === null ? 0 : Number(cursor.slice(1));
+      return Response.json(pages[index]);
+    });
+    window.history.replaceState({}, "", "/?focus=6&region=6110000");
+    const { scroll, open } = openShell();
+
+    open("6");
+    await screen.findByText("지역6"); // 3페이지까지 이어 받았다
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    expect(scroll.scrollTop).toBe(1900); // 여섯 번째 카드(2000~2400)가 가운데
+    expect(replace).toHaveBeenCalledWith("/?region=6110000", { scroll: false });
+  });
+
+  it("focus한 공고가 목록에 없으면 조용히 맨 위에 둔다", async () => {
+    fetchMock.mockImplementation(async () => Response.json({ items: [wire("1"), wire("2")], nextCursor: null }));
+    window.history.replaceState({}, "", "/?focus=999");
+    const { scroll, open } = openShell();
+
+    open("999");
+    await screen.findByText("지역1");
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    expect(scroll.scrollTop).toBe(0);
+    expect(replace).toHaveBeenCalledWith("/", { scroll: false });
   });
 
   it("카드를 누르지 않고 돌아오면 맨 위에 둔다", async () => {

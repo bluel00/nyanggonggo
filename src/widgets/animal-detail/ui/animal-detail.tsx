@@ -10,6 +10,7 @@ import {
   useAnimal,
 } from "@/entities/animal";
 import { FavoriteButton } from "@/features/animal-favorite";
+import { animalListHref } from "@/features/animal-filter";
 import { ShareButton } from "@/features/animal-share";
 import { cn } from "@/shared/lib/utils";
 import { scrollAppToTop } from "@/shared/ui/app-column";
@@ -37,7 +38,8 @@ export function AnimalDetail({ id }: { id: string }) {
   const [photoIndex, setPhotoIndex] = useState(0);
   // 열린 뷰어의 시작 위치. null이면 닫힘
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
-  const goBack = useGoBack();
+  // 목록을 거쳐 왔으면 router.back(), 공유 링크로 바로 들어왔으면 이 공고가 들어 있는 목록으로 간다
+  const goBack = useGoBack(query.data ? animalListHref(query.data) : "/");
 
   // 내부 스크롤 컨테이너는 화면을 옮겨도 유지되므로 상세 진입 시 맨 위로
   useEffect(() => scrollAppToTop(), [id]);

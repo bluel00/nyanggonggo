@@ -72,12 +72,34 @@ export function scrollAppToAnimal(animalId: string): boolean {
 }
 
 /**
+ * 카드가 그려질 때까지 기다렸다가(최대 FIND_FRAMES 프레임) 그 카드로 스크롤한다.
+ * 찾았거나 포기하면 onSettled를 부른다. 돌려주는 함수를 부르면 기다리기를 멈춘다.
+ */
+export function scrollAppToAnimalWhenReady(animalId: string, onSettled?: () => void): () => void {
+  let frames = 0;
+  let frame = 0;
+  const find = () => {
+    if (scrollAppToAnimal(animalId) || frames >= FIND_FRAMES) {
+      onSettled?.();
+      return;
+    }
+    frames += 1;
+    frame = requestAnimationFrame(find);
+  };
+  find();
+  return () => {
+    if (frame) cancelAnimationFrame(frame);
+  };
+}
+
+/**
  * 목록 → 상세 → 뒤로 왔을 때, 열었던 카드가 보이도록 되돌린다(architecture.md 7절).
  *
  * 픽셀(scrollTop) 대신 **카드 id**를 기억한다. 내부 스크롤 컨테이너는 화면이 바뀌는 순간 내용이 비어
  * 스크롤 값이 0으로 눌리고, 복원 시점에는 아직 높이가 모자라 픽셀 값이 자주 틀어졌다(12절 37).
- * 카드가 그려질 때까지 몇 프레임 기다렸다가 찾고, 찾으면(또는 시간이 지나면) 기억한 값을 지운다.
  * 데이터에서 빠진 공고(상태가 바뀐 경우 등)는 조용히 포기하고 맨 위에 둔다.
+ *
+ * URL에 focus가 있으면 그쪽이 우선이다. 호출하는 쪽이 ready를 false로 두어 둘이 같이 스크롤하지 않게 한다.
  */
 export function useAnimalScrollRestoration(listKey: string, ready: boolean): void {
   /** 아직 찾는 중인 카드. 저장소에서는 바로 지우고 여기에 들고 있는다(effect가 다시 붙어도 이어서 찾는다) */
@@ -95,24 +117,9 @@ export function useAnimalScrollRestoration(listKey: string, ready: boolean): voi
       pending.current = { listKey, animalId };
     }
 
-    const { animalId } = pending.current;
-    let frames = 0;
-    let id = 0;
-    const finish = () => {
+    return scrollAppToAnimalWhenReady(pending.current.animalId, () => {
       pending.current = null;
       finishedKey.current = listKey;
-    };
-    const find = () => {
-      if (scrollAppToAnimal(animalId) || frames >= FIND_FRAMES) {
-        finish(); // 찾았거나, 데이터에서 빠진 공고라 포기한다(맨 위에 그대로 둔다)
-        return;
-      }
-      frames += 1;
-      id = requestAnimationFrame(find);
-    };
-    find();
-    return () => {
-      if (id) cancelAnimationFrame(id);
-    };
+    });
   }, [ready, listKey]);
 }
