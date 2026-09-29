@@ -22,3 +22,8 @@ Thumbs.db
 .vercel
 scripts/probe.ts
 probe-out.txt
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
