@@ -1,11 +1,13 @@
 export {
   DEFAULT_ANIMAL_FILTER,
   DEFAULT_REGION,
+  hasRegionParam,
   REGION_ALL,
   isSameFilter,
   parseAnimalFilter,
   toFilterHref,
   toFilterQuery,
+  toSearchParams,
   type AnimalArea,
   type SearchParamsInput,
 } from "./model/filter";

@@ -56,6 +56,11 @@ export function requestedRegions(requests: URL[]): (string | null)[] {
   return requests.map((url) => url.searchParams.get("region"));
 }
 
+/** 그중 첫 페이지 요청(커서 없는 것)만. 무한 스크롤의 다음 페이지 요청과 구분한다 */
+export function firstPageRequests(requests: URL[]): URL[] {
+  return requests.filter((url) => url.searchParams.get("cursor") === null);
+}
+
 /** 목록의 내부 스크롤 컨테이너를 끝까지 내려 다음 페이지를 부른다 */
 export async function scrollListToBottom(page: Page) {
   await page.evaluate((selector) => {

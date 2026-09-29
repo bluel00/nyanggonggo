@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import {
+  firstPageRequests,
   isCardInView,
   loadRealItems,
   mockList,
@@ -92,7 +93,7 @@ test("기억된 지역에서 목록 → 상세 → 뒤로가기도 그 지역 �
   await expect(page).toHaveURL(new RegExp(`/animals/${targetId}$`));
 
   await page.getByRole("button", { name: "뒤로가기" }).click();
-  await expect(page).toHaveURL(/\/$/); // 지역이 없는 목록 주소로 돌아온다(기억된 지역)
+  await expect(page).toHaveURL(new RegExp(`region=${BUSAN}`)); // 기억된 지역이 주소에 채워져 있다
   expect(await isCardInView(page, targetId)).toBe(true);
   expect(await scrollTop(page)).toBeGreaterThan(0);
   expect(requestedRegions(requests).every((region) => region === BUSAN)).toBe(true);
@@ -123,6 +124,21 @@ test("보고 있던 목록 주소는 다른 탭에서 지역을 바꿔도 그대
   await page.reload();
   await expect(page.locator("[data-animal-id]").first()).toBeVisible();
   expect(requestedRegions(requests).every((region) => region === SEOUL)).toBe(true);
+});
+
+test("지역 없이 들어오면 기억된 지역을 주소에 채워 준다(목록 요청은 그 지역 한 번)", async ({ page, context }) => {
+  await context.addCookies([{ name: REGION_COOKIE, value: BUSAN, url: "http://localhost:3000" }]);
+  const requests = await mockList(page, seoulItems);
+
+  await page.goto("/");
+  await expect(page).toHaveURL(`/?region=${BUSAN}`);
+  await expect(page.locator("[data-animal-id]").first()).toBeVisible();
+  // 첫 요청부터 부산이고 서울 요청은 한 번도 없다(서울을 받았다가 바꾸지 않는다).
+  // 개발 모드에서는 StrictMode 때문에 첫 페이지 요청이 두 번 나갈 수 있어 횟수는 보지 않는다
+  const firstPage = requestedRegions(firstPageRequests(requests));
+  expect(firstPage.length).toBeGreaterThan(0);
+  expect(firstPage.every((region) => region === BUSAN), `첫 페이지 요청 지역: ${firstPage.join(", ")}`).toBe(true);
+  expect(requestedRegions(requests)).not.toContain(SEOUL);
 });
 
 test("쿠키 값이 깨져 있으면 조용히 기본 지역(서울)으로 간다", async ({ page, context }) => {

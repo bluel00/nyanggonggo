@@ -46,6 +46,26 @@ function read(params: SearchParamsInput, key: string): string | undefined {
   return Array.isArray(value) ? value[0] : value;
 }
 
+/** Next의 searchParams 객체 → URLSearchParams(값이 여럿이면 모두 살린다) */
+export function toSearchParams(params: SearchParamsInput): URLSearchParams {
+  if (params instanceof URLSearchParams) return new URLSearchParams(params);
+  const result = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (Array.isArray(value)) for (const item of value) result.append(key, item);
+    else if (value !== undefined) result.set(key, value);
+  }
+  return result;
+}
+
+/**
+ * URL에 쓸 수 있는 지역이 들어 있는지. 없으면 화면은 기억된 지역(또는 기본 지역)으로 그려지는데
+ * 주소에는 그 지역이 없다. 그 상태를 두지 않으려고 목록 페이지가 지역을 채워 리다이렉트한다(7절).
+ */
+export function hasRegionParam(params: SearchParamsInput): boolean {
+  const region = read(params, "region");
+  return region === REGION_ALL || findSido(region) !== null;
+}
+
 function pick<T extends string>(allowed: readonly T[], value: string | undefined, fallback: T): T {
   return allowed.includes(value as T) ? (value as T) : fallback;
 }

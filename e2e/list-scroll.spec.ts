@@ -45,7 +45,7 @@ test("화면 안 뒤로가기: 목록으로 돌아오면 열었던 카드가 보
   const animalId = await openCardOnSecondPage(page);
 
   await page.getByRole("button", { name: "뒤로가기" }).click();
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/?region=6110000"); // 지역은 늘 주소에 있다(page.tsx가 채운다)
   await expect(page.locator(`[data-animal-id="${animalId}"]`)).toBeVisible();
   expect(await isCardInView(page, animalId)).toBe(true);
 });
@@ -55,7 +55,7 @@ test("브라우저 뒤로가기: 목록으로 돌아오면 열었던 카드가 �
   const animalId = await openCardOnSecondPage(page);
 
   await page.goBack();
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/?region=6110000");
   await expect(page.locator(`[data-animal-id="${animalId}"]`)).toBeVisible();
   expect(await isCardInView(page, animalId)).toBe(true);
 });
