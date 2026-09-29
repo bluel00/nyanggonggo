@@ -27,11 +27,16 @@ export async function loadRealItems(request: APIRequestContext, query = "region=
   return body.items;
 }
 
-/** 목록 API를 고정 데이터로 바꾼다. 커서는 이 목킹 안에서만 쓰는 offset 문자열이다 */
+/**
+ * 목록 API를 고정 데이터로 바꾼다. 커서는 이 목킹 안에서만 쓰는 offset 문자열이다.
+ * 돌려주는 배열에는 목록 API로 나간 요청의 URL이 순서대로 쌓인다(어떤 지역으로 조회했는지 확인용).
+ */
 export async function mockList(page: Page, items: ListItem[]) {
+  const requests: URL[] = [];
   await page.route(
     (url) => url.pathname === "/api/animals",
     async (route) => {
+      requests.push(new URL(route.request().url()));
       const start = Number(new URL(route.request().url()).searchParams.get("cursor") ?? 0);
       const end = start + LIST_PAGE_SIZE;
       await route.fulfill({
@@ -43,6 +48,12 @@ export async function mockList(page: Page, items: ListItem[]) {
     (url) => url.pathname === "/api/image-proxy",
     (route) => route.fulfill({ contentType: "image/png", body: PNG_1X1 }),
   );
+  return requests;
+}
+
+/** 목록 API로 나간 요청들의 region 값 */
+export function requestedRegions(requests: URL[]): (string | null)[] {
+  return requests.map((url) => url.searchParams.get("region"));
 }
 
 /** 목록의 내부 스크롤 컨테이너를 끝까지 내려 다음 페이지를 부른다 */
