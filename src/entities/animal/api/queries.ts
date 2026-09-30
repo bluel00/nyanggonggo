@@ -16,12 +16,22 @@ export const animalKeys = {
   byIds: (ids: readonly string[]) => [...animalKeys.all, "by-ids", [...ids]] as const,
 };
 
+/**
+ * 무한쿼리는 재요청을 하지 않는다(architecture.md 5절). 무한쿼리의 refetch는 쌓인 페이지를
+ * **처음 커서부터 전부 순차로** 다시 받아서, 50페이지를 본 목록으로 돌아오면 /api/animals가 51번 나갔다(12절 42).
+ * 받아 둔 페이지는 그대로 쓰고, 신선한 목록은 gcTime(5분)이 지나 캐시가 사라진 다음 진입에서 받는다.
+ */
 export function animalsInfiniteOptions(filter: AnimalListFilter, repository: AnimalRepository = animalRepository) {
   return infiniteQueryOptions({
     queryKey: animalKeys.list(filter),
     queryFn: ({ pageParam, signal }) => repository.getAnimals({ ...filter, cursor: pageParam ?? undefined }, { signal }),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
+    // 상세에서 돌아올 때(마운트), 공유 후 앱으로 복귀할 때(focus), 네트워크가 돌아올 때(reconnect) 모두 재요청하지 않는다.
+    // 데이터가 없으면(첫 진입, 필터 변경, 새로고침) 이 설정과 무관하게 받는다.
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 }
 
