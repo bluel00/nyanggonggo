@@ -10,7 +10,7 @@ import type { AnimalListParams } from "./service";
 const DIGITS = /^\d{1,32}$/;
 
 const ListQuerySchema = z.object({
-  species: z.enum(["cat", "dog"]).default("cat"),
+  species: z.enum(["cat", "dog", "other"]).default("cat"),
   region: z.string().regex(DIGITS).optional(),
   district: z.string().regex(DIGITS).optional(),
   status: z.enum(["protected", "ended", "all"]).default("protected"),

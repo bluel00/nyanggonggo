@@ -58,6 +58,7 @@ export function mapUpstreamItem(
         ? `${formatMonthDay(noticeStart)} ~ ${formatMonthDay(noticeEnd)}`
         : null,
     specialMarkText: specialMarkWithoutEndReason(dto),
+    kindText: toKindText(dto.kindFullNm),
   };
 
   return {
@@ -87,9 +88,29 @@ function toSpecies(upKindNm: string): AnimalWireDto["species"] | null {
       return "cat";
     case "개":
       return "dog";
+    case "기타":
+      return "other";
     default:
       return null;
   }
+}
+
+/** `kindFullNm`의 `[축종]` 접두어 */
+const KIND_PREFIX = /^\[[^\]]*\]\s*/;
+/**
+ * 품종 이름을 실제로 특정하지 못하는 값. 기타 축종의 `kindNm`은 늘 `"기타축종"`이고
+ * 고양이 `kindNm`에는 `"기타"`가 있다(2026-10-01 실측, 12.A P12). 화면에서는 null로 보내 기본 문구를 쓰게 한다.
+ */
+const UNKNOWN_KIND = new Set(["기타", "기타축종"]);
+
+/**
+ * `kindFullNm` → 품종 이름. 실측에서 이 값은 늘 `"[<축종>] <품종>"`이었다
+ * (고양이/개 1,000건씩, 기타 155건 모두. 12.A P12). 접두어를 떼고 쓴다.
+ * 접두어가 없으면 값 전체를 쓰고, 비어 있거나 품종을 특정할 수 없는 값이면 null이다.
+ */
+function toKindText(kindFullNm: string | undefined): string | null {
+  const kind = nonEmpty(kindFullNm?.replace(KIND_PREFIX, ""));
+  return kind === null || UNKNOWN_KIND.has(kind) ? null : kind;
 }
 
 function toStatus(dto: UpstreamAnimalItemDto, logger: Logger): AnimalWireDto["status"] {

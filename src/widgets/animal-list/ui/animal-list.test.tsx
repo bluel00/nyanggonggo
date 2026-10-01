@@ -51,6 +51,7 @@ const wire = (id: string): AnimalWireDto => ({
   foundPlaceText: null,
   noticePeriodText: null,
   specialMarkText: null,
+  kindText: null,
 });
 
 const fetchMock = vi.fn<(input: string | URL | Request) => Promise<Response>>();

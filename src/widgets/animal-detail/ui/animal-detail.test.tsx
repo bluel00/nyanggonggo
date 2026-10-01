@@ -25,6 +25,7 @@ const wire = (overrides: Partial<AnimalWireDto> = {}): AnimalWireDto => ({
   foundPlaceText: "서귀포시 남원읍",
   noticePeriodText: "09.21 ~ 10.01",
   specialMarkText: null,
+  kindText: null,
   ...overrides,
 });
 
@@ -70,6 +71,15 @@ describe("AnimalDetail", () => {
     expect(cta.className).not.toContain("fixed");
     expect(cta.querySelector('[data-slot="favorite-button"]')).toBeTruthy();
     expect(fetchMock.mock.calls[0][0]).toContain("/api/animals/450650202602282");
+  });
+
+  it("기타 공고는 타이틀과 사진 alt에 어떤 동물인지 보여 준다", async () => {
+    fetchMock.mockResolvedValue(
+      Response.json(wire({ species: "other", kindText: "토끼", regionText: "경기도 성남시" })),
+    );
+    renderDetail();
+    expect(await screen.findByRole("heading", { name: "토끼 · 경기도 성남시" })).toBeTruthy();
+    expect(screen.getAllByRole("img")[0].getAttribute("alt")).toContain("토끼 사진, 경기도 성남시");
   });
 
   it("임박(D-3 이하)은 주황 D-day", async () => {

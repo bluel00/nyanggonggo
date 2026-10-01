@@ -17,6 +17,7 @@ const animal = (overrides: Partial<Animal> = {}): Animal => ({
   foundPlaceText: null,
   noticePeriodText: null,
   specialMarkText: null,
+  kindText: null,
   ...overrides,
 });
 const NOW = kst("2026-09-21T09:00:00");
@@ -35,6 +36,13 @@ describe("buildShareContent", () => {
     const content = buildShareContent(animal({ status: "ended", shelterName: null, species: "dog" }), "https://nyang.test", NOW);
     expect(content.title).toBe("제주특별자치도 강아지");
     expect(content.description).toBe("종료");
+  });
+
+  it("기타 공고는 제목에 실제 동물 이름을 쓴다", () => {
+    const rabbit = animal({ species: "other", kindText: "토끼", regionText: "경기도 성남시" });
+    expect(buildShareContent(rabbit, "https://nyang.test", NOW).title).toBe("경기도 성남시 토끼");
+    const unknown = animal({ species: "other", kindText: null, regionText: "경기도 성남시" });
+    expect(buildShareContent(unknown, "https://nyang.test", NOW).title).toBe("경기도 성남시 기타 동물");
   });
 
   it("사진이 없으면 OG 이미지를 썸네일로", () => {

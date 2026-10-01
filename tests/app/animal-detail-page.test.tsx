@@ -33,6 +33,7 @@ const wire: AnimalWireDto = {
   foundPlaceText: null,
   noticePeriodText: null,
   specialMarkText: null,
+  kindText: null,
 };
 
 const clientFetch = vi.fn();

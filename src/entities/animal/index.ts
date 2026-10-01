@@ -17,4 +17,12 @@ export {
 export { AnimalCard } from "./ui/animal-card";
 export { AnimalPhoto } from "./ui/animal-photo";
 export { StatusBadge, statusBadgeText } from "./ui/status-badge";
-export { ANIMAL_COPY, SEX_LABEL, SPECIES_COPY, SPECIES_LABEL, type SpeciesCopy } from "./ui/labels";
+export {
+  ANIMAL_COPY,
+  animalTitle,
+  SEX_LABEL,
+  SPECIES_COPY,
+  SPECIES_LABEL,
+  speciesText,
+  type SpeciesCopy,
+} from "./ui/labels";

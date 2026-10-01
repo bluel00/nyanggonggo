@@ -161,6 +161,12 @@ describe("upstream client fetchAll", () => {
     expect(url.searchParams.get("upkind")).toBe("422400");
   });
 
+  it("other는 upkind 429900(기타 축종)", async () => {
+    const fetch = fakeUpstream(items, 10);
+    await client(fetch).fetchAll({ species: "other" });
+    expect(requestedUrls(fetch)[0].searchParams.get("upkind")).toBe("429900");
+  });
+
   it("서비스키는 URLSearchParams로 한 번만 인코딩된다", async () => {
     const fetch = fakeUpstream(items, 10);
     await client(fetch).fetchAll({ species: "cat" });

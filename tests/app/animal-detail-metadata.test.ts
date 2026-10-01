@@ -26,6 +26,7 @@ const wire: AnimalWireDto = {
   foundPlaceText: null,
   noticePeriodText: null,
   specialMarkText: null,
+  kindText: null,
 };
 const meta = (id: string) => generateMetadata({ params: Promise.resolve({ id }) });
 

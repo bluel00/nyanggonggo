@@ -17,6 +17,7 @@ export function toAnimal(wire: AnimalWireDto): Animal {
     noticePeriodText: wire.noticePeriodText,
     // 빈 문자열이나 공백만 있으면 null. UI에서 값 없이 "특이사항" 라벨만 뜨지 않게 한다
     specialMarkText: normalizeText(wire.specialMarkText),
+    kindText: normalizeText(wire.kindText),
   };
 }
 

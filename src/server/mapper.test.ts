@@ -1,10 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 import { AnimalWireDtoSchema } from "@/contract/animals";
 import fixture from "../../docs/fixtures/upstream-items.json";
+import otherFixture from "../../docs/fixtures/upstream-items-other.json";
 import { encodeImageUrl, mapUpstreamItem, type MappedAnimal } from "./mapper";
 import { UpstreamAnimalItemSchema, type UpstreamAnimalItemDto } from "./upstream/dto";
 
-const dtos = fixture.items.map((item) => UpstreamAnimalItemSchema.parse(item));
+const dtos = [...fixture.items, ...otherFixture.items].map((item) => UpstreamAnimalItemSchema.parse(item));
 const byId = (id: string) => {
   const dto = dtos.find((d) => d.desertionNo === id);
   if (!dto) throw new Error(`fixture ${id} not found`);
@@ -17,12 +18,15 @@ const OPTIONAL_SFE = byId("445470202600976");
 const ENDED_EUTHANASIA = byId("427346202600847");
 const TWO_BRACKETS = byId("448537202601421");
 const DOG_VACCINATION = byId("448539202600280");
+const PROTECTED_OTHER = byId("441378202601343");
+const ENDED_OTHER = byId("447512202600622");
 
 const WIRE_KEYS = [
   "ageText",
   "foundPlaceText",
   "id",
   "images",
+  "kindText",
   "noticeEndDate",
   "noticePeriodText",
   "regionText",
@@ -42,7 +46,7 @@ function map(dto: UpstreamAnimalItemDto, logger = spyLogger()): MappedAnimal {
 }
 
 describe("mapUpstreamItem", () => {
-  it("픽스처 6건이 계약 스키마를 통과하고 계약 키만 가진다", () => {
+  it("픽스처 8건(고양이·개 6 + 기타 2)이 계약 스키마를 통과하고 계약 키만 가진다", () => {
     for (const dto of dtos) {
       const { wire } = map(dto);
       expect(AnimalWireDtoSchema.strict().parse(wire)).toEqual(wire);
@@ -109,15 +113,40 @@ describe("mapUpstreamItem", () => {
     expect(map({ ...PROTECTED_CAT, sexCd: "" }).wire.sex).toBe("unknown");
   });
 
-  it("upKindNm: 고양이→cat, 개→dog", () => {
+  it("upKindNm: 고양이→cat, 개→dog, 기타→other", () => {
     expect(map(PROTECTED_CAT).wire.species).toBe("cat");
     expect(map(DOG_VACCINATION).wire.species).toBe("dog");
+    expect(map(PROTECTED_OTHER).wire.species).toBe("other");
+    expect(map(ENDED_OTHER).wire.species).toBe("other");
   });
 
-  it("upKindNm이 고양이/개가 아니면 null을 반환하고 로그를 남긴다", () => {
+  it("upKindNm이 고양이/개/기타가 아니면 null을 반환하고 로그를 남긴다", () => {
     const logger = spyLogger();
+    // "기타축종"은 kindNm 값이고 upKindNm은 "기타"다(12.A P12)
     expect(mapUpstreamItem({ ...PROTECTED_CAT, upKindNm: "기타축종" }, { logger })).toBeNull();
     expect(logger.warn).toHaveBeenCalledOnce();
+  });
+
+  describe("kindText(품종 이름)", () => {
+    it("kindFullNm의 [축종] 접두어를 뗀다", () => {
+      expect(map(PROTECTED_OTHER).wire.kindText).toBe("토끼"); // "[기타축종] 토끼"
+      expect(map(ENDED_OTHER).wire.kindText).toBe("앵무새");
+      expect(map(PROTECTED_CAT).wire.kindText).toBe("한국 고양이"); // "[고양이] 한국 고양이"
+      expect(map(DOG_VACCINATION).wire.kindText).toBe("믹스견");
+    });
+
+    it("품종을 특정할 수 없는 값은 null이다(기본 문구를 쓰게 한다)", () => {
+      for (const kindFullNm of ["[기타축종] 기타축종", "[기타축종]", "[기타축종]   ", "[고양이] 기타", "기타", ""]) {
+        expect(map({ ...PROTECTED_OTHER, kindFullNm }).wire.kindText, kindFullNm).toBeNull();
+      }
+      const { kindFullNm: _omitted, ...withoutKind } = PROTECTED_OTHER;
+      expect(map(withoutKind).wire.kindText).toBeNull();
+    });
+
+    it("접두어가 없으면 값 전체를 쓰고 앞뒤 공백만 제거한다", () => {
+      expect(map({ ...PROTECTED_OTHER, kindFullNm: "  토끼 " }).wire.kindText).toBe("토끼");
+      expect(map({ ...PROTECTED_OTHER, kindFullNm: "붉은귀거북" }).wire.kindText).toBe("붉은귀거북");
+    });
   });
 
   it("optional 필드가 있는 항목과 없는 항목 모두 매핑된다", () => {
@@ -232,6 +261,7 @@ describe("mapUpstreamItem", () => {
       foundPlaceText: null,
       noticePeriodText: null,
       specialMarkText: null,
+      kindText: null,
     });
     expect(result.sortKeys).toEqual({ noticeSdt: "", noticeEdt: "20261001", updTm: "" });
   });

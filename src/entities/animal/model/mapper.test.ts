@@ -15,6 +15,7 @@ const wire: AnimalWireDto = {
   foundPlaceText: "서귀포시 남원읍 의귀리1537",
   noticePeriodText: "09.21 ~ 10.01",
   specialMarkText: null,
+  kindText: null,
 };
 
 describe("toAnimal", () => {

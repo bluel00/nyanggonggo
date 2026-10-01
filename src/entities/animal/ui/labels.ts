@@ -4,6 +4,7 @@ import type { Animal } from "../model/animal";
 export const SPECIES_LABEL: Record<Animal["species"], string> = {
   cat: "고양이",
   dog: "강아지",
+  other: "기타 동물",
 };
 
 /**
@@ -31,6 +32,11 @@ export const SPECIES_COPY: Record<Animal["species"], SpeciesCopy> = {
     emptyTitle: "조건에 맞는 강아지가 없어요",
     errorTitle: "지금은 강아지를 불러오지 못했어요",
   },
+  other: {
+    listTitle: "기타 동물 공고",
+    emptyTitle: "조건에 맞는 기타 동물이 없어요",
+    errorTitle: "지금은 기타 동물을 불러오지 못했어요",
+  },
 };
 
 /**
@@ -45,6 +51,24 @@ export const ANIMAL_COPY = {
   favoritesErrorTitle: "지금은 찜한 공고를 불러오지 못했어요",
   detailErrorTitle: "지금은 공고를 불러오지 못했어요",
 } as const;
+
+/**
+ * 화면에 쓰는 축종 텍스트. 기타 축종은 "기타 동물"이 아니라 실제 동물 이름(토끼, 앵무새…)을 쓴다.
+ * 업스트림 `kindFullNm`에서 뽑은 `kindText`가 그 이름이며, 뽑을 수 없으면 라벨("기타 동물")로 돌아간다.
+ * 사진 alt, 공유 제목, OG 제목, 카드/상세 타이틀이 함께 쓴다.
+ */
+export function speciesText(animal: Pick<Animal, "species" | "kindText">): string {
+  if (animal.species !== "other") return SPECIES_LABEL[animal.species];
+  return animal.kindText ?? SPECIES_LABEL.other;
+}
+
+/**
+ * 카드 1줄과 상세 타이틀. Domain에 이름이 없어 기본은 지역이고, 기타 축종은 어떤 동물인지를
+ * 지역 앞에 붙인다("토끼 · 서울특별시 성동구"). 기타 공고의 카드/상세 디자인은 시안이 없어 임시다(12절 43).
+ */
+export function animalTitle(animal: Pick<Animal, "species" | "kindText" | "regionText">): string {
+  return animal.species === "other" ? `${speciesText(animal)} · ${animal.regionText}` : animal.regionText;
+}
 
 /** 성별 표기(handoff 화면 3: 암컷 / 수컷 / 성별 미상, 임의 결정) */
 export const SEX_LABEL: Record<Animal["sex"], string> = {

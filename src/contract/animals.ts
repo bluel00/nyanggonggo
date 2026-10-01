@@ -6,7 +6,7 @@ import { z } from "zod";
  */
 export const AnimalWireDtoSchema = z.object({
   id: z.string(),
-  species: z.enum(["cat", "dog"]),
+  species: z.enum(["cat", "dog", "other"]),
   images: z.array(z.string()),
   status: z.enum(["protected", "ended"]),
   /** 공고 종료일, KST 달력 날짜 `YYYY-MM-DD` */
@@ -20,6 +20,11 @@ export const AnimalWireDtoSchema = z.object({
   noticePeriodText: z.string().nullable(),
   /** 특이사항(specialMark). 공백뿐이면 null */
   specialMarkText: z.string().nullable(),
+  /**
+   * 품종 이름(`kindFullNm`의 `[축종]` 뒤). 기타 축종은 이 값이 실제 동물(토끼, 앵무새…)이라
+   * 화면에서 "어떤 동물인지" 보여 주는 데 쓴다. 뽑을 수 없으면 null
+   */
+  kindText: z.string().nullable(),
 });
 
 export type AnimalWireDto = z.infer<typeof AnimalWireDtoSchema>;

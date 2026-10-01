@@ -17,6 +17,7 @@ const wire = (overrides: Partial<AnimalWireDto> = {}): AnimalWireDto => ({
   foundPlaceText: "서귀포시 남원읍",
   noticePeriodText: "09.21 ~ 10.01",
   specialMarkText: null,
+  kindText: null,
   ...overrides,
 });
 

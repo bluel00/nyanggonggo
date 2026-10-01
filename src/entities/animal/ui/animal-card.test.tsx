@@ -24,6 +24,7 @@ const animal = (overrides: Partial<Animal> = {}): Animal => ({
   foundPlaceText: "서귀포시 남원읍",
   noticePeriodText: "09.21 ~ 10.01",
   specialMarkText: null,
+  kindText: null,
   ...overrides,
 });
 
@@ -35,6 +36,31 @@ function renderCard(a: Animal) {
 }
 
 describe("AnimalCard", () => {
+  describe("기타 축종", () => {
+    const rabbit = animal({ species: "other", kindText: "토끼", regionText: "경기도 성남시" });
+
+    it("어떤 동물인지를 지역 앞에 보여 준다", () => {
+      renderCard(rabbit);
+      expect(screen.getByText("토끼 · 경기도 성남시")).toBeTruthy();
+    });
+
+    it("사진 alt에도 동물 이름을 쓴다", () => {
+      renderCard(rabbit);
+      expect(screen.getByRole("img").getAttribute("alt")).toBe("토끼 사진, 경기도 성남시");
+    });
+
+    it("동물 이름이 없으면 기본 문구", () => {
+      renderCard(animal({ species: "other", kindText: null, regionText: "경기도 성남시" }));
+      expect(screen.getByText("기타 동물 · 경기도 성남시")).toBeTruthy();
+    });
+
+    it("고양이 카드는 지역만 보여 준다(바뀌지 않는다)", () => {
+      renderCard(animal({ kindText: "한국 고양이" }));
+      expect(screen.getByText("제주특별자치도")).toBeTruthy();
+      expect(screen.getByRole("img").getAttribute("alt")).toBe("고양이 사진, 제주특별자치도");
+    });
+  });
+
   it("보호중(D-10): 초록 배지 + D-day, 사진은 프록시 경유 첫 사진", () => {
     const { card, badge } = renderCard(animal());
     expect(card.getAttribute("data-status")).toBe("protected");

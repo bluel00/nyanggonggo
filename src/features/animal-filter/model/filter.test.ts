@@ -63,6 +63,15 @@ describe("parseAnimalFilter", () => {
   it("잘못된 species/status/sort는 기본값", () => {
     expect(parseAnimalFilter(qs("species=bird&status=notice&sort=old"))).toEqual(DEFAULT_ANIMAL_FILTER);
   });
+
+  it("species=other(기타 축종)를 읽는다", () => {
+    expect(parseAnimalFilter(qs(`species=other&region=${SEOUL}`))).toEqual({
+      species: "other",
+      region: SEOUL,
+      status: "protected",
+      sort: "latest",
+    });
+  });
 });
 
 describe("toFilterQuery / toFilterHref", () => {
@@ -73,6 +82,12 @@ describe("toFilterQuery / toFilterHref", () => {
 
   it("전국은 region=all로 남긴다(생략하면 기본 지역이 되므로)", () => {
     expect(toFilterQuery({ species: "cat", status: "protected", sort: "latest" })).toBe("region=all");
+  });
+
+  it("species=other는 URL에 쓰고, 다시 읽으면 같은 필터다", () => {
+    const filter = { species: "other", region: SEOUL, status: "protected", sort: "latest" } as const;
+    expect(toFilterQuery(filter)).toBe(`species=other&region=${SEOUL}`);
+    expect(parseAnimalFilter(qs(toFilterQuery(filter)))).toEqual(filter);
   });
 
   it("지역은 기본값(서울 전체)이어도 늘 쓴다(생략하면 기억된 지역이 끼어든다)", () => {

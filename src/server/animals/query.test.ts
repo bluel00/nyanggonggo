@@ -27,6 +27,10 @@ describe("parseListQuery", () => {
     });
   });
 
+  it("species=other(기타 축종)를 받는다", () => {
+    expect(parseListQuery(qs("species=other"))).toEqual({ species: "other", status: "protected", sort: "latest" });
+  });
+
   it("district는 region과 함께 받는다", () => {
     expect(parseListQuery(qs("region=6110000&district=3000000"))).toMatchObject({ region: "6110000", district: "3000000" });
   });

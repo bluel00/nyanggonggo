@@ -17,6 +17,7 @@ const animal = (overrides: Partial<Animal> = {}): Animal => ({
   foundPlaceText: "서귀포시",
   noticePeriodText: null,
   specialMarkText: null,
+  kindText: null,
   ...overrides,
 });
 
@@ -32,6 +33,13 @@ describe("buildOgModel", () => {
       imageSrc: "http://openapi.animal.go.kr/openapi/files/1.jpg",
       ended: false,
     });
+  });
+
+  it("기타 공고는 speciesLabel이 실제 동물 이름이다", () => {
+    expect(buildOgModel(animal({ species: "other", kindText: "토끼" }), NOW).speciesLabel).toBe("토끼");
+    expect(buildOgModel(animal({ species: "other", kindText: null }), NOW).speciesLabel).toBe("기타 동물");
+    const text = buildOgText(buildOgModel(animal({ species: "other", kindText: "토끼" }), NOW), "냥공고");
+    expect(text.title).toBe("제주특별자치도 토끼 공고 | 냥공고");
   });
 
   it("임박 당일은 D-day, 종료는 D-day 없음, 만료된 보호중도 D-day 없음", () => {

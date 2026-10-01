@@ -2,7 +2,7 @@ import {
   getDDay,
   getPrimaryImage,
   getStatusVariant,
-  SPECIES_LABEL,
+  speciesText,
   statusBadgeText,
   type Animal,
   type AnimalStatusVariant,
@@ -30,7 +30,7 @@ export function buildOgModel(animal: Animal, now: Date): OgModel {
   return {
     title: animal.regionText,
     sub: animal.shelterName ?? animal.foundPlaceText,
-    speciesLabel: SPECIES_LABEL[animal.species],
+    speciesLabel: speciesText(animal),
     variant,
     badgeText: statusBadgeText(variant, null),
     dDayText: dDay === null ? null : dDay === 0 ? "D-day" : `D-${dDay}`,

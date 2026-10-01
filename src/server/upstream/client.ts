@@ -13,6 +13,8 @@ export const UPSTREAM_ENDPOINT =
 export const UPKIND_BY_SPECIES: Record<AnimalWireDto["species"], string> = {
   cat: "422400",
   dog: "417000",
+  // 기타 축종(토끼, 앵무새, 닭…). 2026-10-01 실측으로 upKindCd/upKindNm이 429900/"기타"임을 확인했다(12.A P12)
+  other: "429900",
 };
 
 /**

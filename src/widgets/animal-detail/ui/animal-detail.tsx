@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import {
   ANIMAL_COPY,
+  animalTitle,
   getDDay,
   getStatusVariant,
   SEX_LABEL,
-  SPECIES_LABEL,
+  speciesText,
   StatusBadge,
   useAnimal,
 } from "@/entities/animal";
@@ -67,7 +68,7 @@ export function AnimalDetail({ id }: { id: string }) {
   const variant = getStatusVariant(animal, now);
   const ended = variant === "ended";
   const dDay = ended ? null : getDDay(animal, now);
-  const alt = `${SPECIES_LABEL[animal.species]} 사진, ${animal.regionText}`;
+  const alt = `${speciesText(animal)} 사진, ${animal.regionText}`;
   const rows = [
     ["보호소", animal.shelterName],
     ["발견 장소", animal.foundPlaceText],
@@ -100,7 +101,7 @@ export function AnimalDetail({ id }: { id: string }) {
             </span>
           )}
         </div>
-        <h1 className="mt-3 text-title">{animal.regionText}</h1>
+        <h1 className="mt-3 text-title">{animalTitle(animal)}</h1>
         <p className="mt-1 text-body text-text-2">
           {SEX_LABEL[animal.sex]} · {animal.ageText ?? "나이 미상"}
         </p>

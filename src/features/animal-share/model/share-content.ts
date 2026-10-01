@@ -3,7 +3,7 @@ import {
   getDDay,
   getPrimaryImage,
   getStatusVariant,
-  SPECIES_LABEL,
+  speciesText,
   statusBadgeText,
   type Animal,
 } from "@/entities/animal";
@@ -31,7 +31,7 @@ export function buildShareContent(animal: Animal, origin: string, now: Date): Sh
   const proxied = primary ? toImageProxyUrl(primary) : null;
   return {
     url,
-    title: `${animal.regionText} ${SPECIES_LABEL[animal.species]}`,
+    title: `${animal.regionText} ${speciesText(animal)}`,
     description: [badge, animal.shelterName].filter(Boolean).join(" · "),
     imageUrl: proxied ? `${origin}${proxied}` : `${url}/opengraph-image`,
   };

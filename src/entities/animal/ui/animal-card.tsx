@@ -8,7 +8,7 @@ import type { Animal } from "../model/animal";
 import { getDDay } from "../model/dDay";
 import { getPrimaryImage, getStatusVariant } from "../model/status";
 import { AnimalPhoto } from "./animal-photo";
-import { SPECIES_LABEL } from "./labels";
+import { animalTitle, speciesText } from "./labels";
 import { StatusBadge } from "./status-badge";
 
 /**
@@ -42,7 +42,7 @@ export function AnimalCard({
 }) {
   const variant = getStatusVariant(animal, now);
   const ended = variant === "ended";
-  const alt = `${SPECIES_LABEL[animal.species]} 사진, ${animal.regionText}`;
+  const alt = `${speciesText(animal)} 사진, ${animal.regionText}`;
   const sub = animal.shelterName ?? animal.foundPlaceText;
 
   const body = (
@@ -54,7 +54,7 @@ export function AnimalCard({
         </div>
       </div>
       <div className="px-1 pt-3">
-        <p className="truncate text-card-title">{animal.regionText}</p>
+        <p className="truncate text-card-title">{animalTitle(animal)}</p>
         {sub && <p className="mt-0.5 truncate text-body text-text-2">{sub}</p>}
       </div>
     </>

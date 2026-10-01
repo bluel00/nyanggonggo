@@ -16,6 +16,7 @@ const animal = (overrides: Partial<Animal> = {}): Animal => ({
   foundPlaceText: null,
   noticePeriodText: null,
   specialMarkText: null,
+  kindText: null,
   ...overrides,
 });
 
@@ -33,6 +34,12 @@ describe("animalListFilter", () => {
   it("종과 상태는 공고 값을 그대로 쓴다", () => {
     const result = animalListFilter(animal({ species: "dog", status: "ended", regionText: "부산광역시 금정구" }));
     expect(result).toMatchObject({ species: "dog", status: "ended", region: "6260000", district: "3350000" });
+  });
+
+  it("기타 공고는 기타 목록으로 간다", () => {
+    const other = animal({ species: "other", kindText: "토끼", regionText: "경기도 성남시" });
+    expect(animalListFilter(other)).toMatchObject({ species: "other", region: "6410000" });
+    expect(animalListHref(other)).toContain("species=other");
   });
 
   it.each([

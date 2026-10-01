@@ -16,6 +16,7 @@ import { useApplyAnimalFilter } from "../model/use-apply-animal-filter";
 const SPECIES_OPTIONS = [
   { value: "cat", label: SPECIES_LABEL.cat },
   { value: "dog", label: SPECIES_LABEL.dog },
+  { value: "other", label: SPECIES_LABEL.other },
 ] as const;
 
 const SIDO_OPTIONS = [{ value: REGION_ALL, label: "전체 시/도" }, ...SIDO.map((s) => ({ value: s.code, label: s.name }))];

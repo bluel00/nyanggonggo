@@ -31,6 +31,7 @@ const animal: Animal = {
   foundPlaceText: null,
   noticePeriodText: null,
   specialMarkText: null,
+  kindText: null,
 };
 
 describe("카카오 SDK 상수", () => {

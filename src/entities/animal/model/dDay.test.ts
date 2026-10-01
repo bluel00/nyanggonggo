@@ -18,6 +18,7 @@ const animal = (overrides: Partial<Animal> = {}): Animal => ({
   foundPlaceText: null,
   noticePeriodText: null,
   specialMarkText: null,
+  kindText: null,
   ...overrides,
 });
 

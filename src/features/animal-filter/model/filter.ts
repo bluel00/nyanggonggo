@@ -27,7 +27,7 @@ export const DEFAULT_ANIMAL_FILTER = {
 
 export const FILTER_KEYS = ["species", "region", "district", "status", "sort"] as const;
 
-const SPECIES = ["cat", "dog"] as const;
+const SPECIES = ["cat", "dog", "other"] as const;
 const STATUSES = ["protected", "ended", "all"] as const;
 const SORTS = ["latest", "endingSoon"] as const;
 
