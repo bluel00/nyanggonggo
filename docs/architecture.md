@@ -56,6 +56,8 @@ src/
 - 서비스: `abandonmentPublicService_v2`, 유기동물 조회 `abandonmentPublic_v2`. 시도 `sido_v2`, 시군구 `sigungu_v2`, 보호소 `shelter_v2`, 품종 `kind_v2`.
 - 지역 코드(확정, 2026-09-22 실측, 12.A P11): 시도 `sido_v2`와 시군구 `sigungu_v2`(`upr_cd`로 조회, 페이지 있음)의 항목은 `orgCd`, `orgdownNm`(시군구는 `uprCd` 포함). 앱은 이 결과를 정적 파일 `src/shared/config/regions.ts`(시도 16, 시군구 237)로 굳혀 쓰며 **런타임에 두 operation을 호출하지 않는다**. 실제 구가 아닌 항목(코드가 시도 코드와 같음, `ddd99dd` 코드, 이름 없음: 19개)은 제외했다. 목록을 바꾸려면 로컬 프로브를 다시 실행해 파일을 다시 만든다(방법은 파일 상단 주석).
 - 확인된 요청 변수: `serviceKey`, `bgnde`/`endde`(구조일), `upkind`(개 417000, 고양이 422400, 기타 429900), `kind`, `upr_cd`(시도), `org_cd`(시군구), `care_reg_no`, `state`(전체=빈값, 공고중=`notice`, 보호중=`protect`), `neuter_yn`, `pageNo`, `numOfRows`(최대 1,000, 기본 10), `_type`(xml 기본, `json` 지원), `bgupd`/`enupd`, `sex_cd`, `rfid_cd`, `desertion_no`, `notice_no`. **정렬 파라미터는 없다.**
+- 축종(확정, 2026-10-01 실측, 12.A P12): `upkind`는 고양이 422400, 개 417000, **기타 429900**이고 응답의 `upKindCd`/`upKindNm`이 각각 `422400`/`"고양이"`, `417000`/`"개"`, `429900`/`"기타"`다. 앱은 이 셋을 모두 쓴다(`UPKIND_BY_SPECIES`, `src/server/upstream/client.ts`).
+- 품종 이름(확정, 2026-10-01 실측, 12.A P12): `kindFullNm`은 늘 `"[<축종>] <품종>"`이고 빈 값이 없다(고양이·개 1,000건씩, 기타 155건 전부). **기타 축종은 `kindNm`이 100% `"기타축종"`, `kindCd`가 100% `000117`이라 어떤 동물인지 알 수 없고, 실제 동물(토끼, 앵무새, 닭…)은 `kindFullNm`에만 있다.** 그래서 서버 Mapper가 `[...]` 접두어를 떼어 WireDto `kindText`로 내려준다(6절).
 - 규모: 고양이 2,529건(2026-09-21 프로브. 이전 샘플은 고양이 2,481건, 전체 7,249건). `numOfRows=500`(5절)이면 고양이는 6회 호출이다(첫 페이지 후 나머지 5회를 동시성 3으로 병렬).
 - 기본 정렬은 `desertionNo` 내림차순으로 보인다(두 샘플에서 확인). 시간순이 아니라 지역 코드순으로 뭉쳐 나온다.
 - 응답 아이템 필드(XML 태그명 기준, DTO는 이름 그대로): `desertionNo, happenDt, happenPlace, kindFullNm, upKindCd, upKindNm, kindCd, kindNm, colorCd, age, weight, noticeNo, noticeSdt, noticeEdt, popfile1, popfile2, processState, sexCd, neuterYn, specialMark, careRegNo, careNm, careTel, careAddr, careOwnerNm, orgNm, updTm`. 일부 아이템에만 있는 optional: `vaccinationChk, sfeSoci, sfeHealth, endReason`. 사진은 `popfile1..N`(개수 가변, 프로브에서 최대 8). 문서에 없는 optional 필드(`healthChk`, `adptn*`, `srvc*`, `rfidCd`, `etcBigo`)도 오며 무시한다(12.A).
@@ -130,11 +132,17 @@ type Animal = {
   foundPlaceText: string | null      // happenPlace
   noticePeriodText: string | null    // "MM.DD ~ MM.DD"
   specialMarkText: string | null     // specialMark(특이사항). 상세에서만 노출
+  kindText: string | null            // 품종 이름(kindFullNm의 "[축종]" 뒤). 기타 축종은 실제 동물
 }
 ```
 
 - 연락처(`careTel`, `careAddr`, `careOwnerNm`)와 종료 사유(`endReason`)는 WireDto와 Domain 어디에도 넣지 않는다(PRD: 보호소 연락 정보 비노출).
 - 파생값은 domain 서비스에서 계산한다: `dDay`(KST 기준, 기준 시각을 주입 가능하게), `isSoon`(D-day 3 이하). 종료 판정은 `processState`가 한다. `dDay`는 `number | null`이며 규칙은 10절을 따른다.
+- `species`: `cat | dog | other`. 업스트림 `upKindNm`의 `고양이`/`개`/`기타`를 서버 Mapper가 옮기고, 그 외 값은 항목을 건너뛴다(로그).
+- `kindText`(확정, 2026-10-01): `kindFullNm`에서 `[<축종>]` 접두어를 떼고 앞뒤 공백을 지운 값이다. 접두어가 없으면 값 전체를 쓰고, 비어 있거나 품종을 특정할 수 없는 값(`기타`, `기타축종`)이면 `null`이다(4절, 12.A P12).
+  - 화면 규칙은 `entities/animal/ui/labels.ts` 한 곳에 있다. `speciesText(animal)`는 축종 자리에 쓸 텍스트로, 고양이/강아지는 라벨이고 **기타는 `kindText`(없으면 "기타 동물")**다. 사진 alt, 카카오 공유 제목, OG 제목이 이 함수를 쓴다.
+  - `animalTitle(animal)`은 카드 1줄과 상세 타이틀이다. 기본은 지역이고 기타 축종만 `"<동물> · <지역>"`으로 어떤 동물인지를 앞에 붙인다(기타 공고의 카드/상세 시안이 없어 임시, 12절 43).
+- 축종별 문구(확정, 2026-10-01): 목록 타이틀, 빈 결과, 조회 실패 문구는 `SPECIES_COPY`(`entities/animal/ui/labels.ts`)에 축종별 **문장 그대로** 둔다. 라벨 + 템플릿(`${label}가 없어요`)으로 만들면 조사가 틀어진다("기타 동물가"). 축종이 섞이는 화면(찜 목록)과 축종을 모르는 화면(상세 조회 실패)은 `ANIMAL_COPY`의 축종 중립 문구를 쓴다(명세 4.5.2의 "고양이" 문구를 "공고"로 바꿨다).
 - `sexCd`: `M`→male, `F`→female, 그 외(`Q` 포함)→unknown.
 - 이미지: `popfile1..N` 중 존재하는 것만 배열로. 파일명의 `[` `]`는 인코딩한다. `http`→`https` 처리는 별도 단계(`next/image` 원격 도메인 설정 또는 이미지 프록시)에서 다룬다.
 
@@ -154,7 +162,7 @@ interface AnimalRepository {
 | 종류 | 담당 | 규칙 |
 |---|---|---|
 | 서버 상태(목록, 상세, 찜 목록) | TanStack Query (`useInfiniteQuery` 등) | 다른 저장소나 `useState`로 복사 금지. 가공은 `select` 또는 렌더 시 파생 |
-| 필터/정렬 | URL search params | `species`, `region`, `status`, `sort`만. 기본 `species=cat`, `status=protected`, `sort=latest`. **`page`는 URL에 넣지 않는다**(내부 커서). 구현 규칙은 아래 |
+| 필터/정렬 | URL search params | `species`(`cat` \| `dog` \| `other`), `region`, `district`, `status`, `sort`만. 기본 `species=cat`, `status=protected`, `sort=latest`. 모르는 값은 기본값으로 본다. **`page`는 URL에 넣지 않는다**(내부 커서). 구현 규칙은 아래 |
 | 찜 목록 | localStorage + 작은 훅 | id 배열만 저장. 읽을 때 Zod로 검증 |
 | 일시적 UI(필터 시트 draft, 뷰어 index, 토스트) | 컴포넌트 로컬 state | 시트 draft는 [적용하기]에서만 URL 반영, 닫히면 버림 |
 
@@ -235,13 +243,19 @@ interface AnimalRepository {
 - 카드 2줄: 명세 4.1.3은 "1줄 이름(없으면 지역명) / 2줄 지역 · 보호소"다. Domain에 이름이 없어 1줄이 지역이 되므로, 2줄은 지역을 반복하지 않고 보호소(없으면 발견 장소)만 둔다
 - 목록 헤더의 찜(하트) 버튼(handoff)은 `/favorites`와 함께 다음 단계에서 넣는다. 카드 클릭 → 상세 링크도 상세 화면과 함께 넣는다(`AnimalCard`의 `href`) 이 문서와 문서 간 새 불일치가 생기면 이 절에 적는다.
 
+기타 축종을 넣으면서 생긴 불일치(2026-10-01, 이 문서를 따른다):
+- PRD 4.1 2) 필터 기능 "축종 (고양이/강아지)", 기능명세서 4.2.2 "축종 segmented: cat/dog" → `cat | dog | other` 셋이다. 기본값은 그대로 `cat`이고, 축종은 기억하지 않는다(지역만 기억)
+- `docs/design/README.md` "화면 타이틀은 축종에 따라 '고양이 공고' / '강아지 공고'" → "기타 동물 공고"가 늘었다
+- 기능명세서 4.5.2 UI의 찜 빈 상태 "아직 찜한 고양이가 없어요 / 마음에 드는 고양이를 저장해보세요 🐾" → 찜 목록은 축종이 섞이므로 "공고"로 바꿨다("아직 찜한 공고가 없어요 / 마음에 드는 공고를 저장해보세요 🐾"). 찜 화면 제목도 "찜한 고양이" → "찜한 공고"
+- 기능명세서 4.1.3 카드 2줄 규칙 → 기타 축종만 1줄이 `"<동물> · <지역>"`이다(시안 없음, 12절 43)
+
 ## 12. 미확정 / 스파이크
 
 각 항목은 추측하지 말고, 해당 단계에서 검증한 뒤 이 절을 갱신한다.
 
 ### 12.A 확정됨(2026-09-21 프로브)
 
-로컬에서 실제 호출한 결과다(`scripts/probe.ts`, 커밋하지 않음). 고양이(`upkind=422400`) 전체 스냅샷 기준이며, 값은 시점에 따라 바뀐다.
+로컬에서 실제 호출한 결과다(`scripts/probe.ts`와 일회성 스크립트, 둘 다 커밋하지 않음). P1~P10은 고양이(`upkind=422400`) 전체 스냅샷 기준이고, 날짜가 붙은 행(P11, P12)은 그 날짜의 별도 실측이다. 값은 시점에 따라 바뀐다.
 
 | # | 항목 | 결과 |
 |---|---|---|
@@ -256,6 +270,7 @@ interface AnimalRepository {
 | P9 | 단건 조회 | 종료(안락사) 공고 1건의 `desertion_no` 조회 성공(길이 1 배열, id 일치). 오래된 공고 전반은 미검증 |
 | P10 | 미문서화 필드 | `healthChk`(4.3%), `adptnTitle/adptnSDate/adptnEDate/adptnConditionLimitTxt/adptnTxt/adptnImg`, `srvcTitle/srvcSDate/srvcEDate/srvcConditionLimitTxt/srvcTxt`(각 0.6%), `rfidCd`(0.2%), `etcBigo`(0.1%). DTO에 선언하지 않고 무시한다. 문서의 기본 27개 필드는 2,529건 모두에 있었다 |
 | P11 | 지역 코드(2026-09-22) | `sido_v2` 16건(1페이지): 광주광역시(6290000)와 전라남도(6460000)는 없고 **전남광주통합특별시(6130000)** 하나로 온다. 강원은 강원특별자치도 6530000, 전북은 전북특별자치도 6540000(옛 6420000/6450000 없음). `sigungu_v2`(`upr_cd`) 256건 중 실제 구가 아닌 19건 제외 → 237건. 제외: 시도 자기 자신(16, 세종 5690000 포함 → 세종은 시군구 0), `ddd99dd` 코드(6119999 가정보호, 6119998 서울특별시, 6419998 경기도, 6479998 경상북도), 이름 없음(6489999). 인천은 2026 개편 구(검단구, 서해구, 영종구, 제물포구)가 온다 |
+| P12 | 기타 축종(2026-10-01) | `upkind=429900`이 기타이며 응답 `upKindCd`/`upKindNm`은 `429900`/`"기타"`. 전국 155건(보호중 101, 종료 54), 서울 29건(보호중 18), 경기 48건(보호중 34). upkind 없이 받은 1페이지(1,000건)의 축종 비율은 개 63.0% / 고양이 34.7% / 기타 2.3%. `kindNm`은 100% `"기타축종"`, `kindCd`는 100% `000117`이고(`kind_v2`의 `up_kind_cd=429900` 품종 목록도 `000117:기타축종` 1건뿐) 실제 동물은 `kindFullNm`에만 있다: 토끼 21.3%, 앵무새 12.3%, 닭 7.1%, 거북이 6.5%, 기니피그 4.5%, 오리/거위 각 3.9%, 칠면조/도마뱀/햄스터 각 2.6%, 돼지/흑염소 각 1.9% 등. `kindFullNm`이 비거나 `"기타"`로만 온 건은 0건. 사진 0장 공고 없음(2장 93.5%, 최대 6장). `sexCd`는 Q 78.1% / M 13.5% / F 8.4%로 개·고양이보다 미상이 훨씬 많고, `age`(`YYYY(년생)` 76.8%, `YYYY(60일미만)(년생)` 23.2%), `weight`, `colorCd`, `processState` 형식은 개·고양이와 같다. `kindFullNm`은 고양이·개에서도 늘 `"[<축종>] <품종>"`이었다(각 1,000건) |
 
 ### 12.B 미확정 목록
 
@@ -332,6 +347,7 @@ interface AnimalRepository {
     - **(C) 사진 데이터량과 메모리 — 미결, 23과 함께 본다**: 실제 사진은 1300×1733 / 약 147KB인데 카드는 380×475 CSS px(DPR 2.625에서 997×1247 device px)에 그린다. 리사이즈가 없어 1,000장을 다 보면 약 147MB를 받고, 브라우저 프로세스는 빈 탭 대비 +407MB였다. 사진 1장 디코드 상한은 9.0MB(1300×1733×4)지만 크롬이 화면 밖 것을 버려 단순 합(50페이지 2,982MB)에는 닿지 않는다. 저가형 기기에서의 탭 종료 위험은 미검증
     - **카드별 찜 리스너 — 미결**: `FavoriteButton`이 카드마다 `subscribeFavorites`로 window 리스너 2개를 걸어 1,000카드면 2,000개다. 찜을 토글하면 스냅샷이 바뀌어 카드 전부가 다시 그려지고, 하트 탭의 입력 응답(event duration)이 20페이지 56ms → 50페이지 112ms로 늘었다(기준 200ms 안이라 급하지는 않다). 찜 id를 목록에서 한 번 읽어 카드에 내려주는 구조로 바꿀지 결정 필요
     - **채택하지 않음**: `maxPages`(무한쿼리가 유지할 페이지 수 상한)는 재요청과 DOM을 같이 줄이지만, 상한을 넘으면 앞 페이지가 캐시에서 사라져 뒤로가기 복원 대상 카드를 못 찾고(맨 위로) 위로 스크롤할 때 다시 받으며 위치가 튄다 — 7절 복원 규칙과 충돌한다. `content-visibility: auto`는 측정에 근거가 없다: 50페이지 누적 Layout 0.97초 / RecalcStyle 0.4초로 레이아웃 비용이 이미 작고, 문제인 복원 long task는 React 마운트라 줄지 않는다
+43. 기타 축종의 화면 디자인: 시안이 없어 임시로 카드 1줄과 상세 타이틀에 `"<동물> · <지역>"`을 쓴다(`animalTitle`). 지역만 쓰는 고양이·강아지와 달리 한 줄에 두 값이 들어가 긴 이름(예: `크레스티드 게코`)은 카드에서 잘린다(`truncate`). 필터 Segmented는 3칸이 됐고 라벨은 "기타 동물"이다. 목록 타이틀은 "기타 동물 공고". 홈 화면과 기타 캐릭터는 다음 작업이며 이 임시 표기를 그때 다시 본다(33과 함께)
 
 ## 13. 다음 버전 계획 (기록만, 설계 전)
 
