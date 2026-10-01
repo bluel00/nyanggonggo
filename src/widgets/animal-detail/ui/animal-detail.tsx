@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import {
+  ANIMAL_COPY,
   getDDay,
   getStatusVariant,
   SEX_LABEL,
@@ -53,7 +54,7 @@ export function AnimalDetail({ id }: { id: string }) {
           <BackButton onClick={goBack} className="bg-bg" />
         </div>
         <div role="status" className="flex flex-col items-center gap-4 px-page py-20 text-center">
-          <p className="text-card-title">지금은 고양이를 불러오지 못했어요</p>
+          <p className="text-card-title">{ANIMAL_COPY.detailErrorTitle}</p>
           <Button variant="primary" size="touch" onClick={goBack}>
             뒤로가기
           </Button>

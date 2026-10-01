@@ -152,7 +152,7 @@ describe("AnimalDetail", () => {
       Response.json({ error: { code: "upstream_error", message: "공고 정보를 불러오지 못했어요." } }, { status: 502 }),
     );
     renderDetail();
-    expect(await screen.findByText("지금은 고양이를 불러오지 못했어요")).toBeTruthy();
+    expect(await screen.findByText("지금은 공고를 불러오지 못했어요")).toBeTruthy();
     // 상단 아이콘과 본문 버튼 모두 "뒤로가기". 본문 텍스트 버튼을 누른다
     fireEvent.click(screen.getByText("뒤로가기"));
     expect(back.mock.calls.length + push.mock.calls.length).toBe(1);

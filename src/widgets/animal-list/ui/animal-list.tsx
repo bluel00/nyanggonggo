@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { AnimalCard, SPECIES_LABEL, useAnimalsInfinite, type AnimalListFilter } from "@/entities/animal";
+import { AnimalCard, SPECIES_COPY, useAnimalsInfinite, type AnimalListFilter } from "@/entities/animal";
 import { FavoriteButton } from "@/features/animal-favorite";
 import { FOCUS_KEY } from "@/features/animal-filter";
 import { markListVisited } from "@/shared/lib/app-navigation";
@@ -35,7 +35,7 @@ const EAGER_CARDS = 2;
 export function AnimalList({ filter, focusId = null }: { filter: AnimalListFilter; focusId?: string | null }) {
   const query = useAnimalsInfinite(filter);
   const [now] = useState(() => new Date());
-  const species = SPECIES_LABEL[filter.species];
+  const copy = SPECIES_COPY[filter.species];
 
   // 목록을 거쳤다는 표시. 상세의 뒤로가기가 목록으로 돌아갈지 판단한다(shared/lib/app-navigation)
   useEffect(() => markListVisited(), []);
@@ -73,7 +73,7 @@ export function AnimalList({ filter, focusId = null }: { filter: AnimalListFilte
 
   if (query.isError && !query.data) {
     return (
-      <StateMessage title={`지금은 ${species}를 불러오지 못했어요`}>
+      <StateMessage title={copy.errorTitle}>
         <Button variant="primary" size="touch" onClick={() => void query.refetch()}>
           다시 시도
         </Button>
@@ -83,7 +83,7 @@ export function AnimalList({ filter, focusId = null }: { filter: AnimalListFilte
 
   const animals = query.data.pages.flatMap((page) => page.items);
   if (animals.length === 0) {
-    return <StateMessage title={`조건에 맞는 ${species}가 없어요`} description="필터를 바꿔서 다시 찾아보세요" />;
+    return <StateMessage title={copy.emptyTitle} description="필터를 바꿔서 다시 찾아보세요" />;
   }
 
   return (
