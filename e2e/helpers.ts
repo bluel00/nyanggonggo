@@ -10,16 +10,21 @@ const PNG_1X1 = Buffer.from(
   "base64",
 );
 
-export type ListItem = { id: string; regionText: string };
+export type ListItem = { id: string; regionText: string; species: string; kindText: string | null };
 
 /**
  * 고정 데이터로 쓸 공고를 실제 목록 API에서 받아 온다.
  * 상세 페이지는 서버 렌더라 브라우저 라우팅으로 가릴 수 없어, 실제로 존재하는 공고 id가 필요하다.
+ * species를 바꾸면 그 축종으로 받는다(기타는 `other`). query를 비우면 전국이다.
  */
-export async function loadRealItems(request: APIRequestContext, query = "region=6110000"): Promise<ListItem[]> {
+export async function loadRealItems(
+  request: APIRequestContext,
+  query = "region=6110000",
+  species: "cat" | "dog" | "other" = "cat",
+): Promise<ListItem[]> {
   // API는 IPv4로 직접 부른다(APIRequestContext에서 localhost가 ::1로 풀려 개발 서버에 못 붙는다)
   const response = await request.get(
-    `http://127.0.0.1:3000/api/animals?species=cat&status=protected&sort=latest&${query}`,
+    `http://127.0.0.1:3000/api/animals?species=${species}&status=protected&sort=latest${query ? `&${query}` : ""}`,
   );
   expect(response.ok(), "목록 API가 응답해야 한다(개발 서버와 서비스키 필요)").toBeTruthy();
   const body = (await response.json()) as { items: ListItem[] };
