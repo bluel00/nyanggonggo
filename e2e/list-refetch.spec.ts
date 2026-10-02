@@ -4,6 +4,7 @@ import {
   LIST_PAGE_SIZE,
   loadRealItems,
   mockList,
+  rememberSpeciesCookie,
   scrollListToBottom,
   watchConsoleErrors,
   type ListItem,
@@ -32,7 +33,11 @@ test.beforeAll(async ({ request }) => {
 });
 
 const consoleWatch = watchConsoleErrors();
-test.beforeEach(({ page }) => consoleWatch.attach(page));
+test.beforeEach(async ({ page, context }) => {
+  consoleWatch.attach(page);
+  // 이 파일의 관심사는 축종이 아니다. 축종 기억을 심어 `/`가 홈을 건너뛰고 목록으로 가게 한다
+  await rememberSpeciesCookie(context);
+});
 test.afterEach(() => consoleWatch.assertNone());
 
 /** 2페이지까지 받아 둔 목록. 돌려주는 값은 목록 요청 기록과 지금까지의 요청 수 */

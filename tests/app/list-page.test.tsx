@@ -1,14 +1,21 @@
-/** app/page.tsx: URL searchParams와 기억된 지역 쿠키를 파싱해 views/animal-list에 넘기는지, 지역이 없으면 주소를 채워 주는지 */
+/**
+ * app/page.tsx: 쿠키 두 개(축종·지역)를 읽어 진입 판정에 넘기고, 결과대로 그리거나 리다이렉트하는지.
+ * 판정 규칙 자체(표)는 `features/animal-filter/model/entry.test.ts`에 있다.
+ */
 import { isValidElement } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Page from "@/app/page";
-import { REGION_COOKIE } from "@/features/animal-filter";
+import { REGION_COOKIE, SPECIES_COOKIE } from "@/features/animal-filter";
 import { AnimalListView } from "@/views/animal-list";
 
-let cookieValue: string | undefined;
+let speciesCookie: string | undefined;
+let regionCookie: string | undefined;
 vi.mock("next/headers", () => ({
   cookies: async () => ({
-    get: (name: string) => (name === REGION_COOKIE && cookieValue ? { value: cookieValue } : undefined),
+    get: (name: string) => {
+      const value = name === SPECIES_COOKIE ? speciesCookie : name === REGION_COOKIE ? regionCookie : undefined;
+      return value === undefined ? undefined : { value };
+    },
   }),
 }));
 
@@ -25,16 +32,18 @@ vi.mock("next/navigation", () => ({
 }));
 
 beforeEach(() => {
-  cookieValue = undefined;
+  speciesCookie = undefined;
+  regionCookie = undefined;
 });
 
 const SEOUL = "6110000";
 const BUSAN = "6260000";
 const BUSAN_GEUMJEONG = "3350000";
+const ID = "411317202600404";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
-/** 리다이렉트 없이 렌더되면 filter를, 리다이렉트되면 목적지를 돌려준다 */
+/** 리다이렉트 없이 렌더되면 filter를 돌려준다 */
 async function renderPage(searchParams: SearchParams) {
   const element = await Page({ searchParams: Promise.resolve(searchParams) });
   expect(isValidElement(element)).toBe(true);
@@ -52,50 +61,50 @@ async function redirectOf(searchParams: SearchParams) {
   throw new Error("리다이렉트하지 않았다");
 }
 
-describe("app/page: 지역이 없으면 주소를 채워 리다이렉트", () => {
-  it("파라미터가 없으면 기본 지역(서울)을 채운다", async () => {
-    expect(await redirectOf({})).toBe(`/?species=cat&region=${SEOUL}`);
+describe("app/page: 축종 기억이 없으면 홈으로", () => {
+  it("쿠키도 파라미터도 없으면 /home", async () => {
+    expect(await redirectOf({})).toBe("/home");
   });
 
-  it("기억된 지역이 있으면 그 지역을 채운다", async () => {
-    cookieValue = BUSAN;
-    expect(await redirectOf({})).toBe(`/?species=cat&region=${BUSAN}`);
+  it("지역 쿠키만 있어도 축종을 모르면 /home(지역은 판정하지 않는다)", async () => {
+    regionCookie = BUSAN;
+    expect(await redirectOf({})).toBe("/home");
   });
 
-  it("기억된 시군구까지 채운다", async () => {
-    cookieValue = `${BUSAN}.${BUSAN_GEUMJEONG}`;
-    expect(await redirectOf({})).toBe(`/?species=cat&region=${BUSAN}&district=${BUSAN_GEUMJEONG}`);
+  it("홈으로 갈 때도 다른 파라미터는 옮긴다", async () => {
+    expect(await redirectOf({ focus: ID, utm_source: "kakao" })).toBe(`/home?focus=${ID}&utm_source=kakao`);
   });
-
-  it("전국을 기억했으면 region=all", async () => {
-    cookieValue = "all";
-    expect(await redirectOf({})).toBe("/?species=cat&region=all");
-  });
-
-  it("focus 등 다른 파라미터는 그대로 옮긴다", async () => {
-    expect(await redirectOf({ focus: "411317202600404", utm_source: "kakao", species: "dog" })).toBe(
-      `/?focus=411317202600404&utm_source=kakao&species=dog&region=${SEOUL}`,
-    );
-  });
-
-  it("모르는 지역 코드도 주소를 바로잡는다", async () => {
-    cookieValue = BUSAN;
-    expect(await redirectOf({ region: "9999999" })).toBe(`/?species=cat&region=${BUSAN}`);
-  });
-
-  it.each(["", "몰라", `${BUSAN}.9999999`, `${BUSAN}.${BUSAN_GEUMJEONG}.x`])(
-    "쿠키 값이 %j면 기본 지역(서울)을 채운다",
-    async (value) => {
-      cookieValue = value;
-      expect(await redirectOf({})).toBe(`/?species=cat&region=${SEOUL}`);
-    },
-  );
 });
 
-describe("app/page: 지역이 있으면 그대로 그린다", () => {
+describe("app/page: 기억으로 주소를 채운다(한 번에)", () => {
+  it("축종 쿠키를 읽어 축종과 기본 지역을 함께 채운다", async () => {
+    speciesCookie = "dog";
+    expect(await redirectOf({})).toBe(`/?species=dog&region=${SEOUL}`);
+  });
+
+  it("축종·지역 쿠키를 둘 다 읽는다", async () => {
+    speciesCookie = "other";
+    regionCookie = `${BUSAN}.${BUSAN_GEUMJEONG}`;
+    expect(await redirectOf({})).toBe(`/?species=other&region=${BUSAN}&district=${BUSAN_GEUMJEONG}`);
+  });
+
+  it("URL 축종이 있으면 지역만 채운다", async () => {
+    regionCookie = BUSAN;
+    expect(await redirectOf({ species: "cat" })).toBe(`/?species=cat&region=${BUSAN}`);
+  });
+
+  it("쿠키 값이 깨져 있으면 조용히 무시한다", async () => {
+    speciesCookie = "panda";
+    regionCookie = "몰라";
+    expect(await redirectOf({})).toBe("/home");
+  });
+});
+
+describe("app/page: 축종과 지역이 다 있으면 그대로 그린다", () => {
   it("URL이 쿠키보다 우선이다(리다이렉트 없음)", async () => {
-    cookieValue = BUSAN;
-    expect(await renderPage({ region: SEOUL })).toEqual({
+    speciesCookie = "dog";
+    regionCookie = BUSAN;
+    expect(await renderPage({ species: "cat", region: SEOUL })).toEqual({
       species: "cat",
       region: SEOUL,
       status: "protected",
@@ -110,11 +119,17 @@ describe("app/page: 지역이 있으면 그대로 그린다", () => {
   });
 
   it("region=all이면 전국으로 그린다", async () => {
-    expect(await renderPage({ region: "all" })).toEqual({ species: "cat", status: "protected", sort: "latest" });
+    expect(await renderPage({ species: "cat", region: "all" })).toEqual({
+      species: "cat",
+      status: "protected",
+      sort: "latest",
+    });
   });
 
   it("focus는 filter가 아니라 focusId로 넘긴다", async () => {
-    const element = await Page({ searchParams: Promise.resolve({ region: SEOUL, focus: "411317202600404" }) });
-    expect((element.props as { focusId: unknown }).focusId).toBe("411317202600404");
+    const element = await Page({
+      searchParams: Promise.resolve({ species: "cat", region: SEOUL, focus: ID }),
+    });
+    expect((element.props as { focusId: unknown }).focusId).toBe(ID);
   });
 });

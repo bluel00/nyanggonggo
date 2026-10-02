@@ -27,3 +27,4 @@ export { FOCUS_KEY, animalListFilter, animalListHref, readFocusId } from "./mode
 export { parseRegionCookie, REGION_COOKIE, rememberRegion } from "./model/region-cookie";
 export { useApplyAnimalFilter } from "./model/use-apply-animal-filter";
 export { AnimalFilterSheet } from "./ui/animal-filter-sheet";
+export { SpeciesChoice } from "./ui/species-choice";

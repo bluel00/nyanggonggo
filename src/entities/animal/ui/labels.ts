@@ -40,10 +40,18 @@ export const SPECIES_COPY: Record<Animal["species"], SpeciesCopy> = {
 };
 
 /**
- * 축종이 섞이는 화면(찜 목록)과 축종을 알 수 없는 화면(상세 조회 실패)의 문구. 축종 중립이다.
+ * 축종이 섞이는 화면(찜 목록), 축종을 알 수 없는 화면(상세 조회 실패), 축종을 고르는 화면(홈)의 문구. 축종 중립이다.
  * 찜 목록은 고양이, 강아지가 함께 들어오므로 명세 4.5.2의 "고양이" 문구를 "공고"로 바꿔 쓴다.
  */
 export const ANIMAL_COPY = {
+  /** 홈(축종 선택) 화면. 디자인 시안 전 임시 문구다(architecture.md 12절) */
+  homeTitle: "오늘은 어떤 친구를 볼까요?",
+  homeDescription: "보고 싶은 쪽을 골라 주세요.",
+  /** 기타 축종으로 가는 작은 텍스트 링크(고양이·강아지와 같은 무게로 두지 않는다) */
+  homeOtherLink: "다른 동물들도 있어요",
+  homeMetaTitle: "어떤 친구를 볼까요",
+  /** 목록 헤더의 홈 진입점. 타이틀과 함께 읽히는 보조 라벨이다 */
+  homeEntryLabel: "축종 바꾸기",
   favoritesTitle: "찜한 공고",
   favoritesEmptyTitle: "아직 찜한 공고가 없어요",
   /** 🐾는 README가 허용한 유일한 이모지(찜 빈 상태) */

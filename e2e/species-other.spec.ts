@@ -1,5 +1,12 @@
 import { expect, test } from "@playwright/test";
-import { isCardInView, loadRealItems, mockList, watchConsoleErrors, type ListItem } from "./helpers";
+import {
+  isCardInView,
+  loadRealItems,
+  mockList,
+  rememberSpeciesCookie,
+  watchConsoleErrors,
+  type ListItem,
+} from "./helpers";
 
 /**
  * 기타 축종(upkind=429900). 기타 공고는 `kindNm`이 늘 "기타축종"이라 어떤 동물인지는
@@ -16,7 +23,11 @@ test.beforeAll(async ({ request }) => {
 });
 
 const consoleWatch = watchConsoleErrors();
-test.beforeEach(({ page }) => consoleWatch.attach(page));
+test.beforeEach(async ({ page, context }) => {
+  consoleWatch.attach(page);
+  // 이 파일의 관심사는 축종이 아니다. 축종 기억을 심어 `/`가 홈을 건너뛰고 목록으로 가게 한다
+  await rememberSpeciesCookie(context);
+});
 test.afterEach(() => consoleWatch.assertNone());
 
 test("실제 목록 API가 기타 축종을 돌려주고 어떤 동물인지 담겨 있다", async () => {

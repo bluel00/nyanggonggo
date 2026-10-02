@@ -8,7 +8,7 @@ export function AnimalListView({ filter, focusId = null }: { filter: AnimalListF
   return (
     <main>
       <AnimalListHeader
-        species={filter.species}
+        filter={filter}
         actions={
           <>
             <FavoritesLink />

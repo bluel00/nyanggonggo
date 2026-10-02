@@ -1,4 +1,16 @@
-import { expect, type APIRequestContext, type Page } from "@playwright/test";
+import { expect, type APIRequestContext, type BrowserContext, type Page } from "@playwright/test";
+
+/** 축종 기억 쿠키 이름(`features/animal-filter/model/species-cookie.ts`) */
+export const SPECIES_COOKIE = "nyanggonggo.species";
+
+/**
+ * 축종 기억을 심는다. `/`로 들어가는 테스트는 축종 기억이 있어야 홈(`/home`)을 건너뛰고 목록으로 간다
+ * (PRD-v1.1 4절). 이 테스트들의 관심사는 축종이 아니라 스크롤·필터·focus·지역이라, 기본 축종을 미리 기억시켜
+ * 둔다. 홈을 거치는 흐름은 `e2e/species-home.spec.ts`가 본다.
+ */
+export async function rememberSpeciesCookie(context: BrowserContext, species = "cat") {
+  await context.addCookies([{ name: SPECIES_COOKIE, value: species, url: "http://localhost:3000" }]);
+}
 
 /** 목록 API를 고정 데이터로 바꿀 때 한 페이지에 담는 건수 */
 export const LIST_PAGE_SIZE = 6;
