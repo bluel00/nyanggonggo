@@ -24,7 +24,7 @@ type MapOptions = { logger?: Logger };
 
 /**
  * UpstreamDto → { wire, sortKeys }.
- * 종(species)을 판정할 수 없는 항목(고양이/개 외)은 null을 반환하고 로그를 남긴다.
+ * 종(species)을 판정할 수 없는 항목(고양이/개/기타 외)은 null을 반환하고 로그를 남긴다.
  */
 export function mapUpstreamItem(
   dto: UpstreamAnimalItemDto,

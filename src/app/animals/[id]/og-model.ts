@@ -1,4 +1,5 @@
 import {
+  animalTitle,
   getDDay,
   getPrimaryImage,
   getStatusVariant,
@@ -10,10 +11,14 @@ import {
 
 /**
  * OG 이미지와 상세 메타데이터에 쓰는 표시값. Domain 파생값(상태, D-day)을 쓰므로 서버가 아니라 app 계층에 둔다.
- * 문구 규칙은 카드/상세와 같다: 제목은 지역, 보조는 보호소(없으면 발견 장소), 배지는 상태만, D-day는 종료가 아니고 있을 때만.
+ * 문구 규칙은 카드/상세와 같다: 제목은 `animalTitle`(지역, 기타 축종만 "<동물> · <지역>"), 보조는 보호소(없으면 발견 장소),
+ * 배지는 상태만, D-day는 종료가 아니고 있을 때만. 링크 미리보기 제목(`buildOgText`)은 "<지역> <동물> 공고" 형식이라 `region`을 따로 둔다.
  */
 export type OgModel = {
+  /** OG 이미지에 그리는 제목(카드 1줄과 같은 규칙) */
   title: string;
+  /** 링크 미리보기 제목이 쓰는 지역. 이미지에는 쓰지 않는다 */
+  region: string;
   sub: string | null;
   speciesLabel: string;
   variant: AnimalStatusVariant;
@@ -28,7 +33,8 @@ export function buildOgModel(animal: Animal, now: Date): OgModel {
   const ended = variant === "ended";
   const dDay = ended ? null : getDDay(animal, now);
   return {
-    title: animal.regionText,
+    title: animalTitle(animal),
+    region: animal.regionText,
     sub: animal.shelterName ?? animal.foundPlaceText,
     speciesLabel: speciesText(animal),
     variant,
@@ -43,7 +49,7 @@ export function buildOgModel(animal: Animal, now: Date): OgModel {
 export function buildOgText(model: OgModel, serviceName: string) {
   const status = model.dDayText ? `${model.badgeText} · ${model.dDayText}` : model.badgeText;
   return {
-    title: `${model.title} ${model.speciesLabel} 공고 | ${serviceName}`,
+    title: `${model.region} ${model.speciesLabel} 공고 | ${serviceName}`,
     description: [status, model.sub].filter(Boolean).join(" · "),
   };
 }

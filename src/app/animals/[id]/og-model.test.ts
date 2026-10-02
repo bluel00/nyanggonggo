@@ -25,6 +25,7 @@ describe("buildOgModel", () => {
   it("보호중 D-10: 배지는 상태만, D-day 따로, 제목은 지역, 보조는 보호소, 대표 사진", () => {
     expect(buildOgModel(animal(), NOW)).toEqual({
       title: "제주특별자치도",
+      region: "제주특별자치도",
       sub: "제2동물보호센터",
       speciesLabel: "고양이",
       variant: "protected",
@@ -35,9 +36,17 @@ describe("buildOgModel", () => {
     });
   });
 
-  it("기타 공고는 speciesLabel이 실제 동물 이름이다", () => {
-    expect(buildOgModel(animal({ species: "other", kindText: "토끼" }), NOW).speciesLabel).toBe("토끼");
-    expect(buildOgModel(animal({ species: "other", kindText: null }), NOW).speciesLabel).toBe("기타 동물");
+  it("기타 공고는 speciesLabel이 실제 동물 이름이고, 이미지 제목에도 동물이 들어간다", () => {
+    expect(buildOgModel(animal({ species: "other", kindText: "토끼" }), NOW)).toMatchObject({
+      speciesLabel: "토끼",
+      // 이미지 제목은 카드 1줄과 같다. 링크 미리보기 제목은 "<지역> <동물> 공고"라 region을 따로 쓴다
+      title: "토끼 · 제주특별자치도",
+      region: "제주특별자치도",
+    });
+    expect(buildOgModel(animal({ species: "other", kindText: null }), NOW)).toMatchObject({
+      speciesLabel: "기타 동물",
+      title: "기타 동물 · 제주특별자치도",
+    });
     const text = buildOgText(buildOgModel(animal({ species: "other", kindText: "토끼" }), NOW), "냥공고");
     expect(text.title).toBe("제주특별자치도 토끼 공고 | 냥공고");
   });
