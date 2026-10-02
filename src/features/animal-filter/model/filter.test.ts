@@ -75,13 +75,13 @@ describe("parseAnimalFilter", () => {
 });
 
 describe("toFilterQuery / toFilterHref", () => {
-  it("species/status/sort의 기본값은 URL에 넣지 않는다", () => {
-    expect(toFilterQuery(DEFAULT_ANIMAL_FILTER)).toBe(`region=${SEOUL}`);
-    expect(toFilterHref("/", DEFAULT_ANIMAL_FILTER)).toBe(`/?region=${SEOUL}`);
+  it("status/sort의 기본값은 URL에 넣지 않는다", () => {
+    expect(toFilterQuery(DEFAULT_ANIMAL_FILTER)).toBe(`species=cat&region=${SEOUL}`);
+    expect(toFilterHref("/", DEFAULT_ANIMAL_FILTER)).toBe(`/?species=cat&region=${SEOUL}`);
   });
 
   it("전국은 region=all로 남긴다(생략하면 기본 지역이 되므로)", () => {
-    expect(toFilterQuery({ species: "cat", status: "protected", sort: "latest" })).toBe("region=all");
+    expect(toFilterQuery({ species: "cat", status: "protected", sort: "latest" })).toBe("species=cat&region=all");
   });
 
   it("species=other는 URL에 쓰고, 다시 읽으면 같은 필터다", () => {
@@ -90,16 +90,20 @@ describe("toFilterQuery / toFilterHref", () => {
     expect(parseAnimalFilter(qs(toFilterQuery(filter)))).toEqual(filter);
   });
 
-  it("지역은 기본값(서울 전체)이어도 늘 쓴다(생략하면 기억된 지역이 끼어든다)", () => {
-    expect(toFilterQuery(DEFAULT_ANIMAL_FILTER)).toBe(`region=${SEOUL}`);
-    expect(toFilterQuery({ ...DEFAULT_ANIMAL_FILTER, district: JONGNO })).toBe(`region=${SEOUL}&district=${JONGNO}`);
-    expect(toFilterQuery({ ...DEFAULT_ANIMAL_FILTER, district: GANGNAM })).toBe(`region=${SEOUL}&district=${GANGNAM}`);
+  it("축종과 지역은 기본값이어도 늘 쓴다(생략하면 기억된 값이 끼어든다)", () => {
+    expect(toFilterQuery(DEFAULT_ANIMAL_FILTER)).toBe(`species=cat&region=${SEOUL}`);
+    expect(toFilterQuery({ ...DEFAULT_ANIMAL_FILTER, district: JONGNO })).toBe(
+      `species=cat&region=${SEOUL}&district=${JONGNO}`,
+    );
+    expect(toFilterQuery({ ...DEFAULT_ANIMAL_FILTER, district: GANGNAM })).toBe(
+      `species=cat&region=${SEOUL}&district=${GANGNAM}`,
+    );
   });
 
   it("필터와 무관한 파라미터는 보존하고, 이전 필터 값과 page/cursor는 지운다", () => {
     const base = qs(`utm_source=kakao&species=dog&region=${BUSAN}&district=${BUSAN_JUNG}&page=3&cursor=MjA`);
     expect(toFilterHref("/", { ...DEFAULT_ANIMAL_FILTER, status: "ended" }, base)).toBe(
-      `/?utm_source=kakao&region=${SEOUL}&status=ended`,
+      `/?utm_source=kakao&species=cat&region=${SEOUL}&status=ended`,
     );
   });
 

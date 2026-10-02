@@ -131,7 +131,7 @@ test("지역 없이 들어오면 기억된 지역을 주소에 채워 준다(목
   const requests = await mockList(page, seoulItems);
 
   await page.goto("/");
-  await expect(page).toHaveURL(`/?region=${BUSAN}`);
+  await expect(page).toHaveURL(`/?species=cat&region=${BUSAN}`);
   await expect(page.locator("[data-animal-id]").first()).toBeVisible();
   // 첫 요청부터 부산이고 서울 요청은 한 번도 없다(서울을 받았다가 바꾸지 않는다).
   // 개발 모드에서는 StrictMode 때문에 첫 페이지 요청이 두 번 나갈 수 있어 횟수는 보지 않는다

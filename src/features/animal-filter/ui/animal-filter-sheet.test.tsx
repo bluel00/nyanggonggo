@@ -96,7 +96,7 @@ describe("AnimalFilterSheet", () => {
     fireEvent.change(select("시/도"), { target: { value: "all" } });
     expect(select("시/군/구").disabled).toBe(true);
     fireEvent.click(screen.getByRole("button", { name: "적용하기" }));
-    expect(replace).toHaveBeenCalledWith("/?utm_source=kakao&region=all", { scroll: false });
+    expect(replace).toHaveBeenCalledWith("/?utm_source=kakao&species=cat&region=all", { scroll: false });
   });
 
   it("시군구가 없는 시도(세종)는 시군구가 비활성", () => {

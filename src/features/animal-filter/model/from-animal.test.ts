@@ -97,12 +97,14 @@ describe("animalListFilter", () => {
 describe("animalListHref", () => {
   it("focus와 지역을 붙이고 나머지 기본값은 생략한다", () => {
     expect(animalListHref(animal({ regionText: "서울특별시 종로구" }))).toBe(
-      "/?focus=411317202600404&region=6110000&district=3000000",
+      "/?focus=411317202600404&species=cat&region=6110000&district=3000000",
     );
   });
 
-  it("기본 지역(서울 전체)이어도 지역을 명시한다(기억된 지역이 끼어들지 않게)", () => {
-    expect(animalListHref(animal({ regionText: "서울특별시" }))).toBe("/?focus=411317202600404&region=6110000");
+  it("기본 축종·지역이어도 명시한다(기억된 값이 끼어들지 않게)", () => {
+    expect(animalListHref(animal({ regionText: "서울특별시" }))).toBe(
+      "/?focus=411317202600404&species=cat&region=6110000",
+    );
   });
 
   it("전국이면 region=all", () => {
