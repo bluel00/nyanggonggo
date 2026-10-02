@@ -73,6 +73,11 @@ export function requestedRegions(requests: URL[]): (string | null)[] {
   return requests.map((url) => url.searchParams.get("region"));
 }
 
+/** 목록 API로 나간 요청들의 species 값 */
+export function requestedSpecies(requests: URL[]): (string | null)[] {
+  return requests.map((url) => url.searchParams.get("species"));
+}
+
 /** 그중 첫 페이지 요청(커서 없는 것)만. 무한 스크롤의 다음 페이지 요청과 구분한다 */
 export function firstPageRequests(requests: URL[]): URL[] {
   return requests.filter((url) => url.searchParams.get("cursor") === null);
