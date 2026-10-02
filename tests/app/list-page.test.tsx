@@ -1,9 +1,9 @@
-/** app/page.tsx: URL searchParams와 기억된 지역 쿠키를 파싱해 views/home에 넘기는지, 지역이 없으면 주소를 채워 주는지 */
+/** app/page.tsx: URL searchParams와 기억된 지역 쿠키를 파싱해 views/animal-list에 넘기는지, 지역이 없으면 주소를 채워 주는지 */
 import { isValidElement } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Page from "@/app/page";
 import { REGION_COOKIE } from "@/features/animal-filter";
-import { HomeView } from "@/views/home";
+import { AnimalListView } from "@/views/animal-list";
 
 let cookieValue: string | undefined;
 vi.mock("next/headers", () => ({
@@ -38,7 +38,7 @@ type SearchParams = Record<string, string | string[] | undefined>;
 async function renderPage(searchParams: SearchParams) {
   const element = await Page({ searchParams: Promise.resolve(searchParams) });
   expect(isValidElement(element)).toBe(true);
-  expect(element.type).toBe(HomeView);
+  expect(element.type).toBe(AnimalListView);
   return (element.props as { filter: unknown }).filter;
 }
 

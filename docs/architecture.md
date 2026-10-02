@@ -168,7 +168,7 @@ interface AnimalRepository {
 
 - 전역 스토어(Redux, Zustand, Recoil 등)를 도입하지 않는다.
 - URL 필터 구현 규칙(`features/animal-filter/model/filter.ts`, 확정):
-  - 읽기: `app/page.tsx`(서버 컴포넌트)가 searchParams를 파싱해 `views/home`에 넘긴다. 없거나 잘못된 값은 기본값으로 본다(화면은 깨지지 않고, API는 400을 유지).
+  - 읽기: `app/page.tsx`(서버 컴포넌트)가 searchParams를 파싱해 `views/animal-list`에 넘긴다. 없거나 잘못된 값은 기본값으로 본다(화면은 깨지지 않고, API는 400을 유지).
   - 쓰기: 기본값과 다른 값만 URL에 넣는다(기본 상태는 `/`). 같은 필터는 같은 URL, 같은 쿼리 키. `page`/`cursor`는 적용 시 지우고, 필터와 무관한 파라미터(예: `utm_*`)는 보존한다.
   - 적용은 `router.replace`(히스토리를 쌓지 않음, `scroll: false`). URL이 바뀌면 서버 컴포넌트가 새 searchParams로 다시 렌더되고 목록 위젯이 내부 스크롤을 맨 위로 올린다.
   - 필터 시트의 `useState`는 열림 여부와 [적용하기] 전 draft만. 열 때 현재 URL 값으로 채우고 닫으면 버린다.

@@ -10,7 +10,7 @@ import {
   toSearchParams,
   type SearchParamsInput,
 } from "@/features/animal-filter";
-import { HomeView } from "@/views/home";
+import { AnimalListView } from "@/views/animal-list";
 
 /**
  * 목록 화면. URL search params(단일 진실 소스)를 서버에서 파싱해 views에 넘긴다.
@@ -31,5 +31,5 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   if (!hasRegionParam(params)) redirect(toFilterHref("/", filter, toSearchParams(params)));
 
   // focus는 필터가 아니다. 공유 링크로 들어온 상세에서 뒤로 왔을 때 그 공고로 스크롤하기 위한 일회성 값이다
-  return <HomeView filter={filter} focusId={readFocusId(params)} />;
+  return <AnimalListView filter={filter} focusId={readFocusId(params)} />;
 }
