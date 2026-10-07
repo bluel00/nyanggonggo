@@ -50,9 +50,8 @@ export const ANIMAL_COPY = {
   homeDescription: "한 번 고르면 기억해둘게요.\n목록에서 언제든 바꿀 수 있어요.",
   /** 기타 축종으로 가는 작은 텍스트 링크(고양이·강아지와 같은 무게로 두지 않는다) */
   homeOtherLink: "다른 동물들도 있어요",
-  homeMetaTitle: "어떤 친구를 볼까요",
-  /** 목록 헤더의 홈 진입점. 스크린리더가 타이틀에 이어 읽는 숨김 텍스트다("고양이 공고, 다른 동물 고르기", 시안 Header-A) */
-  homeEntryLabel: ", 다른 동물 고르기",
+  /** 목록 헤더의 홈 진입점 링크 이름(aria-label). 타이틀 뒤에 붙여 "고양이 공고, 다른 동물 고르기"로 읽힌다(시안 Header-A) */
+  homeEntryLabel: (listTitle: string) => `${listTitle}, 다른 동물 고르기`,
   favoritesTitle: "찜한 공고",
   favoritesEmptyTitle: "아직 찜한 공고가 없어요",
   /** 🐾는 README가 허용한 유일한 이모지(찜 빈 상태) */

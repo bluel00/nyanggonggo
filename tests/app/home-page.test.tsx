@@ -42,8 +42,8 @@ describe("app/home: 축종 기억이 있어도 보여 준다(결정 G1)", () => 
     expect(await renderHome()).toEqual({ region: SEOUL });
   });
 
-  it("문서 제목이 있다", () => {
-    expect(metadata.title).toBe("어떤 친구를 볼까요 | 냥공고");
+  it("문서 제목은 화면 제목과 같다", () => {
+    expect(metadata.title).toBe("오늘은 누구를 보러 왔어요? | 냥공고");
   });
 });
 

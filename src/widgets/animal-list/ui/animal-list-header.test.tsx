@@ -19,8 +19,9 @@ describe("AnimalListHeader: 홈 진입점(시안 Header-A)", () => {
     render(<AnimalListHeader filter={filter("cat")} />);
     const link = screen.getByRole("link", { name: "고양이 공고, 다른 동물 고르기" });
     expect(link.getAttribute("href")).toBe(`/home?region=${BUSAN}`);
-    // 시안처럼 h1 안의 링크다. 보이는 제목 글자는 타이틀뿐이다(숨김 텍스트는 sr-only)
+    // 시안처럼 h1 안의 링크다. 이름은 aria-label로 고정하고, 보이는 글자는 타이틀뿐이다
     expect(link.closest("h1")).not.toBeNull();
+    expect(link.textContent).toBe("고양이 공고");
   });
 
   it("기타 축종도 같은 진입점이다", () => {

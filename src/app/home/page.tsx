@@ -5,7 +5,7 @@ import { REGION_COOKIE, resolveHomeArea, type SearchParamsInput } from "@/featur
 import { SERVICE_NAME } from "@/shared/config/service";
 import { SpeciesPickerView } from "@/views/species-picker";
 
-export const metadata: Metadata = { title: `${ANIMAL_COPY.homeMetaTitle} | ${SERVICE_NAME}` };
+export const metadata: Metadata = { title: `${ANIMAL_COPY.homeTitle} | ${SERVICE_NAME}` };
 
 /**
  * 홈(축종 선택) 화면. `/`로 들어온 사람 중 축종 기억이 없는 사람이 여기로 온다(`app/page.tsx`).

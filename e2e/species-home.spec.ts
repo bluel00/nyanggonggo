@@ -175,8 +175,7 @@ test("목록 헤더 진입점은 접근 가능한 이름에 '다른 동물 고�
   ]) {
     await rememberSpeciesCookie(context, species);
     await page.goto(`/?species=${species}&region=${SEOUL}`);
-    // 숨김 텍스트(sr-only)는 absolute라 Chrome이 이름에 공백을 하나 끼운다("고양이 공고 , 다른 동물 고르기")
-    const entry = page.getByRole("link", { name: new RegExp(`^${title} ?, 다른 동물 고르기$`) });
+    const entry = page.getByRole("link", { name: `${title}, 다른 동물 고르기`, exact: true });
     await expect(entry).toBeVisible();
     await expect(entry).toHaveAttribute("href", `/home?region=${SEOUL}`);
     // 하트·필터는 그대로 오른쪽에 있다
