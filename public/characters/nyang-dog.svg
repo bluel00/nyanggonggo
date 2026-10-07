@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <g id="dog" transform="translate(60 112)">
+    <g id="tail" transform="translate(24 -8)">
+      <path id="tail-shape" d="M-3 -2C5 -3 10 -9 12 -18C13 -22 9 -24 7 -20C5 -13 1 -9 -4 -7Z" fill="#D9C8B2" stroke="#111111" stroke-width="1.8" stroke-linejoin="round"/>
+    </g>
+    <g id="body">
+      <path id="body-shape" d="M-26 0C-30 0 -32 -6 -30 -14C-27 -28 -20 -40 0 -40C20 -40 27 -28 30 -14C32 -6 30 0 26 0Z" fill="#D9C8B2" stroke="#111111" stroke-width="1.8" stroke-linejoin="round"/>
+      <path id="belly" d="M-11 -20C-11 -29 -6 -34 0 -34C6 -34 11 -29 11 -20C11 -11 6 -5 0 -5C-6 -5 -11 -11 -11 -20Z" fill="#F7F3EE"/>
+      <path id="paws" d="M-8 -1V-8M8 -1V-8" fill="none" stroke="#111111" stroke-width="1.8" stroke-linecap="round"/>
+    </g>
+    <g id="head" transform="translate(0 -38)">
+      <path id="head-shape" d="M-25 -21C-25 -35 -14 -43 0 -43C14 -43 25 -35 25 -21C25 -8 14 -2 0 -2C-14 -2 -25 -8 -25 -21Z" fill="#D9C8B2" stroke="#111111" stroke-width="1.8" stroke-linejoin="round"/>
+      <path id="eye-patch" d="M3 -25a7 6.5 0 1 0 14 0a7 6.5 0 1 0 -14 0Z" fill="#BFA88E"/>
+      <path id="muzzle" d="M-10 -12a10 7.5 0 1 0 20 0a10 7.5 0 1 0 -20 0Z" fill="#F7F3EE"/>
+      <path id="cheeks" d="M-19 -12a3.5 2.2 0 1 0 7 0a3.5 2.2 0 1 0 -7 0ZM12 -12a3.5 2.2 0 1 0 7 0a3.5 2.2 0 1 0 -7 0Z" fill="#EBD7CA"/>
+      <g id="ear-left" transform="translate(-20 -36)">
+        <path id="ear-left-shape" d="M3 -3C-5 -5 -12 1 -12 11C-12 19 -8 23 -4 21C0 19 4 10 4 2Z" fill="#A68F76" stroke="#111111" stroke-width="1.8" stroke-linejoin="round"/>
+      </g>
+      <g id="ear-right" transform="translate(20 -36)">
+        <path id="ear-right-shape" d="M-3 -3C5 -5 12 1 12 11C12 19 8 23 4 21C0 19 -4 10 -4 2Z" fill="#A68F76" stroke="#111111" stroke-width="1.8" stroke-linejoin="round"/>
+      </g>
+      <g id="eyes-open" transform="translate(0 -25)">
+        <path d="M-12.6 0a2.6 3.2 0 1 0 5.2 0a2.6 3.2 0 1 0 -5.2 0ZM7.4 0a2.6 3.2 0 1 0 5.2 0a2.6 3.2 0 1 0 -5.2 0Z" fill="#111111"/>
+      </g>
+      <g id="eyes-closed" transform="translate(0 -25)" opacity="0">
+        <path d="M-13 -0.5Q-10 2.5 -7 -0.5M7 -0.5Q10 2.5 13 -0.5" fill="none" stroke="#111111" stroke-width="1.8" stroke-linecap="round"/>
+      </g>
+      <g id="eyes-happy" transform="translate(0 -25)" opacity="0">
+        <path d="M-13 1Q-10 -2.5 -7 1M7 1Q10 -2.5 13 1" fill="none" stroke="#111111" stroke-width="1.8" stroke-linecap="round"/>
+      </g>
+      <path id="nose" d="M-4.2 -16.5C-4.2 -19 4.2 -19 4.2 -16.5C4.2 -14.4 1.6 -13 0 -13C-1.6 -13 -4.2 -14.4 -4.2 -16.5Z" fill="#111111"/>
+      <path id="mouth" d="M0 -13V-10.5M-4.5 -9.5Q-2 -7.5 0 -10.5Q2 -7.5 4.5 -9.5" fill="none" stroke="#111111" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </g>
+</svg>

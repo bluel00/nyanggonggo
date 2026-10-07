@@ -16,6 +16,7 @@ export {
 } from "./api/queries";
 export { AnimalCard } from "./ui/animal-card";
 export { AnimalPhoto } from "./ui/animal-photo";
+export { CHARACTER_SRC, SpeciesCharacter, type CharacterSpecies } from "./ui/species-character";
 export { StatusBadge, statusBadgeText } from "./ui/status-badge";
 export {
   ANIMAL_COPY,
