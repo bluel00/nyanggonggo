@@ -39,6 +39,13 @@ describe("ImageCarousel", () => {
     expect(dots()).toEqual(["false", "false", "true"]);
   });
 
+  it("fetchpriority high는 첫 장 한 장뿐이고 나머지는 lazy다", () => {
+    const { container } = render(<Harness images={[img(1), img(2), img(3)]} />);
+    const images = [...container.querySelectorAll("img")];
+    expect(images.map((i) => i.getAttribute("fetchpriority"))).toEqual(["high", null, null]);
+    expect(images.map((i) => i.getAttribute("loading"))).toEqual(["eager", "lazy", "lazy"]);
+  });
+
   it("1장이면 도트 없이 정적", () => {
     const { container } = render(<Harness images={[img(1)]} />);
     expect(container.querySelector('[data-slot="carousel-dots"]')).toBeNull();

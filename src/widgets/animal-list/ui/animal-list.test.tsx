@@ -130,6 +130,18 @@ describe("AnimalList", () => {
     expect(container.querySelectorAll('[data-slot="animal-card"]')).toHaveLength(ids.length);
   });
 
+  it("fetchpriority high는 첫 카드 사진 한 장뿐이다", async () => {
+    const ids = ["411300202600527", "411300202600526", "411300202600525"];
+    const withPhoto = (id: string) => ({ ...wire(id), images: [`http://openapi.animal.go.kr/openapi/files/${id}.jpg`] });
+    fetchMock.mockResolvedValue(Response.json({ items: ids.map(withPhoto), nextCursor: null }));
+    const { container } = renderList();
+    await screen.findByText("지역411300202600527");
+    const high = container.querySelectorAll('img[fetchpriority="high"]');
+    expect(high).toHaveLength(1);
+    expect(high[0].closest(`[data-animal-id]`)?.getAttribute("data-animal-id")).toBe(ids[0]);
+    expect(high[0].getAttribute("loading")).toBe("eager");
+  });
+
   it("결과가 0건이면 빈 상태 문구", async () => {
     fetchMock.mockResolvedValue(Response.json({ items: [], nextCursor: null }));
     renderList({ species: "dog", status: "ended", sort: "latest" });

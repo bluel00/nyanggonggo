@@ -26,6 +26,7 @@ export function AnimalCard({
   now,
   href,
   priority = false,
+  highPriority = false,
   action,
   onSelect,
 }: {
@@ -35,6 +36,8 @@ export function AnimalCard({
   href?: string;
   /** 첫 화면 카드는 eager 로딩 */
   priority?: boolean;
+  /** 화면의 첫 사진이면 true(fetchpriority="high", 목록의 첫 카드만) */
+  highPriority?: boolean;
   /** 사진 우상단 액션(entities는 features를 모르므로 위젯이 넣는다) */
   action?: ReactNode;
   /** 카드를 눌러 상세로 갈 때 */
@@ -48,7 +51,7 @@ export function AnimalCard({
   const body = (
     <>
       <div className="relative aspect-4/5 overflow-hidden rounded-card bg-status-ended-bg">
-        <AnimalPhoto src={getPrimaryImage(animal)} alt={alt} ended={ended} priority={priority} />
+        <AnimalPhoto src={getPrimaryImage(animal)} alt={alt} ended={ended} priority={priority} highPriority={highPriority} />
         <div className="absolute top-3 left-3">
           <StatusBadge variant={variant} dDay={ended ? null : getDDay(animal, now)} onPhoto />
         </div>

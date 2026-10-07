@@ -94,6 +94,8 @@ export function AnimalList({ filter, focusId = null }: { filter: AnimalListFilte
           animal={animal}
           now={now}
           priority={index < EAGER_CARDS}
+          // 첫 카드 사진만 다른 요청보다 먼저 받는다(fetchpriority high는 화면당 한 장)
+          highPriority={index === 0}
           href={`/animals/${animal.id}`}
           onSelect={() => rememberSelectedAnimal(listKey, animal.id)}
           action={<FavoriteButton animalId={animal.id} variant="overlay" />}

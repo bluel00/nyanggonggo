@@ -67,7 +67,7 @@ export function ImageCarousel({
             aria-label={images.length > 1 ? `사진 크게 보기 (${i + 1}/${images.length})` : "사진 크게 보기"}
             className="aspect-4/5 w-full shrink-0 snap-center bg-status-ended-bg focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
           >
-            <AnimalPhoto src={src} alt={`${alt} ${i + 1}`} ended={ended} priority={i === 0} />
+            <AnimalPhoto src={src} alt={`${alt} ${i + 1}`} ended={ended} priority={i === 0} highPriority={i === 0} />
           </button>
         ))}
       </div>

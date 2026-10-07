@@ -15,6 +15,7 @@ export function AnimalPhoto({
   alt,
   ended = false,
   priority = false,
+  highPriority = false,
   fit = "cover",
   className,
 }: {
@@ -23,6 +24,11 @@ export function AnimalPhoto({
   alt: string;
   ended?: boolean;
   priority?: boolean;
+  /**
+   * 화면의 첫 사진(목록 첫 카드, 상세 캐러셀 첫 장)만 true. `fetchpriority="high"`로 다른 요청보다 먼저 받는다.
+   * 남용하면 서로 대역폭을 다투므로 화면당 한 장만 쓴다(architecture.md 7절).
+   */
+  highPriority?: boolean;
   /** cover: 4:5 카드/상세(초점 center 35%), contain: 풀스크린 뷰어(원본 비율) */
   fit?: "cover" | "contain";
   className?: string;
@@ -43,7 +49,8 @@ export function AnimalPhoto({
     <img
       src={proxied}
       alt={alt}
-      loading={priority ? "eager" : "lazy"}
+      loading={priority || highPriority ? "eager" : "lazy"}
+      fetchPriority={highPriority ? "high" : undefined}
       decoding="async"
       onError={() => setFailed(true)}
       className={cn(
