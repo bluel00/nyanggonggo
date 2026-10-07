@@ -44,9 +44,10 @@ export const SPECIES_COPY: Record<Animal["species"], SpeciesCopy> = {
  * 찜 목록은 고양이, 강아지가 함께 들어오므로 명세 4.5.2의 "고양이" 문구를 "공고"로 바꿔 쓴다.
  */
 export const ANIMAL_COPY = {
-  /** 홈(축종 선택) 화면. 디자인 시안 전 임시 문구다(architecture.md 12절) */
-  homeTitle: "오늘은 어떤 친구를 볼까요?",
-  homeDescription: "보고 싶은 쪽을 골라 주세요.",
+  /** 홈(축종 선택) 화면. 문구는 시안("냥공고 홈 · 축종 선택"의 Main) 그대로다 */
+  homeTitle: "오늘은 누구를 보러 왔어요?",
+  /** 시안의 줄바꿈을 지킨다. 화면은 `whitespace-pre-line`으로 그린다 */
+  homeDescription: "한 번 고르면 기억해둘게요.\n목록에서 언제든 바꿀 수 있어요.",
   /** 기타 축종으로 가는 작은 텍스트 링크(고양이·강아지와 같은 무게로 두지 않는다) */
   homeOtherLink: "다른 동물들도 있어요",
   homeMetaTitle: "어떤 친구를 볼까요",

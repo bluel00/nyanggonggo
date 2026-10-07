@@ -32,6 +32,21 @@ describe("SpeciesChoice", () => {
     expect(document.cookie).toContain(`${SPECIES_COOKIE}=dog`);
   });
 
+  it("고양이·강아지 선택지에는 캐릭터가 장식(alt 비움)으로 들어가고, 이름은 텍스트 라벨이 정한다", () => {
+    render(<SpeciesChoice area={{ region: SEOUL }} />);
+    for (const [name, src] of [
+      ["고양이", "/characters/nyang-cat.svg"],
+      ["강아지", "/characters/nyang-dog.svg"],
+    ]) {
+      const images = screen.getByRole("link", { name }).querySelectorAll("img");
+      expect(images).toHaveLength(1);
+      expect(images[0].getAttribute("alt")).toBe("");
+      expect(images[0].getAttribute("src")).toBe(src);
+    }
+    // 기타 캐릭터는 없다
+    expect(screen.getByRole("link", { name: "다른 동물들도 있어요" }).querySelector("img")).toBeNull();
+  });
+
   it("기타는 큰 선택지가 아니라 작은 텍스트 링크다", () => {
     render(<SpeciesChoice area={{ region: SEOUL }} />);
     // 기타 링크에는 "기타 동물" 라벨을 쓰지 않는다(고양이·강아지와 같은 무게로 보이지 않게)
