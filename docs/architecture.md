@@ -180,7 +180,7 @@ interface AnimalRepository {
   - 검증은 실제 브라우저로 한다: `pnpm e2e`(Playwright/Chromium, `e2e/`). 목록 API 응답은 `page.route`로 고정하고, 상세는 서버 렌더라 실제 공고 id를 쓴다. jsdom에는 레이아웃이 없어 스크롤 복원을 검증할 수 없다(12절 37).
 - 상세 로딩(확정, 2026-10-07): 카드를 누르면 상세가 뜨기까지(서버의 공고 조회, 지난 측정 0.5~0.9초) 화면이 그대로여서 사용자가 여러 번 눌렀다. 두 가지로 바로 반응한다:
   - 카드 누름 피드백: `AnimalCard` 링크에 카드 누름(100ms, scale .98)이 있었다. 홈 카드와 같게 `motion-safe:`로 바꿔 reduced-motion이면 줄지 않는다. 찜 하트는 링크의 형제라(링크 안에 버튼을 두지 않는다) 하트를 누를 때 카드는 줄지 않는다(브라우저에서 하트 누름 중 카드 scale `none` 확인).
-  - 라우트 로딩 경계 `app/animals/[id]/loading.tsx` → `views/animal-detail`의 `AnimalDetailLoadingView` → `widgets/animal-detail`의 `AnimalDetailSkeleton`. 같은 뼈대를 상세 위젯의 조회 대기(`useAnimal` pending)도 쓴다. 뼈대는 실제 상세와 같은 구조·치수다(사진 4:5 + 캐러셀 점 줄 자리, 사진 위 Back 버튼, 상태 줄 28 · 제목 28 · 성별/나이 20 · 정보 줄, sticky 하단 CTA 바). production에서 뼈대와 실제 상세의 상태 줄·제목·정보·CTA 위치가 같았다(390×844, 레이아웃 이동 0). 상태 줄은 D-day가 없는 공고(종료, 만료된 보호중)에서 실제로는 24라 그 아래가 4px 올라간다
+  - 라우트 로딩 경계 `app/animals/[id]/loading.tsx` → `views/animal-detail`의 `AnimalDetailLoadingView` → `widgets/animal-detail`의 `AnimalDetailSkeleton`. 같은 뼈대를 상세 위젯의 조회 대기(`useAnimal` pending)도 쓴다. 뼈대는 실제 상세와 같은 구조·치수다(사진 4:5 + 캐러셀 점 줄 자리, 사진 위 Back 버튼, 상태 줄 28 · 제목 28 · 성별/나이 20 · 정보 줄, sticky 하단 CTA 바). production에서 뼈대와 실제 상세의 상태 줄·제목·정보·CTA 위치가 같았다(390×844, 레이아웃 이동 0). 상태 줄은 D-day 유무와 상관없이 28px(`h-7`)로 고정해 D-day가 없는 공고(종료, 만료된 보호중)에서도 같다(전에는 24라 그 아래가 4px 올라갔다. 2026-10-07 보호중·종료 공고 모두 이동 0 확인)
   - 뼈대의 Back 버튼은 누를 수 있다. 공고를 아직 모르므로 목록을 거쳐 왔으면 `router.back()`, 아니면 기본 목록(`/`)이다(공유 링크로 들어와 로딩 중에 누르면 공고의 목록이 아니라 기억된 목록으로 간다)
   - 뼈대도 진입 시 `scrollAppToTop()`을 부르고 실제 상세도 그대로 부른다(맨 위 시작). 목록 스크롤 복원(카드 id), focus 흐름, 공유 링크 직접 진입, 상세 조회 실패 화면은 그대로다(E2E 전부 통과). 잘못된 id의 `notFound()`는 로딩 경계 안에서 그대로 404다
   - **로딩 경계와 prefetch**: 경계가 생기면 `next/link`의 자동 prefetch는 경계까지만 받고 페이지 본문(서버의 공고 조회)은 누를 때 받는다. 카드를 누른 즉시 뼈대가 보이는 것도 이 prefetch로 받아 둔 경계 덕분이라 **production에서만** 확인된다(개발 서버는 prefetch하지 않는다). 그래서 E2E `e2e/detail-loading.spec.ts`는 production 빌드(포트 3100, `playwright.config.ts`의 `production` 프로젝트)에서 돈다. 측정은 12절 45
@@ -396,7 +396,7 @@ PRD v1.1이 공식화한 항목(2026-10-02). 구현은 v1.1을 따르므로 불�
     - 헤더 진입점의 링크 이름은 시안의 숨김 텍스트(sr-only) 대신 `aria-label`로 "<타이틀>, 다른 동물 고르기"에 고정한다. sr-only는 `absolute`라 Chrome이 "고양이 공고 , 다른 동물 고르기"처럼 쉼표 앞에 공백을 끼웠다
     - 홈 문서 제목은 화면 제목과 같은 "오늘은 누구를 보러 왔어요? | 냥공고"다(`ANIMAL_COPY.homeTitle`, 다른 화면과 같은 `<화면 제목> | SERVICE_NAME` 형식)
     - 미확인: 실제 iOS Safari에서 누름 피드백이 보이는지(7절). Rive 애니메이션은 다음 단계다. 43과 함께 본다
-45. 상세 prefetch가 공공데이터포털을 부른다(2026-10-07 실측, 미결). 방법: production 빌드(`build` + `start`), fetch 캐시(`.next/cache/fetch-cache`)를 비운 상태, Playwright/Chromium 390×844, 고양이·서울 목록에 들어가 1.5초 기다린 뒤 700px씩 15번 스크롤(카드 20 → 40). 서버 쪽은 측정용 preload로 `data.go.kr`로 나가는 실제 네트워크 fetch만 셌다(호스트·경로와 `desertion_no` 유무만 기록하고 쿼리스트링·서비스키는 기록하지 않음, 커밋하지 않음).
+45. 상세 prefetch가 공공데이터포털을 부른다(2026-10-07 실측). **(c) 관찰로 결정**(사유는 아래). 방법: production 빌드(`build` + `start`), fetch 캐시(`.next/cache/fetch-cache`)를 비운 상태, Playwright/Chromium 390×844, 고양이·서울 목록에 들어가 1.5초 기다린 뒤 700px씩 15번 스크롤(카드 20 → 40). 서버 쪽은 측정용 preload로 `data.go.kr`로 나가는 실제 네트워크 fetch만 셌다(호스트·경로와 `desertion_no` 유무만 기록하고 쿼리스트링·서비스키는 기록하지 않음, 커밋하지 않음).
 
     | | `_rsc` 요청(모두 prefetch) | 그중 상세 | 상세 경로 수 | 공공데이터포털 목록 호출 | 상세 호출 |
     |---|---|---|---|---|---|
@@ -406,7 +406,14 @@ PRD v1.1이 공식화한 항목(2026-10-02). 구현은 v1.1을 따르므로 불�
     - 로딩 경계는 prefetch 요청 수도, 공공데이터포털 호출 수도 바꾸지 않았다. 전후 모두 화면에 들어온 카드마다 상세 1회 호출이 생긴다(목록은 한 번에 받은 뒤 서버 캐시라 1회).
     - 원인은 **`generateMetadata`**다. Next 16은 카드마다 경로 트리 요청(`Next-Router-Segment-Prefetch: /_tree`)과 동적 prefetch 요청을 보내는데, 뒤의 요청을 막으면 상세 호출이 0이 됐다. 같은 빌드에서 `generateMetadata`만 실험적으로 비우면(커밋하지 않음) 스크롤해도 상세 호출이 **0**이었다. 즉 로딩 경계 뒤로 페이지 본문은 prefetch에서 빠졌지만 메타데이터(공유 미리보기 제목·설명)는 prefetch에서 계속 만들어지고, 그것이 공고를 조회한다.
     - 같은 공고는 fetch 캐시(`revalidate`) 안에서 다시 호출하지 않는다. 그래도 목록을 훑는 사용자 수만큼 상세 조회가 늘어 일일 호출 한도에 영향을 줄 수 있다.
-    - 후보(미결): 카드 링크 `prefetch={false}`(뼈대가 즉시 보이는 것도 잃는다) / prefetch 요청일 때 `generateMetadata`가 조회하지 않기(요청 헤더로 구분, 공유 미리보기 크롤러는 prefetch 헤더를 보내지 않는다) / 그대로 두고 호출량을 관찰. 결정 전까지 현재 동작을 유지한다
+    - 후보였던 것: (a) 카드 링크 `prefetch={false}`(뼈대가 즉시 보이는 것도 잃는다) / (b) prefetch 요청일 때 `generateMetadata`가 조회하지 않기 / (c) 그대로 두고 호출량을 관찰.
+    - **(c) 관찰로 결정, 사유: (b)를 문서화된 방법으로 구현할 수 없다.**
+      - prefetch 신호인 `next-router-prefetch` 요청 헤더 자체는 공식 문서에 있다: CDN 가이드(https://nextjs.org/docs/app/guides/cdn-caching, "`next-router-prefetch` — whether this is a prefetch request"), CSP 가이드(https://nextjs.org/docs/app/guides/content-security-policy, Proxy matcher의 `missing` 예).
+      - 하지만 앱 코드에서는 읽을 수 없다. Next 16.3.5 production에서 `generateMetadata` 안의 `headers()`에 `next-router-*`·`rsc` 헤더가 하나도 없었다(헤더 이름만 찍는 임시 로그로 확인, 커밋하지 않음). 헤더 검사를 넣은 빌드로 다시 재도 상세 호출은 22회 그대로였다.
+      - Proxy 문서(https://nextjs.org/docs/app/api-reference/file-conventions/proxy, "RSC requests and rewrites")도 이 헤더들을 `request.headers`에서 지운다고 적고, 이유를 RSC 요청을 HTML 요청과 다르게 처리하지 않게(둘이 맞아야 한다)라고 밝힌다. `skipProxyUrlNormalize`로 Proxy에서 헤더를 살려 다른 헤더로 넘기는 우회는 Next가 일부러 막은 구분을 되살리는 것이라 하지 않는다.
+      - (a)는 사용자 문제(눌러도 반응 없음)를 다시 만든다.
+      - 그래서 prefetch마다 생기는 상세 조회(화면에 들어온 카드당 최대 1회, 같은 공고는 fetch 캐시 `revalidate` 안에서 재호출 없음)를 받아들이고 호출량을 본다. 공공데이터포털 일일 한도에 가까워지거나 한도 초과 응답이 보이면 다시 연다.
+      - (b)의 두 번째 조건(prefetch 때 만든 기본 메타데이터가 이동 후에도 남는지)은 첫 조건에서 막혀 확인하지 못했다. 지금은 카드를 눌러 이동한 뒤 문서 제목이 그 공고의 제목이다(production에서 확인)
 
 ## 13. 다음 버전 계획 (기록만, 설계 전)
 
