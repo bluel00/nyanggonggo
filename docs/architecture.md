@@ -88,17 +88,18 @@ Route Handler (app/api/animals)                       # 얇게: 파싱 → servi
 - 정렬 정의: `latest` = `noticeSdt` 내림차순, 동률이면 `updTm` 내림차순, 그다음 `desertionNo` 내림차순. `endingSoon` = 기준 시각(서비스에 주입하는 clock)의 오늘(KST) 기준으로 `noticeEdt`가 지나지 않은 공고(당일 포함)를 `noticeEdt` 오름차순으로 먼저, 지난 공고를 그 뒤에 `noticeEdt` 내림차순으로 둔다. `noticeEdt`가 `YYYYMMDD` 형식이 아니면 맨 뒤. 동률은 `desertionNo` 오름차순. (보호중인데 종료일이 지난 공고가 42.1%라 단순 오름차순이면 임박순 앞쪽이 지난 공고로 채워진다, 12절.) 정렬 키가 없으면 빈 문자열로 둔다. `sortKeys`는 응답에 넣지 않는다.
 - 커서(확정, 2026-09-29): **앞 페이지 마지막 항목의 정렬 키**(id, noticeSdt, noticeEdt, updTm)를 base64url로 감싼 불투명 문자열. 다음 페이지는 정렬 순서에서 그 항목보다 뒤에 오는 항목부터다(이분 탐색). 잘못된 커서는 400, 끝을 넘으면 빈 목록, 마지막 페이지는 `nextCursor: null`. 목록은 요청마다 새로 조립하므로 offset을 쓰면 사이에 공고가 하나만 추가되거나 상태가 바뀌어도 경계에서 중복/누락이 생긴다(12절 38)
 - 상세: 개별 `desertion_no` 조회(캐시는 id별). 찜 목록(`GET /api/animals/by-ids?ids=a,b,c`, 응답 `{ items }`)도 1차는 id별 조회를 병렬(동시성 제한)로 하고, 조회되지 않는 id는 응답에서 제외하며 입력 순서를 유지한다. 중복 id는 한 번만 조회한다. 조회 중 업스트림 오류는 일부만 빼지 않고 요청 전체를 실패(502/504)로 돌려준다(찜이 조용히 사라지지 않게).
-- 캐시 방식(Next 데이터 캐시, `unstable_cache`, 인메모리, 외부 KV)은 **검증 필요**. `AnimalSource` 인터페이스 뒤에 숨겨서 교체 가능하게 만든다. 캐시 저장소에는 항목 크기 제한이 있을 수 있으니 원본이 아니라 Mapper를 거친 가벼운 목록을 저장한다.
+- 업스트림 캐시(확정, 2026-10-07): **검증을 통과한 페이지만 캐시한다.** 원본 fetch는 `cache: "no-store"`이고 Next `revalidate`를 걸지 않는다. 업스트림 클라이언트에 주입한 페이지 캐시(`UpstreamPageCache`, 서버 구현 `src/server/upstream/next-page-cache.ts` = `unstable_cache`, 재검증 300초)가 "받기 + 검증(래퍼 모양, 오류 코드)"이 성공한 페이지만 저장한다. 오류는 예외라 저장되지 않는다. 이유: 공공데이터포털은 오류(한도 초과 등)를 HTTP 200 본문으로 보내기도 하는데, Next fetch 캐시는 status 200이면 본문과 상관없이 저장해서(`next/dist/server/lib/patch-fetch.js`) 오류 본문이 재검증 주기 동안 정상 응답처럼 재사용될 수 있었다. 캐시 키는 요청 파라미터뿐이고 서비스키가 없다(전에는 fetch 캐시 항목 한도 초과 경고에 서비스키가 든 전체 URL이 찍힐 위험이 있었다, 12절 3). Next 16 문서는 `unstable_cache` 대신 `use cache`를 권하지만 Cache Components를 앱 전체에 켜야 해서 지금은 이 파일 하나에 가둔다. Next 런타임 밖(단위 테스트)에서는 `unstable_cache`를 쓸 수 없어 클라이언트 테스트는 가짜 페이지 캐시를, 라우트 통합 테스트는 통과형 `next/cache`를 쓴다. `AnimalSource` 인터페이스는 그대로 두어 다른 저장소로 바꿀 수 있다.
 - 캐시는 두 겹이다. 서버 재검증 주기와 클라이언트 `staleTime`을 문서 한 곳에 숫자로 정해 둔다. 원칙: 클라이언트 `staleTime`은 서버 재검증 주기보다 길지 않게. 초기값은 스파이크에서 정한다.
 - 공공 API 호출에는 `AbortSignal.timeout`을 건다. 실패 시 표준화된 에러를 반환한다.
-- 오류 응답은 계약 `ApiErrorResponse`(`{ error: { code, message } }`, `src/contract/animals.ts`)로 통일한다. 서버(`server/http/respond.ts`)는 보내기 전에 이 스키마로 검증하고, 클라이언트(`shared/api/api-request.ts`)는 같은 스키마로 `code`와 `message`를 읽어 `ApiError`로 바꾼다. 입력 오류 400(`invalid_request`), 없음 404(`not_found`), 업스트림 실패 502(`upstream_error`, 인증/설정 오류 포함. 서버 로그에서는 `upstream auth/config error`로 구분하고 `returnReasonCode`, `errMsg`만 남긴다), 타임아웃 504(`upstream_timeout`), 설정 누락/계약 위반/기타 500(`internal_error`). 메시지에 키, URL, 업스트림 본문, 설정 상세를 넣지 않고 상세는 서버 로그에만 남긴다. 오류 응답은 `Cache-Control: no-store`.
+- 오류 응답은 계약 `ApiErrorResponse`(`{ error: { code, message } }`, `src/contract/animals.ts`)로 통일한다. 서버(`server/http/respond.ts`)는 보내기 전에 이 스키마로 검증하고, 클라이언트(`shared/api/api-request.ts`)는 같은 스키마로 `code`와 `message`를 읽어 `ApiError`로 바꾼다. 입력 오류 400(`invalid_request`), 없음 404(`not_found`), 업스트림 실패 502(`upstream_error`, 인증/설정 오류와 일일 호출 한도 초과 포함. 서버 로그에서는 `upstream auth/config error`(reason `auth`, `returnReasonCode`, `errMsg`만)와 `upstream quota exceeded`(reason `quota_exceeded`, 아래)로 구분한다), 타임아웃 504(`upstream_timeout`), 설정 누락/계약 위반/기타 500(`internal_error`). 메시지에 키, URL, 업스트림 본문, 설정 상세를 넣지 않고 상세는 서버 로그에만 남긴다. 오류 응답은 `Cache-Control: no-store`(API 라우트와 이미지 프록시의 대체 응답 모두).
+- 일일 호출 한도 초과(확정, 2026-10-07): 공공데이터포털 공통 오류 코드 22(`LIMITED_NUMBER_OF_SERVICE_REQUESTS_EXCEEDS_ERROR`, https://www.data.go.kr/data/15098931/openapi.do 에러코드 표)를 다른 오류와 구분해 `upstream quota exceeded` 로그(reason `quota_exceeded`, detail은 응답 모양·HTTP 상태·`code`·`errMsg`만)로 남긴다. 응답 모양이 문서에 없어 세 가지를 모두 본다: HTTP 오류 + `OpenAPI_ServiceResponse.cmmMsgHeader.returnReasonCode` 22(상태 코드와 상관없이), 200 + `response.header.resultCode` 22, 200 + `cmmMsgHeader` 22. 사용자에게는 다른 업스트림 오류와 같은 502와 같은 화면이다. XML 본문으로 오는 한도 초과는 구분하지 않는다(`_type=json`이면 JSON으로 온다는 12.A P3에 기댄다). 운영에서는 Vercel 함수 로그에서 `upstream quota exceeded`를 찾는다(12절 45)
 - 튜닝 숫자는 `src/server/config.ts`의 `SERVER_TUNING` 한 곳에 둔다(초기값, 12절 스파이크에서 조정):
 
 | 항목 | 값 |
 |---|---|
-| upstream fetch `revalidate` | 300초 |
+| 업스트림 페이지 캐시 재검증(`unstable_cache`, 검증을 통과한 페이지만. 원본 fetch는 `no-store`) | 300초 |
 | upstream 타임아웃 | 10,000ms |
-| `numOfRows` | 500 (1,000건 페이지가 fetch 캐시 한도의 94.5%, 12절 3) |
+| `numOfRows` | 500 (예전 fetch 캐시 방식에서 1,000건 페이지가 항목 한도의 94.5%였다, 12절 3) |
 | 나머지 페이지 동시 호출 수 | 3 |
 | 조합당 최대 페이지 | 20 (500 × 20 = 10,000건) |
 | 목록 페이지 크기 | 20 |
@@ -185,6 +186,7 @@ interface AnimalRepository {
   - 뼈대도 진입 시 `scrollAppToTop()`을 부르고 실제 상세도 그대로 부른다(맨 위 시작). 목록 스크롤 복원(카드 id), focus 흐름, 공유 링크 직접 진입, 상세 조회 실패 화면은 그대로다(E2E 전부 통과). 잘못된 id의 `notFound()`는 로딩 경계 안에서 그대로 404다
   - **로딩 경계와 prefetch**: 경계가 생기면 `next/link`의 자동 prefetch는 경계까지만 받고 페이지 본문(서버의 공고 조회)은 누를 때 받는다. 카드를 누른 즉시 뼈대가 보이는 것도 이 prefetch로 받아 둔 경계 덕분이라 **production에서만** 확인된다(개발 서버는 prefetch하지 않는다). 그래서 E2E `e2e/detail-loading.spec.ts`는 production 빌드(포트 3100, `playwright.config.ts`의 `production` 프로젝트)에서 돈다. 측정은 12절 45
   - 뼈대는 움직이지 않는다(README Motion: 카드 누름·시트·토스트 외에는 움직이지 않음)
+- 사진 우선순위(확정, 2026-10-07): `fetchpriority="high"`는 **화면당 한 장**, 목록 첫 카드 사진(`AnimalList` index 0)과 상세 캐러셀 첫 장에만 준다(`AnimalPhoto`의 `highPriority`, eager 포함). 남용하면 서로 대역폭을 다툰다. 나머지는 그대로다: 목록 앞 2장 eager, 그 뒤 lazy, 상세 둘째 장부터 lazy, 모두 `decoding="async"`
 - 상세의 뒤로가기(확정, 2026-09-29):
   - 이 문서(탭)에서 목록 화면을 거쳤으면 `router.back()`. 필터가 붙은 목록 URL과 스크롤 위치가 그대로 살아난다(12절 32).
   - 공유 링크나 북마크로 상세를 바로 열었으면 **그 공고가 들어 있는 목록**으로 `push`한다. 공고의 지역·종·상태로 필터를 만들고(`animalListFilter`, `features/animal-filter/model/from-animal.ts`) `focus=<공고 id>`를 붙인다(`animalListHref`). 지역은 `regionText`(= `orgNm`)에서 정적 목록으로 코드를 되찾고, 시군구를 못 찾으면 시도만, 시도도 못 찾으면 전국으로 떨어진다(4절). 공유한 사람의 필터는 URL에 싣지 않는다.
@@ -240,7 +242,8 @@ interface AnimalRepository {
 - 서버와 클라이언트 모두 `shared`의 얇은 `httpClient`(네이티브 `fetch` 래퍼, `src/shared/api/http-client.ts`)를 쓴다: 타임아웃(`AbortSignal.timeout`, 호출별 override), HTTP 에러의 예외화, 에러 표준화(`HttpError`: timeout / network / status / parse). Next `fetch`의 `next: { revalidate }`, `cache` 옵션을 그대로 전달한다. 테스트는 `fetch` 구현을 주입한다. 오류 메시지와 예외에는 URL의 origin+path만 남기고 쿼리스트링(서비스키)과 원래 오류 메시지/`cause`는 싣지 않는다.
 - 환경변수(공개): `NEXT_PUBLIC_SITE_URL`(공유 링크의 기준 주소, 선택. 비우면 접속한 주소).
 - 환경변수: `DATA_GO_KR_SERVICE_KEY`(서버 전용, `NEXT_PUBLIC_` 금지, 디코딩된 키. `process.env`는 `src/server/config.ts`에서만 요청 시점에 읽는다. 없으면 500이며 import/빌드 시점에는 실패하지 않는다), `NEXT_PUBLIC_KAKAO_JS_KEY`(도메인 제한이 있는 공개 키라 허용. `.env.example`에 있음. 읽는 곳은 `src/shared/config/public-env.ts` 한 곳이고, 비어 있으면 SDK를 불러오지 않고 공유가 링크 복사로 동작한다). `.env.local`은 커밋하지 않고 `.env.example`만 커밋한다. 배포 환경은 Vercel 환경변수. GitHub Secrets는 CI에서 실제 API를 호출할 때만 필요하며 MVP에서는 픽스처로 테스트하므로 쓰지 않는다.
-- 배포: Vercel Hobby(비상업용 약관 확인). 함수 리전(서울 가능 여부), 실행 시간 제한은 **검증 필요**(12절 스파이크).
+- 배포: Vercel Hobby(비상업용 약관 확인). 실행 시간 제한은 **검증 필요**(12절 스파이크).
+- 함수 리전(확정, 2026-10-07): **서울 `icn1`**. 저장소 루트 `vercel.json`의 프로젝트 단위 `regions: ["icn1"]`(Vercel 문서 https://vercel.com/docs/project-configuration/vercel-json#regions, Hobby는 리전 1개). 라우트별 `preferredRegion`은 쓰지 않는다(한 곳에서 관리). 이유: 공공데이터포털과 이미지 원본이 한국에 있는데 기본값 `iad1`(워싱턴)에서는 캐시 미스마다 태평양을 왕복했다(12절 46: 목록 API MISS 3.5~6.6초, 한국에서 업스트림 직접 0.4초). **배포 후 확인 방법**: `curl -sI https://nyanggonggo.vercel.app/api/animals?species=cat&region=6110000` 등 함수 응답의 `x-vercel-id`가 `icn1::icn1::…`(엣지::함수)인지 본다. 함수 부분이 아직 `iad1`이면 대시보드의 Functions Region 설정이 우선 적용되고 있는지 확인한다(문서상 `vercel.json`이 프로젝트 설정을 덮어쓴다). 정적 파일과 CDN 캐시 HIT는 리전과 무관하다
 - 서비스키가 로그, 테스트, 픽스처, 커밋에 들어가지 않게 한다. 이미 대화에 노출된 키는 재발급한 것으로 가정한다.
 
 - 공유 링크(확정, 2026-09-28): 카드의 `content.link`와 버튼 링크는 상세 페이지 절대 URL이다. 기준 주소는 `NEXT_PUBLIC_SITE_URL`이 있으면 그 값, 없으면 접속한 주소(`window.location.origin`)다. **링크가 http(s)가 아니거나 로컬 주소(localhost, 127.0.0.1, `*.local` 등)면 카카오톡 공유를 건너뛰고 링크 복사로 폴백한다.** 링크가 없는(또는 열리지 않는) 카드를 보내는 것보다 낫다. 카드의 링크가 동작하려면 그 도메인이 카카오 개발자 콘솔 [플랫폼 > Web 사이트 도메인]에 등록되어 있어야 한다(등록되지 않으면 카카오가 링크를 무시하고 기본 페이지로 보낸다, 12절 29).
@@ -317,12 +320,12 @@ PRD v1.1이 공식화한 항목(2026-10-02). 구현은 v1.1을 따르므로 불�
 1. ~~`processState`의 실제 값 목록과 비율~~ **확정됨(2026-09-21 프로브)**: 12.A P5. 개는 미검증. 종료 사유별 표시 문제는 21
 2. ~~JSON 응답의 래퍼 구조와 단일 객체/배열 처리~~ **확정됨(2026-09-21 프로브)**: 12.A P1~P3, 픽스처 `docs/fixtures/upstream-wrapper.json`(구조만 실제, 값은 합성). `extract.ts`는 방어적으로 단일 객체, `items: ""`, 누락도 계속 받고, 최상위 `response`가 없으면 업스트림 오류로 본다
 3. 서버 캐시 방식과 항목 크기 제한, 재검증 주기 값, 서버리스 콜드스타트에서 전체 수집 시 실행 시간
-   - 현재: upstream 페이지 fetch에 Next `revalidate: 300`(데이터 캐시). 조립은 요청마다 메모리에서 한다. Route Handler는 `request.url`을 읽어 동적이며, 명시적 `revalidate`를 준 fetch가 동적 핸들러에서도 캐시되는지는 실제 로그로 확인 필요
+   - 현재(2026-10-07~): 원본 fetch는 `no-store`, 검증을 통과한 페이지만 `unstable_cache`(재검증 300초)에 둔다(5절). production 런타임에서 같은 목록·상세의 두 번째 요청이 업스트림을 부르지 않음을 확인했다. 아래 fetch 캐시 항목 크기·서비스키 노출 위험은 fetch 캐시를 쓰지 않으면서 해당 없어졌다(페이지 캐시 키에는 서비스키가 없다). 이전: upstream 페이지 fetch에 Next `revalidate: 300`(데이터 캐시). 조립은 요청마다 메모리에서 한다. Route Handler는 `request.url`을 읽어 동적이며, 명시적 `revalidate`를 준 fetch가 동적 핸들러에서도 캐시되는지는 실제 로그로 확인 필요
    - 크기 제한은 **코드로 확인됨**(Next 16.3.5 `dist/server/lib/incremental-cache/index.js`): fetch 캐시 항목의 `JSON.stringify(data).length`가 2MB(2 × 1024 × 1024)를 넘으면 캐시하지 않는다(커스텀 cache handler를 쓰면 예외). 응답 본문은 base64로 저장되므로(`patch-fetch.js`) 측정값은 UTF-8 바이트의 약 4/3이다
    - **보안 위험(코드로 확인됨)**: 제한을 넘으면 Next가 `Failed to set Next.js data cache for ${fetchUrl} ...`를 dev에서는 예외로 던지고 prod에서는 `console.warn`으로 남긴다. `fetchUrl`은 쿼리스트링(서비스키)을 포함한 전체 URL이다. 우리 로거로는 막을 수 없다
    - **`numOfRows` 결정(2026-09-21)**: 1,000건 페이지가 base64 추정 1,982,436자로 한도의 94.5%(12.A P4)라 여유가 없어 **500**으로 낮췄다. 500건이면 원본 약 0.75MB, base64 약 1.0MB(약 48%)로 추정된다(1,000건 측정값의 절반, 미측정). 호출 수는 고양이 3회 → 6회가 되어 첫 페이지 후 나머지를 동시성 3으로 병렬 수집한다
    - 남은 확인: 500건 페이지의 실제 크기, 동적 핸들러에서 캐시 적중 여부, 콜드스타트 전체 수집 시간(Vercel 로그), 재검증 주기 300초의 적정성
-4. Vercel 함수 리전(서울 가능 여부)과 공공 API 응답 속도, 해외 IP 제한 여부, 함수 실행 시간 제한(고양이 전체 수집 6회 호출: 1회 + 나머지 5회 병렬, 호출당 타임아웃 10초). **확인 방법**: Vercel 프로젝트 설정의 Functions Region, 배포 후 함수 로그의 실행 시간, 리전별 upstream 응답 시간. 로컬 기준 1,000건 페이지 474~725ms(12.A P4). 병렬 수집(동시성 3)이 공공 API의 호출 간격 제한에 걸리는지도 확인
+4. ~~Vercel 함수 리전(서울 가능 여부)~~ **icn1로 지정(2026-10-07, 9절, 배포 후 확인 필요)**. 남은 것: 공공 API 응답 속도, 해외 IP 제한 여부, 함수 실행 시간 제한(고양이 전체 수집 6회 호출: 1회 + 나머지 5회 병렬, 호출당 타임아웃 10초). **확인 방법**: Vercel 프로젝트 설정의 Functions Region, 배포 후 함수 로그의 실행 시간, 리전별 upstream 응답 시간. 로컬 기준 1,000건 페이지 474~725ms(12.A P4). 병렬 수집(동시성 3)이 공공 API의 호출 간격 제한에 걸리는지도 확인
 5. `desertion_no`로 조회 시 종료/오래된 공고가 조회되는지. 종료(안락사) 1건은 `upkind` 없이 조회 성공(12.A P9). **오래된 공고 전반은 미검증**. 결과는 계속 id로 한 번 더 거른다
 6. 이미지 `http` 처리 방식(원격 도메인 설정 vs 프록시). 이미지 URL은 모두 `http://`(12.A P7). **같은 경로가 `https`로도 제공되는지는 미검증**
 7. 카카오 피드 이미지 비율 제한은 미확인. `next/og`(satori)의 폰트 형식은 ttf/otf/woff만 지원(woff2 불가)이고 CSS 변수도 쓸 수 없음을 Next 문서로 확인해 otf + hex로 대응했다(9절)
@@ -405,16 +408,16 @@ PRD v1.1이 공식화한 항목(2026-10-02). 구현은 v1.1을 따르므로 불�
 
     - 로딩 경계는 prefetch 요청 수도, 공공데이터포털 호출 수도 바꾸지 않았다. 전후 모두 화면에 들어온 카드마다 상세 1회 호출이 생긴다(목록은 한 번에 받은 뒤 서버 캐시라 1회).
     - 원인은 **`generateMetadata`**다. Next 16은 카드마다 경로 트리 요청(`Next-Router-Segment-Prefetch: /_tree`)과 동적 prefetch 요청을 보내는데, 뒤의 요청을 막으면 상세 호출이 0이 됐다. 같은 빌드에서 `generateMetadata`만 실험적으로 비우면(커밋하지 않음) 스크롤해도 상세 호출이 **0**이었다. 즉 로딩 경계 뒤로 페이지 본문은 prefetch에서 빠졌지만 메타데이터(공유 미리보기 제목·설명)는 prefetch에서 계속 만들어지고, 그것이 공고를 조회한다.
-    - 같은 공고는 fetch 캐시(`revalidate`) 안에서 다시 호출하지 않는다. 그래도 목록을 훑는 사용자 수만큼 상세 조회가 늘어 일일 호출 한도에 영향을 줄 수 있다.
+    - 같은 공고는 업스트림 페이지 캐시(300초) 안에서 다시 호출하지 않는다. 그래도 목록을 훑는 사용자 수만큼 상세 조회가 늘어 일일 호출 한도에 영향을 줄 수 있다.
     - 후보였던 것: (a) 카드 링크 `prefetch={false}`(뼈대가 즉시 보이는 것도 잃는다) / (b) prefetch 요청일 때 `generateMetadata`가 조회하지 않기 / (c) 그대로 두고 호출량을 관찰.
     - **(c) 관찰로 결정, 사유: (b)를 문서화된 방법으로 구현할 수 없다.**
       - prefetch 신호인 `next-router-prefetch` 요청 헤더 자체는 공식 문서에 있다: CDN 가이드(https://nextjs.org/docs/app/guides/cdn-caching, "`next-router-prefetch` — whether this is a prefetch request"), CSP 가이드(https://nextjs.org/docs/app/guides/content-security-policy, Proxy matcher의 `missing` 예).
       - 하지만 앱 코드에서는 읽을 수 없다. Next 16.3.5 production에서 `generateMetadata` 안의 `headers()`에 `next-router-*`·`rsc` 헤더가 하나도 없었다(헤더 이름만 찍는 임시 로그로 확인, 커밋하지 않음). 헤더 검사를 넣은 빌드로 다시 재도 상세 호출은 22회 그대로였다.
       - Proxy 문서(https://nextjs.org/docs/app/api-reference/file-conventions/proxy, "RSC requests and rewrites")도 이 헤더들을 `request.headers`에서 지운다고 적고, 이유를 RSC 요청을 HTML 요청과 다르게 처리하지 않게(둘이 맞아야 한다)라고 밝힌다. `skipProxyUrlNormalize`로 Proxy에서 헤더를 살려 다른 헤더로 넘기는 우회는 Next가 일부러 막은 구분을 되살리는 것이라 하지 않는다.
       - (a)는 사용자 문제(눌러도 반응 없음)를 다시 만든다.
-      - 그래서 prefetch마다 생기는 상세 조회(화면에 들어온 카드당 최대 1회, 같은 공고는 fetch 캐시 `revalidate` 안에서 재호출 없음)를 받아들이고 호출량을 본다. 공공데이터포털 일일 한도에 가까워지거나 한도 초과 응답이 보이면 다시 연다.
+      - 그래서 prefetch마다 생기는 상세 조회(화면에 들어온 카드당 최대 1회, 같은 공고는 업스트림 페이지 캐시 300초 안에서 재호출 없음)를 받아들이고 호출량을 본다. 공공데이터포털 일일 한도에 가까워지거나 한도 초과 응답이 보이면 다시 연다. **한도 초과는 Vercel 함수 로그의 `upstream quota exceeded`(reason `quota_exceeded`, code 22)로 알 수 있다(2026-10-07, 5절).** 오류 응답은 업스트림 페이지 캐시와 CDN 어디에도 남지 않는다.
       - (b)의 두 번째 조건(prefetch 때 만든 기본 메타데이터가 이동 후에도 남는지)은 첫 조건에서 막혀 확인하지 못했다. 지금은 카드를 눌러 이동한 뒤 문서 제목이 그 공고의 제목이다(production에서 확인)
-46. 운영 로딩 시간 실측(2026-10-07, 코드 변경 없음, 미결). 대상 https://nyanggonggo.vercel.app, 측정 위치 한국(로컬 PC).
+46. 운영 로딩 시간 실측(2026-10-07, 측정 당시 코드 변경 없음. 후속 일부 반영, 아래). 대상 https://nyanggonggo.vercel.app, 측정 위치 한국(로컬 PC).
     - 리전: 목록 API·상세 HTML·이미지 프록시 모두 `x-vercel-id: icn1::iad1::…`이다. 엣지는 서울, **함수는 워싱턴(iad1, Vercel 기본값)**에서 돈다. 저장소에 `vercel.json`이나 라우트별 `preferredRegion` 설정이 없다. 공공데이터포털과 이미지 원본(`openapi.animal.go.kr`, http)은 한국에 있어 캐시 미스 때마다 함수가 태평양을 왕복한다.
     - 이미지 프록시 캐시: 코드는 `public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400`을 내리고 업스트림 fetch는 `no-store`다(바이트를 데이터 캐시에 넣지 않음, 캐시는 CDN). 브라우저에는 `Cache-Control: public, max-age=86400`로 보인다. 같은 사진을 연속 요청하면 첫 번째는 `x-vercel-cache: MISS`, 두 번째부터 `HIT`이었다(5장 모두).
     - 사진 5장(경남 강아지 목록, 142~618KB, 원본 그대로·리사이즈 없음): 프록시 MISS TTFB 0.97~4.00초 / 전체 1.54~4.95초, 프록시 HIT 전체 0.07~0.36초, 원본 직접 전체 0.12~1.14초(대부분 0.13~0.26초).
@@ -422,7 +425,7 @@ PRD v1.1이 공식화한 항목(2026-10-02). 구현은 v1.1을 따르므로 불�
     - 브라우저(Playwright Pixel 7, 9Mbps/1.5Mbps/150ms 스로틀): 목록 첫 카드 사진까지 API·사진 MISS일 때 5.3초(서울 고양이)·7.7초(경북 강아지), HIT일 때 1.7초·2.4초. 상세는 카드를 누른 뒤 첫 사진까지 0.36~0.42초였는데, 목록에서 같은 사진을 이미 받아(같은 URL, 브라우저 캐시) 빠른 것이다. 목록 사진은 앞 2장만 `loading="eager"`이고 나머지는 `lazy`, 모두 `decoding="async"`, `fetchpriority`·preload는 없다. 상세 캐러셀은 첫 장만 eager이고 다음 사진을 따로 미리 받지 않는다(lazy라 가로 스크롤 영역의 근처 판정에 맡긴다).
     - 추정: 첫 방문의 지연은 대부분 **iad1 함수의 캐시 미스**에서 생긴다(업스트림 자체는 한국에서 0.4초 이하). HIT 이후에는 **사진 용량**(원본 140~620KB를 4:5 카드 폭에 그대로 씀)이 남는 비용이다.
     - 호출 한도: 공공데이터포털 서비스 페이지의 에러코드 표에 `22 LIMITED_NUMBER_OF_SERVICE_REQUESTS_EXCEEDS_ERROR`("API 서비스의 일일 호출 허용량을 초과했습니다")가 있고, 개발계정 일일 트래픽은 10,000이다(https://www.data.go.kr/data/15098931/openapi.do). 응답의 HTTP 상태와 본문 형식은 문서에 없다(인증 오류는 HTTP 403 + `OpenAPI_ServiceResponse.cmmMsgHeader`였다, 12.A P3). 지금 코드는 22를 따로 구분하지 않는다: 403 + `cmmMsgHeader`면 "upstream auth/config error"로(returnReasonCode 22가 함께 남는다), 200 + `response.header.resultCode=22`면 "upstream failure"(kind resultCode)로, 200 + `cmmMsgHeader`면 "upstream failure"(kind shape, 본문 일부)로 남는다. 사용자에게는 목록 오류 화면("지금은 …를 불러오지 못했어요"), 상세 오류 화면으로 보인다(502). HTTP 200으로 오는 오류 본문은 fetch 캐시(`revalidate`)에 그대로 담길 수 있는지 확인되지 않았다.
-    - 개선 후보(미결, 효과·비용·위험은 보고서에): 함수 리전 icn1, 이미지 프록시 캐시 헤더, 첫 사진 `fetchpriority`·preload, 리사이즈·포맷 변환(23과 함께), 한도 초과(22) 로그 구분
+    - 후속(2026-10-07): 함수 리전 icn1(9절, 배포 후 `x-vercel-id`로 확인), 한도 초과(22) 로그 구분과 오류 캐시 금지(5절), 첫 사진 `fetchpriority="high"`(7절)를 반영했다. 배포 후 같은 방법으로 다시 잰다. 남은 후보(미결): 리사이즈·포맷 변환(23과 함께), 프록시의 브라우저 캐시 기간(지금 `max-age=86400`), preload. 위의 호출 한도 문단의 "지금 코드는 22를 따로 구분하지 않는다"와 "200 오류 본문이 fetch 캐시에 담길 수 있는지 확인되지 않았다"는 이 후속 전의 상태다(담긴다: Next는 200이면 저장한다. 지금은 원본 fetch를 캐시하지 않는다)
 
 ## 13. 다음 버전 계획 (기록만, 설계 전)
 
