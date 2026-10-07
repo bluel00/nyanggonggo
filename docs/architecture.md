@@ -414,6 +414,15 @@ PRD v1.1이 공식화한 항목(2026-10-02). 구현은 v1.1을 따르므로 불�
       - (a)는 사용자 문제(눌러도 반응 없음)를 다시 만든다.
       - 그래서 prefetch마다 생기는 상세 조회(화면에 들어온 카드당 최대 1회, 같은 공고는 fetch 캐시 `revalidate` 안에서 재호출 없음)를 받아들이고 호출량을 본다. 공공데이터포털 일일 한도에 가까워지거나 한도 초과 응답이 보이면 다시 연다.
       - (b)의 두 번째 조건(prefetch 때 만든 기본 메타데이터가 이동 후에도 남는지)은 첫 조건에서 막혀 확인하지 못했다. 지금은 카드를 눌러 이동한 뒤 문서 제목이 그 공고의 제목이다(production에서 확인)
+46. 운영 로딩 시간 실측(2026-10-07, 코드 변경 없음, 미결). 대상 https://nyanggonggo.vercel.app, 측정 위치 한국(로컬 PC).
+    - 리전: 목록 API·상세 HTML·이미지 프록시 모두 `x-vercel-id: icn1::iad1::…`이다. 엣지는 서울, **함수는 워싱턴(iad1, Vercel 기본값)**에서 돈다. 저장소에 `vercel.json`이나 라우트별 `preferredRegion` 설정이 없다. 공공데이터포털과 이미지 원본(`openapi.animal.go.kr`, http)은 한국에 있어 캐시 미스 때마다 함수가 태평양을 왕복한다.
+    - 이미지 프록시 캐시: 코드는 `public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400`을 내리고 업스트림 fetch는 `no-store`다(바이트를 데이터 캐시에 넣지 않음, 캐시는 CDN). 브라우저에는 `Cache-Control: public, max-age=86400`로 보인다. 같은 사진을 연속 요청하면 첫 번째는 `x-vercel-cache: MISS`, 두 번째부터 `HIT`이었다(5장 모두).
+    - 사진 5장(경남 강아지 목록, 142~618KB, 원본 그대로·리사이즈 없음): 프록시 MISS TTFB 0.97~4.00초 / 전체 1.54~4.95초, 프록시 HIT 전체 0.07~0.36초, 원본 직접 전체 0.12~1.14초(대부분 0.13~0.26초).
+    - 목록 API: CDN HIT 0.04~0.06초, MISS 3.5초(경남 강아지)·6.6초(전북 고양이). 같은 업스트림 목록 1페이지(1,000건, 535KB)를 한국에서 직접 부르면 0.39~0.44초, 상세 단건 0.03초였다(키는 로컬 `.env.local`에서 읽고 시간만 출력). 상세 HTML TTFB는 0.25~0.34초, 첫 요청 1.36초.
+    - 브라우저(Playwright Pixel 7, 9Mbps/1.5Mbps/150ms 스로틀): 목록 첫 카드 사진까지 API·사진 MISS일 때 5.3초(서울 고양이)·7.7초(경북 강아지), HIT일 때 1.7초·2.4초. 상세는 카드를 누른 뒤 첫 사진까지 0.36~0.42초였는데, 목록에서 같은 사진을 이미 받아(같은 URL, 브라우저 캐시) 빠른 것이다. 목록 사진은 앞 2장만 `loading="eager"`이고 나머지는 `lazy`, 모두 `decoding="async"`, `fetchpriority`·preload는 없다. 상세 캐러셀은 첫 장만 eager이고 다음 사진을 따로 미리 받지 않는다(lazy라 가로 스크롤 영역의 근처 판정에 맡긴다).
+    - 추정: 첫 방문의 지연은 대부분 **iad1 함수의 캐시 미스**에서 생긴다(업스트림 자체는 한국에서 0.4초 이하). HIT 이후에는 **사진 용량**(원본 140~620KB를 4:5 카드 폭에 그대로 씀)이 남는 비용이다.
+    - 호출 한도: 공공데이터포털 서비스 페이지의 에러코드 표에 `22 LIMITED_NUMBER_OF_SERVICE_REQUESTS_EXCEEDS_ERROR`("API 서비스의 일일 호출 허용량을 초과했습니다")가 있고, 개발계정 일일 트래픽은 10,000이다(https://www.data.go.kr/data/15098931/openapi.do). 응답의 HTTP 상태와 본문 형식은 문서에 없다(인증 오류는 HTTP 403 + `OpenAPI_ServiceResponse.cmmMsgHeader`였다, 12.A P3). 지금 코드는 22를 따로 구분하지 않는다: 403 + `cmmMsgHeader`면 "upstream auth/config error"로(returnReasonCode 22가 함께 남는다), 200 + `response.header.resultCode=22`면 "upstream failure"(kind resultCode)로, 200 + `cmmMsgHeader`면 "upstream failure"(kind shape, 본문 일부)로 남는다. 사용자에게는 목록 오류 화면("지금은 …를 불러오지 못했어요"), 상세 오류 화면으로 보인다(502). HTTP 200으로 오는 오류 본문은 fetch 캐시(`revalidate`)에 그대로 담길 수 있는지 확인되지 않았다.
+    - 개선 후보(미결, 효과·비용·위험은 보고서에): 함수 리전 icn1, 이미지 프록시 캐시 헤더, 첫 사진 `fetchpriority`·preload, 리사이즈·포맷 변환(23과 함께), 한도 초과(22) 로그 구분
 
 ## 13. 다음 버전 계획 (기록만, 설계 전)
 
