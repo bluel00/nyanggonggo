@@ -12,15 +12,40 @@ export default defineConfig({
   workers: 1,
   reporter: [["list"]],
   use: {
-    // 브라우저는 localhost로 연다(개발 서버가 127.0.0.1을 다른 오리진으로 보고 dev 리소스를 막는다)
-    baseURL: "http://localhost:3000",
     ...devices["Pixel 7"], // 모바일 뷰포트(412x915)
     trace: "retain-on-failure",
   },
-  webServer: {
-    command: "pnpm dev",
-    url: "http://127.0.0.1:3000",
-    reuseExistingServer: true,
-    timeout: 120_000,
-  },
+  /*
+   * 대부분은 개발 서버에서 돈다. 상세 로딩 경계(detail-loading)만 production 서버에서 돈다:
+   * Next는 production에서만 링크를 prefetch하고, 카드를 누른 즉시 로딩 뼈대가 보이는 것은 그 prefetch 덕분이다.
+   * 개발 서버(.next/dev)와 production 빌드(.next)는 출력 폴더가 달라 함께 띄울 수 있다.
+   */
+  projects: [
+    {
+      name: "dev",
+      testIgnore: /detail-loading\.spec\.ts/,
+      // 브라우저는 localhost로 연다(개발 서버가 127.0.0.1을 다른 오리진으로 보고 dev 리소스를 막는다)
+      use: { baseURL: "http://localhost:3000" },
+    },
+    {
+      name: "production",
+      testMatch: /detail-loading\.spec\.ts/,
+      use: { baseURL: "http://localhost:3100" },
+    },
+  ],
+  webServer: [
+    {
+      command: "pnpm dev",
+      url: "http://127.0.0.1:3000",
+      reuseExistingServer: true,
+      timeout: 120_000,
+    },
+    {
+      // 매 실행 빌드한다(지금 코드의 production 동작을 본다). 이미 3100에 띄워 둔 서버가 있으면 그것을 쓴다
+      command: "pnpm build && pnpm start -p 3100",
+      url: "http://127.0.0.1:3100/home",
+      reuseExistingServer: true,
+      timeout: 300_000,
+    },
+  ],
 });
