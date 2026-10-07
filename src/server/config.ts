@@ -41,6 +41,11 @@ export const SERVER_TUNING = {
    * D-day가 KST 자정에 바뀌므로 하루보다 짧게, 링크 미리보기 트래픽의 렌더 비용을 줄이려고 1시간.
    */
   ogImageCacheControl: "public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400",
+  /**
+   * 이미지 프록시가 줄일 때(`w`)의 WebP 품질. 2026-10-07 실제 공고 사진 5장으로 70/75/80/85를 비교해 정했다:
+   * 1:1 확대에서 75와 85의 차이가 눈에 띄지 않고, 80부터 크기가 20~30% 늘어난다(architecture.md 5절)
+   */
+  imageProxyWebpQuality: 75,
   /** 원본 이미지 최대 크기(바이트). 넘으면 대체 이미지 */
   imageProxyMaxBytes: 10 * 1024 * 1024,
 } as const;

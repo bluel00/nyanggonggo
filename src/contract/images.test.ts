@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { IMAGE_PROXY_PATH, isAllowedImageSource, toImageProxyUrl } from "./images";
+import {
+  IMAGE_PROXY_PATH,
+  IMAGE_PROXY_WIDTHS,
+  isAllowedImageSource,
+  isImageProxyWidth,
+  toImageProxySrcSet,
+  toImageProxyUrl,
+} from "./images";
 
 const OK = "http://openapi.animal.go.kr/openapi/service/rest/fileDownloadSrvc/files/shelter/2026/09/202609211109478.jpg";
 
@@ -37,5 +44,25 @@ describe("toImageProxyUrl", () => {
 
   it("허용되지 않으면 null", () => {
     expect(toImageProxyUrl("http://example.com/a.jpg")).toBeNull();
+  });
+});
+
+describe("이미지 프록시 폭", () => {
+  it("허용 폭은 480, 828, 1080뿐이다", () => {
+    expect(IMAGE_PROXY_WIDTHS).toEqual([480, 828, 1080]);
+    expect([480, 828, 1080].every(isImageProxyWidth)).toBe(true);
+    expect([0, 479, 768, 800, 1081, 1080.5].some(isImageProxyWidth)).toBe(false);
+  });
+
+  it("폭을 주면 w를 붙이고, 없으면 원본 URL 그대로다", () => {
+    expect(new URL("http://x" + toImageProxyUrl(OK, 828)).searchParams.get("w")).toBe("828");
+    expect(new URL("http://x" + toImageProxyUrl(OK)).searchParams.has("w")).toBe(false);
+  });
+
+  it("srcset은 허용 폭 전부를 w 서술자로 나열하고, 허용되지 않은 원본이면 null이다", () => {
+    const srcset = toImageProxySrcSet(OK)!;
+    expect(srcset.split(", ").map((entry) => entry.split(" ")[1])).toEqual(["480w", "828w", "1080w"]);
+    expect(srcset.split(", ")[0].split(" ")[0]).toBe(toImageProxyUrl(OK, 480));
+    expect(toImageProxySrcSet("http://example.com/a.jpg")).toBeNull();
   });
 });

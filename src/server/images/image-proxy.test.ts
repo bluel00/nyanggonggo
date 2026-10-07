@@ -2,6 +2,7 @@ import { inflateSync } from "node:zlib";
 import { describe, expect, it, vi } from "vitest";
 import { createHttpClient, type FetchLike } from "@/shared/api/http-client";
 import { createImageProxy } from "./image-proxy";
+import type { ImageResizer } from "./resize-image";
 
 const SRC = "http://openapi.animal.go.kr/openapi/service/rest/fileDownloadSrvc/files/shelter/2026/09/1%5B1%5D.jpg";
 /** 실제 JPEG 시그니처(FF D8 FF) */
@@ -10,9 +11,16 @@ const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2
 const GIF = new Uint8Array([0x47, 0x49, 0x46, 0x38, 0x39, 0x61]);
 const WEBP = new Uint8Array([0x52, 0x49, 0x46, 0x46, 1, 2, 3, 4, 0x57, 0x45, 0x42, 0x50]);
 
-function setup(fetchImpl: FetchLike, overrides: { maxBytes?: number; timeoutMs?: number } = {}) {
+/** 가짜 변환기가 돌려주는 바이트(WebP 시그니처) */
+const RESIZED = new Uint8Array([0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x45, 0x42, 0x50]);
+
+function setup(
+  fetchImpl: FetchLike,
+  overrides: { maxBytes?: number; timeoutMs?: number; resize?: ImageResizer } = {},
+) {
   const fetch = vi.fn(fetchImpl);
   const logger = { warn: vi.fn() };
+  const resize = vi.fn<ImageResizer>(overrides.resize ?? (async () => RESIZED.slice()));
   const proxy = createImageProxy({
     http: createHttpClient({ fetch }),
     logger,
@@ -20,8 +28,9 @@ function setup(fetchImpl: FetchLike, overrides: { maxBytes?: number; timeoutMs?:
     maxBytes: overrides.maxBytes ?? 1024,
     cacheControl: "public, max-age=86400",
     fallbackCacheControl: "no-store",
+    resize,
   });
-  return { fetch, logger, proxy };
+  return { fetch, logger, proxy, resize };
 }
 
 /** 업스트림은 실제 이미지를 주면서 Content-Type을 application/octet-stream으로 잘못 표기한다(2026-09-27 확인) */
@@ -131,5 +140,79 @@ describe("image proxy", () => {
     const { logger, proxy } = setup(async () => new Response("x", { status: 500 }));
     await proxy(`${SRC}?token=secret-value`);
     expect(JSON.stringify(logger.warn.mock.calls)).not.toContain("secret-value");
+  });
+
+  describe("폭(w): 허용 목록 리사이즈 + WebP", () => {
+    /** 변환 결과보다 큰 원본(실제 사진처럼). 앞은 JPEG 시그니처 */
+    const BIG_JPEG = new Uint8Array(200);
+    BIG_JPEG.set([0xff, 0xd8, 0xff, 0xe0]);
+    const bigJpeg = async () => new Response(BIG_JPEG, { headers: { "content-type": "application/octet-stream" } });
+
+    it("w가 없으면 지금처럼 원본이고 변환하지 않는다", async () => {
+      const { proxy, resize } = setup(bigJpeg);
+      const response = await proxy(SRC, null);
+      expect(response.headers.get("content-type")).toBe("image/jpeg");
+      expect(new Uint8Array(await response.arrayBuffer())).toEqual(BIG_JPEG);
+      expect(resize).not.toHaveBeenCalled();
+    });
+
+    it.each([480, 828, 1080])("허용 폭 %i → 그 폭으로 줄인 WebP, 캐시 헤더는 성공 응답 그대로", async (width) => {
+      const { proxy, resize } = setup(bigJpeg);
+      const response = await proxy(SRC, String(width));
+      expect(resize).toHaveBeenCalledWith(BIG_JPEG, width);
+      expect(response.status).toBe(200);
+      expect(response.headers.get("content-type")).toBe("image/webp");
+      expect(response.headers.get("cache-control")).toBe("public, max-age=86400");
+      expect(response.headers.get("content-length")).toBe(String(RESIZED.byteLength));
+      expect(response.headers.get("x-image-proxy")).toBeNull();
+      expect(new Uint8Array(await response.arrayBuffer())).toEqual(RESIZED);
+    });
+
+    it.each(["800", "0", "-480", "480.0", "abc", "", "1080 ", "99999999"])(
+      "허용 목록 밖의 w %j → 400 no-store, 원본을 받지 않는다",
+      async (w) => {
+        const { fetch, proxy, resize } = setup(bigJpeg);
+        const response = await proxy(SRC, w);
+        expect(response.status).toBe(400);
+        expect(response.headers.get("cache-control")).toBe("no-store");
+        expect((await response.json()).error.code).toBe("invalid_request");
+        expect(fetch).not.toHaveBeenCalled();
+        expect(resize).not.toHaveBeenCalled();
+      },
+    );
+
+    it("변환이 실패하면 원본을 캐시 없이 내려주고 로그를 남긴다(URL·본문 없음)", async () => {
+      const failing: ImageResizer = async () => {
+        throw new Error("bad input " + SRC);
+      };
+      const { proxy, logger } = setup(bigJpeg, { resize: failing });
+      const response = await proxy(SRC, "828");
+      expect(response.status).toBe(200);
+      expect(response.headers.get("content-type")).toBe("image/jpeg");
+      expect(response.headers.get("cache-control")).toBe("no-store");
+      expect(response.headers.get("x-image-proxy")).toBe("original");
+      expect(new Uint8Array(await response.arrayBuffer())).toEqual(BIG_JPEG);
+      expect(logger.warn).toHaveBeenCalledWith("image proxy resize failed", {
+        width: 828,
+        imageType: "image/jpeg",
+        bytes: BIG_JPEG.byteLength,
+        name: "Error",
+      });
+      expect(JSON.stringify(logger.warn.mock.calls)).not.toContain("openapi.animal.go.kr");
+    });
+
+    it("변환 결과가 원본보다 크면 원본을 내려준다", async () => {
+      const { proxy } = setup(jpeg, { resize: async () => new Uint8Array(500) });
+      const response = await proxy(SRC, "480");
+      expect(response.headers.get("content-type")).toBe("image/jpeg");
+      expect(response.headers.get("cache-control")).toBe("public, max-age=86400");
+      expect(new Uint8Array(await response.arrayBuffer())).toEqual(JPEG);
+    });
+
+    it("원본을 못 받으면 w가 있어도 지금처럼 투명 대체 이미지이고 변환하지 않는다", async () => {
+      const { proxy, resize } = setup(async () => new Response("nope", { status: 404 }));
+      await expectFallback(await proxy(SRC, "828"));
+      expect(resize).not.toHaveBeenCalled();
+    });
   });
 });
