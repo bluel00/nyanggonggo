@@ -22,7 +22,7 @@ import {
 const SEOUL = "6110000";
 const BUSAN = "6260000";
 const REGION_COOKIE = "nyanggonggo.region";
-const HOME_TITLE = "오늘은 어떤 친구를 볼까요?";
+const HOME_TITLE = "오늘은 누구를 보러 왔어요?";
 
 /**
  * 고정 데이터는 한 번만 받는다(업스트림 호출을 늘리지 않는다). 목록 응답의 **내용**은 이 파일의 관심이 아니다:
@@ -93,7 +93,7 @@ test("목록 헤더에서 홈으로 가면 기억이 있어도 홈이 보이고,
   await expect(page.locator("[data-animal-id]").first()).toBeVisible();
 
   // 축종 기억이 있어도 홈은 건너뛰지 않는다(결정 G1). 보고 있던 지역을 함께 넘긴다(결정 G2)
-  await page.getByRole("link", { name: /축종 바꾸기/ }).click();
+  await page.getByRole("link", { name: /다른 동물 고르기/ }).click();
   await expect(page).toHaveURL(`/home?region=${BUSAN}`);
   await expect(page.getByRole("heading", { name: HOME_TITLE })).toBeVisible();
 
@@ -136,4 +136,50 @@ test("필터 시트에서 축종을 바꾸면 그 축종을 기억한다", async
 
   await expect(page).toHaveURL(/species=dog/);
   expect(await rememberedSpecies(context)).toBe("dog");
+});
+
+test("홈의 선택지는 캐릭터(장식) + 텍스트 라벨의 링크이고, 캐릭터 이미지가 실제로 내려온다", async ({ page }) => {
+  // 캐릭터 SVG 응답을 모은다. 404 등으로 깨지면 여기서 잡힌다
+  const characterResponses: string[] = [];
+  page.on("response", (response) => {
+    if (new URL(response.url()).pathname.startsWith("/characters/")) {
+      characterResponses.push(`${response.status()} ${new URL(response.url()).pathname}`);
+    }
+  });
+
+  await page.goto("/home");
+  await expect(page.getByRole("heading", { name: HOME_TITLE })).toBeVisible();
+
+  for (const name of ["고양이", "강아지"]) {
+    // 링크 이름은 텍스트 라벨이 정한다(이미지는 alt가 비어 이름에 끼지 않는다)
+    const choice = page.getByRole("link", { name, exact: true });
+    await expect(choice).toBeVisible();
+    const image = choice.locator("img");
+    await expect(image).toHaveCount(1);
+    await expect(image).toHaveAttribute("alt", "");
+    // 내려받아 그려졌다(깨진 이미지는 naturalWidth가 0이다)
+    await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth)).toBe(120);
+  }
+  // 기타는 캐릭터 없는 텍스트 링크다
+  await expect(page.getByRole("link", { name: "다른 동물들도 있어요" }).locator("img")).toHaveCount(0);
+  await expect(page.locator("main img")).toHaveCount(2);
+
+  expect(characterResponses.sort()).toEqual(["200 /characters/nyang-cat.svg", "200 /characters/nyang-dog.svg"]);
+});
+
+test("목록 헤더 진입점은 접근 가능한 이름에 '다른 동물 고르기'가 들어간다", async ({ page, context }) => {
+  await mockList(page, items);
+  for (const [species, title] of [
+    ["cat", "고양이 공고"],
+    ["other", "기타 동물 공고"],
+  ]) {
+    await rememberSpeciesCookie(context, species);
+    await page.goto(`/?species=${species}&region=${SEOUL}`);
+    // 숨김 텍스트(sr-only)는 absolute라 Chrome이 이름에 공백을 하나 끼운다("고양이 공고 , 다른 동물 고르기")
+    const entry = page.getByRole("link", { name: new RegExp(`^${title} ?, 다른 동물 고르기$`) });
+    await expect(entry).toBeVisible();
+    await expect(entry).toHaveAttribute("href", `/home?region=${SEOUL}`);
+    // 하트·필터는 그대로 오른쪽에 있다
+    await expect(page.getByRole("button", { name: "필터" })).toBeVisible();
+  }
 });
