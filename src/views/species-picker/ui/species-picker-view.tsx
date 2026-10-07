@@ -12,8 +12,12 @@ import { SERVICE_NAME } from "@/shared/config/service";
 export function SpeciesPickerView({ area }: { area: AnimalArea }) {
   return (
     <div className="flex min-h-full flex-col px-page pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]">
-      <header className="flex min-h-touch items-center py-3">
-        <p className="text-card-title">{SERVICE_NAME}</p>
+      {/* 목록 헤더와 같은 구조: 여백은 바깥, 44px 줄은 안쪽. 한 요소에 min-h-touch와 py-3을 함께 두면
+          border-box라 높이가 68이 아니라 48이 되어 본문이 10px 위로 올라간다 */}
+      <header className="py-3">
+        <div className="flex min-h-touch items-center">
+          <p className="text-card-title">{SERVICE_NAME}</p>
+        </div>
       </header>
       <main className="flex flex-1 flex-col justify-center gap-6 pb-[calc(var(--touch)+var(--space-3)*2)]">
         <div className="flex flex-col gap-2 text-center">
