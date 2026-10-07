@@ -95,7 +95,8 @@ export function AnimalDetail({ id }: { id: string }) {
       </div>
 
       <div className="flex-1 px-page pt-4 pb-6">
-        <div className="flex items-center gap-2">
+        {/* 상태 줄은 D-day(title, 28px) 유무와 상관없이 28px이다. 뼈대(AnimalDetailSkeleton)와 같아 내용이 채워질 때 아래가 움직이지 않는다 */}
+        <div data-slot="status-row" className="flex h-7 items-center gap-2">
           <StatusBadge variant={variant} dDay={null} />
           {dDay !== null && (
             <span data-slot="d-day" className={cn("text-title", STATUS_TEXT[variant])}>
