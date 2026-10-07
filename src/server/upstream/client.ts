@@ -27,10 +27,17 @@ const KNOWN_ERROR_CODES = new Set([
 ]);
 
 /**
- * timeout: 타임아웃. auth: 서버 설정/인증 오류(서비스키 미등록 등). failed: 그 외 업스트림 실패.
- * 클라이언트 응답은 auth와 failed 모두 502로 같다(구분은 서버 로그용).
+ * 공공데이터포털 공통 오류 코드 22(LIMITED_NUMBER_OF_SERVICE_REQUESTS_EXCEEDS_ERROR, 일일 호출 허용량 초과).
+ * 출처: 서비스 페이지 에러코드 표(https://www.data.go.kr/data/15098931/openapi.do). 응답 모양은 문서에 없어
+ * 세 가지를 모두 본다: HTTP 오류 + `cmmMsgHeader`, 200 + `response.header.resultCode`, 200 + `cmmMsgHeader`.
  */
-export type UpstreamErrorReason = "timeout" | "auth" | "failed";
+export const QUOTA_EXCEEDED_CODE = "22";
+
+/**
+ * timeout: 타임아웃. auth: 서버 설정/인증 오류(서비스키 미등록 등). quota_exceeded: 일일 호출 한도 초과(코드 22).
+ * failed: 그 외 업스트림 실패. 클라이언트 응답은 timeout(504)을 빼고 모두 502로 같다(구분은 서버 로그용).
+ */
+export type UpstreamErrorReason = "timeout" | "auth" | "quota_exceeded" | "failed";
 
 /** 로그에 남기는 업스트림 본문 최대 길이 */
 const LOG_SNIPPET_MAX = 200;
@@ -97,10 +104,16 @@ export function createUpstreamClient(options: UpstreamClientOptions): UpstreamCl
 
     const page = extractPage(json);
     if (page === null) {
+      // 200인데 정상 래퍼가 아니고 게이트웨이 오류 머리(cmmMsgHeader)가 온 경우
+      const header = readCmmMsgHeader(json);
+      if (header?.returnReasonCode === QUOTA_EXCEEDED_CODE) throw quotaExceeded("cmmMsgHeader", 200, header, serviceKey);
       throw new UpstreamError("failed", {
         kind: "shape",
         bodySnippet: redact(JSON.stringify(json)?.slice(0, LOG_SNIPPET_MAX) ?? null, serviceKey),
       });
+    }
+    if (page.resultCode === QUOTA_EXCEEDED_CODE) {
+      throw new UpstreamError("quota_exceeded", { kind: "resultCode", status: 200, code: page.resultCode });
     }
     if (page.resultCode !== null && KNOWN_ERROR_CODES.has(page.resultCode)) {
       throw new UpstreamError("failed", { kind: "resultCode", resultCode: page.resultCode });
@@ -172,9 +185,13 @@ export function createUpstreamClient(options: UpstreamClientOptions): UpstreamCl
 function toUpstreamError(error: HttpError, serviceKey: string): UpstreamError {
   if (error.kind === "timeout") return new UpstreamError("timeout", { kind: "timeout", endpoint: error.endpoint });
 
-  // HTTP 403 + OpenAPI_ServiceResponse.cmmMsgHeader: 서버 설정/인증 오류(2026-09-21 프로브로 확인).
-  // 로그에는 returnReasonCode와 errMsg만 남긴다.
-  const auth = error.status === 403 ? readAuthHeader(error.bodySnippet) : null;
+  // HTTP 오류 + OpenAPI_ServiceResponse.cmmMsgHeader. 코드 22면 한도 초과(상태 코드와 상관없이),
+  // 403이면 서버 설정/인증 오류(2026-09-21 프로브로 확인). 로그에는 returnReasonCode와 errMsg만 남긴다.
+  const header = readCmmMsgHeader(parseJson(error.bodySnippet));
+  if (header?.returnReasonCode === QUOTA_EXCEEDED_CODE) {
+    return quotaExceeded("cmmMsgHeader", error.status, header, serviceKey);
+  }
+  const auth = error.status === 403 ? header : null;
   if (auth) {
     return new UpstreamError("auth", {
       kind: "auth",
@@ -192,15 +209,29 @@ function toUpstreamError(error: HttpError, serviceKey: string): UpstreamError {
   });
 }
 
-/** `{ OpenAPI_ServiceResponse: { cmmMsgHeader: { returnReasonCode, errMsg } } }`에서 두 값만 읽는다. */
-function readAuthHeader(body: string | null): { returnReasonCode: string | null; errMsg: string | null } | null {
+type CmmMsgHeader = { returnReasonCode: string | null; errMsg: string | null };
+
+/** 한도 초과 오류. 로그에는 응답 모양, HTTP 상태, 코드, errMsg만 남긴다(서비스키·URL 없음). */
+function quotaExceeded(kind: string, status: number | null, header: CmmMsgHeader, serviceKey: string): UpstreamError {
+  return new UpstreamError("quota_exceeded", {
+    kind,
+    status,
+    code: header.returnReasonCode,
+    errMsg: redact(header.errMsg, serviceKey),
+  });
+}
+
+function parseJson(body: string | null): unknown {
   if (body === null) return null;
-  let json: unknown;
   try {
-    json = JSON.parse(body);
+    return JSON.parse(body);
   } catch {
     return null;
   }
+}
+
+/** `{ OpenAPI_ServiceResponse: { cmmMsgHeader: { returnReasonCode, errMsg } } }`에서 두 값만 읽는다. */
+function readCmmMsgHeader(json: unknown): CmmMsgHeader | null {
   const header = pick(pick(json, "OpenAPI_ServiceResponse"), "cmmMsgHeader");
   if (typeof header !== "object" || header === null) return null;
   const text = (value: unknown) => (typeof value === "string" ? value.slice(0, 100) : null);

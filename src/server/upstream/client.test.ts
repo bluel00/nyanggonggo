@@ -281,6 +281,49 @@ describe("upstream client 오류", () => {
     });
   });
 
+  describe("일일 호출 한도 초과(코드 22, 합성 본문)", () => {
+    // 응답 모양은 문서에 없어 세 가지를 모두 본다. 값은 지어낸 것이다(서비스키가 섞여 있어도 가려져야 한다)
+    const quotaHeader = {
+      OpenAPI_ServiceResponse: {
+        cmmMsgHeader: {
+          errMsg: "SERVICE ERROR",
+          returnAuthMsg: `LIMITED_NUMBER_OF_SERVICE_REQUESTS_EXCEEDS_ERROR ${FAKE_KEY}`,
+          returnReasonCode: "22",
+        },
+      },
+    };
+    const resultCode22 = { response: { header: { resultCode: "22", resultMsg: "LIMITED_NUMBER_OF_SERVICE_REQUESTS_EXCEEDS_ERROR" } } };
+
+    it.each([
+      ["HTTP 403 + cmmMsgHeader", () => Response.json(quotaHeader, { status: 403 }), { kind: "cmmMsgHeader", status: 403, code: "22", errMsg: "SERVICE ERROR" }],
+      ["HTTP 200 + resultCode 22", () => Response.json(resultCode22), { kind: "resultCode", status: 200, code: "22" }],
+      ["HTTP 200 + cmmMsgHeader", () => Response.json(quotaHeader), { kind: "cmmMsgHeader", status: 200, code: "22", errMsg: "SERVICE ERROR" }],
+    ])("%s → quota_exceeded", async (_name, respond, detail) => {
+      const error = await failure(async () => respond());
+      expect(error.reason).toBe("quota_exceeded");
+      expect(error.detail).toEqual(detail);
+      const serialized = `${error.message} ${JSON.stringify(error.detail)}`;
+      expect(serialized).not.toContain(FAKE_KEY);
+      expect(serialized).not.toContain("serviceKey");
+    });
+
+    it("상세 단건 조회에서도 같다", async () => {
+      const error = await client(async () => Response.json(resultCode22))
+        .fetchByDesertionNo("1")
+        .catch((e: UpstreamError) => e);
+      expect((error as UpstreamError).reason).toBe("quota_exceeded");
+    });
+
+    it("다른 코드는 기존 분류 그대로다(403 + 30은 auth, 200 + cmmMsgHeader 30은 failed shape)", async () => {
+      const header30 = structuredClone(quotaHeader);
+      header30.OpenAPI_ServiceResponse.cmmMsgHeader.returnReasonCode = "30";
+      expect((await failure(async () => Response.json(header30, { status: 403 }))).reason).toBe("auth");
+      const shape = await failure(async () => Response.json(header30));
+      expect(shape.reason).toBe("failed");
+      expect(shape.detail).toMatchObject({ kind: "shape" });
+    });
+  });
+
   it("로그용 bodySnippet은 200자 이하다", async () => {
     const error = await failure(async () => new Response("x".repeat(3000), { status: 500 }));
     expect((error.detail.bodySnippet as string).length).toBe(200);

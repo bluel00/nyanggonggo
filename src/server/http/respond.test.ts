@@ -21,6 +21,8 @@ describe("errorResponse", () => {
     [new UpstreamError("failed", { kind: "status", status: 500 }), 502, "upstream_error"],
     [new UpstreamError("timeout", { kind: "timeout" }), 504, "upstream_timeout"],
     [new UpstreamError("auth", { kind: "auth", status: 403 }), 502, "upstream_error"],
+    // 한도 초과도 사용자에게는 다른 업스트림 오류와 같다(화면 문구를 바꾸지 않는다)
+    [new UpstreamError("quota_exceeded", { kind: "resultCode", status: 200, code: "22" }), 502, "upstream_error"],
     [new ServerConfigError(["DATA_GO_KR_SERVICE_KEY"]), 500, "internal_error"],
     [new Error("boom"), 500, "internal_error"],
   ])("%s → %i %s", async (error, status, code) => {
@@ -38,6 +40,19 @@ describe("errorResponse", () => {
       kind: "auth",
       status: 403,
       returnReasonCode: "30",
+      errMsg: "SERVICE ERROR",
+    });
+  });
+
+  it("한도 초과는 별도 메시지와 reason quota_exceeded로 로그를 남긴다", async () => {
+    const { logger } = await run(
+      new UpstreamError("quota_exceeded", { kind: "cmmMsgHeader", status: 403, code: "22", errMsg: "SERVICE ERROR" }),
+    );
+    expect(logger.warn).toHaveBeenCalledWith("upstream quota exceeded", {
+      reason: "quota_exceeded",
+      kind: "cmmMsgHeader",
+      status: 403,
+      code: "22",
       errMsg: "SERVICE ERROR",
     });
   });

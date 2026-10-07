@@ -36,7 +36,12 @@ function classify(error: unknown, logger: Logger): ErrorCode {
   if (error instanceof InvalidRequestError) return "invalid_request";
   if (error instanceof NotFoundError) return "not_found";
   if (error instanceof UpstreamError) {
-    const message = error.reason === "auth" ? "upstream auth/config error" : "upstream failure";
+    const message =
+      error.reason === "auth"
+        ? "upstream auth/config error"
+        : error.reason === "quota_exceeded"
+          ? "upstream quota exceeded"
+          : "upstream failure";
     logger.warn(message, { reason: error.reason, ...error.detail });
     return error.reason === "timeout" ? "upstream_timeout" : "upstream_error";
   }
