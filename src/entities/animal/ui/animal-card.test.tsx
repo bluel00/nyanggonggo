@@ -69,7 +69,12 @@ describe("AnimalCard", () => {
     // 글자 크기 토큰이 색 토큰과 병합되며 사라지지 않는다(cn 테마 설정)
     expect(badge.className).toContain("text-badge");
     const img = screen.getByRole("img", { name: "고양이 사진, 제주특별자치도" }) as HTMLImageElement;
-    expect(img.getAttribute("src")).toBe(`/api/image-proxy?src=${encodeURIComponent(IMG)}`);
+    // 기본 src는 828 폭, srcset은 허용 폭 전부(480/828/1080), sizes는 카드 폭(컬럼 − 좌우 여백)
+    expect(img.getAttribute("src")).toBe(`/api/image-proxy?src=${encodeURIComponent(IMG)}&w=828`);
+    expect(img.getAttribute("srcset")).toBe(
+      [480, 828, 1080].map((w) => `/api/image-proxy?src=${encodeURIComponent(IMG)}&w=${w} ${w}w`).join(", "),
+    );
+    expect(img.getAttribute("sizes")).toBe("(min-width: 480px) 448px, calc(100vw - 32px)");
     expect(img.getAttribute("loading")).toBe("lazy");
     expect(img.className).not.toContain("saturate-70");
   });

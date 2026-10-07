@@ -29,6 +29,15 @@ describe("ImageViewer", () => {
     expect(dialog.className).toContain("bg-viewer-bg");
   });
 
+  it("뷰어는 확대해서 보는 화면이라 원본을 그대로 쓴다(폭 w, srcset 없음)", () => {
+    render(<ImageViewer images={images} alt="고양이 사진" initialIndex={0} onClose={() => {}} />);
+    const dialog = screen.getByRole("dialog", { name: "사진 크게 보기" });
+    for (const image of dialog.querySelectorAll("img")) {
+      expect(new URL(`http://x${image.getAttribute("src")}`).searchParams.has("w")).toBe(false);
+      expect(image.hasAttribute("srcset")).toBe(false);
+    }
+  });
+
   it("시작 위치의 페이지 표시, 사진은 원본 비율(contain)", () => {
     render(<ImageViewer images={images} alt="고양이 사진" initialIndex={1} onClose={() => {}} />);
     expect(screen.getByText("2/3")).toBeTruthy();

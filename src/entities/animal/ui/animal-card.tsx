@@ -7,7 +7,7 @@ import { ANIMAL_ID_ATTRIBUTE } from "@/shared/ui/app-column";
 import type { Animal } from "../model/animal";
 import { getDDay } from "../model/dDay";
 import { getPrimaryImage, getStatusVariant } from "../model/status";
-import { AnimalPhoto } from "./animal-photo";
+import { AnimalPhoto, PHOTO_SIZES } from "./animal-photo";
 import { animalTitle, speciesText } from "./labels";
 import { StatusBadge } from "./status-badge";
 
@@ -51,7 +51,7 @@ export function AnimalCard({
   const body = (
     <>
       <div className="relative aspect-4/5 overflow-hidden rounded-card bg-status-ended-bg">
-        <AnimalPhoto src={getPrimaryImage(animal)} alt={alt} ended={ended} priority={priority} highPriority={highPriority} />
+        <AnimalPhoto src={getPrimaryImage(animal)} alt={alt} ended={ended} priority={priority} highPriority={highPriority} sizes={PHOTO_SIZES.card} />
         <div className="absolute top-3 left-3">
           <StatusBadge variant={variant} dDay={ended ? null : getDDay(animal, now)} onPhoto />
         </div>

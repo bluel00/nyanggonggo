@@ -46,6 +46,14 @@ describe("ImageCarousel", () => {
     expect(images.map((i) => i.getAttribute("loading"))).toEqual(["eager", "lazy", "lazy"]);
   });
 
+  it("상세 사진은 허용 폭 srcset과 컬럼 전체 폭 sizes를 쓴다", () => {
+    const { container } = render(<Harness images={[img(1), img(2)]} />);
+    for (const image of container.querySelectorAll("img")) {
+      expect(image.getAttribute("srcset")?.split(", ").map((entry) => entry.split(" ")[1])).toEqual(["480w", "828w", "1080w"]);
+      expect(image.getAttribute("sizes")).toBe("(min-width: 480px) 480px, 100vw");
+    }
+  });
+
   it("1장이면 도트 없이 정적", () => {
     const { container } = render(<Harness images={[img(1)]} />);
     expect(container.querySelector('[data-slot="carousel-dots"]')).toBeNull();
