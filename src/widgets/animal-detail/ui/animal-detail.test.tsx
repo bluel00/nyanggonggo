@@ -58,6 +58,8 @@ describe("AnimalDetail", () => {
     fetchMock.mockResolvedValue(Response.json(wire()));
     const { container } = renderDetail();
     expect(container.querySelector('[data-slot="detail-skeleton"]')).toBeTruthy();
+    // 뼈대(로딩 경계와 같은 것)에서도 뒤로 갈 수 있다
+    expect(screen.getByRole("button", { name: "뒤로가기" })).toBeTruthy();
 
     expect(await screen.findByRole("heading", { name: "제주특별자치도" })).toBeTruthy();
     expect(screen.getByText("암컷 · 2024(년생)")).toBeTruthy();

@@ -18,6 +18,7 @@ import { cn } from "@/shared/lib/utils";
 import { scrollAppToTop } from "@/shared/ui/app-column";
 import { BackButton, useGoBack } from "@/shared/ui/back-button";
 import { Button } from "@/shared/ui/button";
+import { AnimalDetailSkeleton } from "./animal-detail-skeleton";
 import { ImageCarousel } from "./image-carousel";
 import { ImageViewer } from "./image-viewer";
 
@@ -46,7 +47,8 @@ export function AnimalDetail({ id }: { id: string }) {
   // 내부 스크롤 컨테이너는 화면을 옮겨도 유지되므로 상세 진입 시 맨 위로
   useEffect(() => scrollAppToTop(), [id]);
 
-  if (query.isPending) return <DetailSkeleton />;
+  // 라우트 로딩 경계(loading.tsx)와 같은 뼈대라 둘 사이에서 화면이 바뀌지 않는다
+  if (query.isPending) return <AnimalDetailSkeleton />;
 
   if (query.isError) {
     return (
@@ -137,19 +139,5 @@ export function AnimalDetail({ id }: { id: string }) {
         />
       )}
     </article>
-  );
-}
-
-/** 명세 7.1: 상단 이미지 영역 + 텍스트 줄 스켈레톤(움직임 없음) */
-function DetailSkeleton() {
-  return (
-    <div aria-hidden data-slot="detail-skeleton">
-      <div className="aspect-4/5 bg-status-ended-bg" />
-      <div className="px-page pt-4">
-        <div className="h-6 w-24 rounded-pill bg-status-ended-bg" />
-        <div className="mt-3 h-7 w-2/3 rounded-[7px] bg-status-ended-bg" />
-        <div className="mt-2 h-4 w-1/3 rounded-[6px] bg-status-ended-bg" />
-      </div>
-    </div>
   );
 }
