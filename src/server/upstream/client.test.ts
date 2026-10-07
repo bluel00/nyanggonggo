@@ -5,7 +5,13 @@ import { describe, expect, it, vi } from "vitest";
 import { createHttpClient, type FetchLike } from "@/shared/api/http-client";
 import fixture from "../../../docs/fixtures/upstream-items.json";
 import wrapperFixture from "../../../docs/fixtures/upstream-wrapper.json";
-import { createUpstreamClient, UPSTREAM_ENDPOINT, UpstreamError, type UpstreamClientOptions } from "./client";
+import {
+  createUpstreamClient,
+  UPSTREAM_ENDPOINT,
+  UpstreamError,
+  type UpstreamClientOptions,
+  type UpstreamPageCache,
+} from "./client";
 
 const FAKE_KEY = "test-key-a+b/c==";
 const items = fixture.items;
@@ -30,7 +36,6 @@ function client(fetch: FetchLike, overrides: Partial<UpstreamClientOptions> = {}
   return createUpstreamClient({
     http: createHttpClient({ fetch }),
     serviceKey: FAKE_KEY,
-    revalidateSeconds: 300,
     timeoutMs: 1000,
     pageSize: 2,
     concurrency: 3,
@@ -176,10 +181,11 @@ describe("upstream client fetchAll", () => {
     expect(new URL(raw).searchParams.get("serviceKey")).toBe(FAKE_KEY);
   });
 
-  it("Next revalidate 옵션을 fetch에 전달한다", async () => {
+  it("원본 응답은 캐시하지 않는다(fetch no-store, Next revalidate 없음)", async () => {
     const fetch = fakeUpstream(items, 10);
-    await client(fetch, { revalidateSeconds: 123 }).fetchAll({ species: "cat" });
-    expect(fetch.mock.calls[0][1]).toMatchObject({ next: { revalidate: 123 } });
+    await client(fetch).fetchAll({ species: "cat" });
+    expect(fetch.mock.calls[0][1]).toMatchObject({ cache: "no-store" });
+    expect(fetch.mock.calls[0][1]).not.toHaveProperty("next");
   });
 
   it("필수 필드가 없는 item은 건너뛰고 나머지를 돌려준다", async () => {
@@ -359,6 +365,65 @@ describe("upstream client 오류", () => {
     expect(serialized).not.toContain(FAKE_KEY);
     expect(serialized).not.toContain(encodeURIComponent(FAKE_KEY));
     expect(serialized).not.toContain("serviceKey");
+  });
+});
+
+describe("upstream client 페이지 캐시: 검증을 통과한 페이지만 저장한다", () => {
+  /** unstable_cache처럼 load가 성공했을 때만 저장하는 가짜 */
+  function fakePageCache() {
+    const store = new Map<string, unknown>();
+    const pageCache: UpstreamPageCache = async (key, load) => {
+      if (store.has(key)) return store.get(key) as never;
+      const value = await load();
+      store.set(key, value);
+      return value;
+    };
+    return { store, pageCache };
+  }
+
+  it("정상 페이지는 저장되고 다음 요청은 업스트림을 부르지 않는다", async () => {
+    const { store, pageCache } = fakePageCache();
+    const fetch = fakeUpstream(items, 10);
+    const upstream = client(fetch, { pageSize: 10, pageCache });
+    await upstream.fetchAll({ species: "cat" });
+    await upstream.fetchAll({ species: "cat" });
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(store.size).toBe(1);
+  });
+
+  it.each([
+    ["한도 초과(200 + resultCode 22)", () => Response.json({ response: { header: { resultCode: "22" } } })],
+    ["알려진 오류 resultCode(200 + 30)", () => Response.json({ response: { header: { resultCode: "30" } } })],
+    ["200 + cmmMsgHeader", () => Response.json({ OpenAPI_ServiceResponse: { cmmMsgHeader: { returnReasonCode: "22" } } })],
+    ["모양이 다른 200", () => Response.json({ unexpected: true })],
+    ["HTTP 500", () => new Response("oops", { status: 500 })],
+  ])("오류 응답(%s)은 저장되지 않고, 다음 요청은 업스트림을 다시 부른다", async (_name, respond) => {
+    const { store, pageCache } = fakePageCache();
+    const fetch = vi.fn<FetchLike>(async () => respond());
+    const upstream = client(fetch, { pageCache });
+    await expect(upstream.fetchAll({ species: "cat" })).rejects.toBeInstanceOf(UpstreamError);
+    expect(store.size).toBe(0);
+
+    // 업스트림이 회복하면 바로 정상 결과가 나온다(오류가 캐시되어 재검증 주기 동안 남지 않는다)
+    fetch.mockImplementation(async () => Response.json(page(items.slice(0, 2), 2)));
+    await expect(upstream.fetchAll({ species: "cat" })).resolves.toHaveLength(2);
+    expect(store.size).toBe(1);
+  });
+
+  it("캐시 키에는 요청 파라미터만 있고 서비스키는 없다", async () => {
+    const { store, pageCache } = fakePageCache();
+    await client(fakeUpstream(items, 10), { pageSize: 10, pageCache }).fetchAll({ species: "dog", uprCd: "6110000" });
+    await client(async () => Response.json(page([items[0]], 1)), { pageCache }).fetchByDesertionNo(items[0].desertionNo);
+    const keys = [...store.keys()];
+    expect(keys).toEqual([
+      "numOfRows=10&pageNo=1&upkind=417000&upr_cd=6110000",
+      `desertion_no=${items[0].desertionNo}&numOfRows=10&pageNo=1`,
+    ]);
+    for (const key of keys) {
+      expect(key).not.toContain(FAKE_KEY);
+      expect(key).not.toContain(encodeURIComponent(FAKE_KEY));
+      expect(key).not.toContain("serviceKey");
+    }
   });
 });
 

@@ -53,11 +53,21 @@ export class UpstreamError extends Error {
   }
 }
 
+/**
+ * 검증을 통과한 업스트림 페이지를 캐시한다. load가 성공해야만 저장하고, 실패(예외)는 저장하지 않는다.
+ * key에는 서비스키가 없다(요청 파라미터만). 서버에서는 Next 캐시(`next-page-cache.ts`), 테스트에서는 가짜를 쓴다.
+ */
+export type UpstreamPageCache = <T>(key: string, load: () => Promise<T>) => Promise<T>;
+
+/** 캐시 없이 매번 부른다(기본값) */
+const NO_PAGE_CACHE: UpstreamPageCache = (_key, load) => load();
+
 export type UpstreamClientOptions = {
   http: HttpClient;
   serviceKey: string;
   logger?: Logger;
-  revalidateSeconds: number;
+  /** 검증을 통과한 페이지 캐시. 없으면 캐시하지 않는다 */
+  pageCache?: UpstreamPageCache;
   timeoutMs: number;
   pageSize: number;
   /** 첫 페이지 이후 나머지 페이지의 동시 호출 수 */
@@ -84,9 +94,18 @@ export type UpstreamClient = {
 };
 
 export function createUpstreamClient(options: UpstreamClientOptions): UpstreamClient {
-  const { http, serviceKey, logger = noopLogger } = options;
+  const { http, serviceKey, logger = noopLogger, pageCache = NO_PAGE_CACHE } = options;
 
-  async function fetchPage(params: Record<string, string>) {
+  /**
+   * 페이지 한 장. 원본 응답은 어디에도 캐시하지 않고(fetch `no-store`), 검증을 통과한 페이지만 pageCache에 넣는다.
+   * 공공데이터포털은 오류(한도 초과 등)를 HTTP 200 본문으로 보내기도 해서, fetch 캐시에 맡기면 오류 본문이
+   * 재검증 주기 동안 정상 응답처럼 재사용된다(Next는 200이면 본문과 상관없이 fetch를 캐시한다).
+   */
+  function fetchPage(params: Record<string, string>) {
+    return pageCache(pageCacheKey(params), () => loadPage(params));
+  }
+
+  async function loadPage(params: Record<string, string>) {
     // state 파라미터는 쓰지 않는다. 상태는 processState로 서버에서 판정한다(architecture.md 5절).
     const search = new URLSearchParams({ serviceKey, _type: "json", ...params });
     const url = `${UPSTREAM_ENDPOINT}?${search}`;
@@ -95,7 +114,7 @@ export function createUpstreamClient(options: UpstreamClientOptions): UpstreamCl
     try {
       ({ data: json } = await http.getJson(url, {
         timeoutMs: options.timeoutMs,
-        next: { revalidate: options.revalidateSeconds },
+        cache: "no-store",
       }));
     } catch (error) {
       if (error instanceof HttpError) throw toUpstreamError(error, serviceKey);
@@ -228,6 +247,14 @@ function parseJson(body: string | null): unknown {
   } catch {
     return null;
   }
+}
+
+/** 페이지 캐시 키. 요청 파라미터만 정렬해 쓴다(서비스키, _type 없음) */
+function pageCacheKey(params: Record<string, string>): string {
+  const sorted = Object.keys(params)
+    .sort()
+    .map((key) => [key, params[key]]);
+  return new URLSearchParams(sorted).toString();
 }
 
 /** `{ OpenAPI_ServiceResponse: { cmmMsgHeader: { returnReasonCode, errMsg } } }`에서 두 값만 읽는다. */

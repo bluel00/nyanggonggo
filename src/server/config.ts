@@ -7,13 +7,14 @@ import { z } from "zod";
 
 /** 서버 튜닝값. 초기값은 스파이크에서 조정한다(architecture.md 12절). */
 export const SERVER_TUNING = {
-  /** 공공 API fetch의 Next 데이터 캐시 재검증 주기(초) */
+  /** 검증을 통과한 공공 API 페이지 캐시(Next 데이터 캐시, unstable_cache)의 재검증 주기(초). 원본 fetch는 캐시하지 않는다 */
   upstreamRevalidateSeconds: 300,
   /** 공공 API 호출 타임아웃(ms) */
   upstreamTimeoutMs: 10_000,
   /**
-   * 공공 API 페이지 크기(numOfRows, 최대 1000). 1000건 페이지는 base64 추정 1.98MB로
-   * Next fetch 캐시 항목 한도(2MB)의 94.5%라 500으로 낮췄다(architecture.md 12절 3).
+   * 공공 API 페이지 크기(numOfRows, 최대 1000). Next 데이터 캐시 항목 한도는 2MB다. 1000건 페이지는 원본 1.45~1.49MB이고
+   * 예전 fetch 캐시 방식에서는 base64 추정 1.98MB(한도의 94.5%)여서 500으로 낮췄다(architecture.md 12절 3).
+   * 지금은 검증을 통과한 페이지(JSON)를 캐시하며 500건 기준 그 절반 정도다.
    */
   upstreamPageSize: 500,
   /** 첫 페이지 이후 나머지 페이지의 동시 호출 수 */

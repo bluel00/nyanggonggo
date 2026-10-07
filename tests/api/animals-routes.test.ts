@@ -8,6 +8,10 @@ import { GET as getByIds } from "@/app/api/animals/by-ids/route";
 import { GET as getList } from "@/app/api/animals/route";
 import fixture from "../../docs/fixtures/upstream-items.json";
 
+// 업스트림 페이지 캐시(unstable_cache)는 Next 런타임 밖에서 쓸 수 없다. 여기서는 캐시 없이 매번 부르게 한다
+// (테스트마다 가짜 업스트림 응답이 다르다). 캐시 동작 자체는 src/server/upstream/client.test.ts가 본다.
+vi.mock("next/cache", () => ({ unstable_cache: (load: () => Promise<unknown>) => load }));
+
 const FAKE_KEY = "test-key-route-123";
 
 function upstreamBody(items: unknown[]) {

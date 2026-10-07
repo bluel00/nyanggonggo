@@ -3,6 +3,7 @@ import { getServerConfig, SERVER_TUNING } from "../config";
 import { consoleLogger } from "../logger";
 import { createUpstreamAnimalSource } from "../source/upstream-source";
 import { createUpstreamClient } from "../upstream/client";
+import { createNextPageCache } from "../upstream/next-page-cache";
 import { createAnimalService, type AnimalService } from "./service";
 
 /** 조립 지점. 요청 처리 중에 호출한다(설정을 import 시점에 읽지 않게). */
@@ -12,7 +13,7 @@ export function getAnimalService(): AnimalService {
     http: createHttpClient(),
     serviceKey,
     logger: consoleLogger,
-    revalidateSeconds: SERVER_TUNING.upstreamRevalidateSeconds,
+    pageCache: createNextPageCache(SERVER_TUNING.upstreamRevalidateSeconds),
     timeoutMs: SERVER_TUNING.upstreamTimeoutMs,
     pageSize: SERVER_TUNING.upstreamPageSize,
     concurrency: SERVER_TUNING.upstreamConcurrency,

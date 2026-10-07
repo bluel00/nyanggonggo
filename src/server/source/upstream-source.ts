@@ -4,7 +4,7 @@ import type { UpstreamClient } from "../upstream/client";
 import type { AnimalSource } from "./animal-source";
 
 /**
- * 기본 구현. 캐시는 upstream 페이지 fetch에 건 Next `revalidate`(데이터 캐시)가 맡고,
+ * 기본 구현. 캐시는 업스트림 클라이언트의 페이지 캐시(검증을 통과한 페이지만, Next 데이터 캐시)가 맡고,
  * 파싱과 Mapper는 요청마다 메모리에서 한다.
  */
 export function createUpstreamAnimalSource(
