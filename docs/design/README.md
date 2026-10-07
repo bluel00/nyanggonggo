@@ -8,13 +8,13 @@ Write in short, warm Korean (해요체). The product is a photo feed, not an ado
 
 Warm, minimal, the photo is the hero. Set text in Pretendard using `title` (20/700), `card-title` (16/600), `body` (14/400), `caption` (12/400) and `badge` (12/600). Page ground is `bg`, text `text`, secondary `text-2`, hairlines `border`. Page padding is `space-4` (16), card gap `space-3` (12), card radius `radius-card` (16), chips and badges `radius-pill`. No shadows. Cards are radius only.
 
-Colour points are for status only: 보호중 uses `status-protected` (dot) with `status-protected-bg` and `status-protected-text`; 임박 (D-day 3 or less) uses `status-soon` with `-bg` and `-text`; 종료 uses `status-ended` with `-bg` and `-text`. Text never uses the point colours, only the `-text` variants, which meet 4.5:1. The one exception to "accent = status" is `kakao` with `on-kakao` on ShareButton. Over a photo, badges are `photo-pill` (white 90%) with a coloured dot.
+Colour points are for status only: 보호중 uses `status-protected` (dot) with `status-protected-bg` and `status-protected-text`; 임박 (D-day 3 or less) uses `status-soon` with `-bg` and `-text`; 종료 uses `status-ended` with `-bg` and `-text`. Text never uses the point colours, only the `-text` variants, which meet 4.5:1. The one exception to "accent = status" is `kakao` with `on-kakao` on ShareButton. The character illustrations use their own illustration-only palette, and the cat's bow (`#9C3548`) is a second, character-only exception; see the 캐릭터 section (`characters.md`). Over a photo, badges are `photo-pill` (white 90%) with a coloured dot.
 
 Photos are 4:5, `object-fit: cover`, `object-position: center 35%`. The full-screen viewer shows the original ratio (`contain`) on `viewer-bg`. Ended animals: photo saturate(0.7), grey badge, no dim.
 
 Layout: design frame 390x844 (safe area 47 top, 34 bottom). On desktop the content is one `column-max` (480px) column centred on `canvas`; there is no desktop layout. Bottom sheet, viewer and the fixed CTA bar live inside that column.
 
-Motion: card press 100ms scale(0.98), bottom sheet 250ms ease-out, toast fade 250ms. Nothing else moves. Focus ring is a 2px `focus-ring` with 2px offset.
+Motion: card press 100ms scale(0.98), bottom sheet 250ms ease-out, toast fade 250ms. Nothing else moves, with one exception: the cat and dog characters may idle (slowly, continuously) on screens without photos, react briefly to a press on screens with photos, and never appear in ended-notice contexts; reduced-motion stops them (see `characters.md`). Focus ring is a 2px `focus-ring` with 2px offset.
 
 ## Iconography
 
