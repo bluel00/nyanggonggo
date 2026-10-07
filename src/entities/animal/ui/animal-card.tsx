@@ -71,7 +71,7 @@ export function AnimalCard({
           scroll={false}
           className={cn(
             className,
-            "transition-transform duration-press ease-out active:scale-press focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+            "transition-transform duration-press ease-out motion-safe:active:scale-press focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
           )}
         >
           {body}
