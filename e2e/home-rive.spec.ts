@@ -8,6 +8,7 @@ import { loadRealItems, mockList, rememberSpeciesCookie, watchConsoleErrors, typ
  * - 움직임 줄이기 설정: 정지 이미지만, Rive 런타임·.riv·WASM을 받지 않는다
  * - 홈이 아닌 화면(목록·상세·찜): Rive 런타임·.riv·WASM을 받지 않는다
  * - 카드를 누르면 바로 이동한다(press 때문에 늦추지 않는다), 교체 전후 레이아웃 이동 0
+ * - greet 동안 카드·라벨이 움직이지 않고, greet 중간에 눌러도 바로 이동한다(PRD v1.2 5.1, 7절 "방해 없음")
  */
 
 /** Rive 런타임 번들에만 있는 문자열. 청크 이름은 해시라 내용으로 찾는다 */
@@ -116,3 +117,44 @@ test("Rive가 붙은 뒤 카드를 누르면 바로 이동한다(press 반응 �
   expect(elapsed, `이동 ${elapsed}ms`).toBeLessThan(3000);
   await expect(page).toHaveURL(/species=cat/);
 });
+
+/** 카드(링크)·캐릭터 칸·라벨(텍스트 노드)의 위치와 크기. 라벨은 텍스트라 Range로 잰다 */
+const cardLayout = (page: Page) =>
+  page.evaluate(() =>
+    ["고양이", "강아지"].map((label) => {
+      const link = [...document.querySelectorAll("a")].find((a) => a.textContent?.trim() === label);
+      if (!link) throw new Error(`카드 ${label}이 없다`);
+      const text = [...link.childNodes].find((node) => node.nodeType === Node.TEXT_NODE && node.textContent?.trim());
+      const range = document.createRange();
+      if (text) range.selectNodeContents(text);
+      const box = (rect: DOMRect) => [rect.x, rect.y, rect.width, rect.height].map((value) => Math.round(value * 10) / 10).join(",");
+      return { label, card: box(link.getBoundingClientRect()), character: box(link.querySelector("span")!.getBoundingClientRect()), text: box(range.getBoundingClientRect()) };
+    }),
+  );
+
+test("greet(들어올 때 동작) 동안 카드·캐릭터 칸·라벨의 위치와 크기가 바뀌지 않는다(PRD v1.2 5.1)", async ({ page }) => {
+  await page.goto("/home");
+  await canvasesReady(page);
+  const first = await cardLayout(page);
+  // 두 greet는 2초 안에 끝난다. 100ms마다 2.2초 동안 잰다
+  for (let i = 0; i < 22; i++) {
+    await page.waitForTimeout(100);
+    expect(await cardLayout(page), `${(i + 1) * 100}ms`).toEqual(first);
+  }
+});
+
+for (const at of [500, 1400]) {
+  test(`greet 중간(${at}ms)에 카드를 누르면 바로 목록으로 이동한다`, async ({ page }) => {
+    await mockList(page, await loadRealItems(page.request));
+    await page.goto("/home");
+    await canvasesReady(page);
+    await page.waitForTimeout(at);
+    const started = Date.now();
+    await page.getByRole("link", { name: "강아지", exact: true }).click();
+    await expect(page.getByRole("heading", { name: /강아지 공고/ })).toBeVisible();
+    const elapsed = Date.now() - started;
+    // 위 "바로 이동한다"와 같은 기준(개발 PC의 production 서버). greet가 이동을 늦추지 않는다
+    expect(elapsed, `이동 ${elapsed}ms`).toBeLessThan(3000);
+    await expect(page).toHaveURL(/species=dog/);
+  });
+}
