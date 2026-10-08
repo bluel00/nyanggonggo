@@ -1,4 +1,5 @@
-name: nyang-cat
+name: nyang-characters
+main: nyang-cat
 logs:
   file: build/rive.log
   problems: build/problems.log
