@@ -142,7 +142,9 @@ test("홈의 선택지는 캐릭터(장식) + 텍스트 라벨의 링크이고, 
   // 캐릭터 SVG 응답을 모은다. 404 등으로 깨지면 여기서 잡힌다
   const characterResponses: string[] = [];
   page.on("response", (response) => {
-    if (new URL(response.url()).pathname.startsWith("/characters/")) {
+    // 정지 SVG만 본다(같은 폴더의 .riv는 Rive 교체용이고 home-rive.spec.ts가 본다)
+    const { pathname } = new URL(response.url());
+    if (pathname.startsWith("/characters/") && pathname.endsWith(".svg")) {
       characterResponses.push(`${response.status()} ${new URL(response.url()).pathname}`);
     }
   });
