@@ -1,24 +1,24 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
   <g id="dog" transform="translate(60 112)">
-    <g id="tail" transform="translate(-23 -43) rotate(20)">
+    <g id="tail" transform="translate(-24 -42) rotate(20)">
       <path id="tail-shape" d="M3 -2C-1 -2.5 -4.25 -4.25 -6.75 -7C-9.25 -9.75 -11 -13.5 -12 -18C-13 -22 -9 -24 -7 -20C-6 -16.5 -4.5 -13.75 -2.62 -11.62C-0.75 -9.5 1.5 -8 4 -7Z" fill="#D9C8B2" stroke="#111111" stroke-width="1.8" stroke-linejoin="round"></path>
     </g>
     <g id="leg-front-far" transform="translate(12 -12)">
-      <path id="leg-front-far-shaft" d="M-2.5 0A2.5 2.5 0 0 1 2.5 0A2.5 2.5 0 0 1 -2.5 0ZM-1.5 0L1.5 0L5 7L1 7Z" fill="#F7F3EE"></path>
-      <path id="leg-front-far-paw" d="M0 12C0 8.04 3.78 6 9 6C14.22 6 18 8.04 18 12Z" fill="#D9C8B2" stroke="#111111" stroke-width="1.8" stroke-linejoin="round"></path>
+      <path id="leg-front-far-shaft" d="M-2.5 0A2.5 2.5 0 0 1 2.5 0A2.5 2.5 0 0 1 -2.5 0ZM-1.5 0L1.5 0L5 8L1 8Z" fill="#F7F3EE"></path>
+      <path id="leg-front-far-paw" d="M0 12C0 8.04 2.7 6 9 6C15.3 6 18 8.04 18 12Z" fill="#D9C8B2" stroke="#111111" stroke-width="1.8" stroke-linejoin="round"></path>
     </g>
     <g id="body">
-      <path id="body-shape" d="M-15 0C-16.83 -0.83 -23.17 -0.33 -26 -5C-28.83 -9.67 -32.67 -21.17 -32 -28C-31.33 -34.83 -27.33 -45.5 -22 -46C-16.67 -46.5 -6.83 -36.83 0 -31C6.83 -25.17 20.83 -13.17 19 -11C17.17 -8.83 -6 -16.83 -11 -18Z" fill="#D9C8B2" stroke="#111111" stroke-width="1.8" stroke-linejoin="round"></path>
-      <path id="belly" d="M12 -22C13.67 -21.67 18 -16 19 -14C20 -12 19.17 -10.67 18 -10C16.83 -9.33 13.5 -9 12 -10C10.5 -11 9 -14 9 -16C9 -18 10.33 -22.33 12 -22Z" fill="#F7F3EE"></path>
+      <path id="body-shape" d="M-20 -15C-25 -16 -30 -21 -31 -28C-33 -39 -25 -48 -6 -36C2 -31 8 -27 13 -23C18 -21 22 -15 21 -10C20.5 -7.5 18.5 -5.5 16 -5C13.5 -4.5 10.5 -4.8 8 -5Z" fill="#D9C8B2" stroke="#111111" stroke-width="1.8" stroke-linejoin="round"></path>
+      <path id="belly" d="M13 -21C17 -21 20 -18 20 -14C20 -12.5 19.8 -10.8 19 -9.5C18 -8 16 -6.8 14 -6.5C12 -8 11 -11 11 -14C11 -17 11.5 -21 13 -21Z" fill="#F7F3EE"></path>
     </g>
-    <g id="leg-hind-near" transform="translate(-21 -32)">
-      <path id="leg-hind-near-shaft" d="M-2.5 0A2.5 2.5 0 0 1 2.5 0A2.5 2.5 0 0 1 -2.5 0ZM-1.5 0L1.5 0L4 27L1 27Z" fill="#D9C8B2"></path>
-      <path id="haunch-line" d="M10 13C8 4 4 -6 -4 -8" fill="none" stroke="#111111" stroke-width="1.8" stroke-linecap="round"></path>
-      <path id="leg-hind-near-paw" d="M2.5 31C2.5 29.67 2.5 28.33 2.5 27C2.5 28.33 2.5 29.67 2.5 31Z" fill="#D9C8B2" stroke="#111111" stroke-width="1.8" stroke-linejoin="round"></path>
+    <g id="leg-hind-near" transform="translate(-24 -24)">
+      <path id="leg-hind-near-shaft" d="M-2.5 0A2.5 2.5 0 0 1 2.5 0A2.5 2.5 0 0 1 -2.5 0ZM-1.5 0L1.5 0L7 21L0 21Z" fill="#D9C8B2"></path>
+      <path id="haunch-line" d="M9 24C12 8 2 -6 -7 -3" fill="none" stroke="#111111" stroke-width="1.8" stroke-linecap="round"></path>
+      <path id="leg-hind-near-paw" d="M9 24C12 8 2 -6 -7 -3C-9 10 -3 20 -1 24Z" fill="#D9C8B2" stroke="#111111" stroke-width="1.8" stroke-linejoin="round"></path>
     </g>
     <g id="leg-front-near" transform="translate(12 -12)">
-      <path id="leg-front-near-shaft" d="M-2.5 0A2.5 2.5 0 0 1 2.5 0A2.5 2.5 0 0 1 -2.5 0ZM-1.5 0L1.5 0L8 7L4 7Z" fill="#F7F3EE"></path>
-      <path id="leg-front-near-paw" d="M4 12C4 8.04 7.78 6 13 6C18.22 6 22 8.04 22 12Z" fill="#D9C8B2" stroke="#111111" stroke-width="1.8" stroke-linejoin="round"></path>
+      <path id="leg-front-near-shaft" d="M-2.5 0A2.5 2.5 0 0 1 2.5 0A2.5 2.5 0 0 1 -2.5 0ZM-1.5 0L1.5 0L8 8L4 8Z" fill="#F7F3EE"></path>
+      <path id="leg-front-near-paw" d="M4 12C4 8.04 6.7 6 13 6C19.3 6 22 8.04 22 12Z" fill="#D9C8B2" stroke="#111111" stroke-width="1.8" stroke-linejoin="round"></path>
     </g>
     <g id="head" transform="translate(16 -8) rotate(-12)">
       <g id="ear-right" transform="translate(6 -41)">
