@@ -5,7 +5,7 @@
       그리기 순서는 원본의 반대로 적었다(RML은 앞에 쓴 형제가 위에 그려진다).
       경로는 SVG path를 정점으로 옮긴 것이다(2차 곡선은 3차로, 타원 호는 Ellipse로).
     -->
-    <Artboard defaultStateMachineId="0:7" styleId="0:5" width="120" height="120" name="nyang-cat" id="0:2">
+    <Artboard viewModelId="0:50" viewModelInstanceId="0:51" defaultStateMachineId="0:7" styleId="0:5" width="120" height="120" name="nyang-cat" id="0:2">
         <LayoutComponentStyle name="Artboard Style" id="0:5"/>
 
         <Node x="60" y="112" name="cat" id="0:100">
@@ -353,8 +353,7 @@
         </Node>
 
         <StateMachine name="State Machine 1" id="0:7">
-            <!-- 입력은 트리거 press 하나. 앱(홈 카드 누름)이 발동한다 -->
-            <StateMachineTrigger name="press" id="0:40"/>
+            <!-- 앱이 보내는 신호는 뷰 모델 트리거 press 하나다(아래 ViewModel "Character"). 상태 머신 입력은 쓰지 않는다(폐기 예정) -->
             <StateMachineLayer name="Layer 1" id="0:8">
                 <AnyState x="200" y="-120"/>
                 <ExitState x="400" y="-120"/>
@@ -363,7 +362,14 @@
                 </EntryState>
                 <AnimationState x="200" y="0" animationId="0:6" id="0:12">
                     <StateTransition stateToId="0:13">
-                        <TransitionTriggerCondition inputId="0:40"/>
+                        <TransitionViewModelCondition>
+                            <TransitionPropertyViewModelComparator>
+                                <BindablePropertyTrigger>
+                                    <DataBindContext sourcePathIds="0:50-0:52" propertyKey="686"/>
+                                </BindablePropertyTrigger>
+                            </TransitionPropertyViewModelComparator>
+                            <TransitionValueTriggerComparator/>
+                        </TransitionViewModelCondition>
                     </StateTransition>
                 </AnimationState>
                 <AnimationState x="400" y="0" animationId="0:9" reset="true" id="0:13">
@@ -505,4 +511,12 @@
             </KeyedObject>
         </LinearAnimation>
     </Artboard>
+
+    <!-- 앱 → 캐릭터 신호. 웹 런타임: new Rive({ autoBind: true, ... }) 후 rive.viewModelInstance.trigger("press").trigger() -->
+    <ViewModel defaultInstanceId="0:51" name="Character" id="0:50">
+        <ViewModelPropertyTrigger name="press" id="0:52"/>
+        <ViewModelInstance exports="true" name="Default" id="0:51">
+            <ViewModelInstanceTrigger viewModelPropertyId="0:52"/>
+        </ViewModelInstance>
+    </ViewModel>
 </Rive>
