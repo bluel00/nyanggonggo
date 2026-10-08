@@ -470,18 +470,15 @@ PRD v1.1이 공식화한 항목(2026-10-02). 구현은 v1.1을 따르므로 불�
       - 상세 첫 사진은 목록에서 같은 사진을 이미 받아(브라우저 캐시) 전후 모두 빠르다. `fetchpriority`의 효과는 이 측정으로는 따로 가르지 못했다.
       - 서울 고양이 #1은 API·사진이 MISS였지만 서버 페이지 캐시(`unstable_cache`, 300초)가 따뜻했을 수 있다. 새 목록 두 개(강원 고양이, 전남광주 강아지)는 이번에 처음 요청했다.
 
-47. Rive CLI 실험: 고양이 캐릭터(햅격이) 애니메이션(2026-10-08, 앱 코드 변경 없음, 미결). 원본은 `rive/nyang-cat/scene.rml`(빌드 `rive rive/nyang-cat --once` → `build/nyang-cat.riv`, 커밋하지 않음).
-    - 도구: Rive CLI 1.5.0(기술 미리보기, `~/.rive/bin/rive.exe`, 이 PC의 셸 PATH에는 없다). `rive doctor`는 로그인 안 함 경고 하나(`--publish`/`--rev`만 영향)뿐이다. 계정 없이 `--verify`, `--once`, `--screenshot`이 모두 로컬에서 됐다.
-    - **SVG 가져오기는 없다.** `rive docs assets`가 SVG는 편집기에서 가져올 때만 Rive 도형으로 바뀌고 "이 도구에는 그 경로가 없다"고 적는다. 그래서 SVG path를 `PointsPath` 정점(`StraightVertex`, `CubicDetachedVertex`의 in/out 핸들 각도·거리)으로 옮기는 일회성 변환기를 써서 넣었다(2차 곡선은 3차로, 이 파일의 타원 호는 `Ellipse`로, 감김 방향은 정점 순서로 계산).
-    - 옮기면서 생긴 문제와 처리: RML은 **앞에 쓴 형제가 위에 그려진다**(SVG의 반대)라 순서를 뒤집었다. 회전은 라디안이고 `LinearAnimation.duration`은 프레임(60fps), `StateTransition.duration`은 ms다. 머리 갸웃 6°는 0.10472. 헤드리스 스크린샷은 투명 아트보드 뒤를 어두운 색으로 칠해서 비교용으로만 흰 배경을 넣은 복사본을 따로 렌더했다(원본 RML은 투명).
-    - 결과: 120×120, 그룹 이름(cat, tail, body, head, ear-left, ear-right, eyes-open, eyes-closed, eyes-happy, bow)과 기준점(characters.md 표)이 SVG와 같다. 480px로 렌더해 원본 SVG와 비교하면 픽셀당 평균 차이 1.06/765, 크게 다른 픽셀 0.16%(가장자리 안티에일리어싱)로 모양·색·선 굵기 차이를 찾지 못했다. `.riv`는 **6,356바이트**(SVG 원본 4,774바이트).
-    - 애니메이션: idle(5초 반복: 3초에 깜빡임 1회 — eyes-open 세로로 접힘 → eyes-closed → 되돌림, body 1.5% 숨쉬기, 1~2초에 리본 살랑), press(21프레임: 100ms 동안 eyes-happy·머리 6°·cat 바닥 기준 납작, 250ms ease-out 복귀). 스테이트 머신은 트리거 입력 `press` 하나로 idle → press → (exit time 100%) idle. 두 애니메이션은 서로가 건드리는 속성을 모두 키로 둬서 전환 때 모양이 남지 않게 했다. Luau 스크립트 없음.
-    - 웹 런타임 확인(저장소 밖 임시 페이지, `@rive-app/webgl2` 2.44.0, 공식 문서의 기본 권장 패키지): `--once`로 만든 **서명 없는 .riv도 Rive 로고·스플래시·워터마크 없이** 바로 그려졌다(로드 0.28초, 50ms 프레임은 빈 캔버스, 150ms부터 캐릭터). `press`를 발동하면 상태가 idle → press → idle(약 370ms)로 바뀌고 프레임에서도 반응이 보였다. 콘솔 오류 없음.
-    - 남은 불확실성:
-      - **상태 머신 입력(`StateMachineTrigger`)은 폐기 예정**이다. `rive docs state-machines`와 웹 런타임 경고 모두 뷰 모델 트리거(데이터 바인딩)로 옮기라고 한다. 이번에는 지시대로 입력 `press`를 썼다. 앱에 넣을 때 뷰 모델 트리거로 바꿀지 정해야 한다.
-      - 생성된 AGENTS.md는 "웹 런타임으로 미리보지 말라(로컬 빌드의 서명 없는 스크립트를 거부한다)"고 한다. 스크립트가 없는 이 파일은 문제가 없었지만, 스크립트를 넣으면 `--publish`(로그인) 빌드가 필요하다.
-      - 앱에 넣을 런타임 패키지: `webgl2`는 WebGL 컨텍스트 한도, `canvas-lite`는 크기가 작지만 텍스트·레이아웃·오디오·스크립트 엔진이 빠진다(이 아트보드에는 레이아웃 스타일이 있다). 번들 크기와 렌더 결과를 비교해 고른다. reduced-motion(characters.md: 모든 동작 정지)은 앱 쪽에서 처리해야 한다.
-      - 강아지 캐릭터, Rive 편집기로 가져왔을 때 그룹·기준점·opacity 0 그룹이 유지되는지(characters.md의 미확인 항목)는 보지 않았다. 사람의 눈으로 본 움직임의 자연스러움(속도, 크기)은 프레임 스크린샷으로만 확인했다.
+47. Rive 캐릭터(고양이·강아지) 애니메이션(2026-10-08, 앱 코드 변경 없음, 앱 적용은 미결). 원본은 `rive/nyang-characters/scene.rml`(아트보드 `nyang-cat`, `nyang-dog`), 빌드는 `rive rive/nyang-characters --once` → `build/nyang-characters.riv`(커밋하지 않음). 동작 기준은 `docs/design/characters.md` 모션 절(greet·idle·sleep·press).
+    - **버전 고정**: Rive CLI **1.5.0**(기술 미리보기, `~/.rive/bin/rive.exe`, 이 PC의 셸 PATH에는 없다), 웹 런타임 **`@rive-app/webgl2` 2.44.0**(공식 문서의 기본 권장 패키지). 계정 없이 `--verify`·`--once`·`--screenshot`이 모두 로컬에서 된다. **규칙: 둘 중 하나를 올리면, 로그인 없이 만든(서명 없는) `.riv`를 웹 런타임에 띄워 시작 전·재생 중에 Rive 로고 화면·워터마크가 생기지 않는지 먼저 확인하고 이 줄의 버전을 바꾼다.** 지금의 "로고 없음"은 위 두 버전 기준이다.
+    - **도형**: Rive CLI에는 SVG 가져오기가 없어(`rive docs assets`) `scripts/svg-to-rml.mjs`가 SVG path를 정점으로 옮긴다(사용법·한계는 파일 머리말). `--replace`가 scene.rml의 `svg-to-rml:begin/end` 표시 사이만 바꿔 애니메이션은 손으로 쓴 그대로 둔다. 고양이에 다시 돌려 커밋된 도형과 줄 단위로 같음을 확인했다. RML은 **먼저 쓴 형제가 위에 그려져**(SVG의 반대) 순서를 뒤집고, 회전은 라디안, `LinearAnimation.duration`은 프레임(60fps), `StateTransition.duration`은 ms다. 480px 렌더를 원본 SVG와 비교하면 크게 다른 픽셀이 고양이 0.16%, 강아지 0.17%(가장자리 안티에일리어싱)로 모양·색·선 굵기 차이를 찾지 못했다.
+    - **한 프로젝트, 아트보드 둘**: 홈은 두 캐릭터를 늘 같이 보이므로 `.riv` 하나를 받아 아트보드만 골라 쓴다(요청·캐시·버전이 하나, 박자 엇갈림을 한 파일에서 맞춘다). `.riv`는 **11,273바이트**(고양이만 있던 1차 6,356바이트, 동작을 더한 고양이만 7,230바이트).
+    - **press 신호는 뷰 모델 트리거**: 뷰 모델 `Character`의 트리거 `press` 하나(두 아트보드가 같은 정의를 쓴다). 상태 머신 입력(`StateMachineTrigger`)은 `rive docs`와 웹 런타임 모두 폐기 예정이라 바꿨다. 웹 런타임은 `new Rive({ artboard, stateMachine: "State Machine 1", autoBind: true })` 후 `rive.viewModelInstance.trigger("press").trigger()`(공식 문서 runtimes/web/data-binding). 이렇게 하면 콘솔에 폐기 경고가 없다. CLI 캡처는 `--data=press=1`로 발동한다. Rive 안에서 클릭을 받는 리스너는 두지 않는다(앱의 카드 누름과 두 번 반응하지 않게). 그래서 **CLI 미리보기 창에서 캐릭터를 눌러도 반응이 없다**(미리보기에는 입력·뷰 모델을 보내는 장치가 없고 포인터는 씬 안의 리스너에만 간다). 직접 눌러 보는 것은 저장소 밖 확인용 페이지(`C:side
+yanggonggo-reviewive-check`, press 버튼)로 한다.
+    - **상태 머신**(아트보드마다): Entry → `greet` → (끝나면) `idle`, AnyState → `press`(트리거) → (끝나면) `idle`. 상태에 `stateName`이 있다. `sleep`은 엎드린 포즈 그림이 없어 넣지 않았고, idle에서 나가는 전환으로 붙일 자리를 주석으로 남겼다(그림 대기). 애니메이션마다 움직이는 속성을 모두 키로 둬서 상태가 바뀔 때 모양이 남지 않는다.
+    - **동작**: greet(약 0.75초) 웅크림 → 10px 폴짝 → 공중에서 좌우로 돌아서는 한 바퀴(scaleX 1 → -1 → 1) → 착지 눌림. 평면 360° 회전은 120px 안에서 머리·꼬리가 잘려 쓰지 않았다(모든 프레임이 가장자리에 닿지 않음, 위 여백 최소 고양이 11.5px·강아지 17.5px). 귀는 고양이 쫑긋, 강아지 펄럭. idle은 4~6초에 한 번 깜빡임, 숨쉬기 1.5%, 꼬리 살랑(작고 느리게, 계속), 고양이 리본 가끔. press는 15프레임(250ms): 100ms 동안 웃는 눈·머리 6° 갸웃·바닥 기준 납작, 150ms 복귀(앱은 이동을 늦추지 않는다). 박자 엇갈림: 강아지 greet는 20프레임(약 0.33초) 늦게 시작하고, idle 주기(고양이 5초, 강아지 5.5초)와 깜빡임 시점이 다르다.
+    - 남은 불확실성: 앱에 넣을 런타임 패키지(`webgl2`는 WebGL 컨텍스트 한도, `canvas-lite`는 레이아웃 엔진이 빠지는데 아트보드에 레이아웃 스타일이 있다)와 번들 크기, reduced-motion(앱에서 기본 포즈로 정지), sleep 그림, Rive 편집기로 가져왔을 때 그룹·기준점·opacity 0 그룹이 유지되는지, 사람이 보는 움직임의 자연스러움(속도·크기는 프레임 캡처와 확인용 페이지로만 봤다).
 ## 13. 다음 버전 계획 (기록만, 설계 전)
 
 아직 코드 작업을 하지 않은 항목이다. 다음 기능 작업에서 착수한다.
