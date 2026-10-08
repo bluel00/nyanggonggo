@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <g id="dog" transform="translate(60 112)">
+    <g id="body">
+      <path id="body-shape" d="M-26 0C-30 0 -32 -6 -30 -14C-27 -28 -20 -40 0 -40C20 -40 27 -28 30 -14C32 -6 30 0 26 0Z" fill="#D9C8B2" stroke="#111111" stroke-width="1.8" stroke-linejoin="round"></path>
+    </g>
+    <g id="leg-hind-right" transform="translate(-17 -12)">
+      <path id="leg-hind-right-paw" d="M-3 11V7" fill="none" stroke="#111111" stroke-width="1.8" stroke-linecap="round"></path>
+    </g>
+    <g id="leg-hind-left" transform="translate(17 -12)">
+      <path id="leg-hind-left-paw" d="M3 11V7" fill="none" stroke="#111111" stroke-width="1.8" stroke-linecap="round"></path>
+    </g>
+    <g id="tail" transform="translate(0 -6)">
+      <path id="tail-shape" d="M-3 0C-4 -8 -3 -16 0 -22C2 -25 5 -25 5.5 -22.5C6 -20.5 4 -20 3.5 -18C2.5 -12 2.5 -6 3 0Z" fill="#D9C8B2" stroke="#111111" stroke-width="1.8" stroke-linejoin="round"></path>
+    </g>
+    <g id="head" transform="translate(0 -38)">
+      <path id="head-shape" d="M-25 -21C-25 -35 -14 -43 0 -43C14 -43 25 -35 25 -21C25 -8 14 -2 0 -2C-14 -2 -25 -8 -25 -21Z" fill="#D9C8B2" stroke="#111111" stroke-width="1.8" stroke-linejoin="round"></path>
+      <g id="ear-right" transform="translate(-20 -36)">
+        <path id="ear-right-shape" d="M3 -3C-5 -5 -12 1 -12 11C-12 19 -8 23 -4 21C0 19 4 10 4 2Z" fill="#A68F76" stroke="#111111" stroke-width="1.8" stroke-linejoin="round"></path>
+      </g>
+      <g id="ear-left" transform="translate(20 -36)">
+        <path id="ear-left-shape" d="M-3 -3C5 -5 12 1 12 11C12 19 8 23 4 21C0 19 -4 10 -4 2Z" fill="#A68F76" stroke="#111111" stroke-width="1.8" stroke-linejoin="round"></path>
+      </g>
+    </g>
+  </g>
+</svg>
