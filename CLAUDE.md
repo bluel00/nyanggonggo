@@ -5,12 +5,13 @@
 ## 진실의 원천 (충돌 시 우선순위)
 
 1. `docs/architecture.md`
-2. `docs/PRD-v1.2.md` (PRD v1.1의 변경분: 캐릭터 모션)
-3. `docs/PRD-v1.1.md` (PRD v1.0의 변경분: 기타 축종, 홈 화면, 축종 기억)
-4. `docs/기능명세서.md`, `docs/PRD.md`
-5. `docs/design/handoff.md`, `docs/design/README.md`, `docs/design/tokens.*`
+2. `docs/PRD-v1.3.md` (PRD v1.2의 변경분: 상세 사진 비율)
+3. `docs/PRD-v1.2.md` (PRD v1.1의 변경분: 캐릭터 모션)
+4. `docs/PRD-v1.1.md` (PRD v1.0의 변경분: 기타 축종, 홈 화면, 축종 기억)
+5. `docs/기능명세서.md`, `docs/PRD.md`
+6. `docs/design/handoff.md`, `docs/design/README.md`, `docs/design/tokens.*`
 
-즉 `architecture.md` > `PRD-v1.2.md` > `PRD-v1.1.md` > `PRD.md`·`기능명세서.md`다. `PRD-v1.1.md`는 v1.0에서, `PRD-v1.2.md`는 v1.1에서 **바뀌는 부분만** 적은 문서이고, 적히지 않은 것은 앞 버전이 그대로 유효하다.
+즉 `architecture.md` > `PRD-v1.3.md` > `PRD-v1.2.md` > `PRD-v1.1.md` > `PRD.md`·`기능명세서.md`다. `PRD-v1.1.md`는 v1.0에서, `PRD-v1.2.md`는 v1.1에서, `PRD-v1.3.md`는 v1.2에서 **바뀌는 부분만** 적은 문서이고, 적히지 않은 것은 앞 버전이 그대로 유효하다.
 
 문서에 없거나 서로 충돌하면 **추측하지 말고** 멈춰서 질문하거나 보고에 적는다. 미확정 항목은 `docs/architecture.md` 12절에 추가한다.
 
