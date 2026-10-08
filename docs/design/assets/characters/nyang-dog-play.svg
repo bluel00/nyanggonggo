@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <g id="dog" transform="translate(60 112)">
+    <g id="tail" transform="translate(-23 -43) rotate(20)">
+      <path id="tail-shape" d="M3 -2C-1 -2.5 -4.25 -4.25 -6.75 -7C-9.25 -9.75 -11 -13.5 -12 -18C-13 -22 -9 -24 -7 -20C-6 -16.5 -4.5 -13.75 -2.62 -11.62C-0.75 -9.5 1.5 -8 4 -7Z" fill="#D9C8B2" stroke="#111111" stroke-width="1.8" stroke-linejoin="round"></path>
+    </g>
+    <g id="leg-front-far" transform="translate(12 -12)">
+      <path id="leg-front-far-shaft" d="M-2.5 0A2.5 2.5 0 0 1 2.5 0A2.5 2.5 0 0 1 -2.5 0ZM-1.5 0L1.5 0L5 7L1 7Z" fill="#F7F3EE"></path>
+      <path id="leg-front-far-paw" d="M0 12C0 8.04 3.78 6 9 6C14.22 6 18 8.04 18 12Z" fill="#D9C8B2" stroke="#111111" stroke-width="1.8" stroke-linejoin="round"></path>
+    </g>
+    <g id="body">
+      <path id="body-shape" d="M-15 0C-16.83 -0.83 -23.17 -0.33 -26 -5C-28.83 -9.67 -32.67 -21.17 -32 -28C-31.33 -34.83 -27.33 -45.5 -22 -46C-16.67 -46.5 -6.83 -36.83 0 -31C6.83 -25.17 20.83 -13.17 19 -11C17.17 -8.83 -6 -16.83 -11 -18Z" fill="#D9C8B2" stroke="#111111" stroke-width="1.8" stroke-linejoin="round"></path>
+      <path id="belly" d="M12 -22C13.67 -21.67 18 -16 19 -14C20 -12 19.17 -10.67 18 -10C16.83 -9.33 13.5 -9 12 -10C10.5 -11 9 -14 9 -16C9 -18 10.33 -22.33 12 -22Z" fill="#F7F3EE"></path>
+    </g>
+    <g id="leg-hind-near" transform="translate(-21 -32)">
+      <path id="leg-hind-near-shaft" d="M-2.5 0A2.5 2.5 0 0 1 2.5 0A2.5 2.5 0 0 1 -2.5 0ZM-1.5 0L1.5 0L4 27L1 27Z" fill="#D9C8B2"></path>
+      <path id="haunch-line" d="M10 13C8 4 4 -6 -4 -8" fill="none" stroke="#111111" stroke-width="1.8" stroke-linecap="round"></path>
+      <path id="leg-hind-near-paw" d="M2.5 31C2.5 29.67 2.5 28.33 2.5 27C2.5 28.33 2.5 29.67 2.5 31Z" fill="#D9C8B2" stroke="#111111" stroke-width="1.8" stroke-linejoin="round"></path>
+    </g>
+    <g id="leg-front-near" transform="translate(12 -12)">
+      <path id="leg-front-near-shaft" d="M-2.5 0A2.5 2.5 0 0 1 2.5 0A2.5 2.5 0 0 1 -2.5 0ZM-1.5 0L1.5 0L8 7L4 7Z" fill="#F7F3EE"></path>
+      <path id="leg-front-near-paw" d="M4 12C4 8.04 7.78 6 13 6C18.22 6 22 8.04 22 12Z" fill="#D9C8B2" stroke="#111111" stroke-width="1.8" stroke-linejoin="round"></path>
+    </g>
+    <g id="head" transform="translate(16 -8) rotate(-12)">
+      <g id="ear-right" transform="translate(6 -41)">
+        <path id="ear-right-shape" d="M-4 1C-2 -3 4 -4 7 0C5 2 0 2.5 -4 1Z" fill="#A68F76" stroke="#111111" stroke-width="1.8" stroke-linejoin="round"></path>
+      </g>
+      <path id="head-shape" d="M-19 -21C-19 -35 -9 -43 2 -43C13 -43 19 -36 20 -27C25 -26 30 -23 31 -17C32 -11 28 -6 21 -5C14 -2 4 -2 -3 -3C-13 -5 -19 -11 -19 -21Z" fill="#D9C8B2" stroke="#111111" stroke-width="1.8" stroke-linejoin="round"></path>
+      <path id="muzzle" d="M18 -19C24 -22 30 -20 31 -16C31 -10 27 -6 21 -5C16 -6 14 -15 18 -19Z" fill="#F7F3EE"></path>
+      <path id="cheeks" d="M5 -12a3.2 2 0 1 0 6.4 0a3.2 2 0 1 0 -6.4 0Z" fill="#EBD7CA"></path>
+      <g id="ear-left" transform="translate(-1 -36) rotate(-18)">
+        <path id="ear-left-shape" d="M3 -3C-3 -5 -8 1 -8 11C-8 19 -5 23 -1 21C3 19 6 10 5 2Z" fill="#A68F76" stroke="#111111" stroke-width="1.8" stroke-linejoin="round"></path>
+      </g>
+      <g id="eyes-open" transform="translate(11 -27)">
+        <path d="M-2.2 0a2.2 3 0 1 0 4.4 0a2.2 3 0 1 0 -4.4 0Z" fill="#111111"></path>
+      </g>
+      <g id="eyes-closed" transform="translate(11 -27)" opacity="0">
+        <path d="M-3 -0.5Q0 2.5 3 -0.5" fill="none" stroke="#111111" stroke-width="1.8" stroke-linecap="round"></path>
+      </g>
+      <g id="eyes-happy" transform="translate(11 -27)" opacity="0">
+        <path d="M-3 1Q0 -2.5 3 1" fill="none" stroke="#111111" stroke-width="1.8" stroke-linecap="round"></path>
+      </g>
+      <path id="nose" d="M28 -21.4C30.2 -22 32.4 -20.6 32 -18.4C31.6 -16.6 29.4 -16.4 28.3 -17.6C27.4 -18.7 27.2 -21 28 -21.4Z" fill="#111111"></path>
+      <path id="mouth" d="M30.4 -16.6Q29 -8.5 21.5 -10.5" fill="none" stroke="#111111" stroke-width="1.8" stroke-linecap="round"></path>
+    </g>
+  </g>
+</svg>
