@@ -13,9 +13,12 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "rive:build": "node scripts/rive-build.mjs riv",
+    "rive:wasm": "node scripts/rive-build.mjs wasm"
   },
   "dependencies": {
+    "@rive-app/canvas-lite": "2.44.0",
     "@tanstack/react-query": "^5.103.2",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.3.2",
