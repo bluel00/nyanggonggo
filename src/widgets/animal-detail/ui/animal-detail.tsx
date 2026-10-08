@@ -18,6 +18,7 @@ import { cn } from "@/shared/lib/utils";
 import { scrollAppToTop } from "@/shared/ui/app-column";
 import { BackButton, useGoBack } from "@/shared/ui/back-button";
 import { Button } from "@/shared/ui/button";
+import { photoBoxRatio, type PhotoSize } from "../model/photo-box";
 import { AnimalDetailSkeleton } from "./animal-detail-skeleton";
 import { ImageCarousel } from "./image-carousel";
 import { ImageViewer } from "./image-viewer";
@@ -33,9 +34,11 @@ const STATUS_TEXT = {
  * - 제목: Domain에 이름이 없어 카드 1줄과 같은 규칙(지역)
  * - 상태 + D-day: StatusBadge(상태만) 옆에 D-day를 title 크기로 강조. 종료이거나 dDay가 없으면(만료된 보호중) D-day 없음
  * - 하단 CTA: 스크롤 컨테이너 안 sticky bottom-0(fixed 아님). data-slot="bottom-cta"로 토스트를 CTA 위로 올린다
+ * - 사진 칸: 서버가 읽은 첫 사진 크기(firstPhotoSize)의 비율을 3:4~4:3으로 제한. 모르면 1:1(PRD v1.3)
  */
-export function AnimalDetail({ id }: { id: string }) {
+export function AnimalDetail({ id, firstPhotoSize = null }: { id: string; firstPhotoSize?: PhotoSize | null }) {
   const query = useAnimal(id);
+  const boxRatio = photoBoxRatio(firstPhotoSize);
   const [now] = useState(() => new Date());
   // 메인 사진의 현재 위치. 뷰어를 닫으면 뷰어의 마지막 위치로 맞춘다
   const [photoIndex, setPhotoIndex] = useState(0);
@@ -48,7 +51,7 @@ export function AnimalDetail({ id }: { id: string }) {
   useEffect(() => scrollAppToTop(), [id]);
 
   // 라우트 로딩 경계(loading.tsx)와 같은 뼈대라 둘 사이에서 화면이 바뀌지 않는다
-  if (query.isPending) return <AnimalDetailSkeleton />;
+  if (query.isPending) return <AnimalDetailSkeleton photoRatio={boxRatio} />;
 
   if (query.isError) {
     return (
@@ -83,6 +86,7 @@ export function AnimalDetail({ id }: { id: string }) {
       <div className="relative">
         <ImageCarousel
           images={animal.images}
+          boxRatio={boxRatio}
           alt={alt}
           ended={ended}
           index={photoIndex}

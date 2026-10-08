@@ -16,20 +16,20 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   /*
-   * 대부분은 개발 서버에서 돈다. 상세 로딩 경계(detail-loading)와 홈 캐릭터 Rive(home-rive)는 production 서버에서 돈다:
+   * 대부분은 개발 서버에서 돈다. 상세 로딩 경계(detail-loading), 상세 사진(detail-photo), 홈 캐릭터 Rive(home-rive)는 production 서버에서 돈다:
    * Next는 production에서만 링크를 prefetch하고, 카드를 누른 즉시 로딩 뼈대가 보이는 것은 그 prefetch 덕분이다.
    * 개발 서버(.next/dev)와 production 빌드(.next)는 출력 폴더가 달라 함께 띄울 수 있다.
    */
   projects: [
     {
       name: "dev",
-      testIgnore: /(detail-loading|home-rive)\.spec\.ts/,
+      testIgnore: /(detail-loading|detail-photo|home-rive)\.spec\.ts/,
       // 브라우저는 localhost로 연다(개발 서버가 127.0.0.1을 다른 오리진으로 보고 dev 리소스를 막는다)
       use: { baseURL: "http://localhost:3000" },
     },
     {
       name: "production",
-      testMatch: /(detail-loading|home-rive)\.spec\.ts/,
+      testMatch: /(detail-loading|detail-photo|home-rive)\.spec\.ts/,
       use: { baseURL: "http://localhost:3100" },
     },
   ],

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
+import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ImageCarousel } from "./image-carousel";
 
@@ -9,11 +10,11 @@ afterEach(cleanup);
 const img = (n: number) => `http://openapi.animal.go.kr/openapi/files/${n}.jpg`;
 
 /** 부모처럼 index를 들고 있는 래퍼 */
-function Harness({ images, onOpen = () => {} }: { images: string[]; onOpen?: (i: number) => void }) {
+function Harness({ images, boxRatio = 1, onOpen = () => {} }: { images: string[]; boxRatio?: number; onOpen?: (i: number) => void }) {
   const [index, setIndex] = useState(0);
   return (
     <>
-      <ImageCarousel images={images} alt="고양이 사진" ended={false} index={index} onIndexChange={setIndex} onOpen={onOpen} />
+      <ImageCarousel images={images} boxRatio={boxRatio} alt="고양이 사진" ended={false} index={index} onIndexChange={setIndex} onOpen={onOpen} />
       <output data-testid="index">{index}</output>
     </>
   );
@@ -54,6 +55,24 @@ describe("ImageCarousel", () => {
     }
   });
 
+  it("모든 슬라이드가 같은 칸 비율이고 사진은 잘리지 않게 contain, 빈 곳은 bg다(object-position 없음, PRD v1.3)", () => {
+    const { container } = render(<Harness images={[img(1), img(2)]} boxRatio={4 / 3} />);
+    const slides = [...container.querySelectorAll<HTMLElement>('[data-slot="image-carousel"] button')];
+    for (const slide of slides) expect(slide.className).toContain("bg-bg");
+    for (const image of container.querySelectorAll("img")) {
+      expect(image.className).toContain("object-contain");
+      expect(image.className).not.toContain("object-cover");
+      expect(image.className).not.toContain("object-[");
+    }
+  });
+
+  it("칸 비율은 서버가 그린 HTML에 이미 들어 있다(사진이 로드되며 화면이 밀리지 않게)", () => {
+    const html = renderToString(
+      <ImageCarousel images={[img(1), img(2)]} boxRatio={4 / 3} alt="a" ended={false} index={0} onIndexChange={() => {}} onOpen={() => {}} />,
+    );
+    expect(html.match(/aspect-ratio:[\d.]+/g)).toEqual([`aspect-ratio:${4 / 3}`, `aspect-ratio:${4 / 3}`]);
+  });
+
   it("1장이면 도트 없이 정적", () => {
     const { container } = render(<Harness images={[img(1)]} />);
     expect(container.querySelector('[data-slot="carousel-dots"]')).toBeNull();
@@ -75,12 +94,12 @@ describe("ImageCarousel", () => {
 
   it("부모가 index를 바꾸면 그 사진으로 스크롤한다", () => {
     const { container, rerender } = render(
-      <ImageCarousel images={[img(1), img(2), img(3)]} alt="a" ended={false} index={0} onIndexChange={() => {}} onOpen={() => {}} />,
+      <ImageCarousel images={[img(1), img(2), img(3)]} boxRatio={1} alt="a" ended={false} index={0} onIndexChange={() => {}} onOpen={() => {}} />,
     );
     const track = container.querySelector<HTMLElement>('[data-slot="image-carousel"]')!;
     Object.defineProperty(track, "clientWidth", { configurable: true, value: 390 });
     track.scrollTo = vi.fn();
-    rerender(<ImageCarousel images={[img(1), img(2), img(3)]} alt="a" ended={false} index={2} onIndexChange={() => {}} onOpen={() => {}} />);
+    rerender(<ImageCarousel images={[img(1), img(2), img(3)]} boxRatio={1} alt="a" ended={false} index={2} onIndexChange={() => {}} onOpen={() => {}} />);
     expect(track.scrollTo).toHaveBeenCalledWith({ left: 780 });
   });
 });

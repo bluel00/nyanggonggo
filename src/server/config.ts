@@ -48,6 +48,15 @@ export const SERVER_TUNING = {
   imageProxyWebpQuality: 75,
   /** 원본 이미지 최대 크기(바이트). 넘으면 대체 이미지 */
   imageProxyMaxBytes: 10 * 1024 * 1024,
+  /**
+   * 상세 첫 사진 크기 읽기(PRD v1.3)의 시간 초과(ms). 캐시 조회 포함. 넘으면 사진 칸을 1:1로 그린다.
+   * 상세 응답을 이만큼까지만 늦춘다(배포 환경 icn1에서 다시 재서 확정, architecture.md 12절 50)
+   */
+  imageSizeTimeoutMs: 300,
+  /** 이만큼 받아도 헤더에서 크기를 못 읽으면 포기한다(실측 헤더 위치는 앞 17KB 안) */
+  imageSizeMaxBytes: 256 * 1024,
+  /** 사진 크기 캐시(Next 데이터 캐시)의 재검증 주기(초). 사진 파일은 URL별로 바뀌지 않아 30일 */
+  imageSizeRevalidateSeconds: 30 * 24 * 60 * 60,
 } as const;
 
 const EnvSchema = z.object({
