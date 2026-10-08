@@ -213,6 +213,7 @@ interface AnimalRepository {
   - 홈에서 고르면 **축종만 기억하고** 그 축종·지역의 목록으로 간다. 지역은 넘겨받아 그대로 실어 보내기만 하고 기억하지 않는다(사용자가 홈에서 지역을 고른 것이 아니다).
   - 고양이·강아지는 큰 선택지 두 개, 기타는 그 아래 작은 텍스트 링크다(기타는 전체 공고의 2.3%라 같은 무게로 두면 빈 목록에 가깝다, 12.A P12). UI는 시안 "냥공고 홈 · 축종 선택"(Main 390, Home-PC 480, Header-A)을 따른다(2026-10-07). 고양이·강아지는 캐릭터 + 라벨의 테두리 카드이고, 시안의 button과 달리 **링크**다(고르면 목록으로 이동). 시안과 다른 점은 12절 44.
   - 캐릭터(확정, 2026-10-07): `public/characters/nyang-cat.svg`, `nyang-dog.svg`를 `entities/animal`의 `SpeciesCharacter`가 **`<img>`**로 그린다(120×120 고정, `alt=""` 장식, 의미는 텍스트 라벨). **인라인 SVG를 쓰지 않는다**: 두 SVG가 같은 그룹 id(`head`, `tail`, `body`…)를 써서 한 페이지에 인라인하면 id가 겹친다. `<img>`는 SVG를 별도 문서로 그려 겹치지 않는다. 원본은 `docs/design/assets/characters/`이고 `public/characters/`는 사본이다. 둘이 같은지는 `tests/design/characters-sync.test.ts`가 본다(디자인 동기화 때 둘 다 바꾼다). 사용 규칙은 `docs/design/characters.md`를 따르되 지금은 정지 이미지뿐이다(움직임은 Rive 단계, PRD-v1.1 5절).
+  - 캐릭터 애니메이션(확정, 2026-10-08): 홈 선택지의 캐릭터는 정지 SVG로 시작해 클라이언트에서 Rive 캔버스로 바뀐다(greet → idle, 카드를 누르면 press). 규칙은 9절 "홈 캐릭터 Rive". 정지 SVG `<img>`는 서버 렌더·첫 화면·움직임 줄이기·로드 실패 때 그대로 쓰는 기본이다.
   - 누름 피드백: 홈 카드와 헤더 진입점 모두 카드 누름(100ms, scale .98)이고 `motion-safe:`라 reduced-motion이면 줄지 않는다. iOS Safari는 요소나 조상에 touch 리스너가 있어야 `:active`를 건다. React가 `document`에 `touchstart`를 붙이므로(Chromium에서 리스너 2개 확인) 별도 처리를 하지 않았다. 실제 iOS 기기에서는 아직 확인하지 않았다(12절 44).
 
 - 마지막으로 고른 지역 기억(확정, 2026-09-29, 13절 (a)):
@@ -251,6 +252,23 @@ interface AnimalRepository {
   - 화면: 목록 카드(찜 목록 포함, 같은 `AnimalCard`)와 상세 캐러셀은 `AnimalPhoto`의 `sizes`(`PHOTO_SIZES.card` = `(min-width: 480px) 448px, calc(100vw - 32px)`, `.detail` = `(min-width: 480px) 480px, 100vw`)로 허용 폭 srcset을 쓴다. srcset을 모르는 브라우저는 828을 받는다. **풀스크린 뷰어는 원본**(`w` 없음)이다(확대해서 보는 화면). 공유 이미지(카카오)와 OG 이미지도 원본을 쓴다.
   - sharp(0.35.4, Next가 optionalDependency로 이미 쓰는 버전)는 직접 의존성이다. Vercel 함수는 Node 런타임이라 네이티브 모듈을 쓸 수 있고(Edge 런타임은 불가, https://vercel.com/docs/functions/limitations), Next는 sharp를 `serverExternalPackages` 기본 목록으로 번들에서 빼고 함수에 그대로 싣는다. linux-x64 함수 번들이 약 20MB(sharp 0.96MB + `@img/sharp-linux-x64` 0.43MB + `@img/sharp-libvips-linux-x64` 18.7MB, npm unpackedSize) 늘어난다(함수 한도 250MB). `pnpm-workspace.yaml`의 `ignoredBuiltDependencies: sharp`는 그대로 둔다(0.33부터 플랫폼별 사전 빌드 패키지라 설치 스크립트가 필요 없다).
   - **`next/image`(Vercel Image Optimization)를 쓰지 않는 이유**: Hobby는 이미지 변환이 월 5,000회 포함이고, 넘으면 새 이미지가 402 런타임 오류로 실패해 `onError`가 불리고 사진 대신 alt 텍스트가 보인다(https://vercel.com/docs/image-optimization/limits-and-pricing). 공고 사진은 매일 새로 들어오고 폭마다 변환이 따로 세어져 한도에 닿기 쉽고, 닿으면 실패 모드가 "사진이 사라짐"이다. 우리 프록시는 변환이 실패해도 원본을 내려준다.
+- 홈 캐릭터 Rive(확정, 2026-10-08, `src/entities/animal/ui/species-character.tsx`, `lib/character-animation.ts`): `docs/design/characters.md` 모션 절의 greet·idle·press를 홈 선택지 캐릭터에 입힌다. sleep은 그림이 나오면 `.riv`만 바꾼다(앱은 press 신호만 보낸다).
+  - 런타임: **`@rive-app/canvas-lite` 2.44.0**(정확히 고정, React 래퍼 없이). 후보 비교(gzip, 같은 2.44.0):
+
+    | 패키지 | JS | WASM | 비고 |
+    |---|---|---|---|
+    | `@rive-app/webgl2`(`react-webgl2` 4.36.0) | 115KB | 925KB | Rive Renderer, 공식 기본 권장. WebGL 컨텍스트 수 제한 |
+    | `@rive-app/canvas`(`react-canvas` 4.36.0) | 114KB | 821KB | 벡터 페더링 미지원 |
+    | **`@rive-app/canvas-lite`**(`react-canvas-lite` 4.36.0) | 107KB | **368KB** | 텍스트·레이아웃·오디오·스크립트 엔진 없음 |
+
+    React 래퍼는 각 6KB를 더한다. 이 파일은 텍스트·오디오·스크립트를 쓰지 않고, 세 런타임에서 같게 그려졌다(webgl2 대비 0.8% 픽셀 차이, 가장자리). 아트보드의 `LayoutComponentStyle`은 canvas-lite에서도 문제가 없어 그대로 둔다(120 고정 크기라 레이아웃 기능은 쓰지 않는다). 뷰 모델 트리거도 canvas-lite에서 동작한다. WASM이 절반 이하라 canvas-lite를 쓴다. React 래퍼는 쓰지 않는다: 한 번 받은 자산을 두 캐릭터가 나눠 쓰고, 로드 실패를 직접 다뤄 정지 이미지로 남기려면 기본 패키지를 직접 부르는 쪽이 단순하다.
+  - **WASM 호스팅**: 런타임 기본값은 unpkg(`https://unpkg.com/@rive-app/canvas-lite@2.44.0/rive.wasm`), 실패하면 jsdelivr(`rive_fallback.wasm`)다(Rive 문서 runtimes/web/preloading-wasm, 런타임 코드). 둘 다 쓰지 않는다. `public/rive/rive-canvas-lite-<버전>.wasm`(`pnpm rive:wasm`, 이름에 버전, `Cache-Control: public, max-age=31536000, immutable`)을 직접 받아 `RuntimeLoader.setWasmBinary`로 넘기고 `setWasmFallbackUrl(null)`로 대체 URL을 끈다. 그래서 외부 CDN 요청이 없고, 네트워크 실패는 런타임의 console.error 없이 우리 로그(`console.warn`)만 남는다. 대체 WASM(오래된 아키텍처용)은 두지 않는다: WASM을 못 쓰는 브라우저는 정지 이미지로 남는다.
+  - **.riv**: `public/characters/nyang-characters.riv`를 커밋한다(Vercel 빌드에는 Rive CLI가 없다). **RML(`rive/nyang-characters/scene.rml`)을 고치면 `pnpm rive:build`로 다시 빌드해 함께 커밋한다.** 런타임 버전을 바꾸면 `pnpm rive:wasm`과 `RIVE_RUNTIME_VERSION`(`lib/character-animation-assets.ts`)을 함께 바꾸고, 12절 47의 버전 고정 규칙(로고 화면·워터마크 확인)을 따른다. `tests/design/rive-assets.test.ts`가 고정 버전·설치 버전·WASM 바이트·.riv 아트보드를 본다.
+  - **정지 이미지 → Rive 교체**: 서버 렌더와 첫 화면은 정지 SVG `<img>`(120×120)다. 클라이언트에서만 런타임을 동적 import하고, 런타임·WASM·.riv(페이지당 한 번, 두 캐릭터 공유)가 준비되면 같은 자리에 겹쳐 둔 캔버스를 보이고 이미지를 숨긴다(레이아웃 이동 0). 아트보드는 `nyang-cat` / `nyang-dog`, 상태 머신 `State Machine 1`, `autoBind`. 어느 단계든 실패하면 정지 이미지 그대로이고 `console.warn`만 남긴다. 둘 다 `aria-hidden`(이미지는 `alt=""`), 텍스트 라벨은 그대로.
+  - **press**: 홈 카드 링크의 `pointerdown`(키보드 Enter도)에서 그 캐릭터의 뷰 모델 트리거 `press`를 보낸다. 이동은 늦추지 않는다(반응이 다 보이기 전에 화면이 바뀌어도 된다). greet는 홈에 들어올 때마다 Rive 상태 머신이 1회 한다.
+  - **움직임 줄이기**(`prefers-reduced-motion: reduce`): 런타임·WASM·.riv를 아예 받지 않고 정지 이미지만 둔다.
+  - **홈이 아닌 화면**(목록·상세·찜): Rive 런타임 청크·WASM·.riv를 받지 않는다(동적 import라 홈의 캐릭터가 요청할 때만 받는다). E2E `e2e/home-rive.spec.ts`(production)가 본다.
+  - 측정(2026-10-08, 로컬 production 빌드, Playwright Pixel 7, 9Mbps/1.5Mbps/150ms, 캐시 끔, 3회): 홈 전송량 519KB → 949KB(**+430KB**: 런타임 JS +53KB, WASM 366KB, .riv 11KB, 모두 압축 전송 바이트). LCP 436~520ms → 412~452ms(나빠지지 않음, LCP 요소는 텍스트·정지 이미지라 Rive가 늦게 와도 영향이 없다). 카드 탭 → 목록 제목 855~896ms → 851~871ms(이동이 늦어지지 않음). 움직임 줄이기: 519~520KB, Rive 요청 0. Vercel이 `.wasm`을 압축해 내려주는지는 배포 후 확인한다(로컬 `next start`는 gzip 374KB).
 - 서비스키가 로그, 테스트, 픽스처, 커밋에 들어가지 않게 한다. 이미 대화에 노출된 키는 재발급한 것으로 가정한다.
 
 - 공유 링크(확정, 2026-09-28): 카드의 `content.link`와 버튼 링크는 상세 페이지 절대 URL이다. 기준 주소는 `NEXT_PUBLIC_SITE_URL`이 있으면 그 값, 없으면 접속한 주소(`window.location.origin`)다. **링크가 http(s)가 아니거나 로컬 주소(localhost, 127.0.0.1, `*.local` 등)면 카카오톡 공유를 건너뛰고 링크 복사로 폴백한다.** 링크가 없는(또는 열리지 않는) 카드를 보내는 것보다 낫다. 카드의 링크가 동작하려면 그 도메인이 카카오 개발자 콘솔 [플랫폼 > Web 사이트 도메인]에 등록되어 있어야 한다(등록되지 않으면 카카오가 링크를 무시하고 기본 페이지로 보낸다, 12절 29).
@@ -292,6 +310,7 @@ PRD v1.1이 공식화한 항목(2026-10-02). 구현은 v1.1을 따르므로 불�
 `docs/design` 동기화(2026-10-07): 디자인 시스템 "냥공고"의 현재 내용으로 `README.md`를 갱신하고(캐릭터 팔레트·리본 예외, 캐릭터 모션 예외 두 문장이 늘었다), 캐릭터 절 `characters.md`와 캐릭터 원본 SVG(`assets/characters/nyang-cat.svg`, `nyang-dog.svg`, 각 120×120)를 더했다. 원본 아티팩트를 직접 읽지 못해 사용자가 내려받아 준 묶음(`design-sync-2026-10-07`)에서 옮겼다. `characters.md`는 경로를 `assets/Characters/`(대문자)로 적지만 저장소에서는 `assets/characters/`다. 홈 시안(`*.dc.html`)은 명세로만 읽고 저장소에 옮기지 않았다.
 
 아직 어느 문서와도 맞지 않는 것(이 문서를 따른다):
+- PRD-v1.1 5절 비범위 "캐릭터 애니메이션(Rive): 홈이 정지 SVG로 배포된 뒤 별도 단계" → **1차 적용(sleep 제외, 2026-10-08)**: 홈 선택지 캐릭터가 greet·idle·press로 움직인다(9절 "홈 캐릭터 Rive"). sleep은 엎드린 포즈 그림 대기
 - `docs/design/README.md` "화면 타이틀은 축종에 따라 '고양이 공고' / '강아지 공고'" → 앱은 "기타 동물 공고"까지 3종이다
 - `docs/design/README.md` 문구 예시 "아직 찜한 고양이가 없어요 / 마음에 드는 고양이를 저장해보세요" → 앱은 축종 중립 "아직 찜한 공고가 없어요 / 마음에 드는 공고를 저장해보세요"다(PRD-v1.1 3절 2)). README는 디자인 시스템 원문 그대로 두고 고치지 않는다
 - 기능명세서 4.1.3 카드 2줄 규칙 → 기타 축종만 1줄이 `"<동물> · <지역>"`이다(시안 없음, 12절 43)
@@ -470,7 +489,7 @@ PRD v1.1이 공식화한 항목(2026-10-02). 구현은 v1.1을 따르므로 불�
       - 상세 첫 사진은 목록에서 같은 사진을 이미 받아(브라우저 캐시) 전후 모두 빠르다. `fetchpriority`의 효과는 이 측정으로는 따로 가르지 못했다.
       - 서울 고양이 #1은 API·사진이 MISS였지만 서버 페이지 캐시(`unstable_cache`, 300초)가 따뜻했을 수 있다. 새 목록 두 개(강원 고양이, 전남광주 강아지)는 이번에 처음 요청했다.
 
-47. Rive 캐릭터(고양이·강아지) 애니메이션(2026-10-08, 앱 코드 변경 없음, 앱 적용은 미결). 원본은 `rive/nyang-characters/scene.rml`(아트보드 `nyang-cat`, `nyang-dog`), 빌드는 `rive rive/nyang-characters --once` → `build/nyang-characters.riv`(커밋하지 않음). 동작 기준은 `docs/design/characters.md` 모션 절(greet·idle·sleep·press).
+47. Rive 캐릭터(고양이·강아지) 애니메이션(2026-10-08). **홈에 1차 적용(greet·idle·press, sleep 제외)**, 규칙은 9절 "홈 캐릭터 Rive". 원본은 `rive/nyang-characters/scene.rml`(아트보드 `nyang-cat`, `nyang-dog`), 앱이 쓰는 빌드는 `public/characters/nyang-characters.riv`(`pnpm rive:build`). 동작 기준은 `docs/design/characters.md` 모션 절(greet·idle·sleep·press).
     - **버전 고정**: Rive CLI **1.5.0**(기술 미리보기, `~/.rive/bin/rive.exe`, 이 PC의 셸 PATH에는 없다), 웹 런타임 **`@rive-app/webgl2` 2.44.0**(공식 문서의 기본 권장 패키지). 계정 없이 `--verify`·`--once`·`--screenshot`이 모두 로컬에서 된다. **규칙: 둘 중 하나를 올리면, 로그인 없이 만든(서명 없는) `.riv`를 웹 런타임에 띄워 시작 전·재생 중에 Rive 로고 화면·워터마크가 생기지 않는지 먼저 확인하고 이 줄의 버전을 바꾼다.** 지금의 "로고 없음"은 위 두 버전 기준이다.
     - **도형**: Rive CLI에는 SVG 가져오기가 없어(`rive docs assets`) `scripts/svg-to-rml.mjs`가 SVG path를 정점으로 옮긴다(사용법·한계는 파일 머리말). `--replace`가 scene.rml의 `svg-to-rml:begin/end` 표시 사이만 바꿔 애니메이션은 손으로 쓴 그대로 둔다. 고양이에 다시 돌려 커밋된 도형과 줄 단위로 같음을 확인했다. RML은 **먼저 쓴 형제가 위에 그려져**(SVG의 반대) 순서를 뒤집고, 회전은 라디안, `LinearAnimation.duration`은 프레임(60fps), `StateTransition.duration`은 ms다. 480px 렌더를 원본 SVG와 비교하면 크게 다른 픽셀이 고양이 0.16%, 강아지 0.17%(가장자리 안티에일리어싱)로 모양·색·선 굵기 차이를 찾지 못했다.
     - **한 프로젝트, 아트보드 둘**: 홈은 두 캐릭터를 늘 같이 보이므로 `.riv` 하나를 받아 아트보드만 골라 쓴다(요청·캐시·버전이 하나, 박자 엇갈림을 한 파일에서 맞춘다). `.riv`는 **11,273바이트**(고양이만 있던 1차 6,356바이트, 동작을 더한 고양이만 7,230바이트).
@@ -478,7 +497,7 @@ PRD v1.1이 공식화한 항목(2026-10-02). 구현은 v1.1을 따르므로 불�
 yanggonggo-reviewive-check`, press 버튼)로 한다.
     - **상태 머신**(아트보드마다): Entry → `greet` → (끝나면) `idle`, AnyState → `press`(트리거) → (끝나면) `idle`. 상태에 `stateName`이 있다. `sleep`은 엎드린 포즈 그림이 없어 넣지 않았고, idle에서 나가는 전환으로 붙일 자리를 주석으로 남겼다(그림 대기). 애니메이션마다 움직이는 속성을 모두 키로 둬서 상태가 바뀔 때 모양이 남지 않는다.
     - **동작**: greet(약 0.75초) 웅크림 → 10px 폴짝 → 공중에서 좌우로 돌아서는 한 바퀴(scaleX 1 → -1 → 1) → 착지 눌림. 평면 360° 회전은 120px 안에서 머리·꼬리가 잘려 쓰지 않았다(모든 프레임이 가장자리에 닿지 않음, 위 여백 최소 고양이 11.5px·강아지 17.5px). 귀는 고양이 쫑긋, 강아지 펄럭. idle은 4~6초에 한 번 깜빡임, 숨쉬기 1.5%, 꼬리 살랑(작고 느리게, 계속), 고양이 리본 가끔. press는 15프레임(250ms): 100ms 동안 웃는 눈·머리 6° 갸웃·바닥 기준 납작, 150ms 복귀(앱은 이동을 늦추지 않는다). 박자 엇갈림: 강아지 greet는 20프레임(약 0.33초) 늦게 시작하고, idle 주기(고양이 5초, 강아지 5.5초)와 깜빡임 시점이 다르다.
-    - 남은 불확실성: 앱에 넣을 런타임 패키지(`webgl2`는 WebGL 컨텍스트 한도, `canvas-lite`는 레이아웃 엔진이 빠지는데 아트보드에 레이아웃 스타일이 있다)와 번들 크기, reduced-motion(앱에서 기본 포즈로 정지), sleep 그림, Rive 편집기로 가져왔을 때 그룹·기준점·opacity 0 그룹이 유지되는지, 사람이 보는 움직임의 자연스러움(속도·크기는 프레임 캡처와 확인용 페이지로만 봤다).
+    - 앱 런타임은 `@rive-app/canvas-lite` 2.44.0으로 정했다(9절, 웹 런타임 고정 버전과 같은 2.44.0, 패키지만 canvas-lite). 남은 불확실성: sleep 그림, 실제 폰(iOS Safari 등)에서의 동작·발열, Vercel의 `.wasm` 압축, Rive 편집기로 가져왔을 때 그룹·기준점·opacity 0 그룹이 유지되는지, 사람이 보는 움직임의 자연스러움.
 ## 13. 다음 버전 계획 (기록만, 설계 전)
 
 아직 코드 작업을 하지 않은 항목이다. 다음 기능 작업에서 착수한다.
