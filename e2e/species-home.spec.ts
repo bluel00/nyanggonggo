@@ -4,6 +4,7 @@ import {
   isCardInView,
   loadRealItems,
   mockList,
+  openedDetail,
   rememberSpeciesCookie,
   requestedRegions,
   requestedSpecies,
@@ -115,6 +116,7 @@ test("공유 링크로 다른 축종 공고를 열면 뒤로가기는 그 공고
   const target = items[3];
 
   await page.goto(`/animals/${target.id}`);
+  await openedDetail(page);
   await page.getByRole("button", { name: "뒤로가기" }).click();
 
   // 뒤로가기는 기억된 강아지가 아니라 그 공고(고양이)의 목록으로 간다

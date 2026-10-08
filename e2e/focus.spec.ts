@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { isCardInView, loadRealItems, mockList, scrollTop, watchConsoleErrors, type ListItem } from "./helpers";
+import { isCardInView, loadRealItems, mockList, openedDetail, scrollTop, watchConsoleErrors, type ListItem } from "./helpers";
 
 /**
  * 공유 링크로 상세에 바로 들어온 사람의 뒤로가기: 그 공고가 들어 있는 목록(공고의 지역·종·상태)으로 가고,
@@ -22,6 +22,7 @@ test("상세로 바로 들어와 뒤로가면 그 공고의 목록으로 가고 
   const target = seoulItems[1]!;
 
   await page.goto(`/animals/${target.id}`);
+  await openedDetail(page);
   await page.getByRole("button", { name: "뒤로가기" }).click();
 
   // 그 공고 기준 필터(서울 + 시군구)가 URL에 들어간다
@@ -38,6 +39,7 @@ test("3페이지에 있는 공고면 이어 받아서 찾아낸다", async ({ pa
   const target = seoulItems[14]!; // 6건씩 나누면 3페이지
 
   await page.goto(`/animals/${target.id}`);
+  await openedDetail(page);
   await page.getByRole("button", { name: "뒤로가기" }).click();
 
   await expect(page.locator(`[data-animal-id="${target.id}"]`)).toBeVisible();
@@ -52,6 +54,7 @@ test("목록에 없는 공고면 오류 없이 맨 위에 둔다", async ({ page
   const target = gyeonggiItems[0]!;
 
   await page.goto(`/animals/${target.id}`);
+  await openedDetail(page);
   await page.getByRole("button", { name: "뒤로가기" }).click();
 
   await expect(page).toHaveURL(/region=6410000/);
@@ -65,6 +68,7 @@ test("기본 지역이 아닌 공고도 그 지역 목록으로 간다", async (
   const target = gyeonggiItems[2]!;
 
   await page.goto(`/animals/${target.id}`);
+  await openedDetail(page);
   await page.getByRole("button", { name: "뒤로가기" }).click();
 
   await expect(page).toHaveURL(/region=6410000/);

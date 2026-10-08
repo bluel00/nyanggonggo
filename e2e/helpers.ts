@@ -130,3 +130,12 @@ export function watchConsoleErrors() {
     },
   };
 }
+
+/**
+ * 상세가 다 그려질 때까지 기다린다. 로딩 뼈대(loading.tsx)에도 뒤로가기가 있는데, 뼈대는 공고를 몰라 기본 목록으로 간다.
+ * 상세 응답이 조금만 늦어도(첫 사진 크기 읽기, 최대 300ms, architecture.md 12절 50) 뼈대의 버튼을 누르게 되므로,
+ * 상세에 바로 들어와 뒤로가기를 누르는 테스트는 이것을 먼저 부른다.
+ */
+export async function openedDetail(page: Page) {
+  await expect(page.locator('[data-slot="animal-detail"]')).toBeVisible();
+}

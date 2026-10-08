@@ -4,6 +4,7 @@ import {
   isCardInView,
   loadRealItems,
   mockList,
+  openedDetail,
   rememberSpeciesCookie,
   requestedRegions,
   scrollTop,
@@ -63,6 +64,7 @@ test("공유 링크로 들어온 상세의 뒤로가기는 기억된 지역을 �
   const shared = seoulItems[1]!;
 
   await page.goto(`/animals/${shared.id}`);
+  await openedDetail(page);
   await page.getByRole("button", { name: "뒤로가기" }).click();
 
   await expect(page).toHaveURL(new RegExp(`region=${SEOUL}`));
