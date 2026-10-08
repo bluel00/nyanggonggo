@@ -2,7 +2,8 @@
 /**
  * 홈 캐릭터 Rive 자산을 public/에 둔다(architecture.md 12절 47, 9절 "홈 캐릭터 Rive").
  *
- *   pnpm rive:build   RML 원본(rive/nyang-characters)을 Rive CLI로 빌드해 public/characters/nyang-characters.riv로 복사
+ *   pnpm rive:build   생성기(scripts/rive-characters-scene.mjs)로 scene.rml을 다시 만든 뒤(SVG 변경 반영), RML 원본(rive/nyang-characters)을
+ *                     Rive CLI로 빌드해 public/characters/nyang-characters.riv로 복사
  *   pnpm rive:wasm    @rive-app/canvas-lite의 rive.wasm을 public/rive/rive-canvas-lite-<버전>.wasm으로 복사(이전 버전은 지운다)
  *
  * 규칙: RML을 고치면 `pnpm rive:build`로 다시 빌드해 .riv를 함께 커밋한다(Vercel 빌드에는 Rive CLI가 없다).
@@ -35,6 +36,8 @@ function findRive() {
 }
 
 function buildRiv() {
+  // 생성 → 빌드. 그림만 바꾸고 생성을 잊으면 옛 도형이 빌드되므로 늘 먼저 생성한다
+  execFileSync(process.execPath, [join(ROOT, "scripts/rive-characters-scene.mjs")], { stdio: "inherit" });
   const rive = findRive();
   const version = execFileSync(rive, ["--version"], { encoding: "utf8" }).trim();
   execFileSync(rive, [PROJECT, "--once"], { stdio: "inherit" });

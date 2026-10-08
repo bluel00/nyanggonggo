@@ -4,7 +4,9 @@
  * docs/PRD-v1.2.md 5절을 따른다.
  *
  *   node scripts/rive-characters-scene.mjs   scene.rml의 `<!-- rive-artboards:begin -->` ~ `<!-- rive-artboards:end -->` 사이(두 아트보드)를
- *                                            다시 쓴다(머리말 주석과 뷰 모델은 그대로 둔다). 그다음 `pnpm rive:build`.
+ *                                            다시 쓴다(머리말 주석과 뷰 모델은 그대로 둔다). `pnpm rive:build`가 먼저 이것을 돌린다.
+ *   node scripts/rive-characters-scene.mjs --check   쓰지 않고, 생성 결과가 지금 scene.rml과 다르면 실패(exit 1)한다
+ *                                            (tests/design/rive-scene.test.ts: SVG만 바꾸고 생성하지 않은 상태를 잡는다).
  *
  * 그림을 바꾸면(docs/design/assets/characters/*.svg) 이 스크립트를 다시 돌린다. 자세 사이 보간(옆 앉음 ↔ 웅크림·덮치기·놀자,
  * 기우는 중간 → 누움)은 정점마다 키가 수백 개라 손으로 쓰지 않고 여기서 만든다. scene.rml의 표시 사이는 손으로 고치지 않는다.
@@ -507,6 +509,14 @@ const seen = new Map();
 for (const m of scene.matchAll(/\sid="([^"]+)"/g)) seen.set(m[1], (seen.get(m[1]) ?? 0) + 1);
 const dup = [...seen].filter(([, n]) => n > 1).map(([id]) => id);
 if (dup.length) throw new Error(`id 중복: ${dup.slice(0, 10).join(", ")}`);
+if (process.argv.includes("--check")) {
+  if (scene !== readFileSync(SCENE, "utf8")) {
+    console.error("scene.rml이 생성 결과와 다르다. 그림(SVG)이나 생성기를 바꿨으면 `pnpm rive:build`로 다시 만든다");
+    process.exit(1);
+  }
+  console.log("scene.rml이 생성 결과와 같다");
+  process.exit(0);
+}
 writeFileSync(SCENE, scene);
 const summary = (ch, anims) => `${ch.animal}: views ${Object.keys(ch.view).join(", ")}; ${anims.map((a) => `${a.name}(${a.duration}f, ${a.tracks.size})`).join(" ")}`;
 console.log(summary(cat, [catGreet, catIdle, catPress, catWake, catSleepEnter, catSleep]));
