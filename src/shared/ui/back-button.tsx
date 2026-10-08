@@ -2,7 +2,7 @@
 
 import { ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 import { hasVisitedList } from "../lib/app-navigation";
 import { Button } from "./button";
 
@@ -15,9 +15,24 @@ import { Button } from "./button";
 export function useGoBack(fallback = "/") {
   const router = useRouter();
   return useCallback(() => {
-    if (hasVisitedList() && window.history.length > 1) router.back();
+    if (canGoBackInApp()) router.back();
     else router.push(fallback);
   }, [router, fallback]);
+}
+
+/** 앱 안에서 들어와 브라우저 뒤로가기로 이전 화면에 돌아갈 수 있는지(useGoBack과 같은 판단) */
+export function canGoBackInApp(): boolean {
+  return hasVisitedList() && window.history.length > 1;
+}
+
+const noSubscribe = () => () => {};
+
+/**
+ * 렌더에서 쓰는 canGoBackInApp. 서버 렌더와 그 하이드레이션에서는 false다(서버는 탭의 이동 기록을 모른다).
+ * 상세에 바로 들어오면 서버가 그린 화면 그대로 false이고, 앱 안의 이동으로 새로 그릴 때는 처음부터 실제 값이다.
+ */
+export function useCanGoBackInApp(): boolean {
+  return useSyncExternalStore(noSubscribe, canGoBackInApp, () => false);
 }
 
 /** 44x44 뒤로가기 아이콘 버튼(사진 위에서는 photo-pill 배경, handoff 화면 3) */
