@@ -70,7 +70,7 @@ Type scale (`fontSize`): `title` 20/28/700, `card-title` 16/24/600, `body` 14/20
 
 **Safe area.** 프레임의 47/34는 iPhone 14 기준 값이다. 코드는 `env(safe-area-inset-top/bottom)`을 쓰고 `viewport-fit=cover`를 켠다. 하단 CTA와 시트는 `padding-bottom: calc(16px + env(safe-area-inset-bottom))`.
 
-**스와이프 이미지.** 상세 이미지는 4:5 고정, 사진이 다른 비율이면 cover로 잘라 보여준다 (초점 center 35%). 풀스크린 뷰어는 원본 비율 contain. CSS scroll-snap (`snap-x snap-mandatory`) 또는 Embla를 쓰고, 뷰어를 닫을 때 마지막 index를 상세로 돌려준다. 도트 인디케이터는 이미지 위가 아니라 아래에 둬도 됨(결정 필요). 사진 없는 공고의 플레이스홀더는 아직 미정.
+**스와이프 이미지.** 상세 이미지는 잘리지 않는다(PRD v1.3 3절). 사진 칸은 첫 사진의 가로/세로 비율을 3:4~4:3으로 제한한 비율이고, 모든 사진이 그 칸 안에 contain으로 들어가며 빈 곳은 `bg`다. 넘겨도 칸 높이는 같다. 첫 사진 크기를 모르면 칸은 1:1. 풀스크린 뷰어는 원본 비율 contain. CSS scroll-snap (`snap-x snap-mandatory`) 또는 Embla를 쓰고, 뷰어를 닫을 때 마지막 index를 상세로 돌려준다. 도트 인디케이터는 이미지 위가 아니라 아래에 둬도 됨(결정 필요). 사진 없는 공고의 플레이스홀더는 아직 미정.
 
 **접근성.** 종료 텍스트 #8A8A8A, 보호중 #2E9F6B, 임박 #F08A24는 텍스트 대비 미달이라 라벨용 `-text` 변형 토큰을 추가했다. 점 색상은 항상 라벨과 함께 쓴다.
 
@@ -97,7 +97,7 @@ Type scale (`fontSize`): `title` 20/28/700, `card-title` 16/24/600, `body` 14/20
 - 아이콘(heart, filter, close, back, chevron-down)은 자체 stroke SVG이며 구현 시 lucide로 교체 가능.
 
 화면 3~4 (상세 + 풀스크린 뷰어)
-- 상세 사진은 상단 safe area 뒤까지 꽉 채우고(4:5, 풀폭), Back은 사진 위 오버레이 `Button variant="overlay"` (44x44, `photo-pill` 배경). 새 variant이지만 기존 토큰만 쓴다.
+- 상세 사진은 상단 safe area 뒤까지 꽉 채우고(풀폭, 칸은 첫 사진 비율 3:4~4:3, 모르면 1:1, 사진은 contain), Back은 사진 위 오버레이 `Button variant="overlay"` (44x44, `photo-pill` 배경). 새 variant이지만 기존 토큰만 쓴다.
 - 도트 인디케이터는 사진 아래에 두었다 (사진 위 오버레이가 아님). 6px 원, 현재 `text`, 나머지 `control-border`, 간격 `space-2`. 위치와 색은 임의 결정.
 - 상태 + D-day 강조: StatusBadge(D-day 없이 상태만) 옆에 D-day를 `title` 스타일 텍스트로 크게 표시, 색은 `status-*-text`. 종료 공고는 배지 "종료"만 표시. 이 조합은 임의 결정.
 - 이름(없으면 지역명)을 `title`, 그 아래 "성별 · 추정나이"를 `body` + `text-2`. 성별 표기는 임의로 암컷 / 수컷 / 성별 미상.
@@ -129,4 +129,4 @@ Type scale (`fontSize`): `title` 20/28/700, `card-title` 16/24/600, `body` 14/20
 - 새 화면을 그리지 않고 DS 컴포넌트를 480px 컬럼(`cn-column`)에 다시 마운트했다. 화면 1·3 보드(390 고정)를 import한 것이 아니며, 컬럼 폭만 480이다.
 - 프레임 높이 900은 임의. 데스크톱 safe area는 0, 좌우 여백은 `canvas` 색. 컬럼은 `position: relative`, 시트·CTA 바·뷰어·토스트는 모두 컬럼 안 `absolute`라 뷰포트가 아니라 컬럼 기준으로 뜬다. 구현에서도 `fixed`는 쓰지 않는다.
 - 08a: 목록 + 열린 필터 시트(컬럼 안). 08b: 상세 + 하단 CTA(컬럼 안). 08c: 뷰어(컬럼 안, `viewer-bg`, 2/3 표시).
-- 상세 사진은 컬럼 폭 480에서 4:5로 약 480x600.
+- 상세 사진 칸은 컬럼 폭 480에서 4:3 가로 480x360, 3:4 세로 480x640, 1:1(크기를 모를 때) 480x480.
