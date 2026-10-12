@@ -42,7 +42,7 @@ export function AnimalPhoto({
    * 남용하면 서로 대역폭을 다투므로 화면당 한 장만 쓴다(architecture.md 7절).
    */
   highPriority?: boolean;
-  /** cover: 4:5 카드/상세(초점 center 35%), contain: 풀스크린 뷰어(원본 비율) */
+  /** cover: 목록 카드(1:1, 가운데), contain: 상세 캐러셀과 풀스크린 뷰어(자르지 않음) */
   fit?: "cover" | "contain";
   /** 표시 폭 힌트(PHOTO_SIZES). 없으면 원본 */
   sizes?: string;
@@ -73,7 +73,7 @@ export function AnimalPhoto({
       onError={() => setFailed(true)}
       className={cn(
         "block size-full",
-        fit === "cover" ? "object-cover object-[center_35%]" : "object-contain",
+        fit === "cover" ? "object-cover object-center" : "object-contain",
         ended && "saturate-70",
         className,
       )}

@@ -14,7 +14,8 @@ import { StatusBadge } from "./status-badge";
 /**
  * 공고 카드(bundle.css .cn-card). Domain Animal만 받는다.
  *
- * - 사진 4:5 cover, 초점 center 35%. 이미지 프록시 경유 plain img(lazy). 종료 공고는 saturate(.7), 딤 없음
+ * - 사진 1:1 cover, 가운데(center). 이미지 프록시 경유 plain img(lazy). 종료 공고는 saturate(.7), 딤 없음.
+ *   4:5 center 35%는 4:3 가로 사진(약 절반)에서 한쪽에 치우친 동물의 얼굴을 잘라 1:1로 바꿨다(architecture.md 12절 51)
  * - 배지: 사진 좌상단(12px), photo-pill 배경. 종료 공고는 "종료"만, 그 외는 D-day가 있을 때만 붙인다
  * - 텍스트: Domain에 이름이 없어 1줄은 지역(regionText), 2줄은 보호소(없으면 발견 장소). 명세의 "지역 · 보호소"를
  *   그대로 쓰면 1줄과 지역이 겹쳐서 2줄에는 보호소만 둔다
@@ -50,7 +51,7 @@ export function AnimalCard({
 
   const body = (
     <>
-      <div className="relative aspect-4/5 overflow-hidden rounded-card bg-status-ended-bg">
+      <div className="relative aspect-square overflow-hidden rounded-card bg-status-ended-bg">
         <AnimalPhoto src={getPrimaryImage(animal)} alt={alt} ended={ended} priority={priority} highPriority={highPriority} sizes={PHOTO_SIZES.card} />
         <div className="absolute top-3 left-3">
           <StatusBadge variant={variant} dDay={ended ? null : getDDay(animal, now)} onPhoto />

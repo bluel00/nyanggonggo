@@ -79,6 +79,15 @@ describe("AnimalCard", () => {
     expect(img.className).not.toContain("saturate-70");
   });
 
+  it("사진 칸은 1:1, 사진은 가운데 기준 cover(architecture.md 12절 51)", () => {
+    renderCard(animal());
+    const img = screen.getByRole("img");
+    expect(img.parentElement!.className).toContain("aspect-square");
+    expect(img.className).toContain("object-cover");
+    expect(img.className).toContain("object-center");
+    expect(img.className).not.toContain("object-[");
+  });
+
   it("임박(D-3 이하): 주황 배지", () => {
     const { card, badge } = renderCard(animal({ noticeEndAt: kst("2026-09-23T00:00:00") }));
     expect(card.getAttribute("data-status")).toBe("soon");
