@@ -29,6 +29,7 @@ beforeEach(() => {
   vi.stubEnv("DATA_GO_KR_SERVICE_KEY", FAKE_KEY);
   vi.stubGlobal("fetch", upstreamFetch);
   vi.spyOn(console, "warn").mockImplementation(() => {});
+  vi.spyOn(console, "log").mockImplementation(() => {});
 });
 
 afterEach(() => {
@@ -42,6 +43,22 @@ const req = (path: string) => new Request(`http://localhost${path}`);
 const ctx = (id: string) => ({ params: Promise.resolve({ id }) });
 
 describe("GET /api/animals", () => {
+  it("계측: 요청마다 JSON 한 줄을 남기고 Server-Timing 헤더를 붙인다(키·URL 없음, 12절 52)", async () => {
+    const response = await getList(req("/api/animals?species=dog"));
+    expect(response.headers.get("Server-Timing")).toMatch(/upstream;dur=\d+;desc="(hit|stale|miss)", total;dur=\d+/);
+    const lines = vi.mocked(console.log).mock.calls.map((c) => String(c[0])).filter((l) => l.includes("\"perf\""));
+    expect(lines).toHaveLength(1);
+    expect(JSON.parse(lines[0]!)).toMatchObject({ perf: "list", upstreamCache: "miss", upstreamPages: 1, status: 200 });
+    expect(lines[0]).not.toContain(FAKE_KEY);
+    expect(lines[0]).not.toContain("data.go.kr");
+  });
+
+  it("계측: 오류 응답에도 Server-Timing을 붙인다", async () => {
+    const response = await getList(req("/api/animals?species=bird"));
+    expect(response.status).toBe(400);
+    expect(response.headers.get("Server-Timing")).toMatch(/total;dur=\d+/);
+  });
+
   it("기본값(cat, protected, latest)으로 목록을 돌려준다", async () => {
     const response = await getList(req("/api/animals"));
     expect(response.status).toBe(200);

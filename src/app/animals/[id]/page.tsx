@@ -5,7 +5,7 @@ import { animalKeys, type Animal } from "@/entities/animal";
 import { createQueryClient } from "@/shared/api/query-client";
 import { SERVICE_NAME } from "@/shared/config/service";
 import { AnimalDetailView } from "@/views/animal-detail";
-import { getAnimalForRequest, getPhotoSizeForRequest } from "./animal-data";
+import { getAnimalForRequest, getDetailPerf, getPhotoSizeForRequest } from "./animal-data";
 import { buildOgModel, buildOgText } from "./og-model";
 
 /** 공고 id는 숫자 문자열(desertionNo). 형식이 다르면 조회하지 않고 404 */
@@ -33,14 +33,21 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
  *
  * 첫 사진의 가로·세로도 서버에서 읽어 넘긴다(PRD v1.3). 사진 칸 비율이 서버 HTML에 들어가 사진이 로드될 때 화면이 밀리지 않는다.
  * 시간 초과(300ms)나 실패면 null이고 칸은 1:1이다.
+ *
+ * 요청마다 공공 API·사진 크기 읽기·전체 시간을 로그 한 줄로 남긴다(architecture.md 12절 52). 동작에는 영향이 없다.
  */
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!ID_PATTERN.test(id)) notFound();
+  const perf = getDetailPerf(id);
   const queryClient = createQueryClient();
   await queryClient.prefetchQuery({ queryKey: animalKeys.detail(id), queryFn: () => getAnimalForRequest(id) });
-  const firstPhoto = queryClient.getQueryData<Animal>(animalKeys.detail(id))?.images[0];
-  const firstPhotoSize = firstPhoto ? await getPhotoSizeForRequest(firstPhoto) : null;
+  const animal = queryClient.getQueryData<Animal>(animalKeys.detail(id));
+  const firstPhoto = animal?.images[0];
+  if (!firstPhoto) perf.skipImageSize();
+  const firstPhotoSize = firstPhoto ? await getPhotoSizeForRequest(id, firstPhoto) : null;
+  // 계측 로그 한 줄(architecture.md 12절 52). 여기까지가 데이터 준비이고 렌더는 포함하지 않는다
+  perf.finish({ ok: animal !== undefined });
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
       <AnimalDetailView id={id} firstPhotoSize={firstPhotoSize} />

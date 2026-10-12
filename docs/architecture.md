@@ -546,6 +546,24 @@ PRD v1.1이 공식화한 항목(2026-10-02). 구현은 v1.1을 따르므로 불�
     - **측정**: production `build`+`start`(로컬), Pixel 7, 새 컨텍스트에서 변경 전·후 서버를 번갈아 쟀다. 목록 3개(서울 고양이, 경기 강아지, 부산 고양이) × 7회이고, 목록·서버마다 데우기 1회는 뺐다. 목록 LCP 중앙 **360 → 372ms**(목록별 1,312 → 648, 360 → 360, 308 → 292ms)이고 LCP 요소는 전후 모두 첫 카드 사진이다. CLS는 전후 모두 0이다. 로컬 이미지 프록시가 원본 서버를 매번 부르면서 생기는 편차(최대 4.3초)가 커서, 차이는 측정 범위 안이고 악화 신호는 없다.
     - **확인**: 단위 테스트(카드 칸 1:1·object-center, 로딩 카드 칸 1:1)를 더했다. E2E 43개를 모두 통과했다. 스크롤 복원(`data-animal-id`, list-scroll·focus)도 포함이다. 캡처는 `card-crop\compare\before\`·`after\`(같은 이름, 목록 3개 × 첫 화면·한 번 스크롤)에 있다.
     - 디자인 README 사진 규칙도 고쳤다. `handoff.md`와 `기능명세서.md`의 카드 4:5 문구는 고치지 않았다(이 항목이 우선).
+52. 요청 단위 계측(2026-10-12). 50의 게이트에서 상세 처음 방문 30건 중 3건이 1.3초를 넘었고(사진 크기 읽기는 300ms 안에 끝남) 원인이 콜드 스타트, 공공 API, 렌더 중 무엇인지 모른다. 46의 공공 API 응답시간 재측정도 이 데이터로 한다. **동작은 바꾸지 않고 기록만 한다.**
+    - **무엇을 재나**: 상세 페이지(`/animals/[id]`)와 목록 API(`/api/animals`)의 요청마다 JSON 한 줄을 stdout(`console.log`, Vercel에서는 info 레벨)에 남긴다. 예(로컬 production, 상세 처음 방문):
+      `{"perf":"detail","id":"411315202600742","cold":true,"uptimeMs":6168,"upstreamMs":53,"upstreamCache":"miss","upstreamPages":1,"upstreamMisses":1,"imageSizeMs":111,"imageSize":"miss","totalMs":169,"ok":true}`
+      - `cold`: 이 모듈 인스턴스가 계측한 첫 요청(모듈 스코프 플래그). 상세와 목록은 번들이 달라 각자 첫 요청이 `true`다. 같은 함수 인스턴스가 다른 라우트(OG 이미지 등)를 먼저 처리했을 수 있어 `uptimeMs`(프로세스가 뜬 뒤 지난 시간)를 함께 본다. Vercel 로그의 Function 상세에 있는 start type(cold/warm)이 기준이고 이 두 값은 보조다.
+      - `upstreamMs`: 업스트림 페이지 캐시(`unstable_cache`) 조회를 포함한 공공 API 시간. 여러 페이지면 첫 요청 시작부터 마지막 끝까지. `upstreamCache`: `miss`(한 페이지라도 받아서 기다림), `stale`(만료된 값을 바로 받고 갱신은 뒤에서), `hit`. `upstreamPages`, `upstreamMisses`는 페이지 수와 그중 miss 수. 페이지 요청 전에 끝나면(입력 오류 등) 이 필드가 없다.
+      - `imageSizeMs`, `imageSize`(상세만): 첫 사진 크기 읽기. `hit`(캐시), `miss`(원본에서 읽음), `timeout`(300ms), `error`(그 외 실패), `skip`(사진 없음, 허용되지 않은 주소).
+      - `totalMs`: 상세는 `generateMetadata`와 페이지 중 먼저 계측을 시작한 때부터 사진 크기까지 끝난 때까지(React cache로 한 요청이 한 기록을 쓴다), 목록은 라우트 시작부터 응답 객체를 만든 때까지. **렌더와 전송은 들어가지 않는다.** 따라서 바깥에서 잰 시간 − `totalMs`가 렌더·콜드 스타트·네트워크 몫이다.
+      - `ok`(상세: 공고 조회 성공), `status`(목록: HTTP 상태).
+      - 목록 API는 같은 값을 `Server-Timing` 헤더로도 보낸다(`upstream;dur=402;desc="miss", total;dur=415, cold`). 오류 응답에도 붙는다. CDN HIT는 함수가 돌지 않아 로그가 없고, 헤더는 캐시된 원래 응답의 값이다(`x-vercel-cache`로 구분). 상세 페이지는 헤더를 붙이지 않고 로그만 남긴다.
+      - 서비스키, 공공 API URL, 사진 URL은 넣지 않는다(공고 id만, 공개 정보). 테스트가 키·호스트가 없는지 본다.
+    - **위치**: 기록기는 `src/server/perf/request-perf.ts`(서버 전용, FSD 밖). 업스트림 시간과 적중 여부는 조립 지점(`server/animals/container.ts`의 `getAnimalService(perf)`)이 페이지 캐시를 감싸서 잰다. 클라이언트·소스·서비스는 바꾸지 않았다. 사진 크기 결과는 `createImageSizeReader`가 돌려주는 콜백(`onResult`)으로 받는다(캐시 load가 불렸는지로 hit/miss). 기록을 만들고 로그를 남기는 것은 app(`app/animals/[id]/animal-data.ts`의 `getDetailPerf`, `page.tsx`, `app/api/animals/route.ts`)뿐이다. 3절 경계 규칙 그대로다(FSD 계층은 계측을 모른다).
+    - **오버헤드**(로컬 production, 변경 전 HEAD와 변경 후를 다른 포트에 같이 띄우고 번갈아 7회, 중앙값): 상세 캐시 따뜻함 10.1 → 10.8ms, 목록 API 캐시 따뜻함 7.0 → 8.0ms, 상세 처음 방문(공고 7건, 서버마다 처음) 85 → 81ms. 차이는 측정 편차 안이다.
+    - **수집 방법(배포 후)**: Vercel CLI `vercel logs`(https://vercel.com/docs/cli/logs). **Hobby는 런타임 로그를 1시간만 보관한다**(https://vercel.com/docs/logs/runtime, Pro 1일). 측정을 마치면 1시간 안에 받는다.
+      - 준비(EL): Vercel CLI 설치(`npm i -g vercel`, 저장소 의존성 아님), `vercel login`, 저장소에서 `vercel link`(`.vercel/`은 커밋하지 않음, `.gitignore`에 있다).
+      - 받기: `vercel logs --environment production --no-branch --since 1h --query perf --json --limit 1000 > perf-YYYYMMDD.jsonl`. 기본 100건이라 `--limit`을 준다. JSON Lines의 메시지 필드에 이 한 줄이 들어 있을 것으로 보지만 출력 모양은 첫 수집 때 확인한다(미확인). 안 되면 대시보드 Logs에서 `perf`로 검색하고 요청별로 Function 상세(start type)와 함께 본다.
+      - 해석: 처음 방문이 느린 요청에서 `upstreamMs`가 크면 공공 API, `cold: true`·`uptimeMs`가 작거나 start type이 cold면 콜드 스타트, `totalMs`는 작은데 바깥 시간이 크면 렌더·전송이다. 46의 재측정은 `upstreamCache: "miss"`인 줄의 `upstreamMs`(목록은 페이지 수와 함께)로 한다.
+    - **확인**: 단위 테스트(`request-perf.test.ts`: cold 첫 요청만, miss/hit/stale, 여러 페이지 시간, 실패해도 기록, 한 번만 기록, Server-Timing 값. `image-size.test.ts`: hit/miss/timeout/error/skip. 라우트·상세 페이지 테스트: 요청당 한 줄, 키·URL 없음, 오류 응답의 Server-Timing). 로컬 production에서 로그 줄과 헤더를 확인했다. E2E 42 통과, 1 건너뜀(detail-photo 4:3 가로 대표 공고가 조회되지 않아 원래 규칙대로 건너뜀).
+    - **남은 것**: 배포 후 50과 같은 방법(새 공고 처음 방문)으로 재고, 로그를 받아 1.3초 넘는 요청을 나눈다. 원인이 정해지면 이 계측을 남길지(로그 양) 정한다.
 ## 13. 다음 버전 계획 (기록만, 설계 전)
 
 아직 코드 작업을 하지 않은 항목이다. 다음 기능 작업에서 착수한다.

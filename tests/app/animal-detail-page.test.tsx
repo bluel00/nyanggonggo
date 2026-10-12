@@ -39,10 +39,12 @@ const wire: AnimalWireDto = {
 const clientFetch = vi.fn();
 beforeEach(() => {
   getById.mockReset();
+  vi.spyOn(console, "log").mockImplementation(() => {});
   vi.stubGlobal("fetch", clientFetch);
 });
 afterEach(() => {
   cleanup();
+  vi.restoreAllMocks();
   vi.unstubAllGlobals();
   clientFetch.mockReset();
 });
@@ -83,6 +85,14 @@ describe("app/animals/[id]", () => {
     const element = await renderPage(wire.id);
     expect(element.props.state.queries).toHaveLength(0);
     expect(element.props.children.type).toBe(AnimalDetailView);
+  });
+
+  it("계측: 데이터 준비가 끝나면 JSON 한 줄을 남긴다(사진이 없으면 imageSize skip, 12절 52)", async () => {
+    getById.mockResolvedValue(wire);
+    await renderPage(wire.id);
+    const lines = vi.mocked(console.log).mock.calls.map((c) => String(c[0])).filter((l) => l.includes("\"perf\""));
+    expect(lines).toHaveLength(1);
+    expect(JSON.parse(lines[0]!)).toMatchObject({ perf: "detail", id: wire.id, imageSize: "skip", ok: true });
   });
 
   it("형식이 다르면 notFound(조회하지 않음)", async () => {

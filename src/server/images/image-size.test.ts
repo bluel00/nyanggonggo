@@ -132,4 +132,20 @@ describe("createImageSizeReader(상세 첫 사진 크기, PRD v1.3)", () => {
     expect(warn).toHaveBeenCalledWith("image size unavailable", { reason: "status" });
     expect(JSON.stringify(warn.mock.calls)).not.toContain("openapi");
   });
+
+  it("계측용 결과를 알린다: 캐시 없음 miss, 캐시 적중 hit, 시간 초과 timeout, 실패 error, 허용 안 됨 skip", async () => {
+    const bytes = await jpeg(300, 400);
+    const results: string[] = [];
+    const onResult = (r: string) => results.push(r);
+    const store = new Map<string, ImageSize>();
+    const cache: ImageSizeCache = async (key, load) => store.get(key) ?? store.set(key, await load()).get(key)!;
+    const read = createImageSizeReader({ ...options, fetch: () => streamingFetch(bytes).fetchImpl(SRC), cache });
+    await read(SRC, onResult);
+    await read(SRC, onResult);
+    const hang: FetchLike = () => new Promise(() => {});
+    await createImageSizeReader({ ...options, timeoutMs: 20, fetch: hang })(SRC, onResult);
+    await createImageSizeReader({ ...options, fetch: async () => new Response("no", { status: 404 }) })(SRC, onResult);
+    await createImageSizeReader({ ...options, fetch: vi.fn<FetchLike>() })("http://example.com/a.jpg", onResult);
+    expect(results).toEqual(["miss", "hit", "timeout", "error", "skip"]);
+  });
 });

@@ -21,7 +21,13 @@ export type ImageSizeProbe = (head: Uint8Array) => Promise<ImageSize | null>;
 /** URL별 캐시. load가 성공한 값만 저장하고, load의 예외는 그대로 던진다 */
 export type ImageSizeCache = (key: string, load: () => Promise<ImageSize>) => Promise<ImageSize>;
 
-export type ImageSizeReader = (src: string) => Promise<ImageSize | null>;
+/**
+ * 읽기 결과(계측용, architecture.md 12절 52). hit: 캐시에서 읽음. miss: 원본에서 읽음. timeout: 시간 초과.
+ * error: 그 외 실패. skip: 허용되지 않은 주소라 읽지 않음(상세에 사진이 없을 때도 계측은 skip으로 적는다)
+ */
+export type ImageSizeResult = "hit" | "miss" | "timeout" | "error" | "skip";
+
+export type ImageSizeReader = (src: string, onResult?: (result: ImageSizeResult) => void) => Promise<ImageSize | null>;
 
 export type ImageSizeReaderOptions = {
   fetch?: FetchLike;
@@ -102,8 +108,11 @@ export function createImageSizeReader(options: ImageSizeReaderOptions): ImageSiz
     }
   }
 
-  return async function readImageSize(src) {
-    if (!isAllowedImageSource(src)) return null;
+  return async function readImageSize(src, onResult = () => {}) {
+    if (!isAllowedImageSource(src)) {
+      onResult("skip");
+      return null;
+    }
     const controller = new AbortController();
     let timer: ReturnType<typeof setTimeout> | undefined;
     // 캐시 조회까지 포함해 timeoutMs 안에 끝낸다. 넘으면 받던 것도 끊는다
@@ -113,11 +122,20 @@ export function createImageSizeReader(options: ImageSizeReaderOptions): ImageSiz
         reject(new ImageSizeUnavailable("timeout"));
       }, timeoutMs);
     });
-    const load = () => read(src, controller.signal);
+    // load가 불렸으면 캐시에 없던 것(miss)
+    let loaded = false;
+    const load = () => {
+      loaded = true;
+      return read(src, controller.signal);
+    };
     try {
-      return await Promise.race([cache ? cache(src, load) : load(), timeout]);
+      const size = await Promise.race([cache ? cache(src, load) : load(), timeout]);
+      onResult(loaded ? "miss" : "hit");
+      return size;
     } catch (error) {
-      logger.warn("image size unavailable", { reason: error instanceof ImageSizeUnavailable ? error.reason : "unexpected" });
+      const reason = error instanceof ImageSizeUnavailable ? error.reason : "unexpected";
+      onResult(reason === "timeout" ? "timeout" : "error");
+      logger.warn("image size unavailable", { reason });
       return null;
     } finally {
       clearTimeout(timer);
