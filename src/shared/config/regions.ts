@@ -2,7 +2,7 @@
  * 시도 / 시군구 코드(정적 데이터). 런타임에 sido_v2 / sigungu_v2를 호출하지 않는다.
  *
  * 실측: 2026-09-22, 공공 API abandonmentPublicService_v2의 sido_v2 전체와 시도별 sigungu_v2 전체(upr_cd, 페이지 포함).
- * 시도 16개, 시군구 237개(원본 256개 중 실제 구가 아닌 19개 제외).
+ * 시도 16개, 시군구 235개(원본 256개 중 실제 구가 아닌 19개와 창원시의 빈 코드 2개 제외).
  *
  * 제외 기준(실제 구가 아닌 항목): 코드가 시도 코드와 같음(시도 자기 자신), 코드가 ddd99dd 형식(가정보호, 시도명 등),
  * 이름 없음. 제외한 항목:
@@ -25,8 +25,8 @@
  *   - 경상남도 6489999 (없음): 이름 없음
  *   - 제주특별자치도 6500000 제주특별자치도: 시도 자기 자신
  *   - 전남광주통합특별시 6130000 전남광주통합특별시: 시도 자기 자신
- * 같은 시도 안에서 이름이 겹치는 시군구(예: 창원시)는 라벨에 코드를 붙였다. 원본(sigungu_v2)의 이름이 셋 다 "창원시"라
- * 이름으로는 구분할 수 없다. 2026-09-29 실측에서 공고가 조회되는 코드는 5670000 하나였다(나머지 둘은 0건, 12절 39).
+ * 창원시: 원본(sigungu_v2)에는 이름이 모두 "창원시"인 코드가 셋(5280000, 5320000, 5670000) 있다. 공고가 조회되는 건 5670000
+ * 하나뿐이라 나머지 둘은 뺐다(아래 경상남도 목록과 DISTRICT_ALIASES, 12절 41). 같은 시도 안에서 이름이 겹치는 시군구는 이제 없다.
  *
  * 재실행: 로컬에서 PROBE_ONLY=regions PROBE_REGIONS_OUT=<경로.json> pnpm exec jiti scripts/probe.ts 로 원본을 받고,
  * 같은 기준으로 이 파일을 다시 만든다(scripts/probe.ts는 커밋하지 않는 로컬 스크립트, architecture.md 12절 16).
@@ -284,9 +284,9 @@ export const DISTRICTS: Readonly<Record<string, readonly District[]>> = {
     { code: "5390000", name: "의령군" },
     { code: "5310000", name: "진주시" },
     { code: "5410000", name: "창녕군" },
-    { code: "5280000", name: "창원시(5280000)" },
-    { code: "5320000", name: "창원시(5320000)" },
-    { code: "5670000", name: "창원시(5670000)" },
+    // 창원시는 5670000만 둔다. 같은 이름의 5280000, 5320000은 2026-09-29와 2026-10-13 실측에서 고양이·강아지·기타 모두
+    // 0건이었고, 경상남도 전체 조회의 창원 공고(창원동물보호센터)는 전부 5670000으로 조회됐다. 옛 값은 DISTRICT_ALIASES가 받는다(12절 41)
+    { code: "5670000", name: "창원시" },
     { code: "5330000", name: "통영시" },
     { code: "5440000", name: "하동군" },
     { code: "5400000", name: "함안군" },
@@ -333,7 +333,21 @@ export function findSido(code: string | undefined): Sido | null {
   return SIDO.find((sido) => sido.code === code) ?? null;
 }
 
+/**
+ * 목록에서 뺀 시군구 코드 → 대신 쓰는 코드(시도별). 예전에 고른 값이 URL(district)이나 지역 기억 쿠키에 남아 있을 수 있어서
+ * 받아 주기만 하고, 새로 만드는 주소와 쿠키에는 쓰지 않는다(12절 41).
+ */
+export const DISTRICT_ALIASES: Readonly<Record<string, Readonly<Record<string, string>>>> = {
+  "6480000": { "5280000": "5670000", "5320000": "5670000" },
+};
+
 export function findDistrict(sidoCode: string | undefined, districtCode: string | undefined): District | null {
   if (!sidoCode || !districtCode) return null;
   return DISTRICTS[sidoCode]?.find((district) => district.code === districtCode) ?? null;
+}
+
+/** 바깥에서 들어온 시군구 코드(URL, 쿠키)를 찾는다. 목록에서 뺀 옛 코드면 대신 쓰는 시군구다(DISTRICT_ALIASES) */
+export function resolveDistrict(sidoCode: string | undefined, districtCode: string | undefined): District | null {
+  if (!sidoCode || !districtCode) return null;
+  return findDistrict(sidoCode, DISTRICT_ALIASES[sidoCode]?.[districtCode] ?? districtCode);
 }

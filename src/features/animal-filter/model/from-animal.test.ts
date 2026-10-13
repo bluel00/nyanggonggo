@@ -64,8 +64,18 @@ describe("animalListFilter", () => {
     });
   });
 
-  it("시군구를 못 찾으면 시도만(실측: 창원시는 코드가 셋이라 이름이 안 맞는다)", () => {
+  it("구가 목록에 없으면 시로 맞춘다(실측: 창원시 의창성산구 → 창원시 5670000, 12절 41)", () => {
     expect(animalListFilter(animal({ regionText: "경상남도 창원시 의창성산구" }))).toEqual({
+      species: "cat",
+      region: "6480000",
+      district: "5670000",
+      status: "protected",
+      sort: "latest",
+    });
+  });
+
+  it("시군구를 못 찾으면 시도만", () => {
+    expect(animalListFilter(animal({ regionText: "경상남도 없는시" }))).toEqual({
       species: "cat",
       region: "6480000",
       status: "protected",

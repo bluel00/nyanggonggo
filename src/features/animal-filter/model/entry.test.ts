@@ -77,6 +77,49 @@ describe("resolveAnimalListEntry: 축종을 먼저 판정한다(결정 B)", () =
   });
 });
 
+describe("resolveAnimalListEntry: 목록에서 뺀 창원시 옛 코드(12절 41)", () => {
+  const GYEONGNAM = "6480000";
+  const CHANGWON = "5670000";
+
+  it.each(["5280000", "5320000"])("URL의 district=%s는 5670000으로 고쳐 한 번 리다이렉트한다", (code) => {
+    expect(entry(`species=dog&region=${GYEONGNAM}&district=${code}&focus=${ID}`)).toBe(
+      `/?focus=${ID}&species=dog&region=${GYEONGNAM}&district=${CHANGWON}`,
+    );
+  });
+
+  it("축종을 채울 때도 같은 리다이렉트에서 함께 고친다", () => {
+    expect(entry(`region=${GYEONGNAM}&district=5280000`, { species: "cat" })).toBe(
+      `/?species=cat&region=${GYEONGNAM}&district=${CHANGWON}`,
+    );
+  });
+
+  it("고친 주소로 다시 들어오면 리다이렉트 없이 5670000 목록을 그린다", () => {
+    expect(entry(`species=dog&region=${GYEONGNAM}&district=${CHANGWON}`)).toEqual({
+      kind: "render",
+      filter: { species: "dog", region: GYEONGNAM, district: CHANGWON, status: "protected", sort: "latest" },
+      focusId: null,
+    });
+  });
+
+  it.each(["5280000", "5320000"])("쿠키의 옛 코드 %s는 5670000으로 채운다", (code) => {
+    expect(entry("species=cat", { region: `${GYEONGNAM}.${code}` })).toBe(
+      `/?species=cat&region=${GYEONGNAM}&district=${CHANGWON}`,
+    );
+  });
+
+  it("목록에 없는 다른 시군구 코드는 지금처럼 시도만 그린다(리다이렉트하지 않는다)", () => {
+    expect(entry(`species=cat&region=${GYEONGNAM}&district=9999999`)).toEqual({
+      kind: "render",
+      filter: { species: "cat", region: GYEONGNAM, status: "protected", sort: "latest" },
+      focusId: null,
+    });
+  });
+
+  it("홈 지역도 5670000으로 읽는다", () => {
+    expect(resolveHomeArea(qs(`region=${GYEONGNAM}&district=5320000`))).toEqual({ region: GYEONGNAM, district: CHANGWON });
+  });
+});
+
 describe("resolveAnimalListEntry: 다른 파라미터 처리", () => {
   it("홈으로 갈 때도 focus와 utm_*을 옮긴다", () => {
     expect(entry(`focus=${ID}&utm_source=kakao`)).toBe(`/home?focus=${ID}&utm_source=kakao`);

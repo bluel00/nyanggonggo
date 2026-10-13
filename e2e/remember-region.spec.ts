@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import {
   firstPageRequests,
   isCardInView,
@@ -155,4 +155,49 @@ test("쿠키 값이 깨져 있으면 조용히 기본 지역(서울)으로 간�
   await page.goto("/");
   await expect(page.locator("[data-animal-id]").first()).toBeVisible();
   expect(requestedRegions(requests).every((region) => region === SEOUL)).toBe(true);
+});
+
+/** 문서 요청 중 리다이렉트(3xx) 응답 수. 서버의 redirect()와 클라이언트 이동이 모두 문서 요청으로 잡힌다 */
+function countDocumentRedirects(page: Page) {
+  const redirects: string[] = [];
+  page.on("response", (response) => {
+    if (response.request().resourceType() === "document" && response.status() >= 300 && response.status() < 400) {
+      redirects.push(response.url());
+    }
+  });
+  return redirects;
+}
+
+const GYEONGNAM = "6480000";
+const CHANGWON = "5670000";
+
+for (const oldCode of ["5280000", "5320000"]) {
+  test(`목록에서 뺀 창원시 옛 코드(${oldCode}) 주소로 들어오면 5670000 목록이다(리다이렉트 1회)`, async ({ page }) => {
+    const requests = await mockList(page, seoulItems);
+    const redirects = countDocumentRedirects(page);
+
+    await page.goto(`/?species=cat&region=${GYEONGNAM}&district=${oldCode}`);
+    await expect(page).toHaveURL(`/?species=cat&region=${GYEONGNAM}&district=${CHANGWON}`);
+    await expect(page.locator("[data-animal-id]").first()).toBeVisible();
+
+    expect(redirects.length, `리다이렉트: ${redirects.join(", ")}`).toBe(1); // 주소를 고치는 한 번뿐이다
+    const districts = requests.map((url) => url.searchParams.get("district"));
+    expect(districts.length).toBeGreaterThan(0);
+    expect(districts.every((district) => district === CHANGWON), `요청 시군구: ${districts.join(", ")}`).toBe(true);
+  });
+}
+
+test("지역 기억 쿠키에 창원시 옛 코드가 있으면 5670000으로 채운다(리다이렉트 1회)", async ({ page, context }) => {
+  await context.addCookies([{ name: REGION_COOKIE, value: `${GYEONGNAM}.5280000`, url: "http://localhost:3000" }]);
+  const requests = await mockList(page, seoulItems);
+  const redirects = countDocumentRedirects(page);
+
+  await page.goto("/");
+  await expect(page).toHaveURL(`/?species=cat&region=${GYEONGNAM}&district=${CHANGWON}`);
+  await expect(page.locator("[data-animal-id]").first()).toBeVisible();
+
+  expect(redirects.length, `리다이렉트: ${redirects.join(", ")}`).toBe(1); // 주소를 고치는 한 번뿐이다
+  const districts = requests.map((url) => url.searchParams.get("district"));
+  expect(districts.length).toBeGreaterThan(0);
+  expect(districts.every((district) => district === CHANGWON), `요청 시군구: ${districts.join(", ")}`).toBe(true);
 });

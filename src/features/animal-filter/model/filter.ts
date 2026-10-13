@@ -1,5 +1,5 @@
 import type { AnimalListFilter } from "@/entities/animal";
-import { findDistrict, findSido } from "@/shared/config/regions";
+import { findSido, resolveDistrict } from "@/shared/config/regions";
 
 /**
  * 목록 필터 ↔ URL search params(단일 진실 소스, architecture.md 7절).
@@ -83,17 +83,29 @@ export function readSpeciesParam(params: SearchParamsInput): AnimalSpecies | nul
   return isSpecies(value) ? value : null;
 }
 
+/**
+ * URL의 district가 목록에서 뺀 옛 코드라 다른 코드로 읽혔는지. 그렇다면 목록 페이지가 축종·지역을 채우는 것과
+ * 같은 리다이렉트에서 주소를 새 코드로 바꿔 쓴다(주소와 화면의 지역이 어긋나지 않게, 12절 41).
+ */
+export function hasAliasedDistrict(params: SearchParamsInput): boolean {
+  const district = parseAnimalArea(params).district;
+  return district !== undefined && district !== read(params, "district");
+}
+
 function pick<T extends string>(allowed: readonly T[], value: string | undefined, fallback: T): T {
   return allowed.includes(value as T) ? (value as T) : fallback;
 }
 
-/** URL의 region/district → 필터의 지역. region이 없거나 목록에 없는 코드면 fallback(기억된 지역, 없으면 서울 전체) */
+/**
+ * URL의 region/district → 필터의 지역. region이 없거나 목록에 없는 코드면 fallback(기억된 지역, 없으면 서울 전체).
+ * district가 목록에서 뺀 옛 코드면 대신 쓰는 코드로 읽는다(`DISTRICT_ALIASES`, 12절 41).
+ */
 export function parseAnimalArea(params: SearchParamsInput, fallback: AnimalArea = DEFAULT_AREA): AnimalArea {
   const region = read(params, "region");
   if (region === REGION_ALL) return {};
   const sido = findSido(region);
   if (!sido) return fallback;
-  const district = findDistrict(sido.code, read(params, "district"));
+  const district = resolveDistrict(sido.code, read(params, "district"));
   return district ? { region: sido.code, district: district.code } : { region: sido.code };
 }
 

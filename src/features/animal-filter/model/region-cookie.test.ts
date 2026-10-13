@@ -18,6 +18,10 @@ describe("parseRegionCookie", () => {
     expect(parseRegionCookie("all")).toEqual({});
   });
 
+  it.each(["5280000", "5320000"])("목록에서 뺀 창원시 옛 코드 %s는 5670000으로 읽는다(12절 41)", (code) => {
+    expect(parseRegionCookie(`6480000.${code}`)).toEqual({ region: "6480000", district: "5670000" });
+  });
+
   it.each([
     undefined,
     null,

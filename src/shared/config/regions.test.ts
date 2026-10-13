@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { DISTRICTS, findDistrict, findSido, SIDO } from "./regions";
+import { DISTRICT_ALIASES, DISTRICTS, findDistrict, findSido, resolveDistrict, SIDO } from "./regions";
 
 describe("정적 지역 데이터(2026-09-22 실측)", () => {
-  it("시도 16개, 시군구 237개, 모든 코드는 7자리 숫자이고 전체에서 중복이 없다", () => {
+  it("시도 16개, 시군구 235개, 모든 코드는 7자리 숫자이고 전체에서 중복이 없다", () => {
     expect(SIDO).toHaveLength(16);
     const districts = Object.values(DISTRICTS).flat();
-    expect(districts).toHaveLength(237);
+    expect(districts).toHaveLength(235);
     const codes = [...SIDO.map((s) => s.code), ...districts.map((d) => d.code)];
     for (const code of codes) expect(code).toMatch(/^\d{7}$/);
     expect(new Set(codes).size).toBe(codes.length);
@@ -36,8 +36,44 @@ describe("정적 지역 데이터(2026-09-22 실측)", () => {
     expect(DISTRICTS["5690000"]).toEqual([]);
   });
 
+  it("같은 시도 안에 이름이 같은 시군구가 없다(필터에서 구분할 수 없는 항목이 생기지 않게)", () => {
+    for (const sido of SIDO) {
+      const names = DISTRICTS[sido.code].map((district) => district.name);
+      const duplicated = names.filter((name, index) => names.indexOf(name) !== index);
+      expect(duplicated, sido.name).toEqual([]);
+    }
+  });
+
+  it("경상남도에 창원시는 5670000 하나뿐이다(12절 41)", () => {
+    const changwon = DISTRICTS["6480000"].filter((district) => district.name.includes("창원"));
+    expect(changwon).toEqual([{ code: "5670000", name: "창원시" }]);
+  });
+
   it("findDistrict는 시도에 속한 시군구만 찾는다", () => {
     expect(findDistrict("6260000", "3000000")).toBeNull();
     expect(findDistrict(undefined, "3000000")).toBeNull();
+  });
+});
+
+describe("DISTRICT_ALIASES / resolveDistrict(목록에서 뺀 옛 시군구 코드)", () => {
+  it("별칭의 옛 코드는 목록에 없고, 대신 쓰는 코드는 같은 시도에 있다", () => {
+    for (const [sidoCode, aliases] of Object.entries(DISTRICT_ALIASES)) {
+      for (const [from, to] of Object.entries(aliases)) {
+        expect(findDistrict(sidoCode, from), from).toBeNull();
+        expect(findDistrict(sidoCode, to), to).not.toBeNull();
+      }
+    }
+  });
+
+  it.each(["5280000", "5320000"])("창원시 옛 코드 %s는 5670000으로 찾는다", (code) => {
+    expect(resolveDistrict("6480000", code)).toEqual({ code: "5670000", name: "창원시" });
+    expect(findDistrict("6480000", code)).toBeNull();
+  });
+
+  it("별칭이 없는 코드는 findDistrict와 같다", () => {
+    expect(resolveDistrict("6110000", "3000000")?.name).toBe("종로구");
+    expect(resolveDistrict("6110000", "9999999")).toBeNull();
+    expect(resolveDistrict("6260000", "5280000")).toBeNull(); // 다른 시도에서는 별칭을 쓰지 않는다
+    expect(resolveDistrict(undefined, "5280000")).toBeNull();
   });
 });

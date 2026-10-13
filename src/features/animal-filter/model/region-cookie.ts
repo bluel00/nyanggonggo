@@ -1,4 +1,4 @@
-import { findDistrict, findSido } from "@/shared/config/regions";
+import { findSido, resolveDistrict } from "@/shared/config/regions";
 import { REGION_ALL, type AnimalArea } from "./filter";
 import { writeFilterCookie } from "./filter-cookie";
 
@@ -22,7 +22,8 @@ export function parseRegionCookie(value: string | undefined | null): AnimalArea 
   if (!sido) return null;
   if (district === undefined) return { region: sido.code };
 
-  const found = findDistrict(sido.code, district);
+  // 목록에서 뺀 옛 시군구 코드는 대신 쓰는 코드로 읽는다(12절 41). 쿠키는 다음에 필터를 고를 때 새 값으로 덮인다
+  const found = resolveDistrict(sido.code, district);
   return found ? { region: sido.code, district: found.code } : null;
 }
 

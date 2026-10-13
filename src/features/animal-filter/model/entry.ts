@@ -2,6 +2,7 @@ import type { AnimalListFilter } from "@/entities/animal";
 import {
   DEFAULT_AREA,
   FORBIDDEN_KEYS,
+  hasAliasedDistrict,
   hasRegionParam,
   parseAnimalArea,
   parseAnimalFilter,
@@ -35,6 +36,7 @@ export type RememberedFilterCookies = { species?: string | null; region?: string
  * 1. URL에 쓸 수 있는 `species`가 있으면 그 축종이다. 없거나 모르는 값(`panda`)이면 "없음"으로 본다.
  * 2. 없으면 축종 쿠키를 쓴다. 쿠키도 없으면 홈(`/home`)으로 보내고 **지역은 판정하지 않는다**.
  * 3. 축종이 정해졌으면 지역까지 맞춰 보고, 주소에 채울 값이 있으면 **한 번의 리다이렉트로 둘 다** 채운다.
+ *    주소의 시군구가 목록에서 뺀 옛 코드(`DISTRICT_ALIASES`)일 때도 같은 리다이렉트에서 새 코드로 바꿔 쓴다.
  *
  * `focus`, `utm_*` 같은 다른 파라미터는 어느 쪽으로 가든 그대로 옮긴다. `page`/`cursor`와 모르는 `species` 값은 버린다.
  */
@@ -54,8 +56,8 @@ export function resolveAnimalListEntry(
     rememberedSpecies: species,
   });
 
-  // 보여 주는 목록은 주소만으로 다시 열 수 있어야 한다. 축종이나 지역이 빠져 있으면 채워서 한 번에 보낸다
-  if (urlSpecies === null || !hasRegionParam(params)) {
+  // 보여 주는 목록은 주소만으로 다시 열 수 있어야 한다. 축종이나 지역이 빠져 있거나 옛 시군구 코드면 고쳐서 한 번에 보낸다
+  if (urlSpecies === null || !hasRegionParam(params) || hasAliasedDistrict(params)) {
     return { kind: "redirect", href: toFilterHref("/", filter, base) };
   }
   return { kind: "render", filter, focusId: readFocusId(params) };
