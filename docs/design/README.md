@@ -1,8 +1,8 @@
-서비스명은 미정이며 임시로 "냥공고"를 쓴다. 이름은 코드에서 `SERVICE_NAME` 한 곳에서만 정의하고 OG 이미지, 카카오 피드 카드, 문서 `<title>`에서 이 상수를 읽는다. 화면 타이틀은 서비스명이 아니라 축종에 따라 "고양이 공고" / "강아지 공고"다.
+서비스명은 미정이며 임시로 "냥공고"를 쓴다. 이름은 코드에서 `SERVICE_NAME` 한 곳에서만 정의하고 OG 이미지, 카카오 피드 카드, 문서 `<title>`에서 이 상수를 읽는다. 화면 타이틀은 서비스명이 아니라 축종에 따라 "고양이 공고" / "강아지 공고" / "기타 동물 공고"다.
 
 ## Content fundamentals
 
-Write in short, warm Korean (해요체). The product is a photo feed, not an adoption service: the action is sharing, never adopting. Never show shelter phone numbers or contact information anywhere. Real copy: "지금은 고양이를 불러오지 못했어요", "아직 찜한 고양이가 없어요 / 마음에 드는 고양이를 저장해보세요 🐾", "링크가 복사됐어요". The only emoji is the 🐾 in the favourites empty state. The feed never says it has ended; it keeps showing `SkeletonCard`.
+Write in short, warm Korean (해요체). The product is a photo feed, not an adoption service: the action is sharing, never adopting. Never show shelter phone numbers or contact information anywhere. Real copy: "지금은 고양이를 불러오지 못했어요" (list error), "지금은 공고를 불러오지 못했어요" (detail error), "아직 찜한 공고가 없어요 / 마음에 드는 공고를 저장해보세요 🐾", "링크가 복사됐어요". List copy names the current species (고양이 / 강아지 / 기타 동물); screens that mix species or don't know it (favourites, detail error) say 공고 instead. The only emoji is the 🐾 in the favourites empty state. The feed never says it has ended; it keeps showing `SkeletonCard`.
 
 ## Visual foundations
 
