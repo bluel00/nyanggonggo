@@ -27,7 +27,16 @@ export type ImageSizeCache = (key: string, load: () => Promise<ImageSize>) => Pr
  */
 export type ImageSizeResult = "hit" | "miss" | "timeout" | "error" | "skip";
 
-export type ImageSizeReader = (src: string, onResult?: (result: ImageSizeResult) => void) => Promise<ImageSize | null>;
+/**
+ * 읽기 시간 나누기(계측용, architecture.md 12절 52). fetchMs: 원본 받기와 헤더 읽기(load가 불린 때부터 끝나거나 시간 초과로
+ * 끊길 때까지). 캐시에서 읽었거나 받기 전에 끝나면 없다. cacheMs: 전체에서 fetchMs를 뺀 캐시 조회·저장 시간. 캐시가 없으면 없다
+ */
+export type ImageSizeTiming = { cacheMs?: number; fetchMs?: number };
+
+export type ImageSizeReader = (
+  src: string,
+  onResult?: (result: ImageSizeResult, timing: ImageSizeTiming) => void,
+) => Promise<ImageSize | null>;
 
 export type ImageSizeReaderOptions = {
   fetch?: FetchLike;
@@ -37,6 +46,8 @@ export type ImageSizeReaderOptions = {
   probe?: ImageSizeProbe;
   cache?: ImageSizeCache;
   logger?: Logger;
+  /** 계측용 시계(ms). 테스트가 주입한다 */
+  now?: () => number;
 };
 
 /** 크기 읽기를 시도하는 간격(받은 바이트). 헤더는 대개 첫 수 KB 안에 있다 */
@@ -67,7 +78,7 @@ class ImageSizeUnavailable extends Error {
 }
 
 export function createImageSizeReader(options: ImageSizeReaderOptions): ImageSizeReader {
-  const { timeoutMs, maxBytes, cache, logger = noopLogger } = options;
+  const { timeoutMs, maxBytes, cache, logger = noopLogger, now = () => performance.now() } = options;
   const fetchImpl = options.fetch ?? fetch;
   const probe = options.probe ?? sharpImageSizeProbe;
 
@@ -110,7 +121,7 @@ export function createImageSizeReader(options: ImageSizeReaderOptions): ImageSiz
 
   return async function readImageSize(src, onResult = () => {}) {
     if (!isAllowedImageSource(src)) {
-      onResult("skip");
+      onResult("skip", {});
       return null;
     }
     const controller = new AbortController();
@@ -124,17 +135,33 @@ export function createImageSizeReader(options: ImageSizeReaderOptions): ImageSiz
     });
     // load가 불렸으면 캐시에 없던 것(miss)
     let loaded = false;
-    const load = () => {
+    const startedAt = now();
+    let loadStartedAt: number | undefined;
+    let loadEndedAt: number | undefined;
+    const load = async () => {
       loaded = true;
-      return read(src, controller.signal);
+      loadStartedAt = now();
+      try {
+        return await read(src, controller.signal);
+      } finally {
+        loadEndedAt = now();
+      }
+    };
+    const timing = (): ImageSizeTiming => {
+      const end = now();
+      const fetchMs = loadStartedAt === undefined ? undefined : (loadEndedAt ?? end) - loadStartedAt;
+      return {
+        ...(cache ? { cacheMs: end - startedAt - (fetchMs ?? 0) } : {}),
+        ...(fetchMs === undefined ? {} : { fetchMs }),
+      };
     };
     try {
       const size = await Promise.race([cache ? cache(src, load) : load(), timeout]);
-      onResult(loaded ? "miss" : "hit");
+      onResult(loaded ? "miss" : "hit", timing());
       return size;
     } catch (error) {
       const reason = error instanceof ImageSizeUnavailable ? error.reason : "unexpected";
-      onResult(reason === "timeout" ? "timeout" : "error");
+      onResult(reason === "timeout" ? "timeout" : "error", timing());
       logger.warn("image size unavailable", { reason });
       return null;
     } finally {

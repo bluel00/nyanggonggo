@@ -148,4 +148,63 @@ describe("createImageSizeReader(상세 첫 사진 크기, PRD v1.3)", () => {
     await createImageSizeReader({ ...options, fetch: vi.fn<FetchLike>() })("http://example.com/a.jpg", onResult);
     expect(results).toEqual(["miss", "hit", "timeout", "error", "skip"]);
   });
+
+  it("계측용 시간을 캐시 조회·저장과 원본 받기로 나눠 알린다", async () => {
+    const clock = { t: 0 };
+    const bytes = await jpeg(300, 400);
+    // 원본 받기에 30ms가 걸리는 fetch
+    const slowFetch: FetchLike = async (url, init) => {
+      clock.t += 30;
+      return streamingFetch(bytes).fetchImpl(url, init);
+    };
+    // 조회 5ms, 저장 2ms가 걸리는 캐시
+    const store = new Map<string, ImageSize>();
+    const cache: ImageSizeCache = async (key, load) => {
+      clock.t += 5;
+      const hit = store.get(key);
+      if (hit) return hit;
+      const value = await load();
+      clock.t += 2;
+      store.set(key, value);
+      return value;
+    };
+    const timings: unknown[] = [];
+    const onResult = (result: string, timing: unknown) => timings.push({ result, ...(timing as object) });
+    const now = () => clock.t;
+
+    await createImageSizeReader({ ...options, fetch: slowFetch, now })(SRC, onResult);
+    const cached = createImageSizeReader({ ...options, fetch: slowFetch, cache, now });
+    await cached(SRC, onResult);
+    await cached(SRC, onResult);
+    await createImageSizeReader({ ...options, fetch: vi.fn<FetchLike>(), now })("http://example.com/a.jpg", onResult);
+
+    expect(timings).toEqual([
+      { result: "miss", fetchMs: 30 },
+      { result: "miss", cacheMs: 7, fetchMs: 30 },
+      { result: "hit", cacheMs: 5 },
+      { result: "skip" },
+    ]);
+  });
+
+  it("원본을 받다가 시간 초과면 끊긴 때까지를 받기 시간으로 알린다", async () => {
+    const hang: FetchLike = (_url, init) =>
+      new Promise((_, reject) => init?.signal?.addEventListener("abort", () => reject(new DOMException("aborted", "AbortError"))));
+    let timing: { cacheMs?: number; fetchMs?: number } = {};
+    await createImageSizeReader({ ...options, timeoutMs: 30, fetch: hang, cache: (_key, load) => load() })(SRC, (_r, t) => {
+      timing = t;
+    });
+    expect(timing.fetchMs).toBeGreaterThanOrEqual(25);
+    expect(timing.cacheMs).toBeGreaterThanOrEqual(0);
+    expect(timing.cacheMs).toBeLessThan(25);
+  });
+
+  it("캐시 조회에서 시간 초과면 받기 시간 없이 전부 캐시 시간이다", async () => {
+    let timing: { cacheMs?: number; fetchMs?: number } = {};
+    const slowCache: ImageSizeCache = () => new Promise(() => {});
+    await createImageSizeReader({ ...options, timeoutMs: 30, fetch: vi.fn<FetchLike>(), cache: slowCache })(SRC, (_r, t) => {
+      timing = t;
+    });
+    expect(timing).not.toHaveProperty("fetchMs");
+    expect(timing.cacheMs).toBeGreaterThanOrEqual(25);
+  });
 });

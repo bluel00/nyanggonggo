@@ -1,4 +1,4 @@
-import type { ImageSizeResult } from "../images/image-size";
+import type { ImageSizeResult, ImageSizeTiming } from "../images/image-size";
 import type { UpstreamPageCache } from "../upstream/client";
 
 /**
@@ -33,6 +33,10 @@ export type PerfRecord = {
   /** 상세만. skip은 사진이 없거나 허용되지 않은 주소 */
   imageSizeMs?: number;
   imageSize?: ImageSizeResult;
+  /** 상세만. imageSizeMs 중 캐시 조회·저장 시간(캐시를 쓸 때) */
+  imageSizeCacheMs?: number;
+  /** 상세만. imageSizeMs 중 원본 받기와 헤더 읽기 시간(원본을 받으러 갔을 때만) */
+  imageSizeFetchMs?: number;
   totalMs: number;
   /** 상세: 공고 조회 성공 여부 */
   ok?: boolean;
@@ -42,7 +46,7 @@ export type PerfRecord = {
 
 export type RequestPerf = PageCacheObserver & {
   /** 사진 크기 읽기를 감싸 시간과 결과를 기록한다 */
-  measureImageSize<T>(read: (onResult: (result: ImageSizeResult) => void) => Promise<T>): Promise<T>;
+  measureImageSize<T>(read: (onResult: (result: ImageSizeResult, timing?: ImageSizeTiming) => void) => Promise<T>): Promise<T>;
   skipImageSize(): void;
   /** 끝을 기록하고 로그 한 줄을 남긴다. 두 번째부터는 남기지 않는다 */
   finish(fields?: Pick<PerfRecord, "ok" | "status">): PerfRecord;
@@ -80,7 +84,7 @@ export function createRequestPerf(kind: PerfKind, options: RequestPerfOptions = 
   const cold = takeCold();
   const uptimeAtStart = uptimeMs();
   const pages: { start: number; end: number; result: UpstreamCacheResult }[] = [];
-  let image: { ms: number; result: ImageSizeResult } | undefined;
+  let image: { ms: number; result: ImageSizeResult; timing: ImageSizeTiming } | undefined;
   let record: PerfRecord | undefined;
 
   return {
@@ -108,17 +112,19 @@ export function createRequestPerf(kind: PerfKind, options: RequestPerfOptions = 
     async measureImageSize(read) {
       const start = now();
       let result: ImageSizeResult = "error";
+      let timing: ImageSizeTiming = {};
       try {
-        return await read((value) => {
+        return await read((value, valueTiming = {}) => {
           result = value;
+          timing = valueTiming;
         });
       } finally {
-        image = { ms: now() - start, result };
+        image = { ms: now() - start, result, timing };
       }
     },
 
     skipImageSize() {
-      image = { ms: 0, result: "skip" };
+      image = { ms: 0, result: "skip", timing: {} };
     },
 
     finish(fields = {}) {
@@ -129,7 +135,7 @@ export function createRequestPerf(kind: PerfKind, options: RequestPerfOptions = 
         cold,
         uptimeMs: Math.round(uptimeAtStart),
         ...upstreamFields(pages),
-        ...(image ? { imageSizeMs: Math.round(image.ms), imageSize: image.result } : {}),
+        ...(image ? imageFields(image) : {}),
         totalMs: Math.round(now() - startedAt),
         ...fields,
       };
@@ -158,4 +164,14 @@ function upstreamFields(pages: { start: number; end: number; result: UpstreamCac
   const misses = pages.filter((p) => p.result === "miss").length;
   const cache: UpstreamCacheResult = misses > 0 ? "miss" : pages.some((p) => p.result === "stale") ? "stale" : "hit";
   return { upstreamMs: Math.round(end - start), upstreamCache: cache, upstreamPages: pages.length, upstreamMisses: misses };
+}
+
+function imageFields(image: { ms: number; result: ImageSizeResult; timing: ImageSizeTiming }): Partial<PerfRecord> {
+  const { cacheMs, fetchMs } = image.timing;
+  return {
+    imageSizeMs: Math.round(image.ms),
+    imageSize: image.result,
+    ...(cacheMs === undefined ? {} : { imageSizeCacheMs: Math.round(cacheMs) }),
+    ...(fetchMs === undefined ? {} : { imageSizeFetchMs: Math.round(fetchMs) }),
+  };
 }

@@ -101,6 +101,27 @@ describe("createRequestPerf(요청 단위 계측, architecture.md 12절 52)", ()
     expect(perf.finish({ status: 502 })).toMatchObject({ upstreamCache: "miss", status: 502 });
   });
 
+  it("사진 크기 읽기의 캐시 시간과 받기 시간을 나눠 남기고, 알리지 않은 쪽은 넣지 않는다", async () => {
+    const { clock, options } = setup();
+    const miss = createRequestPerf("detail", options);
+    await miss.measureImageSize(async (onResult) => {
+      clock.t += 40;
+      onResult("miss", { cacheMs: 6.4, fetchMs: 33.6 });
+      return null;
+    });
+    expect(miss.finish()).toMatchObject({ imageSizeMs: 40, imageSize: "miss", imageSizeCacheMs: 6, imageSizeFetchMs: 34 });
+
+    const hit = createRequestPerf("detail", options);
+    await hit.measureImageSize(async (onResult) => {
+      clock.t += 4;
+      onResult("hit", { cacheMs: 4 });
+      return null;
+    });
+    const record = hit.finish();
+    expect(record).toMatchObject({ imageSizeMs: 4, imageSize: "hit", imageSizeCacheMs: 4 });
+    expect(record).not.toHaveProperty("imageSizeFetchMs");
+  });
+
   it("업스트림·사진 요청이 없으면 그 필드를 넣지 않고, 사진이 없으면 skip", () => {
     const { options } = setup();
     const perf = createRequestPerf("detail", options);
