@@ -1,9 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { scrollAppToTop } from "@/shared/ui/app-column";
-import { BackButton, useCanGoBackInApp } from "@/shared/ui/back-button";
+import { BackButton, useGoBack } from "@/shared/ui/back-button";
 import { PHOTO_BOX_RATIO } from "../model/photo-box";
 
 /**
@@ -14,15 +13,16 @@ import { PHOTO_BOX_RATIO } from "../model/photo-box";
  * 실제 상세(`AnimalDetail`)와 같은 구조·치수로 둔다:
  * - 사진 칸 + 캐러셀 점 줄 자리(pt-3 + 6px). 실제 공고는 모두 사진 2장 이상이라 점 줄이 늘 있다(12.A P7).
  *   칸은 기본 1:1(라우트 로딩 경계는 공고를 몰라 크기를 모를 때의 칸과 같게), 위젯 조회 대기에서는 이미 아는 칸 비율(PRD v1.3)
- * - 사진 위 Back 버튼: 앱 안에서 들어왔으면(목록을 거쳐 옴, useGoBack과 같은 판단) 브라우저 뒤로가기.
- *   바로 들어왔으면(공유 링크·북마크) 버튼을 그리지 않고 자리(44×44)만 비워 둔다. 뼈대는 공고를 몰라 그 공고의 목록으로
- *   보낼 수 없고, 기본 목록으로 보내면 원래 경로와 다르다. 실제 상세가 뜨면 상세의 뒤로가기가 `/`로 보낸다(PRD-v1.4 R2)
+ * - 사진 위 Back 버튼: 실제 상세와 같다(`useGoBack("/")`). 앱 안에서 들어왔으면(목록을 거쳐 옴) 뒤로, 아니면(공유 링크·북마크) `/`.
+ *   갈 곳이 공고와 상관없어 공고를 몰라도 늘 버튼을 보인다(PRD-v1.4 R2, PRD-v1.3 6절 결정 대체). 서버 렌더에도 있다.
+ *   `href="/"` 링크로 그린다: 바로 들어온 첫 화면의 뼈대는 하이드레이션되지 않아(BackButton 주석) 링크로 `/`에 간다.
+ *   그 경우는 목록을 거치지 않은 것이라 `/`가 맞다. 예외: 목록에서 온 탭이 상세에서 새로고침해 뼈대가 뜬 동안 누르면 원래 목록이
+ *   아니라 `/`로 간다(뼈대가 떠 있는 동안만)
  * - 상태 줄(D-day가 title 크기라 28px) · 제목(title 28px) · 성별/나이(body 20px) · 정보 줄
  * - 하단 CTA 바(sticky, 찜 44px 원 + 공유 버튼)
  */
 export function AnimalDetailSkeleton({ photoRatio = PHOTO_BOX_RATIO.unknown }: { photoRatio?: number }) {
-  const router = useRouter();
-  const canGoBack = useCanGoBackInApp();
+  const goBack = useGoBack("/");
   // 내부 스크롤 컨테이너는 화면을 옮겨도 유지되므로 뼈대부터 맨 위에서 보인다(실제 상세도 같은 처리를 한다)
   useEffect(() => scrollAppToTop(), []);
 
@@ -34,7 +34,7 @@ export function AnimalDetailSkeleton({ photoRatio = PHOTO_BOX_RATIO.unknown }: {
           <div className="h-1.5" />
         </div>
         <div className="absolute top-[calc(var(--space-3)+env(safe-area-inset-top,0px))] left-page">
-          {canGoBack ? <BackButton onClick={() => router.back()} /> : <div aria-hidden data-slot="back-placeholder" className="size-touch" />}
+          <BackButton onClick={goBack} href="/" />
         </div>
       </div>
 

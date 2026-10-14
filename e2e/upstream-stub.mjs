@@ -74,6 +74,13 @@ const BY_ID = new Map([
   ]),
 ]);
 
+/**
+ * 로딩 화면(스켈레톤)을 붙잡아 두는 공고 id. 단건 조회를 SLOW_MS 늦춘 뒤 실패(500)로 답한다:
+ * 실패는 서버 페이지 캐시에 남지 않아 매번 늦고, 서버 호출 타임아웃(10초)보다 짧다(e2e/back-nav.spec.ts와 같아야 한다)
+ */
+const SLOW_ID = "990000202609999";
+const SLOW_MS = 8000;
+
 const json = (body) => new Response(JSON.stringify(body), { status: 200, headers: { "content-type": "application/json" } });
 const upstreamPage = (list, total, pageNo, rows) =>
   json({
@@ -97,6 +104,10 @@ globalThis.fetch = async function stubFetch(input) {
   if (url.hostname === "apis.data.go.kr") {
     const params = url.searchParams;
     const id = params.get("desertion_no");
+    if (id === SLOW_ID) {
+      await new Promise((resolve) => setTimeout(resolve, SLOW_MS));
+      return new Response("slow stub", { status: 500 });
+    }
     if (id) {
       const found = BY_ID.get(id);
       return upstreamPage(found ? [found] : [], found ? 1 : 0, 1, 10);

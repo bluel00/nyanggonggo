@@ -140,4 +140,34 @@ test.describe("R2: 공유 링크 → 상세 → 뒤로가기", () => {
     await expect(page.getByRole("status")).toBeVisible(); // 스텁에서 제주 고양이는 빈 목록(빈 상태 문구)
     expect(await filterCookies(context)).toEqual(remembered);
   });
+
+  // 스텁이 이 공고의 조회를 8초 늦춰(e2e/upstream-stub.mjs SLOW_ID) 서버가 로딩 경계(스켈레톤)만 먼저 보낸 채 붙잡아 둔다
+  const SLOW_ID = "990000202609999";
+  const cases = [
+    { name: "쿠키가 없으면 홈", cookies: [], expected: "/home" },
+    {
+      name: "쿠키가 있으면 쿠키의 축종·지역 목록",
+      cookies: [
+        { name: REGION_COOKIE, value: "6500000" },
+        { name: SPECIES_COOKIE, value: "cat" },
+      ],
+      expected: "/?species=cat&region=6500000",
+    },
+  ];
+  for (const { name, cookies, expected } of cases) {
+    test(`로딩 화면(스켈레톤)에서 뒤로가기도 \`/\`로 간다: ${name}, 쿠키는 그대로`, async ({ page, context }) => {
+      if (cookies.length) await context.addCookies(cookies.map((cookie) => ({ ...cookie, url: "http://localhost:3101" })));
+
+      // 응답이 끝나지 않아 load 이벤트가 오지 않으므로 문서가 오기 시작하면 바로 본다
+      await page.goto(`/animals/${SLOW_ID}`, { waitUntil: "commit" });
+      const skeleton = page.locator('[data-slot="detail-skeleton"]');
+      await expect(skeleton).toBeVisible();
+      // 상세가 오지 않은 동안 뼈대는 하이드레이션되지 않는다(끝나지 않은 Suspense 경계의 대체 화면). 그래도 눌리는지 바로 누른다
+      await skeleton.getByRole("link", { name: "뒤로가기" }).click();
+
+      await expect(page).toHaveURL(expected);
+      await expect(page.locator('[data-slot="animal-detail"]')).toHaveCount(0);
+      expect(await filterCookies(context)).toEqual(cookies);
+    });
+  }
 });
