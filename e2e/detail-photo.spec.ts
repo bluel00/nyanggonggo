@@ -1,16 +1,19 @@
 import { expect, test, type Page } from "@playwright/test";
 
 /**
- * 상세 사진이 잘리지 않는다(PRD v1.3, architecture.md 12절 50). production 서버(실제 공고 조회 + 첫 사진 크기 읽기)에서 본다.
+ * 상세 사진이 잘리지 않는다(PRD v1.3, architecture.md 12절 50). production 빌드를 스텁 서버로 띄워(첫 사진 크기 읽기 포함) 본다.
  *
- * 공고는 2026-10-08 사진 비율 조사의 대표 공고다. 원본 크기는 그때 잰 값이다(공공 API는 크기를 주지 않는다).
- * 실제 공고라 시간이 지나 조회되지 않으면 건너뛴다(이유를 남긴다).
+ * 공고와 사진은 e2e/upstream-stub.mjs의 고정 데이터다(실제 공고·사진 요청 없음). 사진 크기는 스텁의 ANIMALS와 같아야 한다.
+ * 비율은 2026-10-08 사진 비율 조사의 대표 경우(4:3 가로, 3:4 세로, 세로 → 가로)를 따랐다.
  */
 const CASES = [
-  { name: "4:3 가로", id: "441403202600232", photos: [{ width: 2000, height: 1535 }, { width: 2000, height: 1621 }] },
-  { name: "3:4 세로", id: "426332202600508", photos: [{ width: 455, height: 576 }, { width: 510, height: 542 }] },
-  { name: "세로 → 가로가 섞임", id: "426326202600401", photos: [{ width: 1200, height: 1600 }, { width: 1600, height: 1200 }] },
+  { name: "4:3 가로", id: "990000202600001", photos: [{ width: 1600, height: 1200 }, { width: 1600, height: 1300 }] },
+  { name: "3:4 세로", id: "990000202600002", photos: [{ width: 900, height: 1200 }, { width: 1020, height: 1084 }] },
+  { name: "세로 → 가로가 섞임", id: "990000202600003", photos: [{ width: 1200, height: 1600 }, { width: 1600, height: 1200 }] },
 ];
+
+/** 사진 칸은 컬럼 좌우 24px 안쪽이다(방향 A 1단계, px-6) */
+const PHOTO_INSET = 24;
 
 const clamp = (ratio: number) => Math.min(4 / 3, Math.max(3 / 4, ratio));
 
@@ -47,13 +50,16 @@ for (const item of CASES) {
       }).observe({ type: "layout-shift", buffered: true });
     });
     const response = await page.goto(`/animals/${item.id}`);
-    test.skip(response?.status() === 404, `공고 ${item.id}가 더 이상 조회되지 않는다`);
+    expect(response?.status()).toBe(200);
     const track = page.locator('[data-slot="image-carousel"]');
-    const opened = await track
-      .waitFor({ timeout: 15_000 })
-      .then(() => true)
-      .catch(() => false);
-    test.skip(!opened, `공고 ${item.id}의 상세를 열지 못했다(조회 실패)`);
+    await expect(track).toBeVisible();
+
+    // 칸은 컬럼 좌우 24px 안쪽(좁아진 칸에서도 아래 비율·contain이 그대로여야 한다)
+    const column = await page.locator('[data-slot="app-column"]').boundingBox();
+    const trackBox = await track.boundingBox();
+    if (!column || !trackBox) throw new Error("컬럼 또는 사진 칸을 찾지 못했다");
+    expect(trackBox.x - column.x, "칸 왼쪽 여백").toBeCloseTo(PHOTO_INSET, 0);
+    expect(trackBox.width, "칸 폭 = 컬럼 − 좌우 24px").toBeCloseTo(column.width - PHOTO_INSET * 2, 0);
 
     // 칸 비율 = 첫 사진 비율을 3:4~4:3으로 제한. 모든 슬라이드가 같은 칸
     const expectedBox = clamp(item.photos[0].width / item.photos[0].height);
@@ -61,6 +67,7 @@ for (const item of CASES) {
     for (const [index, original] of item.photos.entries()) {
       const slide = await slideAt(page, index);
       heights.push(slide.box.height);
+      expect(slide.box.width, `사진 요소 폭 = 좁아진 칸 폭(${index + 1}번째)`).toBeCloseTo(trackBox.width, 0);
       expect(slide.box.width / slide.box.height, `칸 비율(${index + 1}번째)`).toBeCloseTo(expectedBox, 2);
       // 사진 전체가 칸 안에 보인다: contain이고, 원본 비율 그대로 그린 영역이 칸 안에 들어간다
       expect(slide.fit).toBe("contain");
