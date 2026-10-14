@@ -27,7 +27,7 @@ export function Segmented<T extends string>({
           onClick={() => onChange(option.value)}
           className={cn(
             "min-h-9 flex-1 rounded-pill text-body text-text-2",
-            "aria-checked:bg-bg aria-checked:text-text",
+            "aria-checked:bg-surface aria-checked:text-text",
             "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
           )}
         >

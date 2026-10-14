@@ -9,7 +9,8 @@ export const cn = createCn({
   extend: {
     theme: {
       text: ["title", "card-title", "body", "caption", "badge"],
-      radius: ["card", "control", "pill"],
+      radius: ["card", "choice", "control", "pill"],
+      shadow: ["card", "card-pressed", "card-ended", "control", "chip", "apply", "photo", "bar"],
       spacing: ["page", "feed-gap", "touch"],
       container: ["column"],
     },

@@ -56,9 +56,18 @@ export function SpeciesChoice({ area }: { area: AnimalArea }) {
             onKeyDown={(event) => {
               if (event.key === "Enter") press(species);
             }}
-            className="flex flex-col items-center gap-3 rounded-card border border-border bg-bg pt-6 pb-4 text-card-title text-text transition-transform duration-press ease-out motion-safe:active:scale-press focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            className="flex flex-col items-center gap-3 rounded-choice bg-surface pt-6 pb-4 shadow-card text-card-title text-text transition-transform duration-press ease-out motion-safe:active:scale-press focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
-            <SpeciesCharacter species={species} animated ref={characterRef[species]} />
+            {/* 캐릭터 뒤 104px 원형 후광(choice-halo → choice-halo-end 72%, README). 장식이라 사진 뒤에는 쓰지 않는다 */}
+            <span className="relative grid place-items-center">
+              <span
+                aria-hidden
+                className="absolute size-[104px] rounded-full bg-[radial-gradient(circle,var(--choice-halo)_0%,var(--choice-halo-end)_72%)]"
+              />
+              <span className="relative">
+                <SpeciesCharacter species={species} animated ref={characterRef[species]} />
+              </span>
+            </span>
             {SPECIES_LABEL[species]}
           </Link>
         ))}

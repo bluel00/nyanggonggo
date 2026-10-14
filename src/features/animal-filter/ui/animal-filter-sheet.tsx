@@ -74,7 +74,8 @@ export function AnimalFilterSheet({ filter }: { filter: AnimalListFilter }) {
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetTrigger asChild>
-        <Chip>
+        {/* 필터 버튼: 흰 바탕 + shadow-control(README, 칩보다 진한 그림자) */}
+        <Chip className="shadow-control">
           <SlidersHorizontal aria-hidden className="size-4" strokeWidth={1.8} />
           필터
         </Chip>
@@ -148,7 +149,7 @@ export function AnimalFilterSheet({ filter }: { filter: AnimalListFilter }) {
           </div>
         </Section>
 
-        <Button variant="primary" size="touch" className="w-full" onClick={handleApply}>
+        <Button variant="apply" size="touch" className="w-full" onClick={handleApply}>
           적용하기
         </Button>
       </SheetContent>
