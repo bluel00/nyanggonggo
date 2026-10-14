@@ -12,22 +12,26 @@ CSS 변수는 `globals.css`의 `:root`에 hex 그대로 정의하고, Tailwind�
 
 | CSS 변수 | Tailwind 키 | 값 |
 |---|---|---|
-| `--bg` | `colors.bg` (`background`) | #FFFFFF |
+| `--bg` / `--bg-end` | `colors.bg.DEFAULT / end` (`background`) | #FFF8EE / #F9EBD9 (페이지 바탕 세로 그라데이션) |
+| `--surface` | `colors.surface` (`card`, `popover`) | #FFFFFF |
 | `--canvas` | `colors.canvas` | #F5F5F5 |
-| `--text` | `colors.text` (`foreground`, `primary`) | #111111 |
-| `--on-text` | `colors['on-text']` (`primary-foreground`) | #FFFFFF |
-| `--text-2` | `colors['text-2']` (`muted-foreground`) | #666666 |
-| `--border` | `colors.border` | #EEEEEE |
+| `--text` | `colors.text` (`foreground`, `primary`) | #2B211B |
+| `--on-text` | `colors['on-text']` (`primary-foreground`) | #FFF8EE |
+| `--text-2` | `colors['text-2']` (`muted-foreground`) | #6B5A4C |
+| `--border` | `colors.border` | #EADCCB |
 | `--control-border` | `colors['control-border']` (`input`) | #8A8A8A |
 | `--status-protected` / `-bg` / `-text` | `colors.status.protected.DEFAULT / bg / text` | #2E9F6B / #E6F6EE / #1F7A50 |
 | `--status-soon` / `-bg` / `-text` | `colors.status.soon.*` | #F08A24 / #FDF0E1 / #A85508 |
 | `--status-ended` / `-bg` / `-text` | `colors.status.ended.*` | #8A8A8A / #EFEFEF / #666666 |
 | `--photo-pill` | `colors['photo-pill']` | rgba(255,255,255,.9) |
+| `--logo` | `colors.logo` | #A84B3A (홈 로고 글자만) |
+| `--apply-from` / `--apply-to` / `--on-apply` | `colors.apply.from / to / fg` | #FFD3B6 / #F59A86 / #3A1F1A (적용하기만) |
+| `--choice-halo` / `--choice-halo-end` | `colors.halo.DEFAULT / end` | #FFE3C8 / #FFF3E6 |
 | `--kakao` / `--on-kakao` | `colors.kakao.DEFAULT / fg` | #FEE500 / #191919 |
 | `--viewer-bg` / `--on-viewer` | `colors.viewer.bg / fg` | #000 / #FFF |
 | `--text-disabled` / `--disabled-bg` | `colors.disabled.text / bg` | #A3A3A3 / #EEEEEE |
 | `--focus-ring` | `colors.ring` | #111111 |
-| `--radius-card` | `borderRadius.card` | 16px |
+| `--radius-card` / `--radius-choice` | `borderRadius.card / choice` | 22px / 24px |
 | `--radius-control` | `borderRadius.control` | 12px |
 | `--radius-pill` | `borderRadius.pill` | 999px |
 | `--space-3` / `--space-4` | `spacing.feed-gap` / `spacing.page` | 12px / 16px |
@@ -36,9 +40,13 @@ CSS 변수는 `globals.css`의 `:root`에 hex 그대로 정의하고, Tailwind�
 | `--press-duration` / `--sheet-duration` | `transitionDuration.press / sheet` | 100ms / 250ms |
 | `--press-scale` | `scale.press` | 0.98 |
 | `--ease-out` | `transitionTimingFunction.out` | cubic-bezier(0,0,.2,1) |
+| `--shadow-card` · `-card-pressed` · `-card-ended` · `-control` · `-chip` · `-apply` · `-photo` · `-bar` | `boxShadow.card` … `bar` | tokens.json `shadow` 그대로 |
+| `--ease-emphasized` / `--ease-heart` | `transitionTimingFunction.emphasized / heart` | cubic-bezier(.2,0,0,1) / cubic-bezier(.3,1.4,.5,1) |
+| 등장·하트·상세 시간 (`--enter-*`, `--list-enter-*`, `--heart-*`, `--detail-*`) | `transitionDuration.*` | tokens.json `motion` 그대로 |
 | `--font-sans` | `fontFamily.sans` | Pretendard Variable, … |
+| `--font-display` | `fontFamily.display` | Jua, Pretendard Variable, … (제목만) |
 
-Type scale (`fontSize`): `title` 20/28/700, `card-title` 16/24/600, `body` 14/20/400, `caption` 12/16/400, `badge` 12/16/600. Line-heights are derived by the designer, not in the brief. Pretendard Variable (OFL) is included as `fonts/PretendardVariable.woff2`, about 2MB. In the app, use the `pretendard` npm package's dynamic-subset CSS or `next/font/local` with a subset to keep the payload small.
+Type scale (`fontSize`): `title` 20/28/700, `card-title` 16/24/600, `body` 14/20/400, `caption` 12/16/400, `badge` 12/16/600. Display (Jua, 400만): `display-home` 28/36, `display-title` 22/28, `display-logo` 20/28. 상세 지역 제목 `display-detail` 24/32는 Pretendard 700이다(Jua 아님, architecture.md 14절). Line-heights are derived by the designer, not in the brief. Pretendard Variable (OFL) is included as `fonts/PretendardVariable.woff2`, about 2MB. In the app, use the `pretendard` npm package's dynamic-subset CSS or `next/font/local` with a subset to keep the payload small.
 
 `status.protected.DEFAULT` etc. are for dots and points only. Text uses `status-*-text`.
 
@@ -70,11 +78,11 @@ Type scale (`fontSize`): `title` 20/28/700, `card-title` 16/24/600, `body` 14/20
 
 **Safe area.** 프레임의 47/34는 iPhone 14 기준 값이다. 코드는 `env(safe-area-inset-top/bottom)`을 쓰고 `viewport-fit=cover`를 켠다. 하단 CTA와 시트는 `padding-bottom: calc(16px + env(safe-area-inset-bottom))`.
 
-**스와이프 이미지.** 상세 이미지는 잘리지 않는다(PRD v1.3 3절). 사진 칸은 첫 사진의 가로/세로 비율을 3:4~4:3으로 제한한 비율이고, 모든 사진이 그 칸 안에 contain으로 들어가며 빈 곳은 `bg`다. 넘겨도 칸 높이는 같다. 첫 사진 크기를 모르면 칸은 1:1. 풀스크린 뷰어는 원본 비율 contain. CSS scroll-snap (`snap-x snap-mandatory`) 또는 Embla를 쓰고, 뷰어를 닫을 때 마지막 index를 상세로 돌려준다. 도트 인디케이터는 이미지 위가 아니라 아래에 둬도 됨(결정 필요). 사진 없는 공고의 플레이스홀더는 아직 미정.
+**스와이프 이미지.** 상세 사진 칸은 첫 사진의 가로/세로를 3:4~4:3으로 제한한 비율이고, 모든 사진을 칸 안에 `contain`(바탕 `bg`)으로 넣는다(README). 첫 사진 크기를 제때 모르면 1:1. 풀스크린 뷰어는 원본 비율 contain. CSS scroll-snap (`snap-x snap-mandatory`) 또는 Embla를 쓰고, 뷰어를 닫을 때 마지막 index를 상세로 돌려준다. 도트 인디케이터는 이미지 위가 아니라 아래에 둬도 됨(결정 필요). 사진 없는 공고의 플레이스홀더는 아직 미정.
 
 **접근성.** 종료 텍스트 #8A8A8A, 보호중 #2E9F6B, 임박 #F08A24는 텍스트 대비 미달이라 라벨용 `-text` 변형 토큰을 추가했다. 점 색상은 항상 라벨과 함께 쓴다.
 
-**문구 차이.** 토스트는 브리프의 "링크가 복사됐어요"를 사용했다 (기능명세서 7.3은 "링크를 복사했어요"). 목록 카드 사진은 1:1 cover, 가운데 기준이다 (PRD v1.3 3-1절. 브리프는 4:5 cover, 기능명세서 4.1.3은 비율 유지). 프레임 기준은 390 (기능명세서 2.1은 375).
+**문구 차이.** 토스트는 브리프의 "링크가 복사됐어요"를 사용했다 (기능명세서 7.3은 "링크를 복사했어요"). 사진 비율은 README 기준(목록 1:1 cover, 상세는 비율 유지 contain)이고, 브리프의 4:5 cover는 OG 이미지에만 남았다. 프레임 기준은 390 (기능명세서 2.1은 375).
 
 **임의로 정한 값 (확인 필요).** 브리프·기능명세서에 없고 디자인 중에 정한 값이다. 확정하거나 바꿀 때는 아래 항목만 손대면 된다.
 
@@ -85,7 +93,7 @@ Type scale (`fontSize`): `title` 20/28/700, `card-title` 16/24/600, `body` 14/20
 
 컴포넌트 내부 치수 (`bundle.css`, 토큰 없음)
 - 배지 높이 24px / 점 6px, Chip 36px 높이 (터치 영역은 위아래 4px 확장해 44px), Segmented 버튼 36px, Radio 원 20px
-- BottomSheet 핸들 36x4px, 딤 rgba(0,0,0,.4), 카드 텍스트 좌우 패딩 4px, 카드 이름-보호소 간격 2px
+- BottomSheet 핸들 36x4px, 딤 rgba(0,0,0,.4), 카드 텍스트 패딩 10px 12px 12px(흰 카드 안, 방향 A), 카드 이름-보호소 간격 2px
 - 아이콘 선 두께 1.8px, 기본 크기 22px (필터 칩 안에서는 16px)
 
 화면 1~2 (목록 + 필터 시트)
@@ -93,16 +101,16 @@ Type scale (`fontSize`): `title` 20/28/700, `card-title` 16/24/600, `body` 14/20
 - 헤더는 sticky로 가정했고 스크롤 시 구분선은 없다. 헤더 안 세로 여백은 `space-3`, 좌우는 `space-4`.
 - 프레임 상단 47px은 빈 safe area (가짜 상태바 없음). 하단 34px은 필터 시트 하단 패딩으로만 반영.
 - 필터 시트 제목 "필터", 섹션 라벨은 `body` + `text-2`, 지역 옵션(전체 지역/서울/경기/부산)은 목 데이터.
-- 카드 사진은 벡터 placeholder이고 실제 사진 톤은 아니다. 사진 비율은 제각각이지만 카드에서는 1:1 cover, 가운데 기준으로 잘린다.
+- 카드 사진은 벡터 placeholder이고 실제 사진 톤은 아니다. 사진 비율은 제각각이지만 카드에서는 1:1 cover(가운데)로 잘린다.
 - 아이콘(heart, filter, close, back, chevron-down)은 자체 stroke SVG이며 구현 시 lucide로 교체 가능.
 
 화면 3~4 (상세 + 풀스크린 뷰어)
-- 상세 사진은 상단 safe area 뒤까지 꽉 채우고(풀폭, 칸은 첫 사진 비율 3:4~4:3, 모르면 1:1, 사진은 contain), Back은 사진 위 오버레이 `Button variant="overlay"` (44x44, `photo-pill` 배경). 새 variant이지만 기존 토큰만 쓴다.
+- 상세 사진 칸은 safe area 아래에서 시작해 좌우 24px 안쪽(390에서 342 폭), `radius-card`, 둘레에 `shadow-photo`(종료는 없음). Back은 사진 왼쪽 위 오버레이 `Button variant="overlay"` (44x44, `photo-pill` 배경). (방향 A, 이전: 풀폭·safe area 뒤까지)
 - 도트 인디케이터는 사진 아래에 두었다 (사진 위 오버레이가 아님). 6px 원, 현재 `text`, 나머지 `control-border`, 간격 `space-2`. 위치와 색은 임의 결정.
 - 상태 + D-day 강조: StatusBadge(D-day 없이 상태만) 옆에 D-day를 `title` 스타일 텍스트로 크게 표시, 색은 `status-*-text`. 종료 공고는 배지 "종료"만 표시. 이 조합은 임의 결정.
 - 이름(없으면 지역명)을 `title`, 그 아래 "성별 · 추정나이"를 `body` + `text-2`. 성별 표기는 임의로 암컷 / 수컷 / 성별 미상.
 - 보호소 / 발견 장소 / 공고 기간은 라벨-값 2열 그리드 (라벨 `body` `text-2`, 열 폭은 내용에 맞춤, 행 간격 `space-3`).
-- 하단 CTA 바: `bg` 배경 + 위쪽 `border` 1px 선, 패딩 `space-3` / `space-4`, 아래는 safe area 34px 추가. 찜 44x44 + 카카오톡 공유(남은 폭). 컬럼 안 `absolute`(또는 `sticky bottom-0`), 정보 리스트는 이 바 뒤로 스크롤된다.
+- 하단 CTA 바: `bg` 배경 + 위쪽 `shadow-bar`(방향 A, 이전 `border` 1px 선), 패딩 `space-3` / `space-4`, 아래는 safe area 34px 추가. 찜 44x44 + 카카오톡 공유(남은 폭). 컬럼 안 `absolute`(또는 `sticky bottom-0`), 정보 리스트는 이 바 뒤로 스크롤된다.
 - 풀스크린 뷰어: `viewer-bg` 전체, 이미지는 원본 비율 `contain`, Close는 우상단 `Button variant="overlay"`, 페이지 표시(예: 2/3)는 상단 중앙 `caption` + `on-viewer`. 목 데이터에 5장짜리가 없어 "1/5" 대신 3장 기준이며, 가로 사진으로 contain 여백을 보여주려고 2/3를 표시했다.
 - 스와이프는 정적 화면으로는 표현할 수 없다. 구현은 scroll-snap 가로 스크롤 (또는 Embla)이며 도트/페이지 표시는 스크롤 위치에서 계산한다.
 
@@ -129,4 +137,18 @@ Type scale (`fontSize`): `title` 20/28/700, `card-title` 16/24/600, `body` 14/20
 - 새 화면을 그리지 않고 DS 컴포넌트를 480px 컬럼(`cn-column`)에 다시 마운트했다. 화면 1·3 보드(390 고정)를 import한 것이 아니며, 컬럼 폭만 480이다.
 - 프레임 높이 900은 임의. 데스크톱 safe area는 0, 좌우 여백은 `canvas` 색. 컬럼은 `position: relative`, 시트·CTA 바·뷰어·토스트는 모두 컬럼 안 `absolute`라 뷰포트가 아니라 컬럼 기준으로 뜬다. 구현에서도 `fixed`는 쓰지 않는다.
 - 08a: 목록 + 열린 필터 시트(컬럼 안). 08b: 상세 + 하단 CTA(컬럼 안). 08c: 뷰어(컬럼 안, `viewer-bg`, 2/3 표시).
-- 상세 사진 칸은 컬럼 폭 480에서 4:3 가로 480x360, 3:4 세로 480x640, 1:1(크기를 모를 때) 480x480.
+- 상세 사진은 컬럼 폭 480에서 좌우 24px 안쪽 432 폭, 높이는 첫 사진 비율(3:4~4:3)에 따라 324~576. (방향 A, 이전: 풀폭 480에서 480x360~480x640)
+
+## (d) 방향 A 적용 (2026-10-14)
+
+근거: Design 아티팩트 "냥공고 홈 · 축종 선택"의 DirA, HomeA, MotionA. 표와 데모가 다르면 MotionA에서 실제로 재생한 값을 따랐다. 원칙(README 맨 앞)이 꾸밈보다 먼저다.
+
+- **바탕 그라데이션.** `bg` → `bg-end`는 스크롤 컨테이너가 아니라 움직이지 않는 컬럼(`.cn-column`, 높이 `100dvh`)에 둔다. 스크롤 길이에 걸면 목록이 길수록 거의 단색이 된다. 흰 면(카드, 시트, 컨트롤)은 `surface`.
+- **그림자.** `shadow-*`는 흰 면에만 쓰고 사진 위·사진 안에는 쓰지 않는다. 목록 카드 그림자는 `box-shadow` 그대로 둬도 되지만, 스크롤이 버벅이면 카드 뒤 정적 레이어로 옮긴다(측정 후 결정).
+- **제목 글꼴(주아).** 결정(2026-10-14, architecture.md 14절): Jua는 고정 문구 7개("냥공고", "오늘은 누구를 보러 왔어요?", "고양이", "강아지", "고양이 공고", "강아지 공고", "기타 동물 공고")에만 쓰고, 이 글자만 담은 부분 글꼴 파일 하나(woff2)를 `next/font/local`로 올린다. 상세 지역 제목은 Pretendard 24/32/700이다(`orgNm`에서 와서 글자를 미리 알 수 없다). 빠진 글자는 Pretendard로 보인다. (디자인 원본 2026-10-14의 이 항목은 `next/font/google` 먼저 시도와 지역 이름 포함 부분 글꼴이었고, 상세 제목을 Pretendard로 바꾸는 중이었다.)
+- **목록 첫 화면 등장.** 첫 렌더 직후 한 번, 뷰포트 아래 끝보다 위에 걸친 카드(종료 제외)만 `list-enter-*`로 올린다. 스크롤·다음 페이지·뒤로가기 복원에서는 실행하지 않는다(세션 플래그).
+- **카드 → 상세 전환.** 결정(2026-10-14): View Transitions로 한다. 같은 문서 View Transitions(카드 사진과 상세 사진에 같은 `view-transition-name`)로 사진이 칸 크기로 커지게 한다. 루트의 기본 크로스페이드는 끈다(`::view-transition-old(root)`, `::view-transition-new(root)`에 `animation: none`): 상세 바탕이 처음부터 불투명해야 목록 사진이 반투명하게 비치지 않는다. 사진 쪽은 old/new 이미지를 `object-fit: cover; height: 100%`로 맞춰, 1:1에서 잘렸던 부분이 드러나게 한다. 지원하지 않는 브라우저: 상세 바탕은 바로 깔고 사진과 정보만 `detail-info-duration`(200ms) 페이드. 종료 공고와 움직임 줄이기는 효과 없이 바로 바뀐다.
+- **찜 하트.** `AnimalCard`에 들어 있다(`favorite`, `onFavoriteToggle`을 넘기면 사진 오른쪽 위에 보임). 사진 위 흰 원(40px, `photo-pill`, 누르는 영역 44px) 크기는 그대로, 안의 하트만 1 → 1.2 → 1. 종료 카드는 채움만. 카드 링크와 형제 요소라 하트를 눌러도 카드가 눌리거나 상세로 가지 않는다.
+- **움직임 줄이기.** `prefers-reduced-motion: reduce`면 등장·전환·하트·누름·시트·캐릭터 모두 효과 없이 바로 바뀐다(페이드도 없음).
+- **캐릭터.** 선 색 `#3A2A20`으로 바뀐 SVG(17개)를 쓰고, Rive 파일은 선 색을 다시 가져온다. 누름 반응에서 머리 6° 갸웃을 뺐다(`characters.md`).
+- **간격.** 결정(2026-10-14): 카드 사이는 `space-3` 12px. DirA 보드는 16px로 그려 첫 화면 카드 수를 쟀으므로, 12px이면 둘째 카드가 조금 더 보인다.
