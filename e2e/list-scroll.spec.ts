@@ -77,4 +77,5 @@ test("기본값이 아닌 필터에서도 열었던 카드가 보인다", async 
   expect(await isCardInView(page, animalId)).toBe(true);
 });
 
-// 공유 링크로 상세에 바로 들어온 경우의 뒤로가기는 focus.spec.ts가 다룬다(그 공고의 목록으로 간다)
+// 공유 링크로 상세에 바로 들어온 경우의 뒤로가기(`/`로 간다)와 5페이지까지 내린 복원, 새로고침 뒤 뒤로가기는
+// back-nav.spec.ts가 다룬다(PRD-v1.4)

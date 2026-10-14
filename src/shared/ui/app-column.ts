@@ -55,7 +55,7 @@ function takeSelectedAnimal(listKey: string): string | null {
 
 /**
  * id로 카드를 찾아 스크롤 컨테이너의 가운데쯤 오게 한다. 카드가 아직 없으면 false.
- * 뒤로가기 복원과 (앞으로 추가할) 공유 링크의 focus 파라미터가 같이 쓴다.
+ * 상세에서 뒤로 왔을 때의 복원(아래)이 쓴다.
  */
 export function scrollAppToAnimal(animalId: string): boolean {
   const container = appScrollContainer();
@@ -98,8 +98,6 @@ export function scrollAppToAnimalWhenReady(animalId: string, onSettled?: () => v
  * 픽셀(scrollTop) 대신 **카드 id**를 기억한다. 내부 스크롤 컨테이너는 화면이 바뀌는 순간 내용이 비어
  * 스크롤 값이 0으로 눌리고, 복원 시점에는 아직 높이가 모자라 픽셀 값이 자주 틀어졌다(12절 37).
  * 데이터에서 빠진 공고(상태가 바뀐 경우 등)는 조용히 포기하고 맨 위에 둔다.
- *
- * URL에 focus가 있으면 그쪽이 우선이다. 호출하는 쪽이 ready를 false로 두어 둘이 같이 스크롤하지 않게 한다.
  */
 export function useAnimalScrollRestoration(listKey: string, ready: boolean): void {
   /** 아직 찾는 중인 카드. 저장소에서는 바로 지우고 여기에 들고 있는다(effect가 다시 붙어도 이어서 찾는다) */

@@ -13,8 +13,8 @@ import { rememberSpecies } from "./species-cookie";
  * scroll: false — 스크롤은 문서가 아니라 내부 컨테이너라 목록 위젯이 필터 변경 시 맨 위로 올린다.
  *
  * 여기가 "사용자가 필터를 직접 고른" 지점이라, 고른 지역과 축종을 쿠키에 기억한다(홈에서 고를 때가 나머지 한 곳이다).
- * 공유 링크로 들어온 상세의 뒤로가기(focus 흐름)나 필터가 붙은 링크로 들어온 경우는 이 경로를 타지 않으므로
- * 기억하지 않는다(7절, PRD-v1.1 3절 8)).
+ * 공유 링크로 들어온 상세와 그 뒤로가기(`/`로 간다)나 필터가 붙은 링크로 들어온 경우는 이 경로를 타지 않으므로
+ * 기억하지 않는다(7절, PRD-v1.1 3절 8), PRD-v1.4 R2).
  */
 export function useApplyAnimalFilter() {
   const router = useRouter();

@@ -54,7 +54,7 @@ test("상세가 느려도 카드를 누르면 바로 상세 뼈대가 보이고,
   // 늦춘 요청이 끝나기 전이다: 상세 위젯이 아니라 라우트 로딩 경계가 그린 뼈대다
   expect(navigationDone).toBe(false);
   // 뼈대에서도 뒤로 갈 수 있다
-  await expect(page.getByRole("button", { name: "뒤로가기" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "뒤로가기" })).toBeVisible();
 
   await expect(page.locator('[data-slot="animal-detail"]')).toBeVisible({ timeout: DETAIL_DELAY_MS + 10_000 });
   await expect(skeleton).toHaveCount(0);
@@ -92,7 +92,7 @@ test("목록에서 들어와 뼈대가 떠 있을 때 뒤로가기를 누르면 
 
   await card.click();
   await expect(page.locator('[data-slot="detail-skeleton"]')).toBeVisible({ timeout: SKELETON_WITHIN_MS });
-  await page.getByRole("button", { name: "뒤로가기" }).click();
+  await page.getByRole("link", { name: "뒤로가기" }).click();
 
   // 늦춘 상세가 끝나기 전에 원래 목록(필터가 붙은 주소)으로 돌아와 있다
   await expect(page).toHaveURL(listUrl);
@@ -100,10 +100,9 @@ test("목록에서 들어와 뼈대가 떠 있을 때 뒤로가기를 누르면 
   expect(navigation.done).toBe(false);
 });
 
-test("바로 들어온 탭에서 뼈대가 떠 있으면 뒤로가기 버튼을 그리지 않고 자리만 둔다(기본 목록으로 보내지 않는다)", async ({ page }) => {
+test("바로 들어온 탭에서 뼈대가 떠 있어도 뒤로가기 버튼이 있고, 상세가 뜨면 같은 자리다(PRD-v1.4 R2)", async ({ page }) => {
   // 공유 링크로 상세 A에 바로 들어온 탭(목록을 거치지 않음). 이 탭에서 다른 상세 B로 가는 동안 뼈대가 뜨게 한다.
-  // 서버가 바로 그린 첫 화면의 뼈대는 서버 렌더라 버튼이 없다(animal-detail-skeleton.test.tsx). 여기서는 같은 판단이
-  // 클라이언트에서 그린 뼈대에서도 지켜지는지를, B의 이동 요청을 늦춰서 본다.
+  // 뼈대의 뒤로가기는 실제 상세와 같이 `/`로 가므로 공고를 몰라도 버튼을 보인다(누른 결과는 back-nav.spec.ts).
   const [first, target] = [items[2], items[3]];
   await page.goto(`/animals/${first.id}`);
   await openedDetail(page);
@@ -116,12 +115,11 @@ test("바로 들어온 탭에서 뼈대가 떠 있으면 뒤로가기 버튼을 
   const skeleton = page.locator('[data-slot="detail-skeleton"]');
   await expect(skeleton).toBeVisible({ timeout: 2000 });
   expect(navigation.done).toBe(false);
-  await expect(page.getByRole("button", { name: "뒤로가기" })).toHaveCount(0);
-  const placeholder = skeleton.locator('[data-slot="back-placeholder"]');
-  await expect(placeholder).toBeVisible();
-  const slot = await placeholder.boundingBox();
+  const skeletonButton = skeleton.getByRole("link", { name: "뒤로가기" });
+  await expect(skeletonButton).toBeVisible();
+  const slot = await skeletonButton.boundingBox();
 
-  // 상세가 뜨면 같은 자리(헤더가 움직이지 않음)에 상세의 뒤로가기가 생긴다
+  // 상세가 뜨면 같은 자리(헤더가 움직이지 않음)에 상세의 뒤로가기가 있다
   await expect(page.locator('[data-slot="animal-detail"]')).toBeVisible({ timeout: SLOW_DETAIL_MS + 10_000 });
   const button = await page.getByRole("button", { name: "뒤로가기" }).boundingBox();
   expect(button).toEqual(slot);

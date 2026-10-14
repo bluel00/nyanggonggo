@@ -2,7 +2,7 @@
 
 import { ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback } from "react";
 import { hasVisitedList } from "../lib/app-navigation";
 import { Button } from "./button";
 
@@ -25,18 +25,31 @@ export function canGoBackInApp(): boolean {
   return hasVisitedList() && window.history.length > 1;
 }
 
-const noSubscribe = () => () => {};
-
 /**
- * 렌더에서 쓰는 canGoBackInApp. 서버 렌더와 그 하이드레이션에서는 false다(서버는 탭의 이동 기록을 모른다).
- * 상세에 바로 들어오면 서버가 그린 화면 그대로 false이고, 앱 안의 이동으로 새로 그릴 때는 처음부터 실제 값이다.
+ * 44x44 뒤로가기 아이콘 버튼(사진 위에서는 photo-pill 배경, handoff 화면 3).
+ *
+ * href를 주면 링크(`<a>`)로 그린다. 하이드레이션 전에도 눌리게 하려는 것이다: 상세에 바로 들어와 로딩 뼈대가 떠 있는 동안
+ * 뼈대는 아직 끝나지 않은 Suspense 경계의 대체 화면이라 React가 하이드레이션하지 않고, 버튼의 onClick은 붙지 않는다
+ * (그때 누른 것은 사라진다). 링크면 브라우저가 href로 간다. 하이드레이션된 뒤에는 onClick이 대신한다(새 탭 열기 등 보조 클릭은 그대로).
  */
-export function useCanGoBackInApp(): boolean {
-  return useSyncExternalStore(noSubscribe, canGoBackInApp, () => false);
-}
-
-/** 44x44 뒤로가기 아이콘 버튼(사진 위에서는 photo-pill 배경, handoff 화면 3) */
-export function BackButton({ onClick, className }: { onClick: () => void; className?: string }) {
+export function BackButton({ onClick, href, className }: { onClick: () => void; href?: string; className?: string }) {
+  if (href !== undefined) {
+    return (
+      <Button asChild variant="overlay" size="icon-touch" className={className}>
+        <a
+          href={href}
+          aria-label="뒤로가기"
+          onClick={(event) => {
+            if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+            event.preventDefault();
+            onClick();
+          }}
+        >
+          <ChevronLeft aria-hidden strokeWidth={1.8} />
+        </a>
+      </Button>
+    );
+  }
   return (
     <Button variant="overlay" size="icon-touch" aria-label="뒤로가기" onClick={onClick} className={className}>
       <ChevronLeft aria-hidden strokeWidth={1.8} />

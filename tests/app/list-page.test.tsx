@@ -39,7 +39,6 @@ beforeEach(() => {
 const SEOUL = "6110000";
 const BUSAN = "6260000";
 const BUSAN_GEUMJEONG = "3350000";
-const ID = "411317202600404";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -72,7 +71,7 @@ describe("app/page: 축종 기억이 없으면 홈으로", () => {
   });
 
   it("홈으로 갈 때도 다른 파라미터는 옮긴다", async () => {
-    expect(await redirectOf({ focus: ID, utm_source: "kakao" })).toBe(`/home?focus=${ID}&utm_source=kakao`);
+    expect(await redirectOf({ utm_source: "kakao", utm_medium: "share" })).toBe("/home?utm_source=kakao&utm_medium=share");
   });
 });
 
@@ -124,12 +123,5 @@ describe("app/page: 축종과 지역이 다 있으면 그대로 그린다", () =
       status: "protected",
       sort: "latest",
     });
-  });
-
-  it("focus는 filter가 아니라 focusId로 넘긴다", async () => {
-    const element = await Page({
-      searchParams: Promise.resolve({ species: "cat", region: SEOUL, focus: ID }),
-    });
-    expect((element.props as { focusId: unknown }).focusId).toBe(ID);
   });
 });

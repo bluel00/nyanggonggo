@@ -7,7 +7,7 @@ const back = vi.fn();
 const push = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ back, push }) }));
 
-/** 모듈 변수(목록을 거쳤는지)를 테스트마다 초기화한다 */
+/** 모듈을 새로 불러온다(새로고침 흉내). "목록을 거쳤다" 표시는 sessionStorage라 afterEach에서 비운다 */
 async function load() {
   vi.resetModules();
   const { markListVisited } = await import("@/shared/lib/app-navigation");
@@ -23,6 +23,7 @@ afterEach(() => {
   cleanup();
   back.mockReset();
   push.mockReset();
+  sessionStorage.clear();
 });
 
 describe("AnimalDetailSkeleton 뒤로가기(공고를 아직 모른다)", () => {
@@ -32,26 +33,27 @@ describe("AnimalDetailSkeleton 뒤로가기(공고를 아직 모른다)", () => 
     setHistoryLength(3);
     render(<AnimalDetailSkeleton />);
 
-    fireEvent.click(screen.getByRole("button", { name: "뒤로가기" }));
+    fireEvent.click(screen.getByRole("link", { name: "뒤로가기" }));
     expect(back).toHaveBeenCalledTimes(1);
     expect(push).not.toHaveBeenCalled();
   });
 
-  it("바로 들어왔으면 버튼 없이 같은 크기(44×44) 자리만 비워 둔다(기본 목록으로 보내지 않는다)", async () => {
+  it("바로 들어왔으면 실제 상세와 같이 `/`로 간다(PRD-v1.4 R2)", async () => {
     const { AnimalDetailSkeleton } = await load();
     setHistoryLength(5); // 카카오톡 인앱 브라우저 등은 히스토리가 쌓여 있다
-    const { container } = render(<AnimalDetailSkeleton />);
+    render(<AnimalDetailSkeleton />);
 
-    expect(screen.queryByRole("button", { name: "뒤로가기" })).toBeNull();
-    expect(container.querySelector('[data-slot="back-placeholder"]')?.className).toContain("size-touch");
+    fireEvent.click(screen.getByRole("link", { name: "뒤로가기" }));
+    expect(push).toHaveBeenCalledWith("/");
+    expect(back).not.toHaveBeenCalled();
   });
 
-  it("서버 렌더(바로 들어온 첫 화면)에는 버튼이 없다", async () => {
-    const { markListVisited, AnimalDetailSkeleton } = await load();
-    markListVisited();
-    setHistoryLength(3);
+  it("서버 렌더(바로 들어온 첫 화면)에도 버튼이 있다(갈 곳이 공고와 상관없다)", async () => {
+    const { AnimalDetailSkeleton } = await load();
     const html = renderToString(<AnimalDetailSkeleton />);
-    expect(html).not.toContain("뒤로가기");
-    expect(html).toContain('data-slot="back-placeholder"');
+    expect(html).toContain('aria-label="뒤로가기"');
+    // 하이드레이션 전(바로 들어와 상세가 아직 오지 않음)에도 눌리도록 `/` 링크다
+    expect(html).toMatch(/<a[^>]*href="\/"[^>]*aria-label="뒤로가기"/);
+    expect(html).not.toContain("back-placeholder");
   });
 });
