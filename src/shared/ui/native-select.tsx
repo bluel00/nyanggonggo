@@ -27,7 +27,7 @@ export function NativeSelect({
         disabled={disabled}
         onChange={(event) => onChange(event.target.value)}
         className={cn(
-          "min-h-touch w-full appearance-none rounded-control border border-control-border bg-bg pr-10 pl-4 text-body text-text",
+          "min-h-touch w-full appearance-none rounded-control border border-control-border bg-surface pr-10 pl-4 text-body text-text",
           "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
           "disabled:border-disabled-bg disabled:bg-disabled-bg disabled:text-disabled-text",
         )}

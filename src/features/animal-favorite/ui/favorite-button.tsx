@@ -6,7 +6,7 @@ import { useFavorite } from "../model/use-favorites";
 
 /**
  * 찜 버튼(44x44). variant:
- * - outline: 상세 하단 CTA(bundle.css .cn-btn--fav, bg + 1px border)
+ * - outline: 상세 하단 CTA(bundle.css .cn-btn--fav, 흰 바탕 surface + shadow-control, 테두리 없음)
  * - overlay: 카드 사진 위(photo-pill 배경, .cn-btn--overlay). 카드 하트는 디자인 시안에 없어 overlay 버튼 모양을 따른다(디자인 미정)
  */
 export function FavoriteButton({
@@ -35,7 +35,7 @@ export function FavoriteButton({
         "inline-flex size-touch flex-none items-center justify-center rounded-pill text-text",
         "transition-transform duration-press ease-out active:scale-press",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-        variant === "outline" ? "border border-border bg-bg active:bg-canvas" : "bg-photo-pill active:bg-bg",
+        variant === "outline" ? "bg-surface shadow-control active:bg-bg" : "bg-photo-pill active:bg-bg",
         className,
       )}
     >

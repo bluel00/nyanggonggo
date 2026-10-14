@@ -5,7 +5,8 @@ import { AnimalPhoto, PHOTO_SIZES } from "@/entities/animal";
 import { cn } from "@/shared/lib/utils";
 
 /**
- * 상세 메인 사진(폭 가득). 네이티브 CSS scroll-snap으로 좌우 스와이프한다(라이브러리 없음).
+ * 상세 메인 사진. 칸은 부모가 좌우 24px 안쪽으로 두고, 여기서 radius-card로 자르고 칸 바깥 둘레에 shadow-photo를 둔다
+ * (사진 위·안에는 그림자를 넣지 않는다. 종료 공고는 그림자 없음, 방향 A). 네이티브 CSS scroll-snap으로 좌우 스와이프한다(라이브러리 없음).
  * 사진은 잘리지 않는다(PRD v1.3): 모든 슬라이드가 같은 칸 비율(boxRatio, 첫 사진 비율을 3:4~4:3으로 제한, 모르면 1:1)이고
  * 사진은 그 칸 안에 contain, 빈 곳은 bg다. 칸 비율은 서버 HTML에 들어 있어 사진이 로드될 때 화면이 밀리지 않고, 넘겨도 높이가 같다.
  * 현재 위치(index)는 부모가 들고 있다(뷰어를 닫으면 그 위치로 맞춘다, 명세 4.4.2).
@@ -43,7 +44,7 @@ export function ImageCarousel({
 
   if (images.length === 0) {
     return (
-      <div className="bg-status-ended-bg" style={{ aspectRatio: boxRatio }}>
+      <div className="overflow-hidden rounded-card bg-status-ended-bg" style={{ aspectRatio: boxRatio }}>
         <AnimalPhoto src={null} alt={alt} />
       </div>
     );
@@ -62,7 +63,10 @@ export function ImageCarousel({
         ref={trackRef}
         data-slot="image-carousel"
         onScroll={handleScroll}
-        className="flex snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className={cn(
+          "flex snap-x snap-mandatory overflow-x-auto rounded-card [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+          !ended && "shadow-photo",
+        )}
       >
         {images.map((src, i) => (
           <button

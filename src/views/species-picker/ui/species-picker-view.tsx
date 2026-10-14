@@ -16,7 +16,7 @@ export function SpeciesPickerView({ area }: { area: AnimalArea }) {
           border-box라 높이가 68이 아니라 48이 되어 본문이 10px 위로 올라간다 */}
       <header className="py-3">
         <div className="flex min-h-touch items-center">
-          <p className="text-card-title">{SERVICE_NAME}</p>
+          <p className="text-card-title text-logo">{SERVICE_NAME}</p>
         </div>
       </header>
       <main className="flex flex-1 flex-col justify-center gap-6 pb-[calc(var(--touch)+var(--space-3)*2)]">

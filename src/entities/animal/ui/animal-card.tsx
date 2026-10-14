@@ -14,6 +14,7 @@ import { StatusBadge } from "./status-badge";
 /**
  * 공고 카드(bundle.css .cn-card). Domain Animal만 받는다.
  *
+ * - 흰 카드(surface, radius-card) + shadow-card(누르는 동안 shadow-card-pressed), 종료는 납작한 shadow-card-ended. 글자 영역 10/12/12px.
  * - 사진 1:1 cover, 가운데(center). 이미지 프록시 경유 plain img(lazy). 종료 공고는 saturate(.7), 딤 없음.
  *   4:5 center 35%는 4:3 가로 사진(약 절반)에서 한쪽에 치우친 동물의 얼굴을 잘라 1:1로 바꿨다(architecture.md 12절 51)
  * - 배지: 사진 좌상단(12px), photo-pill 배경. 종료 공고는 "종료"만, 그 외는 D-day가 있을 때만 붙인다
@@ -51,20 +52,24 @@ export function AnimalCard({
 
   const body = (
     <>
-      <div className="relative aspect-square overflow-hidden rounded-card bg-status-ended-bg">
+      <div className="relative aspect-square overflow-hidden bg-status-ended-bg">
         <AnimalPhoto src={getPrimaryImage(animal)} alt={alt} ended={ended} priority={priority} highPriority={highPriority} sizes={PHOTO_SIZES.card} />
         <div className="absolute top-3 left-3">
           <StatusBadge variant={variant} dDay={ended ? null : getDDay(animal, now)} onPhoto />
         </div>
       </div>
-      <div className="px-1 pt-3">
+      <div className="px-3 pt-2.5 pb-3">
         <p className="truncate text-card-title">{animalTitle(animal)}</p>
         {sub && <p className="mt-0.5 truncate text-body text-text-2">{sub}</p>}
       </div>
     </>
   );
 
-  const className = "block w-full overflow-hidden rounded-card bg-bg text-left text-inherit";
+  // 흰 카드(surface) + 그림자(방향 A). 사진은 카드 위쪽에 붙고 카드 모서리로 잘린다. 사진 위·안에는 그림자를 넣지 않는다
+  const className = cn(
+    "block w-full overflow-hidden rounded-card bg-surface text-left text-inherit",
+    ended ? "shadow-card-ended" : "shadow-card",
+  );
   return (
     <div data-slot="animal-card" data-status={variant} {...{ [ANIMAL_ID_ATTRIBUTE]: animal.id }} className="relative">
       {href ? (
@@ -75,7 +80,8 @@ export function AnimalCard({
           scroll={false}
           className={cn(
             className,
-            "transition-transform duration-press ease-out motion-safe:active:scale-press focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+            !ended && "active:shadow-card-pressed",
+            "transition-[transform,box-shadow] duration-press ease-out motion-safe:active:scale-press focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
           )}
         >
           {body}

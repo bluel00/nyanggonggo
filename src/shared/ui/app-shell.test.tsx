@@ -18,8 +18,13 @@ describe("AppShell", () => {
   });
 
   it("컬럼은 최대 480px(max-w-column), 가운데 정렬, 폭은 가득(390px 화면에서도 그대로)", () => {
-    expect(column).toEqual(expect.arrayContaining(["max-w-column", "mx-auto", "w-full", "bg-bg"]));
+    expect(column).toEqual(expect.arrayContaining(["max-w-column", "mx-auto", "w-full"]));
     expect(html).toContain('data-slot="app-column"');
+  });
+
+  it("바탕 그라데이션(bg → bg-end)은 스크롤 영역이 아니라 움직이지 않는 컬럼에 둔다(방향 A: 화면에 걸친다)", () => {
+    expect(column).toEqual(expect.arrayContaining(["bg-linear-to-b", "from-bg", "to-bg-end"]));
+    expect(scroll.some((c) => c.startsWith("bg-") || c.startsWith("from-"))).toBe(false);
   });
 
   it("컬럼은 화면 높이로 고정되고(h-dvh, overflow-hidden) absolute 요소의 기준(relative)이며 fixed를 쓰지 않는다", () => {

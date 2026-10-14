@@ -83,7 +83,8 @@ export function AnimalDetail({ id, firstPhotoSize = null }: { id: string; firstP
 
   return (
     <article data-slot="animal-detail" className="flex min-h-full flex-col">
-      <div className="relative">
+      {/* 사진 칸: safe area 아래에서 시작해 좌우 24px 안쪽(방향 A, handoff 화면 3~4). 뒤로가기는 칸 왼쪽 위 */}
+      <div className="relative px-6 pt-[calc(var(--space-3)+env(safe-area-inset-top,0px))]">
         <ImageCarousel
           images={animal.images}
           boxRatio={boxRatio}
@@ -93,7 +94,7 @@ export function AnimalDetail({ id, firstPhotoSize = null }: { id: string; firstP
           onIndexChange={setPhotoIndex}
           onOpen={setViewerIndex}
         />
-        <div className="absolute top-[calc(var(--space-3)+env(safe-area-inset-top,0px))] left-page">
+        <div className="absolute top-[calc(var(--space-3)+var(--space-2)+env(safe-area-inset-top,0px))] left-8">
           <BackButton onClick={goBack} />
         </div>
       </div>
@@ -126,7 +127,7 @@ export function AnimalDetail({ id, firstPhotoSize = null }: { id: string; firstP
 
       <div
         data-slot="bottom-cta"
-        className="sticky bottom-0 z-10 flex gap-2 border-t border-border bg-bg px-page pt-3 pb-[calc(var(--space-3)+env(safe-area-inset-bottom,0px))]"
+        className="sticky bottom-0 z-10 flex gap-2 bg-bg px-page shadow-bar pt-3 pb-[calc(var(--space-3)+env(safe-area-inset-bottom,0px))]"
       >
         <FavoriteButton animalId={animal.id} />
         <ShareButton animal={animal} />
