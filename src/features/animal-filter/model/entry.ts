@@ -13,7 +13,6 @@ import {
   type AnimalArea,
   type SearchParamsInput,
 } from "./filter";
-import { readFocusId } from "./from-animal";
 import { parseRegionCookie } from "./region-cookie";
 import { parseSpeciesCookie } from "./species-cookie";
 
@@ -22,7 +21,7 @@ export const HOME_PATH = "/home";
 
 /** `/`로 들어왔을 때 할 일: 이 필터로 목록을 그리거나, 이 주소로 리다이렉트한다 */
 export type AnimalListEntry =
-  | { kind: "render"; filter: AnimalListFilter; focusId: string | null }
+  | { kind: "render"; filter: AnimalListFilter }
   | { kind: "redirect"; href: string };
 
 /** 기억 쿠키의 날값(`cookies().get(...)?.value`). 없으면 기억이 없는 것이다 */
@@ -38,7 +37,7 @@ export type RememberedFilterCookies = { species?: string | null; region?: string
  * 3. 축종이 정해졌으면 지역까지 맞춰 보고, 주소에 채울 값이 있으면 **한 번의 리다이렉트로 둘 다** 채운다.
  *    주소의 시군구가 목록에서 뺀 옛 코드(`DISTRICT_ALIASES`)일 때도 같은 리다이렉트에서 새 코드로 바꿔 쓴다.
  *
- * `focus`, `utm_*` 같은 다른 파라미터는 어느 쪽으로 가든 그대로 옮긴다. `page`/`cursor`와 모르는 `species` 값은 버린다.
+ * `utm_*` 같은 다른 파라미터는 어느 쪽으로 가든 그대로 옮긴다. `page`/`cursor`와 모르는 `species` 값은 버린다.
  */
 export function resolveAnimalListEntry(
   params: SearchParamsInput,
@@ -60,10 +59,10 @@ export function resolveAnimalListEntry(
   if (urlSpecies === null || !hasRegionParam(params) || hasAliasedDistrict(params)) {
     return { kind: "redirect", href: toFilterHref("/", filter, base) };
   }
-  return { kind: "render", filter, focusId: readFocusId(params) };
+  return { kind: "render", filter };
 }
 
-/** 홈으로 보낼 주소. 쓸 수 없는 축종 값과 내부 키만 버리고 나머지(지역, focus, utm_*)는 그대로 옮긴다 */
+/** 홈으로 보낼 주소. 쓸 수 없는 축종 값과 내부 키만 버리고 나머지(지역, utm_*)는 그대로 옮긴다 */
 function toHomePath(base: URLSearchParams): string {
   const next = new URLSearchParams(base);
   for (const key of ["species", ...FORBIDDEN_KEYS]) next.delete(key);

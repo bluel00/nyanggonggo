@@ -17,9 +17,15 @@ export const animalKeys = {
 };
 
 /**
+ * 목록 캐시를 앱 메모리에 두는 시간(PRD-v1.4 R1). 상세에 다녀오는 동안 쌓인 페이지가 이만큼 남아, 그 안에 돌아오면
+ * 다시 받지 않고 보던 자리로 돌아간다. 다른 쿼리는 기본값(`QUERY_GC_TIME_MS`, 5분) 그대로다.
+ */
+export const LIST_GC_TIME_MS = 30 * 60_000;
+
+/**
  * 무한쿼리는 재요청을 하지 않는다(architecture.md 5절). 무한쿼리의 refetch는 쌓인 페이지를
  * **처음 커서부터 전부 순차로** 다시 받아서, 50페이지를 본 목록으로 돌아오면 /api/animals가 51번 나갔다(12절 42).
- * 받아 둔 페이지는 그대로 쓰고, 신선한 목록은 gcTime(5분)이 지나 캐시가 사라진 다음 진입에서 받는다.
+ * 받아 둔 페이지는 그대로 쓰고, 신선한 목록은 gcTime(30분)이 지나 캐시가 사라진 다음 진입에서 받는다.
  */
 export function animalsInfiniteOptions(filter: AnimalListFilter, repository: AnimalRepository = animalRepository) {
   return infiniteQueryOptions({
@@ -32,6 +38,7 @@ export function animalsInfiniteOptions(filter: AnimalListFilter, repository: Ani
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+    gcTime: LIST_GC_TIME_MS,
   });
 }
 

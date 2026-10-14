@@ -7,7 +7,7 @@ const back = vi.fn();
 const push = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ back, push }) }));
 
-/** 모듈 변수(목록을 거쳤는지)를 테스트마다 초기화한다 */
+/** 모듈을 새로 불러온다(새로고침 흉내). "목록을 거쳤다" 표시는 sessionStorage라 afterEach에서 비운다 */
 async function load() {
   vi.resetModules();
   const { markListVisited } = await import("@/shared/lib/app-navigation");
@@ -23,6 +23,7 @@ afterEach(() => {
   cleanup();
   back.mockReset();
   push.mockReset();
+  sessionStorage.clear();
 });
 
 describe("AnimalDetailSkeleton 뒤로가기(공고를 아직 모른다)", () => {

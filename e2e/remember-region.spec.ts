@@ -58,30 +58,38 @@ test("필터로 고른 지역을 기억해, 다시 들어오면 첫 요청부터
   expect(regions).not.toContain(SEOUL); // 서울 목록이 먼저 나갔다가 바뀌지 않는다
 });
 
-test("공유 링크로 들어온 상세의 뒤로가기는 기억된 지역을 무시하고, 기억도 바꾸지 않는다", async ({ page, context }) => {
+test("공유 링크로 들어온 상세의 뒤로가기는 공고의 지역이 아니라 기억된 지역 목록이고, 기억도 바꾸지 않는다", async ({
+  page,
+  context,
+}) => {
   await context.addCookies([{ name: REGION_COOKIE, value: BUSAN, url: "http://localhost:3000" }]);
-  await mockList(page, seoulItems);
-  const shared = seoulItems[1]!;
+  const requests = await mockList(page, seoulItems);
+  const shared = seoulItems[1]!; // 서울 공고
 
   await page.goto(`/animals/${shared.id}`);
   await openedDetail(page);
   await page.getByRole("button", { name: "뒤로가기" }).click();
 
-  await expect(page).toHaveURL(new RegExp(`region=${SEOUL}`));
-  await expect(page).not.toHaveURL(/focus=/);
-  expect(await isCardInView(page, shared.id)).toBe(true);
+  // PRD-v1.4 R2: 공고의 지역(서울)으로 좁히지 않고 `/`로 간다 → 기억된 축종(고양이)·지역(부산) 목록
+  await expect(page).toHaveURL(`/?species=cat&region=${BUSAN}`);
+  await expect(page.locator("[data-animal-id]").first()).toBeVisible();
+  const regions = requestedRegions(firstPageRequests(requests));
+  expect(regions.length).toBeGreaterThan(0);
+  expect(regions.every((region) => region === BUSAN), `목록 요청 지역 ${regions.join(", ")}`).toBe(true);
 
   const cookie = (await context.cookies()).find((item) => item.name === REGION_COOKIE);
   expect(cookie?.value, "남이 공유한 지역은 기억하지 않는다").toBe(BUSAN);
 
-  // 그 목록에서 다른 카드로 들어갔다 돌아와도 기억된 지역(부산)으로 바뀌지 않는다
+  // 그 목록에서 다른 카드로 들어갔다 돌아오면 그 목록(부산) 그대로다(R1)
   const another = page.locator("[data-animal-id]").nth(3);
   const anotherId = (await another.getAttribute("data-animal-id"))!;
   await another.locator("a").click();
   await expect(page).toHaveURL(new RegExp(`/animals/${anotherId}$`));
+  await openedDetail(page);
   await page.getByRole("button", { name: "뒤로가기" }).click();
 
-  await expect(page).toHaveURL(new RegExp(`region=${SEOUL}`));
+  await expect(page).toHaveURL(`/?species=cat&region=${BUSAN}`);
+  await expect(page.locator(`[data-animal-id="${anotherId}"]`)).toBeVisible();
   expect(await isCardInView(page, anotherId)).toBe(true);
 });
 

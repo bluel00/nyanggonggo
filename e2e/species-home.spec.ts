@@ -1,7 +1,6 @@
 import { expect, test, type BrowserContext, type Page } from "@playwright/test";
 import {
   firstPageRequests,
-  isCardInView,
   loadRealItems,
   mockList,
   openedDetail,
@@ -107,7 +106,7 @@ test("목록 헤더에서 홈으로 가면 기억이 있어도 홈이 보이고,
   expect(requestedRegions(requests).every((region) => region === BUSAN)).toBe(true);
 });
 
-test("공유 링크로 다른 축종 공고를 열면 뒤로가기는 그 공고의 목록이고, 기억은 바뀌지 않는다", async ({
+test("공유 링크로 다른 축종 공고를 열면 뒤로가기는 기억된 축종의 목록이고, 기억은 바뀌지 않는다", async ({
   page,
   context,
 }) => {
@@ -119,10 +118,9 @@ test("공유 링크로 다른 축종 공고를 열면 뒤로가기는 그 공고
   await openedDetail(page);
   await page.getByRole("button", { name: "뒤로가기" }).click();
 
-  // 뒤로가기는 기억된 강아지가 아니라 그 공고(고양이)의 목록으로 간다
-  await expect(page).toHaveURL(/species=cat/);
-  await expect(page.getByRole("heading", { name: "고양이 공고" })).toBeVisible();
-  expect(await isCardInView(page, target.id)).toBe(true);
+  // PRD-v1.4 R2: 그 공고(고양이)의 목록이 아니라 `/`로 간다 → 기억된 강아지, 지역 기억 없음 → 서울
+  await expect(page).toHaveURL(`/?species=dog&region=${SEOUL}`);
+  await expect(page.getByRole("heading", { name: "강아지 공고" })).toBeVisible();
   // 남이 공유한 공고를 봤다고 내 기본 축종이 바뀌면 안 된다
   expect(await rememberedSpecies(context)).toBe("dog");
 });

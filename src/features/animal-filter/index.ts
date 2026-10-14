@@ -23,7 +23,6 @@ export {
   type AnimalListEntry,
 } from "./model/entry";
 export { parseSpeciesCookie, rememberSpecies, SPECIES_COOKIE } from "./model/species-cookie";
-export { FOCUS_KEY, animalListFilter, animalListHref, readFocusId } from "./model/from-animal";
 export { parseRegionCookie, REGION_COOKIE, rememberRegion } from "./model/region-cookie";
 export { useApplyAnimalFilter } from "./model/use-apply-animal-filter";
 export { AnimalFilterSheet } from "./ui/animal-filter-sheet";

@@ -4,8 +4,15 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AnimalWireDto } from "@/contract/animals";
-import { createQueryClient } from "@/shared/api/query-client";
-import { animalKeys, useAnimal, useAnimalsByIds, useAnimalsInfinite } from "./queries";
+import { createQueryClient, QUERY_GC_TIME_MS } from "@/shared/api/query-client";
+import {
+  animalKeys,
+  animalsInfiniteOptions,
+  LIST_GC_TIME_MS,
+  useAnimal,
+  useAnimalsByIds,
+  useAnimalsInfinite,
+} from "./queries";
 
 /**
  * 훅은 기본 어댑터(animalRepository)를 그대로 쓴다. 네트워크 대신 전역 fetch를 가짜로 바꾼다.
@@ -144,6 +151,23 @@ describe("useAnimalsInfinite", () => {
       await waitFor(() => expect(other.result.current.isSuccess).toBe(true));
       expect(fetchMock.mock.calls.length).toBe(calls + 1);
     });
+  });
+});
+
+describe("목록 캐시 보관 시간(PRD-v1.4 R1)", () => {
+  it("목록 쿼리의 gcTime은 30분이고, 다른 쿼리는 기본값(5분) 그대로다", async () => {
+    expect(LIST_GC_TIME_MS).toBe(30 * 60_000);
+    expect(animalsInfiniteOptions(LIST_FILTER).gcTime).toBe(30 * 60_000);
+
+    const client = createQueryClient();
+    const list = renderHook(() => useAnimalsInfinite(LIST_FILTER), { wrapper: providerFor(client) });
+    const detail = renderHook(() => useAnimal("448539202600280"), { wrapper: providerFor(client) });
+    await waitFor(() => expect(list.result.current.isSuccess && detail.result.current.isSuccess).toBe(true));
+
+    const cache = client.getQueryCache();
+    expect(cache.find({ queryKey: animalKeys.list(LIST_FILTER) })?.gcTime).toBe(30 * 60_000);
+    expect(cache.find({ queryKey: animalKeys.detail("448539202600280") })?.gcTime).toBe(QUERY_GC_TIME_MS);
+    expect(QUERY_GC_TIME_MS).toBe(5 * 60_000);
   });
 });
 

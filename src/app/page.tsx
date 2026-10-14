@@ -24,5 +24,5 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     region: cookieStore.get(REGION_COOKIE)?.value,
   });
   if (entry.kind === "redirect") redirect(entry.href);
-  return <AnimalListView filter={entry.filter} focusId={entry.focusId} />;
+  return <AnimalListView filter={entry.filter} />;
 }

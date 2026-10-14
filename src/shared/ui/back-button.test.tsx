@@ -6,7 +6,7 @@ const back = vi.fn();
 const push = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ back, push }) }));
 
-/** 모듈 변수(목록을 거쳤는지)를 테스트마다 초기화한다 */
+/** 모듈을 새로 불러온다(새로고침 흉내). "목록을 거쳤다" 표시는 sessionStorage라 afterEach에서 비운다 */
 async function load() {
   vi.resetModules();
   const { markListVisited } = await import("../lib/app-navigation");
@@ -26,6 +26,7 @@ afterEach(() => {
   cleanup();
   back.mockReset();
   push.mockReset();
+  sessionStorage.clear();
 });
 
 describe("useGoBack", () => {
@@ -40,7 +41,19 @@ describe("useGoBack", () => {
     expect(push).not.toHaveBeenCalled();
   });
 
-  it("공유 링크로 바로 열었으면 히스토리가 쌓여 있어도 목록으로 간다(앱 밖으로 나가지 않는다)", async () => {
+  it("목록을 거쳐 온 뒤 새로고침해도(같은 탭) 표시가 남아 뒤로 간다(PRD-v1.4 R1)", async () => {
+    const before = await load();
+    before.markListVisited();
+    const { Screen } = await load(); // 새로고침: 모듈은 새로 불러오고 sessionStorage는 남는다
+    setHistoryLength(3);
+    render(<Screen />);
+
+    fireEvent.click(screen.getByLabelText("뒤로가기"));
+    expect(back).toHaveBeenCalledTimes(1);
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("공유 링크로 바로 열었으면 히스토리가 쌓여 있어도 `/`로 간다(앱 밖으로 나가지 않는다, PRD-v1.4 R2)", async () => {
     const { Screen } = await load();
     setHistoryLength(5); // 카카오톡 인앱 브라우저 등
     render(<Screen />);

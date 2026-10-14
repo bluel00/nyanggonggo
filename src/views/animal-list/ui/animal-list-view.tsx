@@ -4,7 +4,7 @@ import { AnimalFilterSheet } from "@/features/animal-filter";
 import { AnimalList, AnimalListHeader } from "@/widgets/animal-list";
 
 /** 목록 화면. 배치만 한다(로직 없음). filter는 app/page.tsx가 URL에서 파싱해 넘긴다. */
-export function AnimalListView({ filter, focusId = null }: { filter: AnimalListFilter; focusId?: string | null }) {
+export function AnimalListView({ filter }: { filter: AnimalListFilter }) {
   return (
     <main>
       <AnimalListHeader
@@ -16,7 +16,7 @@ export function AnimalListView({ filter, focusId = null }: { filter: AnimalListF
           </>
         }
       />
-      <AnimalList filter={filter} focusId={focusId} />
+      <AnimalList filter={filter} />
     </main>
   );
 }

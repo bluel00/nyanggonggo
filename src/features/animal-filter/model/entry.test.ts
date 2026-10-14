@@ -5,7 +5,6 @@ const SEOUL = "6110000";
 const JONGNO = "3000000";
 const BUSAN = "6260000";
 const BUSAN_JUNG = "3380000";
-const ID = "411317202600404";
 
 const qs = (query: string) => new URLSearchParams(query);
 
@@ -55,7 +54,6 @@ describe("resolveAnimalListEntry: 축종을 먼저 판정한다(결정 B)", () =
     expect(entry(`species=dog&region=${BUSAN}&status=ended&sort=endingSoon`, { species: "cat", region: SEOUL })).toEqual({
       kind: "render",
       filter: { species: "dog", region: BUSAN, status: "ended", sort: "endingSoon" },
-      focusId: null,
     });
   });
 
@@ -64,17 +62,9 @@ describe("resolveAnimalListEntry: 축종을 먼저 판정한다(결정 B)", () =
     expect(result).toEqual({
       kind: "render",
       filter: { species: "cat", status: "protected", sort: "endingSoon" },
-      focusId: null,
     });
   });
 
-  it("focus는 필터가 아니라 focusId로 넘긴다", () => {
-    expect(entry(`species=cat&region=${SEOUL}&focus=${ID}`)).toEqual({
-      kind: "render",
-      filter: { species: "cat", region: SEOUL, status: "protected", sort: "latest" },
-      focusId: ID,
-    });
-  });
 });
 
 describe("resolveAnimalListEntry: 목록에서 뺀 창원시 옛 코드(12절 41)", () => {
@@ -82,8 +72,8 @@ describe("resolveAnimalListEntry: 목록에서 뺀 창원시 옛 코드(12절 41
   const CHANGWON = "5670000";
 
   it.each(["5280000", "5320000"])("URL의 district=%s는 5670000으로 고쳐 한 번 리다이렉트한다", (code) => {
-    expect(entry(`species=dog&region=${GYEONGNAM}&district=${code}&focus=${ID}`)).toBe(
-      `/?focus=${ID}&species=dog&region=${GYEONGNAM}&district=${CHANGWON}`,
+    expect(entry(`species=dog&region=${GYEONGNAM}&district=${code}&utm_source=kakao`)).toBe(
+      `/?utm_source=kakao&species=dog&region=${GYEONGNAM}&district=${CHANGWON}`,
     );
   });
 
@@ -97,7 +87,6 @@ describe("resolveAnimalListEntry: 목록에서 뺀 창원시 옛 코드(12절 41
     expect(entry(`species=dog&region=${GYEONGNAM}&district=${CHANGWON}`)).toEqual({
       kind: "render",
       filter: { species: "dog", region: GYEONGNAM, district: CHANGWON, status: "protected", sort: "latest" },
-      focusId: null,
     });
   });
 
@@ -111,7 +100,6 @@ describe("resolveAnimalListEntry: 목록에서 뺀 창원시 옛 코드(12절 41
     expect(entry(`species=cat&region=${GYEONGNAM}&district=9999999`)).toEqual({
       kind: "render",
       filter: { species: "cat", region: GYEONGNAM, status: "protected", sort: "latest" },
-      focusId: null,
     });
   });
 
@@ -121,13 +109,13 @@ describe("resolveAnimalListEntry: 목록에서 뺀 창원시 옛 코드(12절 41
 });
 
 describe("resolveAnimalListEntry: 다른 파라미터 처리", () => {
-  it("홈으로 갈 때도 focus와 utm_*을 옮긴다", () => {
-    expect(entry(`focus=${ID}&utm_source=kakao`)).toBe(`/home?focus=${ID}&utm_source=kakao`);
+  it("홈으로 갈 때도 utm_*을 옮긴다", () => {
+    expect(entry(`utm_source=kakao&utm_medium=share`)).toBe(`/home?utm_source=kakao&utm_medium=share`);
   });
 
-  it("목록으로 채워 보낼 때도 focus와 utm_*을 옮긴다", () => {
-    expect(entry(`focus=${ID}&utm_source=kakao`, { species: "dog" })).toBe(
-      `/?focus=${ID}&utm_source=kakao&species=dog&region=${SEOUL}`,
+  it("목록으로 채워 보낼 때도 utm_*을 옮긴다", () => {
+    expect(entry(`utm_source=kakao&utm_medium=share`, { species: "dog" })).toBe(
+      `/?utm_source=kakao&utm_medium=share&species=dog&region=${SEOUL}`,
     );
   });
 
