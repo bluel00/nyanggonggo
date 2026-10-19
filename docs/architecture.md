@@ -716,3 +716,32 @@ PRD v1.1이 공식화한 항목(2026-10-02). 구현은 v1.1을 따르므로 불�
   - 래스터만 보면 27.6 → 32.5ms(+18%)로 그림자·그라데이션만큼 늘었고 페인트(기록)는 흔들림 안이다. 상세 LCP 요소는 같은 첫 사진인데 칸이 좁아져 면적이 139,446 → 108,640으로 줄었다.
   - 스크린샷(저장소 밖): `nyanggonggo-review/perf-ui/screens/stage1/` 홈, 목록(위·스크롤), 필터 시트, 상세 보호중(위·아래), 상세 종료, 목록 종료, 찜 빈 상태, 목록 오류, 상세 오류. 오류 화면은 스텁이 대구(`6270000`) 목록을 실패로 답하고, 상세는 없는 id로 연다.
   - 실기기 확인: 아직(브랜치 미리보기 배포 후 EL).
+
+**2단계(제목 글꼴 Jua, 브랜치 `stage-2-font`, 2026-10-19)**
+
+- 원본·라이선스: Google Fonts 저장소 `google/fonts`의 `ofl/jua/Jua-Regular.ttf`(커밋 `69d2493`, sha256 고정, 출처 저장소 `woowabros/Jua`). SIL OFL 1.1이고 **예약 글꼴 이름(Reserved Font Name)이 없다**(google/fonts·woowabros 두 OFL.txt의 저작권 줄, 글꼴 name 13번 확인). 그래서 부분 글꼴의 이름을 바꾸지 않았다. `OFL.txt`를 글꼴 옆에 둔다.
+- 부분 글꼴: `src/shared/assets/fonts/jua-subset.woff2` **8,660바이트**(25글자: 고정 문구 7개 + 공백·물음표). 다시 만들기: `node scripts/jua-subset.mjs`(uvx로 `fonttools==4.60.1`·`brotli==1.1.0`을 임시 환경에서 돌림, 저장소 의존성 아님), 글자 목록 `jua-subset.txt`.
+- 싣기: `src/shared/ui/display-font.ts`(`next/font/local`, `display: swap`). 미리 불러오기는 이 모듈을 가져오는 홈·목록에만 붙고, Next가 HTML `<link>`가 아니라 **HTTP `Link: …; rel=preload; as="font"` 헤더**로 보낸다(상세·찜에는 없음). 브라우저는 약 180ms에 요청을 시작한다.
+- 대체 글꼴 크기 맞춤: Next의 `adjustFontFallback`은 a~z 평균 폭으로 Arial을 맞추는 방식이라 라틴 글자가 없는 이 파일에는 효과가 없어 끄고, 스크립트가 만드는 `jua-fallback.css`의 "Jua Fallback"(Pretendard dynamic subset의 같은 파일, 고정 문구 글자만, `size-adjust` 95.32%·ascent 83.93%·descent 20.98%·line-gap 26.23%)을 대체 글꼴 첫 순서에 둔다.
+- 적용: 홈 서비스명 `display-logo`, 홈 질문 `display-home`, 홈 고양이·강아지 라벨과 목록 제목 `display-title`(Jua). 상세 제목은 보호중·임박 `display-detail`(Pretendard 24/32/700), 종료는 `title` 그대로. 상세 뼈대 제목 높이를 32px로 맞췄다(종료 공고는 4px 짧아진다). 토큰 `.display-*` 클래스는 font-family가 "Jua" 이름이라 쓰지 않고 Tailwind `text-display-*` + `displayFont.className`을 쓴다.
+- 테스트: `tests/design/jua-subset.test.ts`(cmap에 고정 문구의 모든 글자, 그 밖의 글자 없음, 20KB 이하, 글자 목록, OFL, 대체 글꼴 범위), `tests/design/jua-usage.test.tsx`(Jua를 쓰는 파일·횟수 고정, 홈·목록 헤더에서 Jua가 붙은 요소의 글자가 고정 문구뿐), 상세 제목 크기(`animal-detail.test.tsx`).
+- 측정(0단계와 같은 방법, 스크롤 5회 CPU 6배, LCP·CLS 7회):
+
+  | 항목 | 기준선(stage0b, LCP는 0단계, CLS는 1단계 main) | 2단계 | 기준 | 판정 |
+  |---|---|---|---|---|
+  | Jua 파일 | - | 8.5KB 전송, 홈·목록 미리 불러옴, 7개 문구 글자 모두(테스트) | 20KB 이하·홈 미리 불러옴 | 통과 |
+  | FPS 중앙값 | 60.6 (60.4~60.7) | 60.5 (60.5~60.7) | −5% 이내 | 통과 |
+  | 느린 프레임 비율 | 0.2% (0~0.2) | 0.2% (0.2~0.2) | +2%p 이내 | 통과 |
+  | 50ms 넘는 프레임(5회 중앙값) | 0 (0~0) | 0 (0~0) | 늘지 않음 | 통과 |
+  | 메인 스레드 바쁜 비율 | 21.0% (18.0~22.1) | 16.6% (15.4~17.8) | +5%p 이내 | 통과 |
+  | 메인 스레드 50ms 넘는 작업 | 0 | 0(가장 긴 작업 16.2ms) | 0 | 통과 |
+  | 덜 그려진 프레임 | 0% | 0% | +1%p 이내 | 통과 |
+  | 경보선: 페인트·래스터 합 | 52.4ms (46.0~61.1) | 54.1ms (49.4~57.6), **1.03배** | 1.5배 이하 | 넘지 않음 |
+  | LCP 홈 | 440ms (436~444) | 424ms (420~436) | +100ms 이내 | 통과 |
+  | LCP 목록 | 1,488ms (1,460~1,516) | 1,452ms (1,440~1,508) | +100ms 이내 | 통과 |
+  | LCP 상세 | 572ms (560~592) | 564ms (556~584) | +100ms 이내 | 통과 |
+  | CLS 홈 / 목록 / 상세 | 0 / 0 / 0 | 0 / 0 / 0 | 늘지 않음 | 통과 |
+
+  - LCP 요소는 그대로다(홈 캐릭터 120×120, 목록 첫 카드 사진, 상세 첫 사진). 글꼴 교체 확인으로 Jua 응답을 1.5초 늦춰도(3회) 홈·목록 CLS는 0이었다(목록은 chevron이 값 0인 이동 2건).
+  - 측정 스크립트 `lcp.mjs`에 CLS·Jua 요청 기록과 `JUA_DELAY_MS`를 더했다(저장소 밖). 스크린샷 `nyanggonggo-review/perf-ui/screens/stage2/`.
+  - 실기기 확인: 아직(브랜치 미리보기 배포 후 EL).
