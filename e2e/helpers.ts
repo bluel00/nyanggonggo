@@ -91,6 +91,41 @@ export async function scrollListToBottom(page: Page) {
   }, SCROLL);
 }
 
+const isNextListPage = (url: string) => {
+  const { pathname, searchParams } = new URL(url);
+  return pathname === "/api/animals" && searchParams.has("cursor");
+};
+
+/**
+ * 목록을 끝까지 내려 다음 페이지 요청이 나가게 하고, 그 응답(성공)을 기다린다. 카드 수는 부르는 쪽이 이어서 본다.
+ *
+ * 카드가 DOM에 생긴 직후 한 번만 내리면, 그 순간 스크롤이 먹지 않거나(컨테이너가 아직 스크롤되지 않는 상태 등)
+ * 다음 페이지 감시가 붙기 전이라 요청이 영영 나가지 않을 수 있다(전체 E2E에서 한 번, 카드 20장에서 멈춤).
+ * 그래서 요청이 나갈 때까지 다시 내린다. 앱이 다음 페이지를 아예 부르지 않으면 여기서 실패한다.
+ */
+export async function loadNextListPage(page: Page) {
+  let requested = false;
+  const onRequest = (request: { url(): string }) => {
+    if (isNextListPage(request.url())) requested = true;
+  };
+  page.on("request", onRequest);
+  const response = page.waitForResponse((res) => isNextListPage(res.url()));
+  try {
+    await expect
+      .poll(
+        async () => {
+          if (!requested) await scrollListToBottom(page);
+          return requested;
+        },
+        { message: "끝까지 내리면 다음 페이지 요청이 나간다" },
+      )
+      .toBe(true);
+    expect((await response).ok(), "다음 페이지 응답이 성공이다").toBe(true);
+  } finally {
+    page.off("request", onRequest);
+  }
+}
+
 /** 카드가 스크롤 컨테이너의 보이는 영역 안에 있는지 */
 export async function isCardInView(page: Page, animalId: string) {
   return page.evaluate(

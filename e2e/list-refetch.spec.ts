@@ -2,10 +2,10 @@ import { expect, test } from "@playwright/test";
 import {
   isCardInView,
   LIST_PAGE_SIZE,
+  loadNextListPage,
   loadRealItems,
   mockList,
   rememberSpeciesCookie,
-  scrollListToBottom,
   watchConsoleErrors,
   type ListItem,
 } from "./helpers";
@@ -46,7 +46,7 @@ async function loadTwoPages(page: import("@playwright/test").Page, now: Date) {
   const requests = await mockList(page, items);
   await page.goto("/");
   await expect(page.locator("[data-animal-id]")).toHaveCount(LIST_PAGE_SIZE);
-  await scrollListToBottom(page);
+  await loadNextListPage(page);
   await expect(page.locator("[data-animal-id]")).toHaveCount(LIST_PAGE_SIZE * 2);
   return requests;
 }

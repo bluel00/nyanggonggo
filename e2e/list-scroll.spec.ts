@@ -2,10 +2,10 @@ import { expect, test } from "@playwright/test";
 import {
   isCardInView,
   LIST_PAGE_SIZE,
+  loadNextListPage,
   loadRealItems,
   mockList,
   rememberSpeciesCookie,
-  scrollListToBottom,
   watchConsoleErrors,
   type ListItem,
 } from "./helpers";
@@ -18,7 +18,7 @@ import {
 /** 2페이지까지 불러온 뒤 아래쪽 카드를 눌러 상세로 간다. 누른 카드 id를 돌려준다 */
 async function openCardOnSecondPage(page: import("@playwright/test").Page) {
   await expect(page.locator("[data-animal-id]")).toHaveCount(LIST_PAGE_SIZE);
-  await scrollListToBottom(page);
+  await loadNextListPage(page);
   await expect(page.locator("[data-animal-id]")).toHaveCount(LIST_PAGE_SIZE * 2);
 
   const target = page.locator("[data-animal-id]").nth(LIST_PAGE_SIZE + 2); // 2페이지의 카드
