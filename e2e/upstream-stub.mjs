@@ -27,10 +27,10 @@ function ymd(days) {
   return d.toISOString().slice(0, 10).replaceAll("-", "");
 }
 
-function item(id, { upkind, kind, orgNm, photos, updTm, noticeEdtDays }) {
+function item(id, { upkind, kind, orgNm, photos, updTm, noticeEdtDays, processState = "보호중" }) {
   return {
     desertionNo: id,
-    processState: "보호중",
+    processState,
     upKindCd: upkind,
     upKindNm: kind,
     kindFullNm: `[${kind}] 믹스`,
@@ -52,6 +52,9 @@ function item(id, { upkind, kind, orgNm, photos, updTm, noticeEdtDays }) {
   };
 }
 
+/** 종료 공고(상세 제목 줄 높이 확인용, e2e/detail-title.spec.ts와 같아야 한다). 사진은 1:1 두 장이라 뼈대의 기본 칸·점 줄과 같다 */
+const ENDED_ID = "990000202600011";
+
 /** updTm이 하나씩 이르다(최신순 정렬이 index 순서). 종료일은 7~16일 뒤로 돌려 종료임박순은 다른 순서가 된다 */
 const LIST_ITEMS = Array.from({ length: STUB_LIST.size }, (_, index) => {
   const minutes = STUB_LIST.size - index;
@@ -72,6 +75,18 @@ const BY_ID = new Map([
     id,
     item(id, { upkind: "422400", kind: "고양이", orgNm: "서울특별시 종로구", photos, updTm: "2026-10-14 10:00:00.0", noticeEdtDays: 7 }),
   ]),
+  [
+    ENDED_ID,
+    item(ENDED_ID, {
+      upkind: "422400",
+      kind: "고양이",
+      orgNm: "서울특별시 마포구",
+      photos: [[400, 400], [400, 400]],
+      updTm: "2026-10-14 09:00:00.0",
+      noticeEdtDays: -1,
+      processState: "종료(입양)",
+    }),
+  ],
 ]);
 
 /**

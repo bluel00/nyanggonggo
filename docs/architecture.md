@@ -602,6 +602,7 @@ PRD v1.1이 공식화한 항목(2026-10-02). 구현은 v1.1을 따르므로 불�
     - **계측 유지(결정, 2026-10-14, EL 확인)**: 유지한다. 로그는 함수가 돈 요청에 한 줄씩(CDN HIT는 없음)이라 양이 작고, 콜드 요청의 Vercel 쪽 시간(목록 513ms)과 사진 크기 timeout의 원인이 아직 나뉘지 않았으며, 공공 API의 짧은 튐을 이 줄로만 볼 수 있다.
     - **남은 것**: 다음 운영 콜드 측정에서 `imageSizeCacheMs`·`imageSizeFetchMs`로 콜드 사진 크기 timeout을 나눈다. 코드 불러오기(페이지 청크, sharp)를 줄일 방법은 미결이다.
 53. 찜 화면의 부분 실패(2026-10-14, 백로그, 고칠지는 나중에 정한다). `getAnimalsByIds`에서 id 하나의 공공 API 조회가 HTTP 오류이면 by-ids 요청 전체가 실패하고(502) 찜 화면 전체가 에러 상태가 된다(`src/server/animals/service.ts:59` 주변). 빈 결과(조회되지 않는 id)는 8절대로 화면에서만 빠진다.
+54. 상세 로딩 뼈대의 사진 넘김 점 줄(2026-10-19, 14.4 2단계에서 발견, 고칠지는 나중에 정한다). 뼈대는 사진 장수를 몰라 점 줄 자리(12px + 6px)를 늘 두는데, 상세는 사진이 2장 이상일 때만 점 줄을 그린다. 그래서 사진이 한 장인 공고는 뼈대 → 상세에서 점 줄 아래(상태 줄·제목·정보)가 18px 올라간다. 제목 줄 높이(32px)는 상태와 상관없이 같다(`e2e/detail-title.spec.ts`는 두 장 공고로 본다). 선택지: 한 장일 때도 점 줄 높이를 비워 두기, 위젯 조회 대기의 뼈대처럼 아는 장수를 넘기기(라우트 로딩 경계는 공고를 모른다).
 
 ## 13. 다음 버전 계획 (기록만, 설계 전)
 
@@ -681,7 +682,7 @@ PRD v1.1이 공식화한 항목(2026-10-02). 구현은 v1.1을 따르므로 불�
 | 스크롤 중 메인 스레드 50ms 넘는 작업 | 0개 | 1, 3, 4, 5 |
 | 덜 그려진 프레임(체커보드) | 0단계보다 1%p 넘게 늘지 않는다 | 1, 3, 4, 5 |
 | **경보선**: 스크롤 중 페인트·래스터 시간 합 | 0단계의 1.5배 이하. 넘어도 실패가 아니라 **실기기 확인 대상**으로 보고한다 | 1, 3, 4, 5 |
-| Jua 파일 | 20KB 이하, 홈에서 미리 불러옴(`<link rel="preload">`), 고정 문구 7개의 글자가 모두 있음(테스트) | 2 |
+| Jua 파일 | 20KB 이하, 홈에서 미리 불러옴(`<link rel="preload">` 또는 같은 효과의 HTTP `Link` 헤더), 고정 문구 7개의 글자가 모두 있음(테스트) | 2 |
 | 움직임 줄이기·종료 공고 | 애니메이션 0(E2E에서 `getAnimations()` 길이) | 3, 4 |
 | 목록 등장 | 첫 화면 카드만, 스크롤 뒤 새 카드·뒤로가기 복원에는 없음(E2E) | 3 |
 
@@ -721,9 +722,9 @@ PRD v1.1이 공식화한 항목(2026-10-02). 구현은 v1.1을 따르므로 불�
 
 - 원본·라이선스: Google Fonts 저장소 `google/fonts`의 `ofl/jua/Jua-Regular.ttf`(커밋 `69d2493`, sha256 고정, 출처 저장소 `woowabros/Jua`). SIL OFL 1.1이고 **예약 글꼴 이름(Reserved Font Name)이 없다**(google/fonts·woowabros 두 OFL.txt의 저작권 줄, 글꼴 name 13번 확인). 그래서 부분 글꼴의 이름을 바꾸지 않았다. `OFL.txt`를 글꼴 옆에 둔다.
 - 부분 글꼴: `src/shared/assets/fonts/jua-subset.woff2` **8,660바이트**(25글자: 고정 문구 7개 + 공백·물음표). 다시 만들기: `node scripts/jua-subset.mjs`(uvx로 `fonttools==4.60.1`·`brotli==1.1.0`을 임시 환경에서 돌림, 저장소 의존성 아님), 글자 목록 `jua-subset.txt`.
-- 싣기: `src/shared/ui/display-font.ts`(`next/font/local`, `display: swap`). 미리 불러오기는 이 모듈을 가져오는 홈·목록에만 붙고, Next가 HTML `<link>`가 아니라 **HTTP `Link: …; rel=preload; as="font"` 헤더**로 보낸다(상세·찜에는 없음). 브라우저는 약 180ms에 요청을 시작한다.
+- 싣기: `src/shared/ui/display-font.ts`(`next/font/local`, `display: swap`). 미리 불러오기는 이 모듈을 가져오는 홈·목록에만 붙고, Next가 HTML `<link>`가 아니라 **HTTP `Link: …; rel=preload; as="font"` 헤더**로 보낸다(상세·찜에는 없음). 14.3 기준 문구를 이 헤더도 인정하게 고쳤다. 브라우저는 약 180ms에 요청을 시작한다.
 - 대체 글꼴 크기 맞춤: Next의 `adjustFontFallback`은 a~z 평균 폭으로 Arial을 맞추는 방식이라 라틴 글자가 없는 이 파일에는 효과가 없어 끄고, 스크립트가 만드는 `jua-fallback.css`의 "Jua Fallback"(Pretendard dynamic subset의 같은 파일, 고정 문구 글자만, `size-adjust` 95.32%·ascent 83.93%·descent 20.98%·line-gap 26.23%)을 대체 글꼴 첫 순서에 둔다.
-- 적용: 홈 서비스명 `display-logo`, 홈 질문 `display-home`, 홈 고양이·강아지 라벨과 목록 제목 `display-title`(Jua). 상세 제목은 보호중·임박 `display-detail`(Pretendard 24/32/700), 종료는 `title` 그대로. 상세 뼈대 제목 높이를 32px로 맞췄다(종료 공고는 4px 짧아진다). 토큰 `.display-*` 클래스는 font-family가 "Jua" 이름이라 쓰지 않고 Tailwind `text-display-*` + `displayFont.className`을 쓴다.
+- 적용: 홈 서비스명 `display-logo`, 홈 질문 `display-home`, 홈 고양이·강아지 라벨과 목록 제목 `display-title`(Jua). 상세 제목은 보호중·임박 `display-detail`(Pretendard 24/32/700), 종료는 `title` 그대로. 상세 제목 줄은 상태와 상관없이 32px이다(종료 공고는 글자만 title 20px, `leading-8`). 뼈대 제목 높이도 32px이고, 뼈대 → 종료 공고 상세에서 제목과 그 아래가 움직이지 않음을 E2E로 본다(`e2e/detail-title.spec.ts`, 사진 한 장일 때의 점 줄 차이는 12절 B 54). 토큰 `.display-*` 클래스는 font-family가 "Jua" 이름이라 쓰지 않고 Tailwind `text-display-*` + `displayFont.className`을 쓴다.
 - 테스트: `tests/design/jua-subset.test.ts`(cmap에 고정 문구의 모든 글자, 그 밖의 글자 없음, 20KB 이하, 글자 목록, OFL, 대체 글꼴 범위), `tests/design/jua-usage.test.tsx`(Jua를 쓰는 파일·횟수 고정, 홈·목록 헤더에서 Jua가 붙은 요소의 글자가 고정 문구뿐), 상세 제목 크기(`animal-detail.test.tsx`).
 - 측정(0단계와 같은 방법, 스크롤 5회 CPU 6배, LCP·CLS 7회):
 

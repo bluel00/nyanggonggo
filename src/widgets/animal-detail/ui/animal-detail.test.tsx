@@ -110,7 +110,7 @@ describe("AnimalDetail", () => {
     expect(screen.getByRole("img").className).toContain("saturate-70");
   });
 
-  it("제목은 Pretendard다: 보호중은 display-detail(24/32/700), 종료는 차분하게 title(architecture.md 14.1)", async () => {
+  it("제목은 Pretendard다: 보호중은 display-detail(24/32/700), 종료는 차분하게 title 크기에 줄 높이 32px(architecture.md 14.1)", async () => {
     fetchMock.mockResolvedValue(Response.json(wire()));
     renderDetail();
     expect((await screen.findByRole("heading")).className).toContain("text-display-detail");
@@ -120,6 +120,7 @@ describe("AnimalDetail", () => {
     renderDetail();
     const ended = await screen.findByRole("heading");
     expect(ended.className).toContain("text-title");
+    expect(ended.className).toContain("leading-8");
     expect(ended.className).not.toContain("text-display-detail");
   });
 

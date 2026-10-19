@@ -18,7 +18,7 @@ import { PHOTO_BOX_RATIO } from "../model/photo-box";
  *   `href="/"` 링크로 그린다: 바로 들어온 첫 화면의 뼈대는 하이드레이션되지 않아(BackButton 주석) 링크로 `/`에 간다.
  *   그 경우는 목록을 거치지 않은 것이라 `/`가 맞다. 예외: 목록에서 온 탭이 상세에서 새로고침해 뼈대가 뜬 동안 누르면 원래 목록이
  *   아니라 `/`로 간다(뼈대가 떠 있는 동안만)
- * - 상태 줄(D-day가 title 크기라 28px) · 제목(보호중·종료 임박의 display-detail 32px. 종료 공고는 title 28px라 4px 짧다) · 성별/나이(body 20px) · 정보 줄
+ * - 상태 줄(D-day가 title 크기라 28px) · 제목(32px: 보호중·종료 임박의 display-detail, 종료 공고도 줄 높이 32px) · 성별/나이(body 20px) · 정보 줄
  * - 하단 CTA 바(sticky, 찜 44px 원 + 공유 버튼)
  */
 export function AnimalDetailSkeleton({ photoRatio = PHOTO_BOX_RATIO.unknown }: { photoRatio?: number }) {
@@ -42,7 +42,7 @@ export function AnimalDetailSkeleton({ photoRatio = PHOTO_BOX_RATIO.unknown }: {
         <div className="flex h-7 items-center">
           <div className="h-6 w-24 rounded-pill bg-status-ended-bg" />
         </div>
-        <div className="mt-3 h-8 w-2/3 rounded-[7px] bg-status-ended-bg" />
+        <div data-slot="detail-title" className="mt-3 h-8 w-2/3 rounded-[7px] bg-status-ended-bg" />
         <div className="mt-1 h-5 w-1/3 rounded-[6px] bg-status-ended-bg" />
         <div className="mt-6 flex flex-col gap-3">
           {["w-3/4", "w-2/3", "w-1/2"].map((width) => (
