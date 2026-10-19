@@ -53,6 +53,10 @@ test("홈: 정지 이미지가 같은 자리의 Rive 캔버스로 바뀌고, .ri
   const seen = watchRive(page);
   await page.goto("/home");
   const wrapper = page.locator('[data-slot="character-image"]').first().locator("..");
+  // 등장(카드가 12px 올라온다)이 끝난 뒤의 자리와 비교한다. greet은 등장이 끝나야 시작한다
+  await page.evaluate(() =>
+    Promise.all([...document.querySelectorAll('[data-enter="home"]')].flatMap((el) => el.getAnimations().map((a) => a.finished))),
+  );
   const before = await wrapper.boundingBox();
 
   await canvasesReady(page);
@@ -116,6 +120,35 @@ test("Rive가 붙은 뒤 카드를 누르면 바로 이동한다(press 반응 �
   // 개발 PC의 production 서버 기준. 이동이 press 반응(250ms)을 기다리지 않으면 이 안에 끝난다
   expect(elapsed, `이동 ${elapsed}ms`).toBeLessThan(3000);
   await expect(page).toHaveURL(/species=cat/);
+});
+
+test("greet은 홈 등장이 끝난 뒤 0.3초 안에 시작한다(README 움직임 표)", async ({ page }) => {
+  // Rive 자산을 미리 받아 둔 상태(두 번째 방문)에서 잰다. 처음 받는 시간은 망에 따라 다르다
+  await page.goto("/home");
+  await canvasesReady(page);
+  await page.addInitScript(() => {
+    const w = window as unknown as { __ready: number[] };
+    w.__ready = [];
+    new MutationObserver((records) => {
+      for (const record of records) {
+        const el = record.target as HTMLElement;
+        if (record.attributeName === "data-ready" && el.dataset.ready === "true") w.__ready.push(performance.now());
+      }
+    }).observe(document, { attributes: true, subtree: true, attributeFilter: ["data-ready"] });
+  });
+  await page.reload();
+  await canvasesReady(page);
+  const { ready, entranceEnd } = await page.evaluate(async () => {
+    const last = [...document.querySelectorAll('[data-enter="home"]')].at(-1)!;
+    const animation = last.getAnimations()[0];
+    const end = animation ? Number(animation.startTime) + Number(animation.effect!.getComputedTiming().endTime) : 0;
+    return { ready: (window as unknown as { __ready: number[] }).__ready, entranceEnd: end };
+  });
+  expect(ready).toHaveLength(2);
+  for (const t of ready) {
+    expect(t, "등장이 끝나기 전에 시작하지 않는다").toBeGreaterThanOrEqual(entranceEnd);
+    expect(t - entranceEnd, `등장 끝 → greet ${Math.round(t - entranceEnd)}ms`).toBeLessThan(300);
+  }
 });
 
 /** 카드(링크)·캐릭터 칸·라벨(텍스트 노드)의 위치와 크기. 라벨은 텍스트라 Range로 잰다 */
