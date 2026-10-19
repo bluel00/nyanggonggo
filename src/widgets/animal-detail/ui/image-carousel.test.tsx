@@ -73,9 +73,12 @@ describe("ImageCarousel", () => {
     expect(html.match(/aspect-ratio:[\d.]+/g)).toEqual([`aspect-ratio:${4 / 3}`, `aspect-ratio:${4 / 3}`]);
   });
 
-  it("1장이면 도트 없이 정적", () => {
+  it("1장이면 도트 없이 정적. 도트 줄 자리는 비워 둔다(뼈대와 같은 높이, 12절 B 54)", () => {
     const { container } = render(<Harness images={[img(1)]} />);
-    expect(container.querySelector('[data-slot="carousel-dots"]')).toBeNull();
+    const dots = container.querySelector('[data-slot="carousel-dots"]');
+    expect(dots?.className).toContain("pt-3");
+    expect(dots?.className).toContain("h-1.5");
+    expect(dots?.children).toHaveLength(0);
     expect(screen.getByRole("button", { name: "사진 크게 보기" })).toBeTruthy();
   });
 

@@ -52,8 +52,8 @@ function item(id, { upkind, kind, orgNm, photos, updTm, noticeEdtDays, processSt
   };
 }
 
-/** 종료 공고(상세 제목 줄 높이 확인용, e2e/detail-title.spec.ts와 같아야 한다). 사진은 1:1 두 장이라 뼈대의 기본 칸·점 줄과 같다 */
-const ENDED_ID = "990000202600011";
+/** 종료 공고 id → 사진 장수(상세 제목 줄·도트 줄 자리 확인용, e2e/detail-title.spec.ts와 같아야 한다). 사진은 1:1이라 뼈대의 기본 칸과 같다 */
+const ENDED_CASES = { "990000202600011": 2, "990000202600012": 1 };
 
 /** updTm이 하나씩 이르다(최신순 정렬이 index 순서). 종료일은 7~16일 뒤로 돌려 종료임박순은 다른 순서가 된다 */
 const LIST_ITEMS = Array.from({ length: STUB_LIST.size }, (_, index) => {
@@ -75,18 +75,18 @@ const BY_ID = new Map([
     id,
     item(id, { upkind: "422400", kind: "고양이", orgNm: "서울특별시 종로구", photos, updTm: "2026-10-14 10:00:00.0", noticeEdtDays: 7 }),
   ]),
-  [
-    ENDED_ID,
-    item(ENDED_ID, {
+  ...Object.entries(ENDED_CASES).map(([id, count]) => [
+    id,
+    item(id, {
       upkind: "422400",
       kind: "고양이",
       orgNm: "서울특별시 마포구",
-      photos: [[400, 400], [400, 400]],
+      photos: Array.from({ length: count }, () => [400, 400]),
       updTm: "2026-10-14 09:00:00.0",
       noticeEdtDays: -1,
       processState: "종료(입양)",
     }),
-  ],
+  ]),
 ]);
 
 /**
