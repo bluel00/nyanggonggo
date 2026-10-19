@@ -1,6 +1,8 @@
 import { ANIMAL_COPY } from "@/entities/animal";
 import { SpeciesChoice, type AnimalArea } from "@/features/animal-filter";
 import { SERVICE_NAME } from "@/shared/config/service";
+import { cn } from "@/shared/lib/utils";
+import { displayFont } from "@/shared/ui/display-font";
 
 /**
  * 홈(축종 선택) 화면. 배치만 한다(로직 없음). area는 `app/home/page.tsx`가 URL과 쿠키로 정해 넘긴다.
@@ -16,12 +18,12 @@ export function SpeciesPickerView({ area }: { area: AnimalArea }) {
           border-box라 높이가 68이 아니라 48이 되어 본문이 10px 위로 올라간다 */}
       <header className="py-3">
         <div className="flex min-h-touch items-center">
-          <p className="text-card-title text-logo">{SERVICE_NAME}</p>
+          <p className={cn(displayFont.className, "text-display-logo text-logo")}>{SERVICE_NAME}</p>
         </div>
       </header>
       <main className="flex flex-1 flex-col justify-center gap-6 pb-[calc(var(--touch)+var(--space-3)*2)]">
         <div className="flex flex-col gap-2 text-center">
-          <h1 className="text-title">{ANIMAL_COPY.homeTitle}</h1>
+          <h1 className={cn(displayFont.className, "text-display-home")}>{ANIMAL_COPY.homeTitle}</h1>
           <p className="whitespace-pre-line text-body text-text-2">{ANIMAL_COPY.homeDescription}</p>
         </div>
         <SpeciesChoice area={area} />

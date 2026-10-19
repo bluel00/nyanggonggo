@@ -108,7 +108,8 @@ export function AnimalDetail({ id, firstPhotoSize = null }: { id: string; firstP
             </span>
           )}
         </div>
-        <h1 className="mt-3 text-title">{animalTitle(animal)}</h1>
+        {/* 보호중·종료 임박은 display-detail(Pretendard 24/32/700), 종료는 차분하게 title(architecture.md 14.1) */}
+        <h1 className={cn("mt-3", ended ? "text-title" : "text-display-detail")}>{animalTitle(animal)}</h1>
         <p className="mt-1 text-body text-text-2">
           {SEX_LABEL[animal.sex]} · {animal.ageText ?? "나이 미상"}
         </p>
