@@ -1,5 +1,5 @@
 import { expect, test, type BrowserContext, type Page } from "@playwright/test";
-import { isCardInView, openedDetail, scrollListToBottom, SPECIES_COOKIE } from "./helpers";
+import { isCardInView, loadNextListPage, openedDetail, SPECIES_COOKIE } from "./helpers";
 
 /**
  * 상세에서 뒤로가기(PRD-v1.4 R1·R2, 4절 완료 기준). production 빌드를 스텁 서버(e2e/upstream-stub.mjs)로 띄워 본다:
@@ -43,11 +43,11 @@ async function watchSkeletons(page: Page) {
 const skeletonCount = (page: Page) => page.evaluate(() => (window as unknown as { __skeletons: number }).__skeletons);
 const resetSkeletons = (page: Page) => page.evaluate(() => ((window as unknown as { __skeletons: number }).__skeletons = 0));
 
-/** 목록을 pages페이지까지 내린다 */
+/** 목록을 pages페이지까지 내린다. 페이지마다 다음 페이지 응답을 기다린 뒤 카드 수를 본다 */
 async function loadPages(page: Page, pages: number) {
   for (let loaded = 1; loaded < pages; loaded += 1) {
     await expect(page.locator(CARDS)).toHaveCount(loaded * PAGE_SIZE);
-    await scrollListToBottom(page);
+    await loadNextListPage(page);
   }
   await expect(page.locator(CARDS)).toHaveCount(pages * PAGE_SIZE);
 }

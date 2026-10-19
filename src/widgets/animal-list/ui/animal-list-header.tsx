@@ -3,6 +3,8 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { ANIMAL_COPY, SPECIES_COPY, type AnimalListFilter } from "@/entities/animal";
 import { homeHref } from "@/features/animal-filter";
+import { cn } from "@/shared/lib/utils";
+import { displayFont } from "@/shared/ui/display-font";
 
 /**
  * 목록 헤더(handoff 화면 1~2): 왼쪽 타이틀("고양이 공고" / "강아지 공고" / "기타 동물 공고"),
@@ -20,7 +22,7 @@ export function AnimalListHeader({ filter, actions }: { filter: AnimalListFilter
   const listTitle = SPECIES_COPY[filter.species].listTitle;
   return (
     <header className="sticky top-0 z-10 flex items-center justify-between gap-2 bg-bg px-page pt-[calc(var(--space-3)+env(safe-area-inset-top,0px))] pb-3">
-      <h1 className="-ml-2 text-title">
+      <h1 className={cn(displayFont.className, "-ml-2 text-display-title")}>
         <Link
           href={homeHref({ region: filter.region, district: filter.district })}
           aria-label={ANIMAL_COPY.homeEntryLabel(listTitle)}

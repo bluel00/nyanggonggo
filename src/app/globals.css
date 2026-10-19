@@ -135,6 +135,20 @@
   --text-badge: 12px;
   --text-badge--line-height: 16px;
   --text-badge--font-weight: 600;
+  /* 제목(tokens.css의 .display-*와 같은 크기). 글꼴은 Jua 셋은 displayFont.className(src/shared/ui/display-font.ts)으로 따로 준다.
+     display-detail은 Pretendard 700이다(토큰 .display-detail의 Jua 400이 아니라 architecture.md 14.1) */
+  --text-display-home: 28px;
+  --text-display-home--line-height: 36px;
+  --text-display-home--font-weight: 400;
+  --text-display-title: 22px;
+  --text-display-title--line-height: 28px;
+  --text-display-title--font-weight: 400;
+  --text-display-logo: 20px;
+  --text-display-logo--line-height: 28px;
+  --text-display-logo--font-weight: 400;
+  --text-display-detail: 24px;
+  --text-display-detail--line-height: 32px;
+  --text-display-detail--font-weight: 700;
 }
 
 /*

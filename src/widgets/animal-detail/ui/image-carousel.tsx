@@ -11,7 +11,8 @@ import { cn } from "@/shared/lib/utils";
  * 사진은 그 칸 안에 contain, 빈 곳은 bg다. 칸 비율은 서버 HTML에 들어 있어 사진이 로드될 때 화면이 밀리지 않고, 넘겨도 높이가 같다.
  * 현재 위치(index)는 부모가 들고 있다(뷰어를 닫으면 그 위치로 맞춘다, 명세 4.4.2).
  * 사진을 탭하면 onOpen(index). 1장이면 도트 없이 정적, 0장이면 카드와 같은 대체 UI.
- * 도트는 사진 아래(handoff 화면 3: 6px, 현재 text, 나머지 control-border, 간격 space-2).
+ * 도트는 사진 아래(handoff 화면 3: 6px, 현재 text, 나머지 control-border, 간격 space-2). 도트 줄 자리(위 12px + 6px)는 사진 수와
+ * 상관없이 늘 두고 1장 이하면 비워 둔다: 로딩 뼈대가 같은 자리를 두어 뼈대 → 상세에서 사진 아래가 움직이지 않는다(12절 B 54 결정).
  */
 export function ImageCarousel({
   images,
@@ -44,8 +45,11 @@ export function ImageCarousel({
 
   if (images.length === 0) {
     return (
-      <div className="overflow-hidden rounded-card bg-status-ended-bg" style={{ aspectRatio: boxRatio }}>
-        <AnimalPhoto src={null} alt={alt} />
+      <div>
+        <div className="overflow-hidden rounded-card bg-status-ended-bg" style={{ aspectRatio: boxRatio }}>
+          <AnimalPhoto src={null} alt={alt} />
+        </div>
+        <CarouselDots count={0} index={0} />
       </div>
     );
   }
@@ -89,17 +93,23 @@ export function ImageCarousel({
           </button>
         ))}
       </div>
-      {images.length > 1 && (
-        <div data-slot="carousel-dots" aria-hidden className="flex justify-center gap-2 pt-3">
-          {images.map((src, i) => (
-            <span
-              key={src}
-              data-current={i === index}
-              className={cn("size-1.5 rounded-full", i === index ? "bg-text" : "bg-control-border")}
-            />
-          ))}
-        </div>
-      )}
+      <CarouselDots count={images.length} index={index} />
+    </div>
+  );
+}
+
+/** 도트 줄. 자리(pt-3 + 6px)는 늘 두고, 사진이 2장 이상일 때만 도트를 그린다 */
+function CarouselDots({ count, index }: { count: number; index: number }) {
+  return (
+    <div data-slot="carousel-dots" aria-hidden className="box-content flex h-1.5 justify-center gap-2 pt-3">
+      {count > 1 &&
+        Array.from({ length: count }, (_, i) => (
+          <span
+            key={i}
+            data-current={i === index}
+            className={cn("size-1.5 rounded-full", i === index ? "bg-text" : "bg-control-border")}
+          />
+        ))}
     </div>
   );
 }
