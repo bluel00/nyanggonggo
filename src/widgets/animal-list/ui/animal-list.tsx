@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
-import { AnimalCard, SPECIES_COPY, useAnimalsInfinite, type AnimalListFilter } from "@/entities/animal";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type Ref } from "react";
+import { AnimalCard, getStatusVariant, SPECIES_COPY, useAnimalsInfinite, type AnimalListFilter } from "@/entities/animal";
 import { FavoriteButton } from "@/features/animal-favorite";
 import { markListVisited } from "@/shared/lib/app-navigation";
 import {
+  appScrollViewport,
   rememberSelectedAnimal,
   scrollAppToTop,
   useAnimalScrollRestoration,
@@ -35,6 +36,7 @@ export function AnimalList({ filter }: { filter: AnimalListFilter }) {
   // 상세에서 뒤로 오면 캐시된 페이지(같은 쿼리 키)와 함께 열었던 카드로 되돌아간다
   const listKey = filterKey(filter);
   useAnimalScrollRestoration(listKey, query.isSuccess);
+  const feedRef = useFirstScreenEntrance(listKey, query.isPending);
   const sentinelRef = useLoadMore({
     enabled: query.hasNextPage && !query.isFetchingNextPage && !query.isFetchNextPageError,
     onLoadMore: () => void query.fetchNextPage(),
@@ -42,7 +44,7 @@ export function AnimalList({ filter }: { filter: AnimalListFilter }) {
 
   if (query.isPending) {
     return (
-      <FeedList>
+      <FeedList ref={feedRef}>
         {Array.from({ length: INITIAL_SKELETONS }, (_, i) => (
           <SkeletonCard key={i} />
         ))}
@@ -66,7 +68,7 @@ export function AnimalList({ filter }: { filter: AnimalListFilter }) {
   }
 
   return (
-    <FeedList>
+    <FeedList ref={feedRef}>
       {animals.map((animal, index) => (
         <AnimalCard
           key={animal.id}
@@ -77,7 +79,9 @@ export function AnimalList({ filter }: { filter: AnimalListFilter }) {
           highPriority={index === 0}
           href={`/animals/${animal.id}`}
           onSelect={() => rememberSelectedAnimal(listKey, animal.id)}
-          action={<FavoriteButton animalId={animal.id} variant="overlay" />}
+          action={
+            <FavoriteButton animalId={animal.id} variant="overlay" ended={getStatusVariant(animal, now) === "ended"} />
+          }
         />
       ))}
       {query.isFetchingNextPage && <SkeletonCard />}
@@ -94,8 +98,63 @@ export function AnimalList({ filter }: { filter: AnimalListFilter }) {
   );
 }
 
-function FeedList({ children }: { children: ReactNode }) {
-  return <div className="flex flex-col gap-feed-gap px-page pb-page">{children}</div>;
+function FeedList({ children, ref }: { children: ReactNode; ref?: Ref<HTMLDivElement> }) {
+  return (
+    <div ref={ref} className="flex flex-col gap-feed-gap px-page pb-page">
+      {children}
+    </div>
+  );
+}
+
+/**
+ * 목록 첫 화면 등장(README 움직임 표): 뼈대 다음에 첫 페이지가 그려지는 순간, 첫 화면에 들어가는 카드에만 한 번 data-enter="list"와
+ * 순서를 붙인다(globals.css). 종료 카드는 뺀다. 칠하기 전(layout effect)에 붙여 카드가 한 번 보였다 사라지는 깜빡임이 없다.
+ *
+ * 몇 장이 첫 화면인지는 **뼈대가 칠해진 뒤**(effect) 뼈대 위치로 정해 두고, 카드를 그릴 때는 레이아웃을 읽지 않는다.
+ * 카드를 그리는 커밋 안에서 위치를 읽으면 레이아웃이 강제로 앞당겨져 지연 로딩 사진까지 첫 사진과 함께 받기 시작해
+ * 첫 사진(LCP)이 약 0.3초 늦었다(2026-10-19 실측). 뼈대(SkeletonCard)는 카드보다 글자 칸이 10px 낮아 경계에서 화면 바로 아래의
+ * 카드가 하나 더 들어갈 수는 있어도(보이지 않는 곳에서 돈다) 보이는 카드를 빠뜨리지는 않는다.
+ *
+ * 효과가 없는 경우: 스크롤로 새로 보이는 카드·다음 페이지(붙이지 않음), 상세에서 돌아온 목록(캐시가 있어 뼈대를 거치지 않는다),
+ * 움직임 줄이기(CSS가 no-preference에서만 돈다). 다 돈 카드에서는 속성을 지운다.
+ */
+function useFirstScreenEntrance(listKey: string, pending: boolean) {
+  const ref = useRef<HTMLDivElement>(null);
+  /** 뼈대를 보인 목록과 그 화면에 들어가는 카드 수. 이 목록의 첫 페이지가 그려질 때 한 번 등장한다 */
+  const awaiting = useRef<{ listKey: string; count: number } | null>(null);
+
+  useEffect(() => {
+    if (!pending) return;
+    const skeletons = ref.current?.querySelectorAll<HTMLElement>('[data-slot="skeleton-card"]') ?? [];
+    const viewport = appScrollViewport();
+    if (skeletons.length < 2 || !viewport) return;
+    const top = skeletons[0].getBoundingClientRect().top;
+    const step = skeletons[1].getBoundingClientRect().top - top;
+    if (step <= 0) return;
+    awaiting.current = { listKey, count: Math.max(0, Math.ceil((viewport.bottom - top) / step)) };
+  }, [listKey, pending]);
+
+  useLayoutEffect(() => {
+    if (pending || awaiting.current?.listKey !== listKey) return;
+    const { count } = awaiting.current;
+    awaiting.current = null;
+    const cards = ref.current?.querySelectorAll<HTMLElement>('[data-slot="animal-card"]') ?? [];
+    let order = 0;
+    for (const card of [...cards].slice(0, count)) {
+      if (card.dataset.status === "ended") continue;
+      card.dataset.enter = "list";
+      card.style.setProperty("--enter-i", String(order++));
+      const done = (event: AnimationEvent) => {
+        if (event.target !== card) return;
+        card.removeEventListener("animationend", done);
+        delete card.dataset.enter;
+        card.style.removeProperty("--enter-i");
+      };
+      card.addEventListener("animationend", done);
+    }
+  }, [listKey, pending]);
+
+  return ref;
 }
 
 /** 빈 상태와 오류: 헤더는 유지하고 메시지와 버튼만 가운데(handoff 화면 6) */

@@ -18,6 +18,11 @@ function appScrollContainer(): HTMLElement | null {
   return document.querySelector<HTMLElement>(APP_SCROLL_SELECTOR);
 }
 
+/** 내부 스크롤 컨테이너가 화면에서 차지하는 영역(보이는 범위). 컨테이너가 없으면 null */
+export function appScrollViewport(): DOMRect | null {
+  return appScrollContainer()?.getBoundingClientRect() ?? null;
+}
+
 /** 내부 스크롤 컨테이너를 맨 위로 */
 export function scrollAppToTop(): void {
   const container = appScrollContainer();

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ANIMAL_COPY,
   SPECIES_LABEL,
@@ -11,6 +11,7 @@ import {
   type CharacterSpecies,
 } from "@/entities/animal";
 import { DEFAULT_ANIMAL_FILTER, toFilterHref, type AnimalArea, type AnimalSpecies } from "../model/filter";
+import { animationsFinished, enterOrder } from "@/shared/lib/motion";
 import { cn } from "@/shared/lib/utils";
 import { displayFont } from "@/shared/ui/display-font";
 import { rememberSpecies } from "../model/species-cookie";
@@ -23,7 +24,9 @@ import { rememberSpecies } from "../model/species-cookie";
  * 고른 축종은 쿠키에 기억해 다음 `/` 진입에서 홈을 건너뛴다.
  * 지역은 목록에서 넘겨받은 값을 그대로 다음 목록에 실어 보내고, 기억하지는 않는다(결정 G2).
  *
- * 누름 피드백은 카드 누름(100ms, scale .98)이고 reduced-motion이면 줄어들지 않는다(`motion-safe:`).
+ * 누름 피드백은 카드 누름(100ms, scale .98)이고 reduced-motion이면 줄어들지 않는다(`motion-safe:`). 누르면 바로 목록으로 간다.
+ * 등장(README 움직임 표): 제목(SpeciesPickerView) → 고양이 → 강아지 → 링크가 차례로 올라오며 나타난다(globals.css [data-enter]).
+ * 캐릭터 greet은 마지막 등장(링크)이 끝난 뒤 시작한다(Rive는 미리 받아 두고 인스턴스만 그때 만든다).
  *
  * 캐릭터는 Rive로 움직인다(greet → idle, 정지 SVG에서 교체). 카드를 누르는 순간(pointerdown, 키보드 Enter) 그 캐릭터에
  * press 신호를 보낸다. 이동은 늦추지 않는다(반응이 다 보이기 전에 화면이 바뀌어도 된다, characters.md 모션 절).
@@ -35,6 +38,19 @@ export function SpeciesChoice({ area }: { area: AnimalArea }) {
   const dogRef = useRef<CharacterHandle>(null);
   const characterRef = { cat: catRef, dog: dogRef } as const;
   const press = (species: CharacterSpecies) => characterRef[species].current?.press();
+  const lastEnterRef = useRef<HTMLAnchorElement>(null);
+  const [entered, setEntered] = useState(false);
+  useEffect(() => {
+    const last = lastEnterRef.current;
+    if (!last) return;
+    let cancelled = false;
+    void animationsFinished(last).then(() => {
+      if (!cancelled) setEntered(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const listHref = (species: AnimalSpecies) => {
     const filter: AnimalListFilter = {
       species,
@@ -49,9 +65,11 @@ export function SpeciesChoice({ area }: { area: AnimalArea }) {
   return (
     <div className="flex flex-col gap-6">
       <div className="grid grid-cols-2 gap-3">
-        {BIG_CHOICES.map((species) => (
+        {BIG_CHOICES.map((species, index) => (
           <Link
             key={species}
+            data-enter="home"
+            style={enterOrder(index + 1)}
             href={listHref(species)}
             onClick={() => rememberSpecies(species)}
             onPointerDown={() => press(species)}
@@ -67,7 +85,7 @@ export function SpeciesChoice({ area }: { area: AnimalArea }) {
                 className="absolute size-[104px] rounded-full bg-[radial-gradient(circle,var(--choice-halo)_0%,var(--choice-halo-end)_72%)]"
               />
               <span className="relative">
-                <SpeciesCharacter species={species} animated ref={characterRef[species]} />
+                <SpeciesCharacter species={species} animated play={entered} ref={characterRef[species]} />
               </span>
             </span>
             <span className={cn(displayFont.className, "text-display-title")}>{SPECIES_LABEL[species]}</span>
@@ -75,6 +93,9 @@ export function SpeciesChoice({ area }: { area: AnimalArea }) {
         ))}
       </div>
       <Link
+        ref={lastEnterRef}
+        data-enter="home"
+        style={enterOrder(BIG_CHOICES.length + 1)}
         href={listHref("other")}
         onClick={() => rememberSpecies("other")}
         className="flex min-h-touch items-center self-center px-2 text-body text-text-2 underline underline-offset-[3px] hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"

@@ -167,6 +167,48 @@
   scale: var(--press-scale);
 }
 
+/*
+ * 움직임(README 움직임 표, architecture.md 14.2 3단계). CSS만 쓰고 transform 계열(translate·scale)과 opacity만 움직인다.
+ * 움직임 줄이기면 아무것도 돌지 않는다(페이드도 없음): 모두 no-preference 안에만 둔다.
+ * - data-enter="home": 홈 등장(제목 → 고양이 → 강아지 → 링크), 순서는 --enter-i
+ * - data-enter="list": 목록 첫 화면 카드(위젯이 첫 화면에 보이는 카드에만 붙인다). 투명도는 카드 단위로만 쓴다
+ * - data-heart-pop: 찜을 켤 때 하트(흰 원 안의 아이콘만) 1 → 1.2(45%) → 1, 앞뒤 반쪽에 ease-heart
+ */
+@keyframes enter-rise {
+  from {
+    opacity: 0;
+    translate: 0 var(--enter-rise);
+  }
+}
+@keyframes heart-pop {
+  0% {
+    scale: 1;
+    animation-timing-function: var(--ease-heart);
+  }
+  45% {
+    scale: var(--heart-scale);
+    animation-timing-function: var(--ease-heart);
+  }
+  100% {
+    scale: 1;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  [data-enter="home"] {
+    --enter-rise: var(--enter-distance);
+    animation: enter-rise var(--enter-duration) var(--ease-out) both;
+    animation-delay: calc(var(--enter-i, 0) * var(--enter-stagger));
+  }
+  [data-enter="list"] {
+    --enter-rise: var(--list-enter-distance);
+    animation: enter-rise var(--list-enter-duration) var(--ease-out) both;
+    animation-delay: calc(var(--enter-i, 0) * var(--list-enter-stagger));
+  }
+  [data-heart-pop] {
+    animation: heart-pop var(--heart-duration) both;
+  }
+}
+
 /* 하단 CTA 바가 있는 화면에서는 토스트를 CTA 위로 올린다(handoff 화면 6: touch + space-3 × 3 + safe area) */
 [data-slot="app-column"]:has([data-slot="bottom-cta"]) {
   --toast-offset: calc(var(--touch) + var(--space-3) * 3);

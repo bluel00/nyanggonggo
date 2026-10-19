@@ -4,7 +4,7 @@ import { useEffect, useImperativeHandle, useRef, useState, type Ref } from "reac
 import { cn } from "@/shared/lib/utils";
 import { describeError, warnClient } from "@/shared/lib/client-log";
 import { CHARACTER_PRESS_TRIGGER, CHARACTER_STATE_MACHINE } from "../lib/character-animation-assets";
-import { loadCharacterAnimation, prefersReducedMotion } from "../lib/character-animation";
+import { loadCharacterAnimation, prefersReducedMotion, type CharacterAnimationKit } from "../lib/character-animation";
 import type { Animal } from "../model/animal";
 
 /** 캐릭터가 있는 축종. 기타는 종이 분산되어 하나로 대표할 수 없어 캐릭터를 만들지 않는다(docs/design/characters.md) */
@@ -40,21 +40,27 @@ type RiveInstance = InstanceType<typeof import("@rive-app/canvas-lite").Rive>;
  *   한 페이지에 인라인하면 id가 겹친다.
  * - `animated`이면 클라이언트에서만 Rive를 지연 로드하고, 로드되면 같은 120×120 자리를 캔버스로 바꾼다(겹쳐 두고
  *   보이는 쪽만 바꿔 레이아웃 이동이 없다). greet → idle은 Rive 상태 머신이 알아서 한다.
+ * - `play`가 false인 동안은 런타임·.riv만 미리 받아 두고 Rive를 시작하지 않는다(정지 이미지 그대로). true가 되면 그때 시작해
+ *   greet이 바로 돈다. 홈은 등장이 끝난 뒤 true로 바꾼다(README 움직임 표: greet은 등장이 끝나고 0.3초 안에).
  * - 움직임을 줄이도록 설정했거나 로드가 실패하면 정지 이미지 그대로다(런타임·WASM·.riv를 받지 않거나, 로그만 남긴다).
  * - `ref`의 `press()`가 뷰 모델 트리거 `press`를 보낸다(카드를 누를 때). 아직 로드 전이면 아무 일도 없다.
  */
 export function SpeciesCharacter({
   species,
   animated = false,
+  play = true,
   ref,
 }: {
   species: CharacterSpecies;
   animated?: boolean;
+  /** false면 미리 받기만 하고 시작하지 않는다 */
+  play?: boolean;
   ref?: Ref<CharacterHandle>;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const riveRef = useRef<RiveInstance | null>(null);
   const [ready, setReady] = useState(false);
+  const [kit, setKit] = useState<CharacterAnimationKit | null>(null);
 
   useImperativeHandle(
     ref,
@@ -73,36 +79,44 @@ export function SpeciesCharacter({
   useEffect(() => {
     if (!animated || prefersReducedMotion()) return;
     let cancelled = false;
-    let instance: RiveInstance | null = null;
-    void loadCharacterAnimation().then((kit) => {
-      const canvas = canvasRef.current;
-      if (!kit || cancelled || !canvas) return;
-      try {
-        instance = new kit.runtime.Rive({
-          buffer: kit.riv.slice(0),
-          canvas,
-          artboard: CHARACTER_ARTBOARD[species],
-          stateMachine: CHARACTER_STATE_MACHINE,
-          autoBind: true,
-          autoplay: true,
-          onLoad: () => {
-            if (cancelled || !instance) return;
-            instance.resizeDrawingSurfaceToCanvas();
-            riveRef.current = instance;
-            setReady(true);
-          },
-          onLoadError: (event) => warnClient("character-animation", ".riv를 열지 못해 정지 이미지를 쓴다", { species, type: event?.type }),
-        });
-      } catch (error) {
-        warnClient("character-animation", "Rive를 시작하지 못해 정지 이미지를 쓴다", { species, ...describeError(error) });
-      }
+    void loadCharacterAnimation().then((loaded) => {
+      if (loaded && !cancelled) setKit(loaded);
     });
+    return () => {
+      cancelled = true;
+    };
+  }, [animated]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!kit || !play || !canvas) return;
+    let cancelled = false;
+    let instance: RiveInstance | null = null;
+    try {
+      instance = new kit.runtime.Rive({
+        buffer: kit.riv.slice(0),
+        canvas,
+        artboard: CHARACTER_ARTBOARD[species],
+        stateMachine: CHARACTER_STATE_MACHINE,
+        autoBind: true,
+        autoplay: true,
+        onLoad: () => {
+          if (cancelled || !instance) return;
+          instance.resizeDrawingSurfaceToCanvas();
+          riveRef.current = instance;
+          setReady(true);
+        },
+        onLoadError: (event) => warnClient("character-animation", ".riv를 열지 못해 정지 이미지를 쓴다", { species, type: event?.type }),
+      });
+    } catch (error) {
+      warnClient("character-animation", "Rive를 시작하지 못해 정지 이미지를 쓴다", { species, ...describeError(error) });
+    }
     return () => {
       cancelled = true;
       riveRef.current = null;
       instance?.cleanup();
     };
-  }, [animated, species]);
+  }, [kit, play, species]);
 
   return (
     <span aria-hidden className="relative block shrink-0" style={{ width: CHARACTER_SIZE, height: CHARACTER_SIZE }}>
