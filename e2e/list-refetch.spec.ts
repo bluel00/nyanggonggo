@@ -3,7 +3,7 @@ import {
   isCardInView,
   LIST_PAGE_SIZE,
   loadNextListPage,
-  loadRealItems,
+  loadStubItems,
   mockList,
   rememberSpeciesCookie,
   watchConsoleErrors,
@@ -29,7 +29,7 @@ function requestsSince(requests: URL[], mark: number): string[] {
 
 let items: ListItem[];
 test.beforeAll(async ({ request }) => {
-  items = await loadRealItems(request);
+  items = await loadStubItems(request);
 });
 
 const consoleWatch = watchConsoleErrors();

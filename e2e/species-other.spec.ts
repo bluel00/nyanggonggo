@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import {
-  loadRealItems,
+  loadStubItems,
   mockList,
   rememberSpeciesCookie,
   SPECIES_COOKIE,
@@ -11,13 +11,14 @@ import {
 /**
  * 기타 축종(upkind=429900). 기타 공고는 `kindNm`이 늘 "기타축종"이라 어떤 동물인지는
  * `kindFullNm`에서 뽑은 `kindText`에만 있다(architecture.md 12.A P12).
- * 목록은 page.route로 고정하지만, 상세는 서버 렌더라 실제 기타 공고 id가 필요하다.
+ * 목록은 page.route로 고정하고, 상세(서버 렌더)는 스텁(e2e/upstream-stub.mjs)의 기타 공고다. 실제 API가 기타 축종에 동물 이름을
+ * 담아 주는지는 `pnpm e2e:live`(e2e/live)가 본다.
  */
 
 let otherItems: ListItem[];
 test.beforeAll(async ({ request }) => {
-  // 전국 기타·보호중(시군구를 좁히면 건수가 모자랄 수 있다)
-  otherItems = await loadRealItems(request, "", "other");
+  // 전국 기타·보호중
+  otherItems = await loadStubItems(request, "", "other");
   const named = otherItems.find((item) => item.kindText);
   expect(named, "동물 이름이 있는 기타 공고가 있어야 한다").toBeTruthy();
 });
@@ -29,13 +30,6 @@ test.beforeEach(async ({ page, context }) => {
   await rememberSpeciesCookie(context);
 });
 test.afterEach(() => consoleWatch.assertNone());
-
-test("실제 목록 API가 기타 축종을 돌려주고 어떤 동물인지 담겨 있다", async () => {
-  expect(otherItems.length).toBeGreaterThan(0);
-  expect(otherItems.every((item) => item.species === "other")).toBe(true);
-  // 실측에서 kindFullNm은 늘 "[기타축종] <동물>"이라 대부분 이름이 뽑힌다
-  expect(otherItems.filter((item) => item.kindText).length).toBeGreaterThan(otherItems.length / 2);
-});
 
 test("필터에서 기타를 고르면 기타 조건으로 조회하고 카드에 동물 이름이 보인다", async ({ page }) => {
   const requests = await mockList(page, otherItems);

@@ -14,6 +14,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "playwright test",
+    "e2e:live": "playwright test -c playwright.live.config.ts",
     "rive:build": "node scripts/rive-build.mjs riv",
     "rive:wasm": "node scripts/rive-build.mjs wasm"
   },

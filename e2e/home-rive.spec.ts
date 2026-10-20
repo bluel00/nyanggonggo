@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { loadRealItems, mockList, rememberSpeciesCookie, watchConsoleErrors, type ListItem } from "./helpers";
+import { loadStubItems, mockList, rememberSpeciesCookie, watchConsoleErrors, type ListItem } from "./helpers";
 
 /**
  * 홈 캐릭터 Rive(architecture.md 9절 "홈 캐릭터 Rive"). production 빌드에서 본다(실제 번들 분할·정적 파일 그대로).
@@ -91,7 +91,7 @@ test("움직임 줄이기 설정이면 정지 이미지만 두고 Rive 런타임
 test.describe("홈이 아닌 화면", () => {
   let items: ListItem[];
   test.beforeAll(async ({ request }) => {
-    items = await loadRealItems(request);
+    items = await loadStubItems(request);
   });
 
   test("목록·상세·찜에서는 Rive 런타임·.riv·WASM을 받지 않는다", async ({ page, context }) => {
@@ -110,7 +110,7 @@ test.describe("홈이 아닌 화면", () => {
 });
 
 test("Rive가 붙은 뒤 카드를 누르면 바로 이동한다(press 반응 때문에 이동을 늦추지 않는다)", async ({ page }) => {
-  await mockList(page, await loadRealItems(page.request));
+  await mockList(page, await loadStubItems(page.request));
   await page.goto("/home");
   await canvasesReady(page);
   const started = Date.now();
@@ -178,7 +178,7 @@ test("greet(들어올 때 동작) 동안 카드·캐릭터 칸·라벨의 위치
 
 for (const at of [500, 1400]) {
   test(`greet 중간(${at}ms)에 카드를 누르면 바로 목록으로 이동한다`, async ({ page }) => {
-    await mockList(page, await loadRealItems(page.request));
+    await mockList(page, await loadStubItems(page.request));
     await page.goto("/home");
     await canvasesReady(page);
     await page.waitForTimeout(at);
