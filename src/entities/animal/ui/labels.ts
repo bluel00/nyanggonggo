@@ -58,6 +58,10 @@ export const ANIMAL_COPY = {
   favoritesEmptyDescription: "마음에 드는 공고를 저장해보세요 🐾",
   favoritesErrorTitle: "지금은 찜한 공고를 불러오지 못했어요",
   detailErrorTitle: "지금은 공고를 불러오지 못했어요",
+  /** 상세 정보 줄의 이름 */
+  detailRowLabels: { shelter: "보호소", foundPlace: "발견 장소", noticePeriod: "공고 기간", specialMark: "특이사항" },
+  /** 나이를 모를 때 */
+  ageUnknown: "나이 미상",
 } as const;
 
 /**
@@ -84,3 +88,23 @@ export const SEX_LABEL: Record<Animal["sex"], string> = {
   male: "수컷",
   unknown: "성별 미상",
 };
+
+/**
+ * 상세 화면에 보일 글자(제목, 상태·D-day, 성별·나이, 정보 줄 이름과 값). 카드를 누를 때 이 글자의 글꼴 조각을 미리 받는 데 쓴다
+ * (architecture.md 14.2 4단계): 카드 → 상세 전환은 새 화면의 글꼴을 다 받을 때까지 커밋을 기다려, 받지 않은 글자가 있으면 그만큼 늦게 떴다.
+ */
+export function detailDisplayText(animal: Animal): string {
+  return [
+    animalTitle(animal),
+    "보호중 임박 종료 · D-day 0123456789",
+    SEX_LABEL[animal.sex],
+    animal.ageText ?? ANIMAL_COPY.ageUnknown,
+    ...Object.values(ANIMAL_COPY.detailRowLabels),
+    animal.shelterName,
+    animal.foundPlaceText,
+    animal.noticePeriodText,
+    animal.specialMarkText,
+  ]
+    .filter(Boolean)
+    .join(" ");
+}

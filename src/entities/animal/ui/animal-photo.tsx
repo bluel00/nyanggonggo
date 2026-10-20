@@ -12,6 +12,9 @@ import { cn } from "@/shared/lib/utils";
  *
  * sizes(표시 폭 힌트)를 주면 프록시의 허용 폭(480/828/1080, WebP)으로 srcset을 만들어 브라우저가 화면 폭 × DPR에 맞는
  * 것을 고른다. 주지 않으면 원본 그대로다(풀스크린 뷰어: 확대해서 보는 화면, architecture.md 5절).
+ *
+ * knownSrc를 주면 그 주소(이미 받아 디코드한 카드 사진의 currentSrc)를 그대로 쓰고 바로 디코드한다(decoding="sync"). 카드 → 상세
+ * 진입에서 상세 첫 사진이 새로 받거나 디코드를 기다리느라 비는 프레임이 없게 한다(architecture.md 14.2 4단계).
  */
 
 /** 표시 폭 힌트. 카드는 컬럼(최대 480) − 좌우 여백 32, 상세 캐러셀은 컬럼 전체다 */
@@ -30,6 +33,8 @@ export function AnimalPhoto({
   highPriority = false,
   fit = "cover",
   sizes,
+  knownSrc,
+  decodeSync = false,
   className,
 }: {
   /** 원본 URL(공공 API). null이면 대체 UI */
@@ -46,11 +51,15 @@ export function AnimalPhoto({
   fit?: "cover" | "contain";
   /** 표시 폭 힌트(PHOTO_SIZES). 없으면 원본 */
   sizes?: string;
+  /** 이미 받아 둔 같은 사진의 주소. 있으면 srcset 대신 이 주소를 쓴다 */
+  knownSrc?: string;
+  /** 바로 디코드한다(다시 마운트된 상세 사진이 이미 받은 이미지를 비는 프레임 없이 그리게) */
+  decodeSync?: boolean;
   className?: string;
 }) {
   const [failed, setFailed] = useState(false);
-  const proxied = src ? toImageProxyUrl(src, sizes ? DEFAULT_WIDTH : undefined) : null;
-  const srcSet = src && sizes ? (toImageProxySrcSet(src) ?? undefined) : undefined;
+  const proxied = src ? (knownSrc ?? toImageProxyUrl(src, sizes ? DEFAULT_WIDTH : undefined)) : null;
+  const srcSet = src && sizes && !knownSrc ? (toImageProxySrcSet(src) ?? undefined) : undefined;
 
   if (!proxied || failed) {
     return (
@@ -69,7 +78,7 @@ export function AnimalPhoto({
       alt={alt}
       loading={priority || highPriority ? "eager" : "lazy"}
       fetchPriority={highPriority ? "high" : undefined}
-      decoding="async"
+      decoding={knownSrc || decodeSync ? "sync" : "async"}
       onError={() => setFailed(true)}
       className={cn(
         "block size-full",

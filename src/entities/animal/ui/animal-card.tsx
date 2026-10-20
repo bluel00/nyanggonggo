@@ -2,9 +2,12 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { usePrefersReducedMotion } from "@/shared/lib/use-reduced-motion";
 import { cn } from "@/shared/lib/utils";
 import { ANIMAL_ID_ATTRIBUTE } from "@/shared/ui/app-column";
+import { CARD_TO_DETAIL, photoTransition, ViewTransition } from "@/shared/ui/view-transition";
 import type { Animal } from "../model/animal";
+import type { CardPhotoSize } from "../model/detail-entry";
 import { getDDay } from "../model/dDay";
 import { getPrimaryImage, getStatusVariant } from "../model/status";
 import { AnimalPhoto, PHOTO_SIZES } from "./animal-photo";
@@ -24,7 +27,19 @@ import { StatusBadge } from "./status-badge";
  *   그대로 쓰면 1줄과 지역이 겹쳐서 2줄에는 보호소만 둔다
  * - href가 있으면 링크, 없으면 정적 article. 링크를 누르면 onSelect로 알린다(목록이 그 카드를 기억해 뒤로 왔을 때 되돌아간다)
  * - action(예: 찜 버튼)은 사진 우상단에 둔다. 링크 안에 버튼을 넣지 않도록 링크와 형제로 두어 카드 이동과 겹치지 않는다
+ * - transition이면 카드 → 상세 전환(architecture.md 14.2 4단계): 사진 칸이 상세 사진 칸과 짝을 이루고(View Transitions) 링크가
+ *   이동 종류(CARD_TO_DETAIL)를 싣는다. 종료 공고와 움직임 줄이기는 효과 없이 바로 바뀐다(README 원칙).
+ *   누를 때 onSelect에 사진이 로드됐으면 그 주소와 실제 가로·세로를, 아니면 null을 넘긴다(위젯이 상세 로딩 화면을 고른다)
  */
+/** 누른 카드의 사진. 로드되지 않았으면 null */
+export type CardSelection = { photoSrc: string; photoSize: CardPhotoSize } | null;
+
+function cardSelection(link: HTMLElement): CardSelection {
+  const img = link.querySelector("img");
+  if (!img || !img.complete || img.naturalWidth === 0 || img.naturalHeight === 0) return null;
+  return { photoSrc: img.currentSrc || img.src, photoSize: { width: img.naturalWidth, height: img.naturalHeight } };
+}
+
 export function AnimalCard({
   animal,
   now,
@@ -33,6 +48,8 @@ export function AnimalCard({
   highPriority = false,
   action,
   onSelect,
+  onPress,
+  transition = false,
 }: {
   animal: Animal;
   /** D-day 기준 시각 */
@@ -45,21 +62,31 @@ export function AnimalCard({
   /** 사진 우상단 액션(entities는 features를 모르므로 위젯이 넣는다) */
   action?: ReactNode;
   /** 카드를 눌러 상세로 갈 때 */
-  onSelect?: () => void;
+  onSelect?: (selection: CardSelection) => void;
+  /** 카드를 누르기 시작할 때(pointerdown). 다음 화면에 필요한 것을 미리 받는 데 쓴다 */
+  onPress?: () => void;
+  /** 카드 → 상세 전환을 쓴다(목록). 종료 공고는 무시한다 */
+  transition?: boolean;
 }) {
   const variant = getStatusVariant(animal, now);
   const ended = variant === "ended";
   const alt = `${speciesText(animal)} 사진, ${animal.regionText}`;
   const sub = animal.shelterName ?? animal.foundPlaceText;
+  // 전환 경계는 실제로 이어질 때만 둔다: 경계가 있으면 React가 전환(0ms라도)을 열고 새 화면의 글꼴·사진을 기다린다
+  const reducedMotion = usePrefersReducedMotion();
+  const morph = transition && !ended && !reducedMotion;
+  const photo = (
+    <div className="relative aspect-square overflow-hidden bg-status-ended-bg">
+      <AnimalPhoto src={getPrimaryImage(animal)} alt={alt} ended={ended} priority={priority} highPriority={highPriority} sizes={PHOTO_SIZES.card} />
+      <div className="absolute top-3 left-3">
+        <StatusBadge variant={variant} dDay={ended ? null : getDDay(animal, now)} onPhoto />
+      </div>
+    </div>
+  );
 
   const body = (
     <>
-      <div className="relative aspect-square overflow-hidden bg-status-ended-bg">
-        <AnimalPhoto src={getPrimaryImage(animal)} alt={alt} ended={ended} priority={priority} highPriority={highPriority} sizes={PHOTO_SIZES.card} />
-        <div className="absolute top-3 left-3">
-          <StatusBadge variant={variant} dDay={ended ? null : getDDay(animal, now)} onPhoto />
-        </div>
-      </div>
+      {morph ? <ViewTransition {...photoTransition(animal.id)}>{photo}</ViewTransition> : photo}
       <div className="px-3 pt-2.5 pb-3">
         <p className="truncate text-card-title">{animalTitle(animal)}</p>
         {sub && <p className="mt-0.5 truncate text-body text-text-2">{sub}</p>}
@@ -77,7 +104,9 @@ export function AnimalCard({
       {href ? (
         <Link
           href={href}
-          onClick={onSelect}
+          onClick={(event) => onSelect?.(cardSelection(event.currentTarget))}
+          onPointerDown={onPress}
+          transitionTypes={morph ? [CARD_TO_DETAIL] : undefined}
           // Next가 이동할 때 내부 스크롤 컨테이너를 건드리지 않게 한다(새 화면은 각자 맨 위로 올린다)
           scroll={false}
           className={cn(
