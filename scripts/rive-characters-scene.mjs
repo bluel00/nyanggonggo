@@ -42,6 +42,9 @@ const r4 = (n) => +(+n).toFixed(4);
 const f24 = (n) => n * 2.5;
 /** rig의 기준점(바닥 가운데). 위치 키는 이 값에 더한다 */
 const ORIGIN = { x: 60, y: 112 };
+/** press 반응: 100ms(60fps 6프레임)에 납작해지고 같은 시간에 돌아온다 */
+const PRESS_IN_FRAMES = 6;
+const PRESS_FRAMES = PRESS_IN_FRAMES * 2;
 
 /** SVG의 그룹 값(translate·rotate·opacity) */
 function groupValues(source) {
@@ -212,14 +215,17 @@ function character(animal, { ids, views }) {
     }
   };
 
-  /** press: 250ms(15프레임). 웃는 눈, 머리 6° 갸웃, 바닥 기준 납작. hop이면 잠에서 깨며 살짝 튀어 오른다(200ms 안) */
+  /**
+   * press(characters.md 방향 A, 2026-10-14): 100ms(press-duration, 6프레임) ease-out으로 웃는 눈 + 몸이 바닥 가운데(rig) 기준 가로 1.03
+   * × 세로 0.96(char-press-x·y)으로 납작해지고, 다음 100ms에 돌아온다(PRESS_FRAMES). 머리 기울기는 없다(이전 6° 갸웃 삭제).
+   * hop이면 잠에서 깨며 살짝 튀어 오른다(200ms 안)
+   */
   ch.pressLike = (anim, hop) => {
-    anim.key(ch.g("front", "eyes-happy"), "opacity", [[0, 1], [13, 0], [15, 0]]);
-    anim.key(ch.g("front", "eyes-open"), "opacity", [[0, 0], [13, 1], [15, 1]]);
-    anim.key(ch.g("front", "head"), "rotation", [[0, 0, "easeOut"], [6, 6 * DEG, "easeOut"], [15, 0]]);
-    anim.key(ids.rig, "scaleY", [[0, 1, "easeOut"], [6, 0.95, "easeOut"], [15, 1]]);
-    anim.key(ids.rig, "scaleX", [[0, 1, "easeOut"], [6, 1.03, "easeOut"], [15, 1]]);
-    if (hop) anim.key(ids.rig, "y", [[0, ORIGIN.y, "easeOut"], [5, ORIGIN.y - 4, "easeIn"], [11, ORIGIN.y], [15, ORIGIN.y]]);
+    anim.key(ch.g("front", "eyes-happy"), "opacity", [[0, 1], [PRESS_FRAMES, 0]]);
+    anim.key(ch.g("front", "eyes-open"), "opacity", [[0, 0], [PRESS_FRAMES, 1]]);
+    anim.key(ids.rig, "scaleY", [[0, 1, "easeOut"], [PRESS_IN_FRAMES, 0.96, "easeOut"], [PRESS_FRAMES, 1]]);
+    anim.key(ids.rig, "scaleX", [[0, 1, "easeOut"], [PRESS_IN_FRAMES, 1.03, "easeOut"], [PRESS_FRAMES, 1]]);
+    if (hop) anim.key(ids.rig, "y", [[0, ORIGIN.y, "easeOut"], [4, ORIGIN.y - 4, "easeIn"], [9, ORIGIN.y], [PRESS_FRAMES, ORIGIN.y]]);
     return anim;
   };
   return ch;
@@ -357,8 +363,8 @@ const catIdle = new Anim("idle", "0:21", 300, "loop");
   catIdle.key(g("tail"), "rotation", [[0, 0, "easeInOut"], [75, 0.07, "easeInOut"], [150, 0, "easeInOut"], [225, -0.056, "easeInOut"], [300, 0]]);
   catIdle.key(g("bow"), "rotation", [[0, 0], [60, 0, "easeInOut"], [75, 0.07, "easeInOut"], [90, -0.05, "easeInOut"], [105, 0.02, "easeInOut"], [120, 0], [300, 0]]);
 }
-const catPress = cat.pressLike(new Anim("press", "0:22", 15, "oneShot"), false);
-const catWake = cat.pressLike(new Anim("wake", "0:25", 15, "oneShot"), true);
+const catPress = cat.pressLike(new Anim("press", "0:22", PRESS_FRAMES, "oneShot"), false);
+const catWake = cat.pressLike(new Anim("wake", "0:25", PRESS_FRAMES, "oneShot"), true);
 
 // sleepEnter: 졸기 → 3/4 → 기우는 중간 → 누움(정점 보간)
 const catSleepEnter = new Anim("sleepEnter", "0:23", 150, "oneShot");
@@ -404,7 +410,7 @@ const catArtboard = artboardXml(
   [
     { id: CS.greet, anim: catGreet, name: "greet", x: 200, y: 0, comment: "greet: 들어올 때 1회(엉덩이 씰룩 → 덮치기) → idle. 누르면 끊고 press", out: [{ to: CS.idle, done: true }, { to: CS.press, press: true }] },
     { id: CS.idle, anim: catIdle, name: "idle", x: 400, y: 0, reset: true, comment: "idle: 무입력 10초(exitTime ms)면 sleepEnter. 다시 들어올 때마다 처음부터(reset)", out: [{ to: CS.sleepEnter, afterMs: 10000 }, { to: CS.press, press: true }] },
-    { id: CS.press, anim: catPress, name: "press", x: 400, y: -160, reset: true, comment: "press: 250ms → idle", out: [{ to: CS.idle, done: true }] },
+    { id: CS.press, anim: catPress, name: "press", x: 400, y: -160, reset: true, comment: "press: 200ms(100ms 납작 + 100ms 돌아옴) → idle", out: [{ to: CS.idle, done: true }] },
     { id: CS.sleepEnter, anim: catSleepEnter, name: "sleepEnter", x: 600, y: 0, reset: true, comment: "sleep: 졸기 → 눕기 → 잠(반복). 누르면 wake(정면 앉음으로 튀어 오름)", out: [{ to: CS.sleep, done: true }, { to: CS.wake, press: true }] },
     { id: CS.sleep, anim: catSleep, name: "sleep", x: 800, y: 0, out: [{ to: CS.wake, press: true }] },
     { id: CS.wake, anim: catWake, name: "wake", x: 600, y: -160, reset: true, out: [{ to: CS.idle, done: true }] },
@@ -471,7 +477,7 @@ const dogIdle = new Anim("idle", "0:221", 330, "loop");
   dogIdle.key(g("body"), "scaleY", [[0, 1, "easeInOut"], [165, 1.015, "easeInOut"], [330, 1]]);
   dogIdle.key(g("tail"), "rotation", [[0, 0, "easeInOut"], [83, 0.09, "easeInOut"], [165, 0, "easeInOut"], [248, -0.072, "easeInOut"], [330, 0]]);
 }
-const dogPress = dog.pressLike(new Anim("press", "0:222", 15, "oneShot"), false);
+const dogPress = dog.pressLike(new Anim("press", "0:222", PRESS_FRAMES, "oneShot"), false);
 dog.finalize([dogGreet, dogIdle, dogPress]);
 
 const DS = { greet: "0:212", idle: "0:213", press: "0:214" };
@@ -481,7 +487,7 @@ const dogArtboard = artboardXml(
   [
     { id: DS.greet, anim: dogGreet, name: "greet", x: 200, y: 0, comment: "greet: 들어올 때 1회(놀자 자세) → idle. 누르면 끊고 press", out: [{ to: DS.idle, done: true }, { to: DS.press, press: true }] },
     { id: DS.idle, anim: dogIdle, name: "idle", x: 400, y: 0, out: [{ to: DS.press, press: true }] },
-    { id: DS.press, anim: dogPress, name: "press", x: 400, y: -160, reset: true, comment: "press: 250ms → idle", out: [{ to: DS.idle, done: true }] },
+    { id: DS.press, anim: dogPress, name: "press", x: 400, y: -160, reset: true, comment: "press: 200ms(100ms 납작 + 100ms 돌아옴) → idle", out: [{ to: DS.idle, done: true }] },
   ],
   [dogGreet, dogIdle, dogPress],
 );
