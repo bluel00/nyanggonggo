@@ -15,8 +15,11 @@ class FakeIntersectionObserver {
   constructor(private readonly callback: IntersectionObserverCallback) {
     FakeIntersectionObserver.instances.push(this);
   }
+  /** true면 실제 IntersectionObserver처럼 observe 직후 지금 상태(범위 안)를 한 번 알려 준다 */
+  static inRange = false;
   observe(target: Element) {
     this.targets.add(target);
+    if (FakeIntersectionObserver.inRange) queueMicrotask(() => this.trigger());
   }
   unobserve(target: Element) {
     this.targets.delete(target);
@@ -58,6 +61,7 @@ const listRequests = () =>
 
 beforeEach(() => {
   FakeIntersectionObserver.instances = [];
+  FakeIntersectionObserver.inRange = false;
   vi.stubGlobal("IntersectionObserver", FakeIntersectionObserver);
   vi.stubGlobal("fetch", fetchMock);
 });
@@ -100,6 +104,21 @@ describe("AnimalList", () => {
     triggerSentinel();
     await waitFor(() => expect(container.querySelectorAll('[data-slot="animal-card"]')).toHaveLength(3));
     expect(listRequests()).toHaveLength(2);
+  });
+
+  it("다음 페이지를 붙인 뒤에도 sentinel이 범위 안이면 이어서 부른다(감시를 페이지마다 새로 건다)", async () => {
+    // 감시는 상태가 바뀔 때만 알리므로, 한 감시를 계속 쓰면 범위 안에 머무는 sentinel로는 다시 부르지 않는다
+    FakeIntersectionObserver.inRange = true;
+    fetchMock.mockImplementation(async (input) => {
+      const cursor = new URL(String(input), "http://localhost").searchParams.get("cursor");
+      if (cursor === null) return Response.json({ items: [wire("1")], nextCursor: "Mg" });
+      if (cursor === "Mg") return Response.json({ items: [wire("2")], nextCursor: "Mw" });
+      return Response.json({ items: [wire("3")], nextCursor: null });
+    });
+    renderList();
+
+    await screen.findByText("지역3");
+    expect(listRequests().map((url) => url.searchParams.get("cursor"))).toEqual([null, "Mg", "Mw"]);
   });
 
   it("오류 상태에서 [다시 시도]를 누르면 다시 요청하고 목록을 그린다", async () => {

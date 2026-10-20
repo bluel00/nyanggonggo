@@ -19,13 +19,14 @@ let container: HTMLElement;
  * 렌더 타이밍과 무관하게 동작하도록 getBoundingClientRect 자체를 갈아 끼운다.
  */
 const realRect = Element.prototype.getBoundingClientRect;
+const box = (top: number, height: number) => ({ top, height, bottom: top + height }) as DOMRect;
 function installFakeLayout() {
   Element.prototype.getBoundingClientRect = function (this: Element) {
-    if (this === container) return { top: 0, height: CONTAINER_HEIGHT } as DOMRect;
+    if (this === container) return box(0, CONTAINER_HEIGHT);
     const cards = [...container.querySelectorAll(`[${ANIMAL_ID_ATTRIBUTE}]`)];
     const index = cards.indexOf(this);
-    if (index < 0) return { top: 0, height: 0 } as DOMRect;
-    return { top: index * CARD_HEIGHT - container.scrollTop, height: CARD_HEIGHT } as DOMRect;
+    if (index < 0) return box(0, 0);
+    return box(index * CARD_HEIGHT - container.scrollTop, CARD_HEIGHT);
   };
 }
 
@@ -94,6 +95,47 @@ describe("useAnimalScrollRestoration", () => {
       openScreen({ listKey: "cat|6110000||protected|latest", ids: IDS });
     });
     expect(container.scrollTop).toBe(1100);
+  });
+
+  it("캐시로 바로 그려지면 떠날 때의 scrollTop 그대로 되돌린다(가운데 맞춤 아님)", async () => {
+    const list = openScreen({ listKey: "k", ids: IDS });
+    container.scrollTop = 1000; // a3(800~1200)이 위쪽에 걸친 위치
+    rememberSelectedAnimal("k", "a3");
+    list.unmount();
+    scrollAppToTop();
+
+    await act(async () => {
+      openScreen({ listKey: "k", ids: IDS });
+    });
+    expect(container.scrollTop).toBe(1000);
+  });
+
+  it("되돌린 자리에서 카드가 안 보이면(레이아웃이 달라짐) 카드를 가운데로 맞춘다", async () => {
+    const list = openScreen({ listKey: "k", ids: IDS });
+    container.scrollTop = 1000;
+    rememberSelectedAnimal("k", "a4"); // 떠날 때 a4는 1200~1600
+    list.unmount();
+    scrollAppToTop();
+
+    await act(async () => {
+      openScreen({ listKey: "k", ids: ["a1", "a2", "a3", "a5", "a4"] }); // a4가 1600~2000으로 밀림
+    });
+    expect(container.scrollTop).toBe(1500);
+  });
+
+  it("첫 렌더에 데이터가 없었으면(캐시가 지워짐) 픽셀 위치 대신 카드를 가운데로 맞춘다", async () => {
+    const list = openScreen({ listKey: "k", ids: IDS });
+    container.scrollTop = 1000;
+    rememberSelectedAnimal("k", "a3");
+    list.unmount();
+    scrollAppToTop();
+
+    const back = openScreen({ listKey: "k", ready: false, ids: [] });
+    await act(async () => {
+      back.rerender(<List listKey="k" ready ids={IDS} />);
+    });
+    // a3(800~1200)의 가운데가 컨테이너 가운데로
+    expect(container.scrollTop).toBe(700);
   });
 
   it("카드가 늦게 그려져도 몇 프레임 기다렸다 찾는다", async () => {

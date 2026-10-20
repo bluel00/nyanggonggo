@@ -1,5 +1,5 @@
 import { expect, test, type BrowserContext, type Page } from "@playwright/test";
-import { isCardInView, loadNextListPage, openedDetail, SPECIES_COOKIE } from "./helpers";
+import { isCardInView, loadNextListPage, openedDetail, scrollTop, SPECIES_COOKIE } from "./helpers";
 
 /**
  * 상세에서 뒤로가기(PRD-v1.4 R1·R2, 4절 완료 기준). production 빌드를 스텁 서버(e2e/upstream-stub.mjs)로 띄워 본다:
@@ -58,6 +58,66 @@ async function openCard(page: Page, animalId: string) {
   await openedDetail(page);
 }
 
+/** 카드 위쪽이 스크롤 영역 위에서 80px 아래에 오게 내린다(가운데 맞춤과 다른 위치) */
+async function placeCardNearTop(page: Page, animalId: string) {
+  await page.evaluate((id) => {
+    const scroll = document.querySelector<HTMLElement>('[data-slot="app-scroll"]')!;
+    const card = document.querySelector<HTMLElement>(`[data-animal-id="${id}"]`)!;
+    scroll.scrollTop += card.getBoundingClientRect().top - scroll.getBoundingClientRect().top - 80;
+  }, animalId);
+}
+
+/** 카드를 누르는 순간의 목록 scrollTop을 남긴다(누르기 전 Playwright가 스크롤해도 실제로 떠난 위치를 본다) */
+async function watchLeaveScroll(page: Page) {
+  await page.evaluate(() => {
+    document.addEventListener(
+      "click",
+      () => {
+        const w = window as unknown as { __leaveScroll: number };
+        w.__leaveScroll = document.querySelector<HTMLElement>('[data-slot="app-scroll"]')!.scrollTop;
+      },
+      { capture: true, once: true },
+    );
+  });
+}
+const leaveScroll = (page: Page) => page.evaluate(() => (window as unknown as { __leaveScroll: number }).__leaveScroll);
+
+type Frame = { list: boolean; scrollTop: number };
+/** 지금부터 매 프레임(rAF, 그리기 직전) 목록이 그려졌는지와 scrollTop을 남긴다 */
+async function recordFrames(page: Page) {
+  await page.evaluate(() => {
+    const w = window as unknown as { __frames: Frame[] };
+    w.__frames = [];
+    const tick = () => {
+      const scroll = document.querySelector<HTMLElement>('[data-slot="app-scroll"]');
+      const list = !document.querySelector('[data-slot="animal-detail"]') && document.querySelector("[data-animal-id]") !== null;
+      w.__frames.push({ list, scrollTop: scroll?.scrollTop ?? -1 });
+      if (w.__frames.length < 180) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+}
+/** 목록이 처음 그려진 프레임 */
+async function firstListFrame(page: Page): Promise<Frame> {
+  const frames = () => page.evaluate(() => (window as unknown as { __frames: Frame[] }).__frames);
+  await expect.poll(async () => (await frames()).some((frame) => frame.list), { message: "목록이 그려진다" }).toBe(true);
+  return (await frames()).find((frame) => frame.list)!;
+}
+
+/** 카드 가운데와 스크롤 영역 가운데의 차이(px) */
+function offCenter(page: Page, animalId: string) {
+  return page.evaluate((id) => {
+    const scroll = document.querySelector<HTMLElement>('[data-slot="app-scroll"]')!.getBoundingClientRect();
+    const card = document.querySelector<HTMLElement>(`[data-animal-id="${id}"]`)!.getBoundingClientRect();
+    return card.top + card.height / 2 - (scroll.top + scroll.height / 2);
+  }, animalId);
+}
+
+async function goBack(page: Page, how: "화면 안" | "브라우저") {
+  if (how === "화면 안") await page.getByRole("button", { name: "뒤로가기" }).click();
+  else await page.goBack();
+}
+
 async function filterCookies(context: BrowserContext) {
   return (await context.cookies())
     .filter((cookie) => cookie.name === SPECIES_COOKIE || cookie.name === REGION_COOKIE)
@@ -91,6 +151,58 @@ test.describe("R1: 목록 → 상세 → 뒤로가기", () => {
       expect(requests.slice(mark), "뒤로가기로 목록 요청이 나가지 않는다").toEqual([]);
       expect(await skeletonCount(page), "스켈레톤이 보이지 않는다").toBe(0);
       expect(await filterCookies(context), "기억(쿠키)을 쓰지 않는다").toEqual([]);
+    });
+  }
+
+  // 쓸어넘기기 깜빡임(architecture.md 12절 37): iOS 사파리는 쓸어넘기는 동안 떠날 때 화면의 스냅숏을 보여 주므로,
+  // 목록의 첫 프레임이 떠날 때와 같은 scrollTop이어야 한다. 브라우저 뒤로가기(history.back)가 쓸어넘기기와 같은 경로다
+  for (const depth of [1, 5]) {
+    const card = depth === 1 ? listItemId(7) : target;
+    for (const how of ["화면 안", "브라우저"] as const) {
+      test(`${depth}페이지 깊이, ${how} 뒤로가기: 목록의 첫 프레임 scrollTop이 떠날 때와 ±1px`, async ({ page }) => {
+        await page.goto(LIST_URL);
+        await loadPages(page, depth);
+        await placeCardNearTop(page, card);
+        await watchLeaveScroll(page);
+        await openCard(page, card);
+        const left = await leaveScroll(page);
+        expect(left, "가운데 맞춤과 구분되도록 위쪽까지 내렸다").toBeGreaterThan(0);
+
+        await recordFrames(page);
+        await goBack(page, how);
+        const first = await firstListFrame(page);
+        expect(Math.abs(first.scrollTop - left), `첫 프레임 ${first.scrollTop}, 떠날 때 ${left}`).toBeLessThanOrEqual(1);
+        await expect(page).toHaveURL(LIST_URL);
+        // 그 뒤에도 움직이지 않는다
+        await page.waitForTimeout(500);
+        expect(Math.abs((await scrollTop(page)) - left)).toBeLessThanOrEqual(1);
+      });
+    }
+  }
+
+  // 상세에 머무는 동안 목록 캐시(gcTime 30분)가 지워지면 목록을 다시 받는다. 첫 화면이 뼈대라 스냅숏과 맞출 수 없고,
+  // 다시 받은 목록은 순서·높이가 같다는 보장이 없으므로 카드 id로 찾아 가운데에 맞춘다(지금까지의 동작)
+  for (const how of ["화면 안", "브라우저"] as const) {
+    test(`캐시가 지워진 뒤 ${how} 뒤로가기: 열었던 카드를 가운데로 맞춘다`, async ({ page }) => {
+      const card = listItemId(7);
+      await page.clock.install();
+      await watchSkeletons(page);
+      await page.goto(LIST_URL);
+      await expect(page.locator(CARDS)).toHaveCount(PAGE_SIZE);
+      await placeCardNearTop(page, card);
+      await openCard(page, card);
+      // 목록이 언마운트돼 캐시의 gc 타이머가 걸린 뒤에 시간을 넘긴다(미리보기 상세가 보일 때는 아직일 수 있다)
+      await expect(page.locator(CARDS)).toHaveCount(0);
+      await expect(page.locator('[data-slot="detail-preview"]')).toHaveCount(0);
+
+      await page.clock.fastForward("31:00");
+      await resetSkeletons(page);
+      await goBack(page, how);
+
+      await expect(page).toHaveURL(LIST_URL);
+      await expect(page.locator(`[data-animal-id="${card}"]`)).toBeVisible();
+      await expect.poll(() => offCenter(page, card).then(Math.abs), { message: "카드 가운데가 스크롤 영역 가운데" }).toBeLessThanOrEqual(1);
+      expect(await skeletonCount(page), "캐시가 지워져 뼈대부터 그렸다").toBeGreaterThan(0);
     });
   }
 
