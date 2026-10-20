@@ -81,6 +81,7 @@ export function AnimalList({ filter }: { filter: AnimalListFilter }) {
   }, [query.isSuccess, feedRef]);
   const sentinelRef = useLoadMore({
     enabled: query.hasNextPage && !query.isFetchingNextPage && !query.isFetchNextPageError,
+    pages: query.data?.pages.length ?? 0,
     onLoadMore: () => void query.fetchNextPage(),
   });
 
@@ -212,8 +213,14 @@ function StateMessage({ title, description, children }: { title: string; descrip
   );
 }
 
-/** sentinel이 보이면 onLoadMore. 네이티브 IntersectionObserver만 쓴다 */
-function useLoadMore({ enabled, onLoadMore }: { enabled: boolean; onLoadMore: () => void }) {
+/**
+ * sentinel이 화면 아래 PREFETCH_MARGIN 안에 들어오면 다음 페이지를 부른다. 네이티브 IntersectionObserver만 쓴다.
+ * 감시는 페이지를 받을 때마다(pages) 새로 건다. IntersectionObserver는 상태가 바뀔 때만 알려 주므로, 한 감시를 계속 쓰면
+ * 다음 페이지를 붙인 뒤에도 sentinel이 범위 안에 남거나 감시가 '범위 밖'을 보기 전에 다시 끝까지 내린 경우 아무 알림이 없어 멈춘다
+ * (응답이 빨라 isFetchingNextPage가 한 번도 그려지지 않으면 enabled도 바뀌지 않는다. WebKit E2E에서 3페이지에서 멈춤).
+ * 새 감시는 처음에 지금 상태를 한 번 알려 준다.
+ */
+function useLoadMore({ enabled, pages, onLoadMore }: { enabled: boolean; pages: number; onLoadMore: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
   const callback = useRef(onLoadMore);
   useEffect(() => {
@@ -231,7 +238,7 @@ function useLoadMore({ enabled, onLoadMore }: { enabled: boolean; onLoadMore: ()
     );
     observer.observe(target);
     return () => observer.disconnect();
-  }, [enabled]);
+  }, [enabled, pages]);
 
   return ref;
 }
