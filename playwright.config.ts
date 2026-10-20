@@ -72,6 +72,12 @@ export default defineConfig({
       testMatch: /(back-nav|detail-photo|detail-title|detail-transition)\.spec\.ts/,
       use: { baseURL: "http://localhost:3101" },
     },
+    {
+      // 상세에서 뒤로가기는 iOS 사파리 엔진(WebKit)에서도 본다(쓸어넘기기 깜빡임, architecture.md 12절 37). 같은 스텁 서버
+      name: "production-stub-webkit",
+      testMatch: /back-nav\.spec\.ts/,
+      use: { ...devices["iPhone 13"], baseURL: "http://localhost:3101" },
+    },
   ],
   // 서버마다 띄우기 전에 서버 데이터 캐시(<출력 폴더>/cache/fetch-cache)를 비운다. 이전 실행(전날)의 공고 페이지 캐시가 남으면
   // 스텁의 오늘 기준 날짜와 섞여 다음 페이지가 비었다(e2e/clear-data-cache.mjs). 빌드 산출물은 지우지 않는다.

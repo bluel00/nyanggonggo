@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import { useLayoutEffect, useRef, useSyncExternalStore } from "react";
 import { APP_COLUMN_SELECTOR, APP_SCROLL_SELECTOR } from "./app-shell";
 
 const subscribe = () => () => {};
@@ -39,23 +39,53 @@ const SELECTED_KEY_PREFIX = "nyanggonggo:selected:";
 /** 카드가 나타날 때까지 기다리는 최대 프레임(캐시된 페이지가 그려질 시간) */
 const FIND_FRAMES = 30;
 
-/** 목록에서 연 카드를 기억한다. 뒤로 왔을 때 그 카드로 돌아가기 위한 것이라 목록(필터)별로 따로 둔다. */
+/** 목록을 떠날 때 기억하는 것: 연 카드와 그때의 스크롤 위치(px). 위치를 못 읽었으면 null */
+type SelectedAnimal = { animalId: string; scrollTop: number | null };
+
+/**
+ * 목록에서 연 카드와 지금 스크롤 위치를 기억한다. 뒤로 왔을 때 그 자리로 돌아가기 위한 것이라 목록(필터)별로 따로 둔다.
+ * 카드를 누르는 순간(목록이 아직 그려져 있을 때) 부른다.
+ */
 export function rememberSelectedAnimal(listKey: string, animalId: string): void {
+  const selected: SelectedAnimal = { animalId, scrollTop: appScrollContainer()?.scrollTop ?? null };
   try {
-    sessionStorage.setItem(SELECTED_KEY_PREFIX + listKey, animalId);
+    sessionStorage.setItem(SELECTED_KEY_PREFIX + listKey, JSON.stringify(selected));
   } catch {
     // 저장 실패는 무시(복원만 안 된다)
   }
 }
 
-function takeSelectedAnimal(listKey: string): string | null {
+function takeSelectedAnimal(listKey: string): SelectedAnimal | null {
   try {
-    const id = sessionStorage.getItem(SELECTED_KEY_PREFIX + listKey);
+    const raw = sessionStorage.getItem(SELECTED_KEY_PREFIX + listKey);
     sessionStorage.removeItem(SELECTED_KEY_PREFIX + listKey);
-    return id;
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<SelectedAnimal> | null;
+    if (typeof parsed?.animalId !== "string") return null;
+    return { animalId: parsed.animalId, scrollTop: typeof parsed.scrollTop === "number" ? parsed.scrollTop : null };
   } catch {
     return null;
   }
+}
+
+function findAnimalCard(container: HTMLElement, animalId: string): HTMLElement | undefined {
+  // 선택자에 id를 넣지 않고(이스케이프 규칙에 기대지 않는다) 속성값을 직접 비교한다
+  const cards = container.querySelectorAll<HTMLElement>(`[${ANIMAL_ID_ATTRIBUTE}]`);
+  return [...cards].find((element) => element.getAttribute(ANIMAL_ID_ATTRIBUTE) === animalId);
+}
+
+/**
+ * 떠날 때의 scrollTop으로 되돌리고, 그 자리에서 카드가 (일부라도) 보이면 true.
+ * 안 보이면(레이아웃이 달라짐) false이고, 부르는 쪽이 카드 가운데 맞춤으로 넘어간다.
+ */
+function restoreScrollTop(scrollTop: number, animalId: string): boolean {
+  const container = appScrollContainer();
+  const card = container && findAnimalCard(container, animalId);
+  if (!container || !card) return false;
+  container.scrollTop = scrollTop;
+  const containerBox = container.getBoundingClientRect();
+  const cardBox = card.getBoundingClientRect();
+  return cardBox.bottom > containerBox.top && cardBox.top < containerBox.bottom;
 }
 
 /**
@@ -64,9 +94,7 @@ function takeSelectedAnimal(listKey: string): string | null {
  */
 export function scrollAppToAnimal(animalId: string): boolean {
   const container = appScrollContainer();
-  // 선택자에 id를 넣지 않고(이스케이프 규칙에 기대지 않는다) 속성값을 직접 비교한다
-  const cards = container?.querySelectorAll<HTMLElement>(`[${ANIMAL_ID_ATTRIBUTE}]`) ?? [];
-  const card = [...cards].find((element) => element.getAttribute(ANIMAL_ID_ATTRIBUTE) === animalId);
+  const card = container && findAnimalCard(container, animalId);
   if (!container || !card) return false;
 
   const containerBox = container.getBoundingClientRect();
@@ -98,26 +126,35 @@ export function scrollAppToAnimalWhenReady(animalId: string, onSettled?: () => v
 }
 
 /**
- * 목록 → 상세 → 뒤로 왔을 때, 열었던 카드가 보이도록 되돌린다(architecture.md 7절).
+ * 목록 → 상세 → 뒤로 왔을 때, 떠날 때의 화면으로 되돌린다(architecture.md 7절, 12절 37).
  *
- * 픽셀(scrollTop) 대신 **카드 id**를 기억한다. 내부 스크롤 컨테이너는 화면이 바뀌는 순간 내용이 비어
- * 스크롤 값이 0으로 눌리고, 복원 시점에는 아직 높이가 모자라 픽셀 값이 자주 틀어졌다(12절 37).
- * 데이터에서 빠진 공고(상태가 바뀐 경우 등)는 조용히 포기하고 맨 위에 둔다.
+ * - 목록이 캐시로 첫 렌더부터 그려지면(보통의 뒤로가기) 떠날 때의 scrollTop을 **그리기 전에**(layout effect) 되돌린다.
+ *   iOS 사파리의 쓸어넘기기 뒤로가기는 떠날 때 화면의 스냅숏을 보여 주다가 실제 화면으로 바꾸므로, 첫 프레임이 그 스냅숏과
+ *   같아야 깜빡이지 않는다. 위치는 카드를 누를 때 읽어 둔다(목록이 지워지면 컨테이너 scrollTop이 0으로 눌린다).
+ * - 되돌린 자리에서 열었던 카드가 보이지 않거나(레이아웃이 달라짐), 캐시가 지워져 데이터를 다시 받은 경우(첫 렌더가 뼈대)는
+ *   **카드 id**로 찾아 가운데에 맞춘다. 다시 받은 데이터는 순서·높이가 같다는 보장이 없다.
+ * - 데이터에서 빠진 공고(상태가 바뀐 경우 등)는 조용히 포기하고 맨 위에 둔다.
  */
 export function useAnimalScrollRestoration(listKey: string, ready: boolean): void {
   /** 아직 찾는 중인 카드. 저장소에서는 바로 지우고 여기에 들고 있는다(effect가 다시 붙어도 이어서 찾는다) */
   const pending = useRef<{ listKey: string; animalId: string } | null>(null);
   const finishedKey = useRef<string | null>(null);
+  /** 첫 렌더에 이미 데이터가 있었다(캐시). 이때만 픽셀 위치를 쓴다 */
+  const readyOnMount = useRef(ready);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!ready || finishedKey.current === listKey) return;
     if (pending.current?.listKey !== listKey) {
-      const animalId = takeSelectedAnimal(listKey);
-      if (!animalId) {
+      const selected = takeSelectedAnimal(listKey);
+      if (!selected) {
         finishedKey.current = listKey;
         return;
       }
-      pending.current = { listKey, animalId };
+      if (readyOnMount.current && selected.scrollTop !== null && restoreScrollTop(selected.scrollTop, selected.animalId)) {
+        finishedKey.current = listKey;
+        return;
+      }
+      pending.current = { listKey, animalId: selected.animalId };
     }
 
     return scrollAppToAnimalWhenReady(pending.current.animalId, () => {
