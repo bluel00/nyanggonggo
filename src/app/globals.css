@@ -287,3 +287,11 @@
     @apply bg-background text-foreground;
   }
 }
+
+/*
+ * 상세 층(PRD-v1.5 R3, shared/ui/stack-layer.tsx)이 있는 동안 문서의 당김(당겨서 새로고침, 바운스)을 끈다. 새로고침하면 얹은 구조가
+ * 풀려 아래 목록을 잃는다. 층이 빠지는 커밋에서 같이 풀린다. 목록 화면의 기본 동작은 그대로다.
+ */
+html:has([data-slot="stack-layer"]) {
+  overscroll-behavior-y: none;
+}

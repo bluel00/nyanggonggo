@@ -22,12 +22,15 @@ export const viewport: Viewport = {
 
 export default function RootLayout({
   children,
-}: Readonly<{ children: ReactNode }>) {
+  modal,
+}: Readonly<{ children: ReactNode; modal: ReactNode }>) {
   return (
     <html lang="ko">
       <body>
         <Providers>
-          <AppShell overlay={<Toaster />}>{children}</AppShell>
+          <AppShell stack={modal} overlay={<Toaster />}>
+            {children}
+          </AppShell>
         </Providers>
       </body>
     </html>
