@@ -49,4 +49,54 @@ describe("FavoriteButton", () => {
     fireEvent.click(screen.getByRole("button"));
     expect(parentClick).not.toHaveBeenCalled();
   });
+
+  describe("움직임(README 움직임 표)", () => {
+    const heart = () => document.querySelector("[data-slot=favorite-button] svg")!;
+
+    it("켤 때만 하트가 튄다(누른 버튼만). 끄면 튀지 않고, 다시 켜면 또 튄다", () => {
+      render(
+        <>
+          <FavoriteButton animalId="1" variant="overlay" />
+          <FavoriteButton animalId="1" />
+        </>,
+      );
+      const [card, detail] = screen.getAllByRole("button");
+      fireEvent.click(card);
+      expect(card.querySelector("svg")!.hasAttribute("data-heart-pop")).toBe(true);
+      expect(card.querySelector("svg")!.getAttribute("fill-opacity")).toBe("1");
+      expect(detail.querySelector("svg")!.hasAttribute("data-heart-pop")).toBe(false);
+
+      fireEvent.click(card);
+      expect(card.querySelector("svg")!.hasAttribute("data-heart-pop")).toBe(false);
+      expect(card.querySelector("svg")!.getAttribute("fill-opacity")).toBe("0");
+      fireEvent.click(card);
+      expect(card.querySelector("svg")!.hasAttribute("data-heart-pop")).toBe(true);
+    });
+
+    it("이미 찜한 공고를 열면 튀지 않는다", () => {
+      localStorage.setItem("nyanggonggo:favorites", JSON.stringify(["1"]));
+      render(<FavoriteButton animalId="1" />);
+      expect(screen.getByRole("button", { name: "찜 해제" })).toBeTruthy();
+      expect(heart().hasAttribute("data-heart-pop")).toBe(false);
+    });
+
+    it("종료 공고는 채움만: 튐·끄기 페이드·누름 효과가 없다", () => {
+      render(<FavoriteButton animalId="1" variant="overlay" ended />);
+      const button = screen.getByRole("button");
+      expect(button.className).not.toContain("scale-press");
+      fireEvent.click(button);
+      expect(heart().getAttribute("fill-opacity")).toBe("1");
+      expect(heart().hasAttribute("data-heart-pop")).toBe(false);
+      fireEvent.click(button);
+      expect(heart().getAttribute("class")).not.toContain("transition");
+    });
+
+    it("카드용(overlay)은 흰 원 40px, 누르는 영역 44px", () => {
+      render(<FavoriteButton animalId="1" variant="overlay" />);
+      expect(screen.getByRole("button").className).toContain("size-touch");
+      const circle = document.querySelector("[data-slot=favorite-circle]")!;
+      expect(circle.className).toContain("size-10");
+      expect(circle.className).toContain("bg-photo-pill");
+    });
+  });
 });

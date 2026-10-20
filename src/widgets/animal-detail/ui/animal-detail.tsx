@@ -132,7 +132,7 @@ export function AnimalDetail({ id, firstPhotoSize = null }: { id: string; firstP
         data-slot="bottom-cta"
         className="sticky bottom-0 z-10 flex gap-2 bg-bg px-page shadow-bar pt-3 pb-[calc(var(--space-3)+env(safe-area-inset-bottom,0px))]"
       >
-        <FavoriteButton animalId={animal.id} />
+        <FavoriteButton animalId={animal.id} ended={ended} />
         <ShareButton animal={animal} />
       </div>
 

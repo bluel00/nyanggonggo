@@ -129,6 +129,20 @@ describe("AnimalCard", () => {
     expect(screen.getByRole("img").tagName).toBe("DIV");
   });
 
+  it("누름(README 움직임 표): 보호중은 scale .98 + shadow-card-pressed(움직임 줄이기 제외), 종료는 누름 효과가 없다", () => {
+    const { container } = render(<AnimalCard animal={animal()} now={NOW} href="/animals/1" />);
+    const link = container.querySelector("a")!;
+    expect(link.className).toContain("motion-safe:active:scale-press");
+    expect(link.className).toContain("motion-safe:active:shadow-card-pressed");
+    expect(link.className).toContain("duration-press");
+    cleanup();
+
+    const ended = render(
+      <AnimalCard animal={animal({ status: "ended", noticeEndAt: kst("2026-09-30T00:00:00") })} now={NOW} href="/animals/1" />,
+    ).container.querySelector("a")!;
+    expect(ended.className).not.toMatch(/scale-press|shadow-card-pressed|transition/);
+  });
+
   it("href가 있으면 링크", () => {
     const { container } = render(<AnimalCard animal={animal()} now={NOW} href="/animals/1" />);
     expect(container.querySelector("a")?.getAttribute("href")).toBe("/animals/1");

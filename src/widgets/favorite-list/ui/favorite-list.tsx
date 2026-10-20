@@ -2,7 +2,7 @@
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
-import { AnimalCard, ANIMAL_COPY, animalsByIdsOptions } from "@/entities/animal";
+import { AnimalCard, ANIMAL_COPY, animalsByIdsOptions, getStatusVariant } from "@/entities/animal";
 import { FavoriteButton, useFavoriteIds } from "@/features/animal-favorite";
 import { markListVisited } from "@/shared/lib/app-navigation";
 import { scrollAppToTop } from "@/shared/ui/app-column";
@@ -73,7 +73,9 @@ export function FavoriteList() {
               animal={animal}
               now={now}
               href={`/animals/${animal.id}`}
-              action={<FavoriteButton animalId={animal.id} variant="overlay" />}
+              action={
+                <FavoriteButton animalId={animal.id} variant="overlay" ended={getStatusVariant(animal, now) === "ended"} />
+              }
             />
           ))}
         </FeedList>

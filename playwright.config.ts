@@ -25,13 +25,13 @@ export default defineConfig({
   projects: [
     {
       name: "dev",
-      testIgnore: /(detail-loading|detail-photo|detail-title|home-rive|back-nav)\.spec\.ts/,
+      testIgnore: /(detail-loading|detail-photo|detail-title|home-rive|back-nav|motion)\.spec\.ts/,
       // 브라우저는 localhost로 연다(개발 서버가 127.0.0.1을 다른 오리진으로 보고 dev 리소스를 막는다)
       use: { baseURL: "http://localhost:3000" },
     },
     {
       name: "production",
-      testMatch: /(detail-loading|home-rive)\.spec\.ts/,
+      testMatch: /(detail-loading|home-rive|motion)\.spec\.ts/,
       use: { baseURL: "http://localhost:3100" },
     },
     {
@@ -40,23 +40,27 @@ export default defineConfig({
       use: { baseURL: "http://localhost:3101" },
     },
   ],
+  // 서버마다 띄우기 전에 서버 데이터 캐시(<출력 폴더>/cache/fetch-cache)를 비운다. 이전 실행(전날)의 공고 페이지 캐시가 남으면
+  // 스텁의 오늘 기준 날짜와 섞여 다음 페이지가 비었다(e2e/clear-data-cache.mjs). 빌드 산출물은 지우지 않는다.
+  // 이미 떠 있는 서버를 쓰는(reuseExistingServer) 경우에는 명령이 돌지 않아 비우지 않는다.
   webServer: [
     {
-      command: "pnpm dev",
+      command: "node e2e/clear-data-cache.mjs .next/dev && pnpm dev",
       url: "http://127.0.0.1:3000",
       reuseExistingServer: true,
       timeout: 120_000,
     },
     {
       // 매 실행 빌드한다(지금 코드의 production 동작을 본다). 이미 3100에 띄워 둔 서버가 있으면 그것을 쓴다
-      command: "pnpm build && pnpm start -p 3100",
+      command: "node e2e/clear-data-cache.mjs .next && pnpm build && pnpm start -p 3100",
       url: "http://127.0.0.1:3100/home",
       reuseExistingServer: true,
       timeout: 300_000,
     },
     {
       // 위 서버의 빌드를 그대로 쓴다(서버는 배열 순서대로 하나씩 준비된다). 스텁이 모든 외부 요청에 대신 답하므로 서비스키는 쓰이지 않는 자리 값이다
-      command: "node node_modules/next/dist/bin/next start -p 3101",
+      // 3100과 같은 .next/cache를 쓴다. 3100이 이미 떠 있던 서버여도 섞이지 않게 여기서도 비운다
+      command: "node e2e/clear-data-cache.mjs .next && node node_modules/next/dist/bin/next start -p 3101",
       url: "http://127.0.0.1:3101/home",
       env: { NODE_OPTIONS: "--import ./e2e/upstream-stub.mjs", DATA_GO_KR_SERVICE_KEY: "e2e-stub" },
       reuseExistingServer: false,

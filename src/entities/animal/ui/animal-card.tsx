@@ -14,7 +14,9 @@ import { StatusBadge } from "./status-badge";
 /**
  * 공고 카드(bundle.css .cn-card). Domain Animal만 받는다.
  *
- * - 흰 카드(surface, radius-card) + shadow-card(누르는 동안 shadow-card-pressed), 종료는 납작한 shadow-card-ended. 글자 영역 10/12/12px.
+ * - 흰 카드(surface, radius-card) + shadow-card, 종료는 납작한 shadow-card-ended. 글자 영역 10/12/12px.
+ * - 누름(README 움직임 표): scale .98 + shadow-card-pressed, 100ms. 종료 카드와 움직임 줄이기에는 누름 효과가 없다.
+ *   등장 효과는 목록 위젯이 첫 화면 카드에만 붙인다(data-enter, 여기서는 하지 않는다)
  * - 사진 1:1 cover, 가운데(center). 이미지 프록시 경유 plain img(lazy). 종료 공고는 saturate(.7), 딤 없음.
  *   4:5 center 35%는 4:3 가로 사진(약 절반)에서 한쪽에 치우친 동물의 얼굴을 잘라 1:1로 바꿨다(architecture.md 12절 51)
  * - 배지: 사진 좌상단(12px), photo-pill 배경. 종료 공고는 "종료"만, 그 외는 D-day가 있을 때만 붙인다
@@ -80,8 +82,9 @@ export function AnimalCard({
           scroll={false}
           className={cn(
             className,
-            !ended && "active:shadow-card-pressed",
-            "transition-[transform,box-shadow] duration-press ease-out motion-safe:active:scale-press focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+            !ended &&
+              "transition-[scale,box-shadow] duration-press ease-out motion-safe:active:scale-press motion-safe:active:shadow-card-pressed",
+            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
           )}
         >
           {body}
