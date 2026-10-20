@@ -1,4 +1,5 @@
-import { expect, type APIRequestContext, type BrowserContext, type Page } from "@playwright/test";
+import { expect, test, type APIRequestContext, type BrowserContext, type Page } from "@playwright/test";
+import { REAL_API_ANNOTATION } from "./run-reporter";
 
 /** 축종 기억 쿠키 이름(`features/animal-filter/model/species-cookie.ts`) */
 export const SPECIES_COOKIE = "nyanggonggo.species";
@@ -34,6 +35,8 @@ export async function loadRealItems(
   query = "region=6110000",
   species: "cat" | "dog" | "other" = "cat",
 ): Promise<ListItem[]> {
+  // 실행 요약(e2e/run-reporter.ts)이 "실제 공공 API를 쓰는 테스트"로 표시하게 한다. beforeAll에서 부르면 그 범위의 테스트 모두에 붙는다
+  test.info().annotations.push({ type: REAL_API_ANNOTATION, description: "loadRealItems" });
   // API는 IPv4로 직접 부른다(APIRequestContext에서 localhost가 ::1로 풀려 개발 서버에 못 붙는다)
   const response = await request.get(
     `http://127.0.0.1:3000/api/animals?species=${species}&status=protected&sort=latest${query ? `&${query}` : ""}`,
