@@ -1,5 +1,4 @@
-import { expect, test, type APIRequestContext, type BrowserContext, type Page } from "@playwright/test";
-import { REAL_API_ANNOTATION } from "./run-reporter";
+import { expect, type APIRequestContext, type BrowserContext, type Page } from "@playwright/test";
 
 /** 축종 기억 쿠키 이름(`features/animal-filter/model/species-cookie.ts`) */
 export const SPECIES_COOKIE = "nyanggonggo.species";
@@ -26,22 +25,20 @@ const PNG_1X1 = Buffer.from(
 export type ListItem = { id: string; regionText: string; species: string; kindText: string | null };
 
 /**
- * 고정 데이터로 쓸 공고를 실제 목록 API에서 받아 온다.
- * 상세 페이지는 서버 렌더라 브라우저 라우팅으로 가릴 수 없어, 실제로 존재하는 공고 id가 필요하다.
- * species를 바꾸면 그 축종으로 받는다(기타는 `other`). query를 비우면 전국이다.
+ * 고정 데이터로 쓸 공고를 개발 서버의 목록 API에서 받아 온다. E2E 서버는 모두 스텁(e2e/upstream-stub.mjs)을 쓰므로 스텁의 고정
+ * 공고다(고양이·서울 30건, 기타·전국 20건, 개·세종 120건). 상세 페이지는 서버 렌더라 브라우저 라우팅으로 가릴 수 없어, 서버(스텁)가
+ * 아는 공고 id가 필요하다. species를 바꾸면 그 축종으로 받는다(기타는 `other`). query를 비우면 전국이다.
  */
-export async function loadRealItems(
+export async function loadStubItems(
   request: APIRequestContext,
   query = "region=6110000",
   species: "cat" | "dog" | "other" = "cat",
 ): Promise<ListItem[]> {
-  // 실행 요약(e2e/run-reporter.ts)이 "실제 공공 API를 쓰는 테스트"로 표시하게 한다. beforeAll에서 부르면 그 범위의 테스트 모두에 붙는다
-  test.info().annotations.push({ type: REAL_API_ANNOTATION, description: "loadRealItems" });
   // API는 IPv4로 직접 부른다(APIRequestContext에서 localhost가 ::1로 풀려 개발 서버에 못 붙는다)
   const response = await request.get(
     `http://127.0.0.1:3000/api/animals?species=${species}&status=protected&sort=latest${query ? `&${query}` : ""}`,
   );
-  expect(response.ok(), "목록 API가 응답해야 한다(개발 서버와 서비스키 필요)").toBeTruthy();
+  expect(response.ok(), "목록 API가 응답해야 한다(스텁을 넣은 개발 서버)").toBeTruthy();
   const body = (await response.json()) as { items: ListItem[] };
   expect(body.items.length, "고정 데이터로 쓸 공고가 충분해야 한다").toBeGreaterThanOrEqual(12);
   return body.items;

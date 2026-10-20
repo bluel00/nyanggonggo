@@ -53,6 +53,8 @@ export const ANIMAL_COPY = {
   /** 목록 헤더의 홈 진입점 링크 이름(aria-label). 타이틀 뒤에 붙여 "고양이 공고, 다른 동물 고르기"로 읽힌다(시안 Header-A) */
   homeEntryLabel: (listTitle: string) => `${listTitle}, 다른 동물 고르기`,
   favoritesTitle: "찜한 공고",
+  /** 목록 위에 얹은 상세 층의 이름. 상세 제목이 아직 없을 때(뼈대)만 쓰인다(PRD-v1.5) */
+  detailLayerLabel: "공고 상세",
   favoritesEmptyTitle: "아직 찜한 공고가 없어요",
   /** 🐾는 README가 허용한 유일한 이모지(찜 빈 상태) */
   favoritesEmptyDescription: "마음에 드는 공고를 저장해보세요 🐾",

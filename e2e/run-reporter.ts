@@ -1,7 +1,7 @@
 import { writeFileSync } from "node:fs";
 import type { FullResult, Reporter, Suite, TestCase } from "@playwright/test/reporter";
 
-/** loadRealItems(e2e/helpers.ts)가 테스트에 붙이는 표시. 실제 공공 API(개발 서버 → 공공 API)로 받은 공고를 쓴다는 뜻 */
+/** 실제 공공 API를 부르는 테스트에 붙이는 표시(e2e/live). 기본 E2E는 서버가 모두 스텁이라 붙지 않는다(0개여야 한다) */
 export const REAL_API_ANNOTATION = "real-api";
 
 /**

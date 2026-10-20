@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
   loadNextListPage,
-  loadRealItems,
+  loadStubItems,
   mockList,
   openedDetail,
   rememberSpeciesCookie,
@@ -19,7 +19,7 @@ test.use({ viewport: { width: 412, height: 839 } });
 
 let items: ListItem[];
 test.beforeAll(async ({ request }) => {
-  items = await loadRealItems(request);
+  items = await loadStubItems(request);
 });
 
 const consoleWatch = watchConsoleErrors();

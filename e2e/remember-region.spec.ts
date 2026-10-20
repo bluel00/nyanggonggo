@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import {
   firstPageRequests,
   isCardInView,
-  loadRealItems,
+  loadStubItems,
   mockList,
   openedDetail,
   rememberSpeciesCookie,
@@ -23,7 +23,7 @@ const REGION_COOKIE = "nyanggonggo.region";
 
 let seoulItems: ListItem[];
 test.beforeAll(async ({ request }) => {
-  seoulItems = await loadRealItems(request, `region=${SEOUL}`);
+  seoulItems = await loadStubItems(request, `region=${SEOUL}`);
 });
 
 const consoleWatch = watchConsoleErrors();

@@ -3,7 +3,7 @@ import {
   isCardInView,
   LIST_PAGE_SIZE,
   loadNextListPage,
-  loadRealItems,
+  loadStubItems,
   mockList,
   rememberSpeciesCookie,
   watchConsoleErrors,
@@ -31,7 +31,7 @@ async function openCardOnSecondPage(page: import("@playwright/test").Page) {
 
 let items: ListItem[];
 test.beforeAll(async ({ request }) => {
-  items = await loadRealItems(request);
+  items = await loadStubItems(request);
 });
 
 const consoleWatch = watchConsoleErrors();

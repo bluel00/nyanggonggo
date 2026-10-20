@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { loadRealItems, mockList, openedDetail, rememberSpeciesCookie, watchConsoleErrors, type ListItem } from "./helpers";
+import { loadStubItems, mockList, openedDetail, rememberSpeciesCookie, watchConsoleErrors, type ListItem } from "./helpers";
 
 /**
  * 목록 카드를 누르면 상세가 뜨기 전에 바로 상세 뼈대가 보이는지(`app/animals/[id]/loading.tsx`).
@@ -16,7 +16,7 @@ const SKELETON_WITHIN_MS = 200;
 
 let items: ListItem[];
 test.beforeAll(async ({ request }) => {
-  items = await loadRealItems(request);
+  items = await loadStubItems(request);
 });
 
 const consoleWatch = watchConsoleErrors();

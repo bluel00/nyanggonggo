@@ -1,7 +1,7 @@
 import { expect, test, type BrowserContext, type Page } from "@playwright/test";
 import {
   firstPageRequests,
-  loadRealItems,
+  loadStubItems,
   mockList,
   openedDetail,
   rememberSpeciesCookie,
@@ -26,11 +26,11 @@ const HOME_TITLE = "오늘은 누구를 보러 왔어요?";
 
 /**
  * 고정 데이터는 한 번만 받는다(업스트림 호출을 늘리지 않는다). 목록 응답의 **내용**은 이 파일의 관심이 아니다:
- * 보는 것은 주소, 목록 요청의 조건, 쿠키다. 상세로 바로 들어가는 테스트만 실제 공고 id가 필요하다.
+ * 보는 것은 주소, 목록 요청의 조건, 쿠키다. 상세로 바로 들어가는 테스트만 서버(스텁)가 아는 공고 id가 필요하다.
  */
 let items: ListItem[];
 test.beforeAll(async ({ request }) => {
-  items = await loadRealItems(request, `region=${SEOUL}`);
+  items = await loadStubItems(request, `region=${SEOUL}`);
 });
 
 const consoleWatch = watchConsoleErrors();

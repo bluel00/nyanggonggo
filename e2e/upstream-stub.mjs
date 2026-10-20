@@ -1,17 +1,17 @@
-// E2E 전용 서버 스텁. playwright.config.ts의 "production-stub" 서버가 NODE_OPTIONS="--import ./e2e/upstream-stub.mjs"로 넣는다.
+// E2E 전용 서버 스텁. playwright.config.ts의 E2E 서버 셋(개발 3000, production 3100·3101) 모두 NODE_OPTIONS="--import ./e2e/upstream-stub.mjs"로 넣는다.
 // 서버의 fetch를 가로채 공공 API는 아래 고정 공고로, 이미지 호스트는 경로에 적힌 크기(가로x세로)의 단색 JPEG로 답한다.
-// 그 밖 호스트는 막는다(실제 공공 API·이미지 요청 없음). 사진 경로는 실제 주소가 아니다.
+// 그 밖 호스트는 막는다(실제 공공 API·이미지 요청 없음, 기본 E2E는 실제 API를 쓸 수 없다). 사진 경로는 실제 주소가 아니다.
+// 실제 API의 응답 형식은 따로 `pnpm e2e:live`(e2e/live)가 본다.
 //
-// 서버의 공공 API 페이지 캐시(Next 데이터 캐시, .next/cache)는 production 서버(3100)와 같은 폴더를 쓴다. 캐시 키가
-// 요청 파라미터라, 고정 목록은 다른 E2E가 쓰지 않는 조합(개, 세종)에만 둔다. 공고 id는 실제 공고와 겹치지 않는 99로 시작한다.
+// 공고 id는 실제 공고와 겹치지 않는 99로 시작한다. 날짜는 오늘(KST) 기준이라 어느 날 돌려도 보호중이다.
 import sharp from "sharp";
 
 const IMAGE_HOST = "openapi.animal.go.kr";
 const photo = (width, height) => `http://${IMAGE_HOST}/e2e-fixture/${width}x${height}.jpg`;
 
-/** 고정 목록의 조합. 다른 조합의 목록은 빈 결과다(e2e/back-nav.spec.ts의 값과 같아야 한다) */
+/** 개·세종 고정 목록(e2e/back-nav.spec.ts 등 production-stub의 값과 같아야 한다) */
 const STUB_LIST = { upkind: "417000", region: "5690000", orgNm: "세종특별자치시", size: 120 };
-/** 고정 목록 공고의 id(최신순 0번째가 맨 앞) */
+/** 개·세종 고정 목록 공고의 id(최신순 0번째가 맨 앞) */
 const listItemId = (index) => String(990000202601000 + index);
 
 /** 상세 사진 비율 확인용 공고 id → 사진 크기 */
@@ -27,13 +27,13 @@ function ymd(days) {
   return d.toISOString().slice(0, 10).replaceAll("-", "");
 }
 
-function item(id, { upkind, kind, orgNm, photos, updTm, noticeEdtDays, processState = "보호중" }) {
+function item(id, { upkind, kind, fullKind = kind, orgNm, photos, updTm, noticeEdtDays, processState = "보호중", animal = "믹스" }) {
   return {
     desertionNo: id,
     processState,
     upKindCd: upkind,
     upKindNm: kind,
-    kindFullNm: `[${kind}] 믹스`,
+    kindFullNm: `[${fullKind}] ${animal}`,
     colorCd: "갈색",
     age: "2025(년생)",
     weight: "3(Kg)",
@@ -73,8 +73,50 @@ const LIST_ITEMS = Array.from({ length: STUB_LIST.size }, (_, index) => {
   });
 });
 
+/** n분 전 updTm(최신순 정렬이 index 순서가 되게) */
+const updTmAgo = (minutes) => `2026-10-13 ${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}:00.0`;
+
+/**
+ * 고양이·서울(upr_cd 6110000) 30건. 개발·production 서버의 화면 E2E(목록·필터·지역·축종 기억·움직임·상세 로딩)가
+ * 상세(서버 렌더)로 들어갈 공고 id를 여기서 얻는다(e2e/helpers.ts의 loadStubItems). 목록 자체는 대개 page.route로 고정한다.
+ */
+const SEOUL_DISTRICTS = ["서울특별시 종로구", "서울특별시 마포구", "서울특별시 강남구"];
+const SEOUL_CAT_ITEMS = Array.from({ length: 30 }, (_, index) =>
+  item(String(990000202602000 + index), {
+    upkind: "422400",
+    kind: "고양이",
+    animal: "코리안 숏헤어",
+    orgNm: SEOUL_DISTRICTS[index % SEOUL_DISTRICTS.length],
+    photos: [[400, 400]],
+    updTm: updTmAgo(30 - index),
+    noticeEdtDays: 5 + (index % 10),
+  }),
+);
+
+/** 기타 축종·전국(upr_cd 없음) 20건. 실제 응답처럼 upKindNm은 "기타", kindFullNm은 "[기타축종] <동물>"이다(어떤 동물인지는 여기에만 있다, 12.A P12) */
+const OTHER_ANIMALS = ["토끼", "햄스터", "고슴도치", "기니피그"];
+const OTHER_ITEMS = Array.from({ length: 20 }, (_, index) =>
+  item(String(990000202603000 + index), {
+    upkind: "429900",
+    kind: "기타",
+    fullKind: "기타축종",
+    animal: OTHER_ANIMALS[index % OTHER_ANIMALS.length],
+    orgNm: index % 2 ? "경기도 수원시" : "부산광역시 해운대구",
+    photos: [[400, 400]],
+    updTm: updTmAgo(20 - index),
+    noticeEdtDays: 6 + (index % 10),
+  }),
+);
+
+/** 목록 조합(upkind, upr_cd, org_cd 없음) → 고정 목록. 다른 조합은 빈 결과다 */
+const LISTS = [
+  { upkind: STUB_LIST.upkind, region: STUB_LIST.region, items: LIST_ITEMS },
+  { upkind: "422400", region: "6110000", items: SEOUL_CAT_ITEMS },
+  { upkind: "429900", region: null, items: OTHER_ITEMS },
+];
+
 const BY_ID = new Map([
-  ...LIST_ITEMS.map((it) => [it.desertionNo, it]),
+  ...LISTS.flatMap((list) => list.items.map((it) => [it.desertionNo, it])),
   ...Object.entries(PHOTO_CASES).map(([id, photos]) => [
     id,
     item(id, { upkind: "422400", kind: "고양이", orgNm: "서울특별시 종로구", photos, updTm: "2026-10-14 10:00:00.0", noticeEdtDays: 7 }),
@@ -134,9 +176,9 @@ globalThis.fetch = async function stubFetch(input) {
     const pageNo = Number(params.get("pageNo") ?? 1);
     const rows = Number(params.get("numOfRows") ?? 10);
     const mine =
-      params.get("upkind") === STUB_LIST.upkind && params.get("upr_cd") === STUB_LIST.region && !params.get("org_cd")
-        ? LIST_ITEMS
-        : [];
+      LISTS.find(
+        (list) => params.get("upkind") === list.upkind && params.get("upr_cd") === list.region && !params.get("org_cd"),
+      )?.items ?? [];
     return upstreamPage(mine.slice((pageNo - 1) * rows, pageNo * rows), mine.length, pageNo, rows);
   }
   if (url.hostname === IMAGE_HOST) {
