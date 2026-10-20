@@ -1,7 +1,7 @@
 "use client";
 
 import { useLayoutEffect, useRef, useSyncExternalStore } from "react";
-import { APP_COLUMN_SELECTOR, APP_SCROLL_SELECTOR } from "./app-shell";
+import { APP_COLUMN_SELECTOR, APP_OVERLAY_SCROLL_SELECTOR, APP_SCROLL_SELECTOR } from "./app-shell";
 
 const subscribe = () => () => {};
 
@@ -14,8 +14,9 @@ export function useAppColumn(): HTMLElement | null {
   );
 }
 
+/** 지금 앞에 보이는 스크롤 영역. 시험판(spike-stack-nav): 목록 위에 상세를 얹었으면 그 층의 스크롤 영역 */
 function appScrollContainer(): HTMLElement | null {
-  return document.querySelector<HTMLElement>(APP_SCROLL_SELECTOR);
+  return document.querySelector<HTMLElement>(APP_OVERLAY_SCROLL_SELECTOR) ?? document.querySelector<HTMLElement>(APP_SCROLL_SELECTOR);
 }
 
 /** 내부 스크롤 컨테이너가 화면에서 차지하는 영역(보이는 범위). 컨테이너가 없으면 null */

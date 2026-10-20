@@ -58,7 +58,7 @@ export default defineConfig({
   projects: [
     {
       name: "dev",
-      testIgnore: /(detail-loading|detail-photo|detail-title|detail-transition|home-rive|back-nav|motion)\.spec\.ts/,
+      testIgnore: /(detail-loading|detail-photo|detail-title|detail-transition|home-rive|back-nav|motion|stack-nav)\.spec\.ts/,
       // 브라우저는 localhost로 연다(개발 서버가 127.0.0.1을 다른 오리진으로 보고 dev 리소스를 막는다)
       use: { baseURL: "http://localhost:3000" },
     },
@@ -69,13 +69,13 @@ export default defineConfig({
     },
     {
       name: "production-stub",
-      testMatch: /(back-nav|detail-photo|detail-title|detail-transition)\.spec\.ts/,
+      testMatch: /(back-nav|detail-photo|detail-title|detail-transition|stack-nav)\.spec\.ts/,
       use: { baseURL: "http://localhost:3101" },
     },
     {
       // 상세에서 뒤로가기는 iOS 사파리 엔진(WebKit)에서도 본다(쓸어넘기기 깜빡임, architecture.md 12절 37). 같은 스텁 서버
       name: "production-stub-webkit",
-      testMatch: /back-nav\.spec\.ts/,
+      testMatch: /(back-nav|stack-nav)\.spec\.ts/,
       use: { ...devices["iPhone 13"], baseURL: "http://localhost:3101" },
     },
   ],

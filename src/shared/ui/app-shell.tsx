@@ -11,8 +11,11 @@ import type { ReactNode } from "react";
  */
 export const APP_COLUMN_SELECTOR = '[data-slot="app-column"]';
 export const APP_SCROLL_SELECTOR = '[data-slot="app-scroll"]';
+/** 시험판(spike-stack-nav): 목록 위에 얹은 상세 층의 스크롤 영역 */
+export const APP_OVERLAY_SCROLL_SLOT = "app-overlay-scroll";
+export const APP_OVERLAY_SCROLL_SELECTOR = '[data-slot="app-overlay-scroll"]';
 
-export function AppShell({ children, overlay }: { children: ReactNode; overlay?: ReactNode }) {
+export function AppShell({ children, overlay, stack }: { children: ReactNode; overlay?: ReactNode; stack?: ReactNode }) {
   return (
     <div className="min-h-dvh bg-canvas">
       <div
@@ -22,6 +25,8 @@ export function AppShell({ children, overlay }: { children: ReactNode; overlay?:
         <div data-slot="app-scroll" className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
           {children}
         </div>
+        {/* 시험판(spike-stack-nav): 목록 위에 얹은 상세(@modal 슬롯). 얹은 동안 아래 목록은 스크롤·누름을 막는다(globals.css) */}
+        {stack}
         {/* 스크롤 영역 밖, 컬럼 안: 토스트 등 컬럼 기준 absolute 요소 */}
         {overlay}
       </div>

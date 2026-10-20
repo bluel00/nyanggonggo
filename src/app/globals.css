@@ -287,3 +287,9 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* 시험판(spike-stack-nav): 상세를 얹은 동안 아래 목록은 스크롤되거나 눌리지 않는다. overflow hidden은 scrollTop을 바꾸지 않는다 */
+[data-slot="app-column"]:has(> [data-slot="app-overlay"]) > [data-slot="app-scroll"] {
+  overflow: hidden;
+  pointer-events: none;
+}
