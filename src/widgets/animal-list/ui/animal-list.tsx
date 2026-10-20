@@ -20,12 +20,7 @@ import { FavoriteButton } from "@/features/animal-favorite";
 import { SHARE_BUTTON_LABEL } from "@/features/animal-share";
 import { warmFonts, warmFontsAfterImages } from "@/shared/lib/font-warm";
 import { markListVisited } from "@/shared/lib/app-navigation";
-import {
-  appScrollViewport,
-  rememberSelectedAnimal,
-  scrollAppToTop,
-  useAnimalScrollRestoration,
-} from "@/shared/ui/app-column";
+import { appScrollViewport, scrollAppToTop } from "@/shared/ui/app-column";
 import { Button } from "@/shared/ui/button";
 import { SkeletonCard } from "@/shared/ui/skeleton-card";
 
@@ -45,8 +40,7 @@ export function AnimalList({ filter }: { filter: AnimalListFilter }) {
   const query = useAnimalsInfinite(filter);
   const queryClient = useQueryClient();
   /**
-   * 카드를 누를 때(architecture.md 14.2 4단계): 보던 카드를 기억하고(뒤로가기 복원), 사진이 로드된 카드면 그 공고를 상세 캐시에
-   * 넣고 진입 정보를 남긴다. 그러면 상세의 로딩 화면이 뼈대 대신 실제 상세를 그려 사진이 이어진다. 사진이 아직 없으면
+   * 카드를 누를 때(architecture.md 14.2 4단계): 사진이 로드된 카드면 그 공고를 상세 캐시에 넣고 진입 정보를 남긴다. 그러면 상세의 로딩 화면이 뼈대 대신 실제 상세를 그려 사진이 이어진다. 사진이 아직 없으면
    * 실제 비율을 몰라 지금처럼 뼈대로 간다.
    */
   /**
@@ -55,7 +49,6 @@ export function AnimalList({ filter }: { filter: AnimalListFilter }) {
    */
   const warmDetail = (animal: Animal) => warmFonts(`${detailDisplayText(animal)} ${SHARE_BUTTON_LABEL}`);
   const select = (animal: Animal, selection: CardSelection) => {
-    rememberSelectedAnimal(listKey, animal.id);
     warmDetail(animal);
     if (!selection) return;
     seedAnimalDetail(queryClient, animal);
@@ -67,9 +60,8 @@ export function AnimalList({ filter }: { filter: AnimalListFilter }) {
   // 목록을 거쳤다는 표시. 상세의 뒤로가기가 목록으로 돌아갈지 판단한다(shared/lib/app-navigation)
   useEffect(() => markListVisited(), []);
   useScrollTopOnFilterChange(filter);
-  // 상세에서 뒤로 오면 캐시된 페이지(같은 쿼리 키)와 함께 열었던 카드로 되돌아간다
+  // 상세는 이 목록 위에 얹히고(PRD-v1.5) 목록은 내려가지 않으므로, 돌아왔을 때 따로 되돌릴 것이 없다
   const listKey = filterKey(filter);
-  useAnimalScrollRestoration(listKey, query.isSuccess);
   const feedRef = useFirstScreenEntrance(listKey, query.isPending);
   useEffect(() => {
     if (!query.isSuccess) return;
@@ -160,7 +152,7 @@ function FeedList({ children, ref }: { children: ReactNode; ref?: Ref<HTMLDivEle
  * 첫 사진(LCP)이 약 0.3초 늦었다(2026-10-19 실측). 뼈대(SkeletonCard)는 카드보다 글자 칸이 10px 낮아 경계에서 화면 바로 아래의
  * 카드가 하나 더 들어갈 수는 있어도(보이지 않는 곳에서 돈다) 보이는 카드를 빠뜨리지는 않는다.
  *
- * 효과가 없는 경우: 스크롤로 새로 보이는 카드·다음 페이지(붙이지 않음), 상세에서 돌아온 목록(캐시가 있어 뼈대를 거치지 않는다),
+ * 효과가 없는 경우: 스크롤로 새로 보이는 카드·다음 페이지(붙이지 않음), 상세에서 돌아온 목록(상세가 위에 얹혔다 걷힐 뿐 목록은 그대로다),
  * 움직임 줄이기(CSS가 no-preference에서만 돈다). 다 돈 카드에서는 속성을 지운다.
  */
 function useFirstScreenEntrance(listKey: string, pending: boolean) {
