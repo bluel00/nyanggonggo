@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useState, type ReactNode } from "react";
 import { usePrefersReducedMotion } from "@/shared/lib/use-reduced-motion";
 import { cn } from "@/shared/lib/utils";
-import { ANIMAL_ID_ATTRIBUTE } from "@/shared/ui/app-column";
 import { CARD_TO_DETAIL, photoTransition, ViewTransition } from "@/shared/ui/view-transition";
 import type { Animal } from "../model/animal";
 import type { CardPhotoSize } from "../model/detail-entry";
@@ -25,11 +25,12 @@ import { StatusBadge } from "./status-badge";
  * - 배지: 사진 좌상단(12px), photo-pill 배경. 종료 공고는 "종료"만, 그 외는 D-day가 있을 때만 붙인다
  * - 텍스트: Domain에 이름이 없어 1줄은 지역(regionText), 2줄은 보호소(없으면 발견 장소). 명세의 "지역 · 보호소"를
  *   그대로 쓰면 1줄과 지역이 겹쳐서 2줄에는 보호소만 둔다
- * - href가 있으면 링크, 없으면 정적 article. 링크를 누르면 onSelect로 알린다(목록이 그 카드를 기억해 뒤로 왔을 때 되돌아간다)
+ * - href가 있으면 링크, 없으면 정적 article. 링크를 누르면 onSelect로 알린다(목록이 상세 캐시를 채우고 진입 정보를 남긴다)
  * - action(예: 찜 버튼)은 사진 우상단에 둔다. 링크 안에 버튼을 넣지 않도록 링크와 형제로 두어 카드 이동과 겹치지 않는다
- * - transition이면 카드 → 상세 전환(architecture.md 14.2 4단계): 사진 칸이 상세 사진 칸과 짝을 이루고(View Transitions) 링크가
- *   이동 종류(CARD_TO_DETAIL)를 싣는다. 종료 공고와 움직임 줄이기는 효과 없이 바로 바뀐다(README 원칙).
- *   누를 때 onSelect에 사진이 로드됐으면 그 주소와 실제 가로·세로를, 아니면 null을 넘긴다(위젯이 상세 로딩 화면을 고른다)
+ * - transition이면 카드 → 상세 전환(architecture.md 14.2 4단계, PRD-v1.5 R5): 링크가 이동 종류(CARD_TO_DETAIL)를 싣고, 누른 카드의
+ *   사진 칸에 같은 사진을 한 장 겹쳐(DepartingPhoto) 상세 사진 칸과 짝을 이룬다(View Transitions). 종료 공고와 움직임 줄이기는
+ *   효과 없이 바로 바뀐다(README 원칙). 누를 때 onSelect에 사진이 로드됐으면 그 주소와 실제 가로·세로를, 아니면 null을 넘긴다
+ *   (위젯이 상세 로딩 화면을 고른다)
  */
 /** 누른 카드의 사진. 로드되지 않았으면 null */
 export type CardSelection = { photoSrc: string; photoSize: CardPhotoSize } | null;
@@ -75,9 +76,14 @@ export function AnimalCard({
   // 전환 경계는 실제로 이어질 때만 둔다: 경계가 있으면 React가 전환(0ms라도)을 열고 새 화면의 글꼴·사진을 기다린다
   const reducedMotion = usePrefersReducedMotion();
   const morph = transition && !ended && !reducedMotion;
+  /** 상세로 떠나는 중인 사진(누른 순간부터 상세가 얹힐 때까지). 이 동안만 전환 경계가 있다 */
+  const [departing, setDeparting] = useState<CardSelection>(null);
   const photo = (
     <div className="relative aspect-square overflow-hidden bg-status-ended-bg">
       <AnimalPhoto src={getPrimaryImage(animal)} alt={alt} ended={ended} priority={priority} highPriority={highPriority} sizes={PHOTO_SIZES.card} />
+      {href && departing && (
+        <DepartingPhoto id={animal.id} href={href} src={departing.photoSrc} onArrived={() => setDeparting(null)} />
+      )}
       <div className="absolute top-3 left-3">
         <StatusBadge variant={variant} dDay={ended ? null : getDDay(animal, now)} onPhoto />
       </div>
@@ -86,7 +92,7 @@ export function AnimalCard({
 
   const body = (
     <>
-      {morph ? <ViewTransition {...photoTransition(animal.id)}>{photo}</ViewTransition> : photo}
+      {photo}
       <div className="px-3 pt-2.5 pb-3">
         <p className="truncate text-card-title">{animalTitle(animal)}</p>
         {sub && <p className="mt-0.5 truncate text-body text-text-2">{sub}</p>}
@@ -100,11 +106,15 @@ export function AnimalCard({
     ended ? "shadow-card-ended" : "shadow-card",
   );
   return (
-    <div data-slot="animal-card" data-status={variant} {...{ [ANIMAL_ID_ATTRIBUTE]: animal.id }} className="relative">
+    <div data-slot="animal-card" data-status={variant} data-animal-id={animal.id} className="relative">
       {href ? (
         <Link
           href={href}
-          onClick={(event) => onSelect?.(cardSelection(event.currentTarget))}
+          onClick={(event) => {
+            const selection = cardSelection(event.currentTarget);
+            if (morph) setDeparting(selection);
+            onSelect?.(selection);
+          }}
           onPointerDown={onPress}
           transitionTypes={morph ? [CARD_TO_DETAIL] : undefined}
           // Next가 이동할 때 내부 스크롤 컨테이너를 건드리지 않게 한다(새 화면은 각자 맨 위로 올린다)
@@ -127,5 +137,28 @@ export function AnimalCard({
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * 카드 → 상세 전환의 출발 사진(PRD-v1.5 R5). 상세가 목록 위에 얹히고 목록은 내려가지 않으므로, 카드 사진은 화면에서 빠지지 않아
+ * 상세 사진 칸과 짝을 이룰 수 없다(React의 이름 짝은 한쪽이 빠지고 한쪽이 들어오는 같은 전환에서만 생긴다). 그래서 누른 순간 카드
+ * 사진 위에 같은 사진(이미 받아 디코드한 currentSrc)을 한 장 겹쳐 두고, 주소가 상세로 바뀌는 커밋(상세 층이 붙는 커밋)에서 이것을
+ * 뺀다. 빠지는 이 사진과 들어오는 상세 사진 칸이 같은 이름이라 짝을 이룬다.
+ *
+ * 카드의 진짜 사진은 그대로 둔다(다시 만들면 돌아왔을 때 사파리가 다시 디코드하며 비는 프레임이 생긴다, 12절 56). 배지보다 아래에
+ * 그려 누른 순간 화면이 바뀌지 않는다. 주소를 읽는 것은 이 사진뿐이라 다른 카드는 이동 때 다시 그려지지 않는다.
+ */
+function DepartingPhoto({ id, href, src, onArrived }: { id: string; href: string; src: string; onArrived: () => void }) {
+  const arrived = usePathname() === href;
+  useEffect(() => {
+    if (arrived) onArrived();
+  }, [arrived, onArrived]);
+  if (arrived) return null;
+  return (
+    <ViewTransition {...photoTransition(id)}>
+      {/* eslint-disable-next-line @next/next/no-img-element -- 카드 사진과 같은 주소(이미 디코드됨)를 그대로 겹친다 */}
+      <img src={src} alt="" aria-hidden decoding="sync" className="absolute inset-0 block size-full object-cover object-center" />
+    </ViewTransition>
   );
 }

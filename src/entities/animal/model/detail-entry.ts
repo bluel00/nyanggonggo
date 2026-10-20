@@ -28,14 +28,12 @@ export type DetailEntry = {
   startedAt: number;
   /** 상세에서 보던 사진 위치. 로딩 화면 → 서버 페이지로 바뀔 때 이어 받는다 */
   photoIndex: number;
-  /** 상세가 이미 한 번 그려졌다(로딩 화면). 서버 페이지로 바뀔 때 스크롤을 다시 맨 위로 올리지 않는다 */
-  shown: boolean;
 };
 
 const entries = new Map<string, DetailEntry>();
 
-export function startDetailEntry(entry: Omit<DetailEntry, "startedAt" | "photoIndex" | "shown">): DetailEntry {
-  const started: DetailEntry = { ...entry, startedAt: performance.now(), photoIndex: 0, shown: false };
+export function startDetailEntry(entry: Omit<DetailEntry, "startedAt" | "photoIndex">): DetailEntry {
+  const started: DetailEntry = { ...entry, startedAt: performance.now(), photoIndex: 0 };
   entries.set(entry.id, started);
   return started;
 }

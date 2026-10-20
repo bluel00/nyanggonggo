@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
-import { scrollAppToTop } from "@/shared/ui/app-column";
 import { BackButton, useGoBack } from "@/shared/ui/back-button";
 import { PHOTO_BOX_RATIO } from "../model/photo-box";
 
@@ -23,8 +21,6 @@ import { PHOTO_BOX_RATIO } from "../model/photo-box";
  */
 export function AnimalDetailSkeleton({ photoRatio = PHOTO_BOX_RATIO.unknown }: { photoRatio?: number }) {
   const goBack = useGoBack("/");
-  // 내부 스크롤 컨테이너는 화면을 옮겨도 유지되므로 뼈대부터 맨 위에서 보인다(실제 상세도 같은 처리를 한다)
-  useEffect(() => scrollAppToTop(), []);
 
   return (
     <div data-slot="detail-skeleton" aria-busy="true" className="flex min-h-full flex-col">

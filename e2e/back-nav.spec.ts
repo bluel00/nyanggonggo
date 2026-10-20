@@ -1,9 +1,11 @@
 import { expect, test, type BrowserContext, type Page } from "@playwright/test";
-import { isCardInView, loadNextListPage, openedDetail, scrollTop, SPECIES_COOKIE } from "./helpers";
+import { isCardInView, loadNextListPage, openedDetail, SPECIES_COOKIE } from "./helpers";
+import { belowScrollTop, LAYER, recordStackFrames, rememberCards, sameCards, stackFrames, stackFramesDone } from "./stack";
 
 /**
- * 상세에서 뒤로가기(PRD-v1.4 R1·R2, 4절 완료 기준). production 빌드를 스텁 서버(e2e/upstream-stub.mjs)로 띄워 본다:
+ * 상세에서 뒤로가기(PRD-v1.4 R1·R2, PRD-v1.5 R1·R2·R4). production 빌드를 스텁 서버(e2e/upstream-stub.mjs)로 띄워 본다:
  * 목록 API·상세·사진이 모두 고정 데이터라(실제 공공 API 요청 없음) 페이지 크기(20건)와 커서가 실제 서버 그대로다.
+ * Chromium과 WebKit(아이폰 사파리 엔진) 둘 다 돈다(playwright.config.ts).
  *
  * 스텁의 고정 목록은 개·세종 120건(6페이지)이고, 최신순으로 id가 990000202601000부터 하나씩 는다.
  * 다른 조합의 목록은 빈 결과다. 아래 값은 스텁과 같아야 한다.
@@ -58,7 +60,7 @@ async function openCard(page: Page, animalId: string) {
   await openedDetail(page);
 }
 
-/** 카드 위쪽이 스크롤 영역 위에서 80px 아래에 오게 내린다(가운데 맞춤과 다른 위치) */
+/** 카드 위쪽이 스크롤 영역 위에서 80px 아래에 오게 내린다(떠날 때 위치가 0이 아니게) */
 async function placeCardNearTop(page: Page, animalId: string) {
   await page.evaluate((id) => {
     const scroll = document.querySelector<HTMLElement>('[data-slot="app-scroll"]')!;
@@ -67,69 +69,9 @@ async function placeCardNearTop(page: Page, animalId: string) {
   }, animalId);
 }
 
-/** 카드를 누르는 순간의 목록 scrollTop을 남긴다(누르기 전 Playwright가 스크롤해도 실제로 떠난 위치를 본다) */
-async function watchLeaveScroll(page: Page) {
-  await page.evaluate(() => {
-    document.addEventListener(
-      "click",
-      () => {
-        const w = window as unknown as { __leaveScroll: number };
-        w.__leaveScroll = document.querySelector<HTMLElement>('[data-slot="app-scroll"]')!.scrollTop;
-      },
-      { capture: true, once: true },
-    );
-  });
-}
-const leaveScroll = (page: Page) => page.evaluate(() => (window as unknown as { __leaveScroll: number }).__leaveScroll);
-
-type Frame = { list: boolean; scrollTop: number };
-/** 지금부터 매 프레임(rAF, 그리기 직전) 목록이 그려졌는지와 scrollTop을 남긴다 */
-async function recordFrames(page: Page) {
-  await page.evaluate(() => {
-    const w = window as unknown as { __frames: Frame[] };
-    w.__frames = [];
-    const tick = () => {
-      const scroll = document.querySelector<HTMLElement>('[data-slot="app-scroll"]');
-      const list = !document.querySelector('[data-slot="animal-detail"]') && document.querySelector("[data-animal-id]") !== null;
-      w.__frames.push({ list, scrollTop: scroll?.scrollTop ?? -1 });
-      if (w.__frames.length < 180) requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
-  });
-}
-/** 목록이 처음 그려진 프레임 */
-async function firstListFrame(page: Page): Promise<Frame> {
-  const frames = () => page.evaluate(() => (window as unknown as { __frames: Frame[] }).__frames);
-  await expect.poll(async () => (await frames()).some((frame) => frame.list), { message: "목록이 그려진다" }).toBe(true);
-  return (await frames()).find((frame) => frame.list)!;
-}
-
-/** 카드 가운데와 스크롤 영역 가운데의 차이(px) */
-function offCenter(page: Page, animalId: string) {
-  return page.evaluate((id) => {
-    const scroll = document.querySelector<HTMLElement>('[data-slot="app-scroll"]')!.getBoundingClientRect();
-    const card = document.querySelector<HTMLElement>(`[data-animal-id="${id}"]`)!.getBoundingClientRect();
-    return card.top + card.height / 2 - (scroll.top + scroll.height / 2);
-  }, animalId);
-}
-
-/** 카드 사진의 decoding 속성을 스크롤 영역 안·밖으로 나눠 모은다 */
-function cardPhotoDecoding(page: Page) {
-  return page.evaluate(() => {
-    const scroll = document.querySelector<HTMLElement>('[data-slot="app-scroll"]')!.getBoundingClientRect();
-    const inView: string[] = [];
-    const outOfView: string[] = [];
-    for (const card of document.querySelectorAll<HTMLElement>("[data-animal-id]")) {
-      const box = card.getBoundingClientRect();
-      const visible = box.bottom > scroll.top && box.top < scroll.bottom;
-      for (const img of card.querySelectorAll("img")) (visible ? inView : outOfView).push(img.getAttribute("decoding") ?? "");
-    }
-    return { inView, outOfView };
-  });
-}
-
 async function goBack(page: Page, how: "화면 안" | "브라우저") {
-  if (how === "화면 안") await page.getByRole("button", { name: "뒤로가기" }).click();
+  // 층 안의 뒤로가기를 누른다(아래 화면은 inert지만 Playwright의 역할 찾기에는 잡힌다)
+  if (how === "화면 안") await page.locator(LAYER).getByRole("button", { name: "뒤로가기" }).click();
   else await page.goBack();
 }
 
@@ -154,8 +96,7 @@ test.describe("R1: 목록 → 상세 → 뒤로가기", () => {
 
       const mark = requests.length;
       await resetSkeletons(page);
-      if (how === "화면 안") await page.getByRole("button", { name: "뒤로가기" }).click();
-      else await page.goBack();
+      await goBack(page, how);
 
       await expect(page).toHaveURL(LIST_URL);
       await expect(page.locator(`[data-animal-id="${target}"]`)).toBeVisible();
@@ -169,75 +110,77 @@ test.describe("R1: 목록 → 상세 → 뒤로가기", () => {
     });
   }
 
-  // 쓸어넘기기 깜빡임(architecture.md 12절 37): iOS 사파리는 쓸어넘기는 동안 떠날 때 화면의 스냅숏을 보여 주므로,
-  // 목록의 첫 프레임이 떠날 때와 같은 scrollTop이어야 한다. 브라우저 뒤로가기(history.back)가 쓸어넘기기와 같은 경로다
+  // 상세는 목록 위에 얹히고 목록은 내려가지 않는다(PRD-v1.5 R1). 쓸어넘기기는 브라우저 뒤로가기(history.back)와 같은 경로다.
+  // 층이 있는 동안과 걷힌 뒤 모든 프레임에서 목록 위치가 떠날 때와 같고, 층이 사라진 첫 프레임부터 목록이 스크롤·터치된다(R4)
   for (const depth of [1, 5]) {
     const card = depth === 1 ? listItemId(7) : target;
     for (const how of ["화면 안", "브라우저"] as const) {
-      test(`${depth}페이지 깊이, ${how} 뒤로가기: 목록의 첫 프레임 scrollTop이 떠날 때와 ±1px`, async ({ page }) => {
+      test(`${depth}페이지 깊이, ${how} 뒤로가기: 목록은 같은 요소·같은 위치이고, 층이 사라진 첫 프레임부터 스크롤·터치된다`, async ({ page }) => {
         await page.goto(LIST_URL);
         await loadPages(page, depth);
         await placeCardNearTop(page, card);
-        expect(new Set(Object.values(await cardPhotoDecoding(page)).flat()), "처음 들어올 때와 스크롤로 보인 카드").toEqual(
-          new Set(["async"]),
-        );
-        await watchLeaveScroll(page);
-        await openCard(page, card);
-        const left = await leaveScroll(page);
-        expect(left, "가운데 맞춤과 구분되도록 위쪽까지 내렸다").toBeGreaterThan(0);
+        const left = await belowScrollTop(page);
+        expect(left, "위쪽까지 내렸다").toBeGreaterThan(0);
+        await rememberCards(page);
 
-        await recordFrames(page);
+        await openCard(page, card);
+        await expect(page.locator(`${LAYER} [data-slot="animal-detail"]`)).toHaveCount(1);
+        expect(await sameCards(page), "얹은 동안 목록이 그대로 있다").toBe(true);
+
+        await recordStackFrames(page);
         await goBack(page, how);
-        const first = await firstListFrame(page);
-        expect(Math.abs(first.scrollTop - left), `첫 프레임 ${first.scrollTop}, 떠날 때 ${left}`).toBeLessThanOrEqual(1);
         await expect(page).toHaveURL(LIST_URL);
-        // 그 뒤에도 움직이지 않는다
-        await page.waitForTimeout(500);
-        expect(Math.abs((await scrollTop(page)) - left)).toBeLessThanOrEqual(1);
-        // 화면 안 카드 사진만 바로 디코드(12절 56), 나머지는 그대로 async
-        const decoding = await cardPhotoDecoding(page);
-        expect(decoding.inView.length).toBeGreaterThan(0);
-        expect(new Set(decoding.inView), "화면 안 카드 사진").toEqual(new Set(["sync"]));
-        expect(new Set(decoding.outOfView), "화면 밖 카드 사진").toEqual(new Set(["async"]));
+        await expect(page.locator(LAYER)).toHaveCount(0);
+        await expect.poll(() => stackFramesDone(page), { message: "층이 걷힌 뒤 30프레임" }).toBe(true);
+
+        expect(await sameCards(page), "카드가 다시 만들어지지 않았다").toBe(true);
+        const frames = await stackFrames(page);
+        expect(new Set(frames.map((frame) => frame.scrollTop)), "모든 프레임에서 목록 위치 그대로").toEqual(new Set([left]));
+        const firstGone = frames.findIndex((frame) => !frame.layer);
+        expect(frames.slice(0, firstGone).every((frame) => !frame.usable), "층이 있는 동안 목록은 막혀 있다").toBe(true);
+        expect(frames.slice(firstGone).every((frame) => frame.usable), "층이 사라진 첫 프레임부터 목록이 스크롤·터치된다").toBe(true);
       });
     }
   }
 
-  // 상세에 머무는 동안 목록 캐시(gcTime 30분)가 지워지면 목록을 다시 받는다. 첫 화면이 뼈대라 스냅숏과 맞출 수 없고,
-  // 다시 받은 목록은 순서·높이가 같다는 보장이 없으므로 카드 id로 찾아 가운데에 맞춘다(지금까지의 동작)
-  for (const how of ["화면 안", "브라우저"] as const) {
-    test(`캐시가 지워진 뒤 ${how} 뒤로가기: 열었던 카드를 가운데로 맞춘다`, async ({ page }) => {
-      const card = listItemId(7);
-      await page.clock.install();
-      await watchSkeletons(page);
-      await page.goto(LIST_URL);
-      await expect(page.locator(CARDS)).toHaveCount(PAGE_SIZE);
-      await placeCardNearTop(page, card);
-      await openCard(page, card);
-      // 목록이 언마운트돼 캐시의 gc 타이머가 걸린 뒤에 시간을 넘긴다(미리보기 상세가 보일 때는 아직일 수 있다)
-      await expect(page.locator(CARDS)).toHaveCount(0);
-      await expect(page.locator('[data-slot="detail-preview"]')).toHaveCount(0);
+  // 목록이 내려가지 않아 목록 캐시가 쓰이는 중(관찰자 있음)이다. 상세에 오래 머물러도(목록 gcTime 30분) 목록이 사라지지 않는다
+  test("상세에 31분 머문 뒤 뒤로가기: 목록은 같은 요소이고 다시 받지 않는다", async ({ page }) => {
+    const card = listItemId(7);
+    await page.clock.install();
+    await watchSkeletons(page);
+    const requests = countListRequests(page);
+    await page.goto(LIST_URL);
+    await expect(page.locator(CARDS)).toHaveCount(PAGE_SIZE);
+    await placeCardNearTop(page, card);
+    const left = await belowScrollTop(page);
+    await rememberCards(page);
+    await openCard(page, card);
 
-      await page.clock.fastForward("31:00");
-      await resetSkeletons(page);
-      await goBack(page, how);
+    await page.clock.fastForward("31:00");
+    const mark = requests.length;
+    await resetSkeletons(page);
+    await goBack(page, "브라우저");
 
-      await expect(page).toHaveURL(LIST_URL);
-      await expect(page.locator(`[data-animal-id="${card}"]`)).toBeVisible();
-      await expect.poll(() => offCenter(page, card).then(Math.abs), { message: "카드 가운데가 스크롤 영역 가운데" }).toBeLessThanOrEqual(1);
-      expect(await skeletonCount(page), "캐시가 지워져 뼈대부터 그렸다").toBeGreaterThan(0);
-    });
-  }
+    await expect(page.locator(LAYER)).toHaveCount(0);
+    expect(await sameCards(page)).toBe(true);
+    expect(await belowScrollTop(page)).toBe(left);
+    await page.waitForTimeout(500);
+    expect(requests.slice(mark)).toEqual([]);
+    expect(await skeletonCount(page)).toBe(0);
+  });
 
+  // R2(PRD-v1.5): 얹은 상세에서 새로고침하면 상세 전체 페이지. 그 뒤 뒤로가기는 목록을 처음부터 부른다(위치는 보장하지 않는다)
   test("목록 → 상세 → 새로고침 → 화면 안 뒤로가기: 원래 목록 주소(쿼리 포함)로 간다", async ({ page, context }) => {
     const listUrl = `${LIST_URL}&sort=endingSoon`;
     await page.goto(listUrl);
     await expect(page.locator(CARDS)).toHaveCount(PAGE_SIZE);
     const first = (await page.locator(CARDS).first().getAttribute("data-animal-id"))!;
     await openCard(page, first);
+    await expect(page.locator(LAYER)).toHaveCount(1);
 
     await page.reload();
     await openedDetail(page);
+    await expect(page.locator(LAYER), "새로고침하면 상세 전체 페이지").toHaveCount(0);
     await page.getByRole("button", { name: "뒤로가기" }).click();
 
     await expect(page).toHaveURL(listUrl);

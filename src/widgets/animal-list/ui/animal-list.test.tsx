@@ -194,85 +194,28 @@ describe("AnimalList 찜 하트", () => {
   });
 });
 
-describe("AnimalList 스크롤 복원", () => {
-  const filter: AnimalListFilter = { species: "cat", status: "protected", sort: "latest" };
-  const CARD_HEIGHT = 400;
-  const CONTAINER_HEIGHT = 600;
-  const realRect = Element.prototype.getBoundingClientRect;
+describe("AnimalList 상세로 갈 때(PRD-v1.5 R6)", () => {
+  // 상세는 목록 위에 얹히고 목록은 내려가지 않는다. 그래서 목록은 떠날 때 아무것도 기억하지 않고 스크롤도 건드리지 않는다
+  afterEach(() => sessionStorage.clear());
 
-  /** AppShell과 같은 구조를 만들고, 화면마다 별도 host에 그려 이동을 흉내 낸다 */
-  function openShell() {
+  it("카드를 눌러도 스크롤 위치를 바꾸거나 저장하지 않는다(복원 코드·키 없음)", async () => {
+    fetchMock.mockImplementation(async () => Response.json({ items: [wire("1"), wire("2"), wire("3")], nextCursor: null }));
     document.body.innerHTML = `<div data-slot="app-column"><div data-slot="app-scroll"></div></div>`;
     const scroll = document.querySelector<HTMLElement>('[data-slot="app-scroll"]')!;
-    // jsdom에는 레이아웃이 없다. 카드가 400px씩 쌓인 목록을 흉내 낸다
-    Element.prototype.getBoundingClientRect = function (this: Element) {
-      if (this === scroll) return { top: 0, height: CONTAINER_HEIGHT } as DOMRect;
-      const cards = [...scroll.querySelectorAll("[data-animal-id]")];
-      const index = cards.indexOf(this);
-      if (index < 0) return { top: 0, height: 0 } as DOMRect;
-      return { top: index * CARD_HEIGHT - scroll.scrollTop, height: CARD_HEIGHT } as DOMRect;
-    };
+    const host = document.createElement("div");
+    scroll.appendChild(host);
     const client = createQueryClient();
-    const open = () => {
-      const host = document.createElement("div");
-      scroll.appendChild(host);
-      return render(<AnimalList filter={filter} />, {
-        container: host,
-        wrapper: ({ children }: { children: ReactNode }) => <QueryClientProvider client={client}>{children}</QueryClientProvider>,
-      });
-    };
-    return { scroll, open };
-  }
-
-  afterEach(() => {
-    Element.prototype.getBoundingClientRect = realRect;
-    sessionStorage.clear();
-  });
-
-  it("무한 스크롤로 2페이지를 본 뒤 상세로 갔다 돌아오면 카드가 그대로 있고 열었던 카드로 돌아간다", async () => {
-    fetchMock.mockImplementation(async (input) => {
-      const cursor = new URL(String(input), "http://localhost").searchParams.get("cursor");
-      return Response.json(
-        cursor === null
-          ? { items: [wire("1"), wire("2"), wire("3")], nextCursor: "c2" }
-          : { items: [wire("4"), wire("5")], nextCursor: null },
-      );
+    render(<AnimalList filter={{ species: "cat", status: "protected", sort: "latest" }} />, {
+      container: host,
+      wrapper: ({ children }: { children: ReactNode }) => <QueryClientProvider client={client}>{children}</QueryClientProvider>,
     });
-    const { scroll, open } = openShell();
+    await screen.findByText("지역3");
+    scroll.scrollTop = 800;
+    const keysBefore = Object.keys(sessionStorage).sort();
 
-    const list = open();
-    await screen.findByText("지역1");
-    await triggerSentinel();
-    await screen.findByText("지역5"); // 2페이지까지 로드
+    fireEvent.click(screen.getByText("지역3"));
 
-    // 2페이지의 카드를 눌러 상세로 간다
-    fireEvent.click(screen.getByText("지역4"));
-    const requestsBeforeBack = listRequests().length;
-    list.unmount();
-    scroll.scrollTop = 0; // 상세 화면(맨 위)
-
-    // 뒤로가기: 같은 QueryClient라 캐시된 2페이지가 그대로 나온다
-    await act(async () => {
-      open();
-    });
-    expect(screen.getByText("지역5")).toBeTruthy();
-    // 지역4는 네 번째 카드(1200~1600). 가운데가 컨테이너 가운데에 오도록
-    expect(scroll.scrollTop).toBe(1100);
-    expect(listRequests()).toHaveLength(requestsBeforeBack); // 다시 불러오지 않는다(staleTime)
-  });
-
-  it("카드를 누르지 않고 돌아오면 맨 위에 둔다", async () => {
-    fetchMock.mockImplementation(async () => Response.json({ items: [wire("1"), wire("2")], nextCursor: null }));
-    const { scroll, open } = openShell();
-
-    const list = open();
-    await screen.findByText("지역1");
-    list.unmount();
-    scroll.scrollTop = 0;
-
-    await act(async () => {
-      open();
-    });
-    expect(scroll.scrollTop).toBe(0);
+    expect(scroll.scrollTop).toBe(800);
+    expect(Object.keys(sessionStorage).sort()).toEqual(keysBefore);
   });
 });

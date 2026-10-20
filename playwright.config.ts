@@ -51,14 +51,14 @@ export default defineConfig({
   /*
    * 대부분은 개발 서버에서 돈다. 상세 로딩 경계(detail-loading), 홈 캐릭터 Rive(home-rive)는 production 서버에서 돈다:
    * Next는 production에서만 링크를 prefetch하고, 카드를 누른 즉시 로딩 뼈대가 보이는 것은 그 prefetch 덕분이다.
-   * 상세에서 뒤로가기(back-nav, PRD-v1.4), 상세 사진(detail-photo), 상세 제목 줄(detail-title)은 같은 빌드를 스텁 서버
-   * (e2e/upstream-stub.mjs: 고정 공고, 크기를 아는 단색 사진)로 띄워 본다.
+   * 상세에서 뒤로가기(back-nav, PRD-v1.4·v1.5), 상세 층(stack-nav, PRD-v1.5), 상세 사진(detail-photo), 상세 제목 줄(detail-title)은
+   * 같은 빌드를 스텁 서버(e2e/upstream-stub.mjs: 고정 공고, 크기를 아는 단색 사진)로 띄워 본다.
    * 개발 서버(.next/dev)와 production 빌드(.next)는 출력 폴더가 달라 함께 띄울 수 있다.
    */
   projects: [
     {
       name: "dev",
-      testIgnore: /(detail-loading|detail-photo|detail-title|detail-transition|home-rive|back-nav|motion)\.spec\.ts/,
+      testIgnore: /(detail-loading|detail-photo|detail-title|detail-transition|home-rive|back-nav|motion|stack-nav)\.spec\.ts/,
       // 브라우저는 localhost로 연다(개발 서버가 127.0.0.1을 다른 오리진으로 보고 dev 리소스를 막는다)
       use: { baseURL: "http://localhost:3000" },
     },
@@ -69,13 +69,13 @@ export default defineConfig({
     },
     {
       name: "production-stub",
-      testMatch: /(back-nav|detail-photo|detail-title|detail-transition)\.spec\.ts/,
+      testMatch: /(back-nav|detail-photo|detail-title|detail-transition|stack-nav)\.spec\.ts/,
       use: { baseURL: "http://localhost:3101" },
     },
     {
-      // 상세에서 뒤로가기는 iOS 사파리 엔진(WebKit)에서도 본다(쓸어넘기기 깜빡임, architecture.md 12절 37). 같은 스텁 서버
+      // 상세에서 뒤로가기와 상세 층은 iOS 사파리 엔진(WebKit)에서도 본다(쓸어넘기기 깜빡임, PRD-v1.5). 같은 스텁 서버
       name: "production-stub-webkit",
-      testMatch: /back-nav\.spec\.ts/,
+      testMatch: /(back-nav|stack-nav)\.spec\.ts/,
       use: { ...devices["iPhone 13"], baseURL: "http://localhost:3101" },
     },
   ],

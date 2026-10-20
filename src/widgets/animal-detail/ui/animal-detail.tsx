@@ -18,7 +18,6 @@ import {
 import { FavoriteButton } from "@/features/animal-favorite";
 import { ShareButton } from "@/features/animal-share";
 import { cn } from "@/shared/lib/utils";
-import { scrollAppToTop } from "@/shared/ui/app-column";
 import { BackButton, useGoBack } from "@/shared/ui/back-button";
 import { Button } from "@/shared/ui/button";
 import { photoBoxRatio, type PhotoSize } from "../model/photo-box";
@@ -76,14 +75,6 @@ export function AnimalDetail({ id, firstPhotoSize = null }: { id: string; firstP
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   // 목록을 거쳐 왔으면 router.back(), 공유 링크로 바로 들어왔으면 `/`(내 평소 화면: 홈 또는 기억된 목록, PRD-v1.4 R2)
   const goBack = useGoBack("/");
-
-  // 내부 스크롤 컨테이너는 화면을 옮겨도 유지되므로 상세 진입 시 맨 위로. 로딩 화면 → 서버 페이지로 바뀔 때는 두 번째라 그대로 둔다
-  useEffect(() => {
-    const current = getDetailEntry(id);
-    if (current?.shown) return;
-    if (current) current.shown = true;
-    scrollAppToTop();
-  }, [id]);
 
   // 라우트 로딩 경계(loading.tsx)와 같은 뼈대라 둘 사이에서 화면이 바뀌지 않는다
   if (query.isPending) return <AnimalDetailSkeleton photoRatio={boxRatio} />;

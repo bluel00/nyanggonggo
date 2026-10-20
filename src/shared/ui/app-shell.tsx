@@ -8,11 +8,12 @@ import type { ReactNode } from "react";
  * 컬럼은 화면 높이(100dvh)로 고정하고 스크롤은 안쪽 `app-scroll`이 맡는다(내부 스크롤 컨테이너, handoff (c)).
  * 컬럼은 `position: relative` + `overflow: hidden`이라 하단 CTA, 바텀시트, 토스트, 뷰어는 `position: fixed` 대신
  * 컬럼 기준 `absolute`로 두면 항상 화면 안에 보인다(CLAUDE.md). 포털은 useAppColumn()이 찾는 이 컬럼에 붙인다.
+ * stack은 지금 화면 위에 얹는 층(목록 위의 상세, @modal 슬롯)이다. 스크롤 영역의 형제라 아래 화면은 내려가지 않는다.
  */
 export const APP_COLUMN_SELECTOR = '[data-slot="app-column"]';
 export const APP_SCROLL_SELECTOR = '[data-slot="app-scroll"]';
 
-export function AppShell({ children, overlay }: { children: ReactNode; overlay?: ReactNode }) {
+export function AppShell({ children, stack, overlay }: { children: ReactNode; stack?: ReactNode; overlay?: ReactNode }) {
   return (
     <div className="min-h-dvh bg-canvas">
       <div
@@ -22,6 +23,8 @@ export function AppShell({ children, overlay }: { children: ReactNode; overlay?:
         <div data-slot="app-scroll" className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
           {children}
         </div>
+        {/* 지금 화면 위에 얹은 층(상세, PRD-v1.5). 없으면 비어 있다(shared/ui/stack-layer.tsx) */}
+        {stack}
         {/* 스크롤 영역 밖, 컬럼 안: 토스트 등 컬럼 기준 absolute 요소 */}
         {overlay}
       </div>
