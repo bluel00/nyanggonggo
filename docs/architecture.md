@@ -830,3 +830,11 @@ PRD v1.1이 공식화한 항목(2026-10-02). 구현은 v1.1을 따르므로 불�
 
     판정: 원인이다. 미룬 뒤 끈 것과 같고, 카드 → 상세 보이기까지도 47ms로 그대로다(누를 때 받는 부분은 바꾸지 않았다).
 
+
+**5단계(Rive 캐릭터 선 색·누름 반응, 브랜치 `stage-5-rive`, 2026-10-20)**
+
+- 바꾼 것: `docs/design/characters.md`를 디자인 동기화본(2026-10-14, 방향 A)으로 옮겼다. 캐릭터 SVG 원본 17개(`docs/design/assets/characters/`)의 선 `stroke="#111111"` 204곳을 `#3A2A20`으로 바꿨다(눈·강아지 코의 채움 `#111111`, 두께 1.8, path·그룹·기준점은 그대로, `#4A3E34` 줄무늬 선도 그대로). 앱 정지 그림(`public/characters/` 정면 앉음 둘, 움직임 줄이기에서 보임)도 같은 파일이다. press 반응(`scripts/rive-characters-scene.mjs`): 머리 6° 기울기를 없애고, 100ms(60fps 6프레임) ease-out으로 웃는 눈 + 몸이 바닥 가운데(rig) 기준 가로 1.03 × 세로 0.96, 다음 100ms에 돌아와 12프레임(200ms)에 idle로 간다(이전 250ms, 세로 0.95). 잠에서 깨는 wake도 같다. 이동을 늦추지 않는 것은 그대로다(앱은 press 신호만 보낸다).
+- 빌드: `pnpm rive:build`(Rive CLI 1.5.0), `--check` 통과(scene.rml이 생성 결과와 같다). `.riv` 77,200 → 76,981바이트(brotli 17,924 → 17,880).
+- 테스트: `tests/design/character-colors.test.ts`(선에 `#111111`이 없고 `#3A2A20`, 채움 `#111111`은 눈·코에만, scene.rml의 Stroke에도 `#111111` 없음), `tests/design/rive-scene.test.ts`(press·wake 12프레임, 6프레임에 1.03 × 0.96, 회전 없음). E2E 전체 통과(home-rive 포함).
+- 스크린샷(저장소 밖 `nyanggonggo-review/perf-ui/screens/stage5/`): `svg-before-after.png`(정면 앉음·강아지 놀자·고양이 씰룩·덮치기 공중·착지, 이전/지금), `rive-frames.png`(홈 실제 Rive: greet 0~2.5초, press 100ms, 움직임 줄이기 정지 그림)와 낱장. 선 색만 바뀌고 모양은 같다.
+- 측정(홈만 바뀌어 14.3 중 홈 LCP·FCP·CLS만 다시 쟀다. 목록 스크롤·목록·상세 LCP는 홈 밖이라 생략했다): LCP 홈 804ms(784~812, 기준선 main 432 대비 +372 ≤ 등장 길이 500) 통과, FCP 홈 420ms(412~424, +100 이내) 통과, CLS 0 통과.

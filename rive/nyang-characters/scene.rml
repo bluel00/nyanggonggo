@@ -28,7 +28,7 @@
                                 <CubicDetachedVertex x="-1.6" y="-2.8" inRotation="3.1416" inDistance="0.6667" outRotation="0" outDistance="0" id="0:2008"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FF9C3548" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                         <Shape name="bow-pattern">
                             <PointsPath isClosed="true" isClockwise="true" name="Path">
@@ -57,7 +57,7 @@
                                 <CubicDetachedVertex x="-1" y="1.2" inRotation="2.84" inDistance="4.7127" outRotation="0" outDistance="0" id="0:2022"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FF9C3548" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                     </Node>
                     <Node x="10" y="-30" rotation="0.1745" name="head" id="0:1402">
@@ -66,7 +66,7 @@
                                 <CubicDetachedVertex x="26.6" y="-13.6" inRotation="0" inDistance="0" outRotation="2.0344" outDistance="2.3851" id="0:2023"/>
                                 <CubicDetachedVertex x="21.5" y="-10.8" inRotation="0.1138" inDistance="2.3485" outRotation="0" outDistance="0" id="0:2024"/>
                             </PointsPath>
-                            <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                         <Shape name="nose">
                             <PointsPath isClosed="true" isClockwise="true" name="Path">
@@ -82,7 +82,7 @@
                                     <CubicDetachedVertex x="-3" y="-0.5" inRotation="0" inDistance="0" outRotation="0.7854" outDistance="2.8284" id="0:2028"/>
                                     <CubicDetachedVertex x="3" y="-0.5" inRotation="2.3562" inDistance="2.8284" outRotation="0" outDistance="0" id="0:2029"/>
                                 </PointsPath>
-                                <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                                <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                             </Shape>
                         </Node>
                         <Node x="14" y="-24" opacity="0" name="eyes-open" id="0:1404">
@@ -146,7 +146,7 @@
                                 <CubicDetachedVertex x="-20" y="-20" inRotation="1.5708" inDistance="10" outRotation="0" outDistance="0" id="0:2060"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FFA38D74" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                         <Node x="-4" y="-37" rotation="-0.2094" name="ear-left" id="0:1405">
                             <Shape name="ear-left-inner">
@@ -165,7 +165,7 @@
                                     <CubicDetachedVertex x="9" y="2" inRotation="0" inDistance="0" outRotation="0" outDistance="0" id="0:2067"/>
                                 </PointsPath>
                                 <Fill name="Fill"><SolidColor colorValue="FFA38D74" name="Color"/></Fill>
-                                <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                                <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                             </Shape>
                         </Node>
                         <Node x="8" y="-38" name="ear-right" id="0:1406">
@@ -177,7 +177,7 @@
                                     <CubicDetachedVertex x="6" y="2" inRotation="0" inDistance="0" outRotation="0" outDistance="0" id="0:2071"/>
                                 </PointsPath>
                                 <Fill name="Fill"><SolidColor colorValue="FFA38D74" name="Color"/></Fill>
-                                <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                                <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                             </Shape>
                         </Node>
                     </Node>
@@ -189,7 +189,7 @@
                                 <CubicDetachedVertex x="6" y="20" inRotation="-1.5708" inDistance="5" outRotation="0" outDistance="0" id="0:2074"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FFFFFFFF" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                         <Shape name="leg-front-near-shaft">
                             <Ellipse x="0" y="0" width="5" height="5" originX="0.5" originY="0.5" name="Path" id="0:2075"/>
@@ -210,14 +210,14 @@
                                 <CubicDetachedVertex x="7" y="11" inRotation="-1.5708" inDistance="4" outRotation="0" outDistance="0" id="0:2082"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FFFFFFFF" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                         <Shape name="haunch-line">
                             <PointsPath isClosed="false" isClockwise="true" name="Path">
                                 <CubicDetachedVertex x="7" y="10" inRotation="0" inDistance="0" outRotation="-1.3258" outDistance="8.2462" id="0:2083"/>
                                 <CubicDetachedVertex x="-9" y="-6" inRotation="0" inDistance="12" outRotation="0" outDistance="0" id="0:2084"/>
                             </PointsPath>
-                            <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                         <Shape name="leg-hind-near-shaft">
                             <Ellipse x="0" y="0" width="5" height="5" originX="0.5" originY="0.5" name="Path" id="0:2085"/>
@@ -284,7 +284,7 @@
                                 <CubicDetachedVertex x="12" y="0" inRotation="0" inDistance="2" outRotation="0" outDistance="0" id="0:2120"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FFA38D74" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                     </Node>
                     <Node x="14" y="-20" name="leg-front-far" id="0:1410">
@@ -295,7 +295,7 @@
                                 <CubicDetachedVertex x="5" y="20" inRotation="-1.5708" inDistance="5" outRotation="0" outDistance="0" id="0:2123"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FFFFFFFF" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                         <Shape name="leg-front-far-shaft" id="0:905">
                             <Ellipse x="0" y="0" width="5" height="5" originX="0.5" originY="0.5" name="Path" id="0:2124"/>
@@ -338,7 +338,7 @@
                                 <CubicDetachedVertex x="4" y="-9" inRotation="2.8198" inDistance="3.1623" outRotation="0" outDistance="0" id="0:2140"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FFA38D74" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                     </Node>
                 </Node>
@@ -357,7 +357,7 @@
                                 <CubicDetachedVertex x="-1.6" y="-2.8" inRotation="3.1416" inDistance="0.6667" outRotation="0" outDistance="0" id="0:2508"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FF9C3548" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                         <Shape name="bow-pattern">
                             <PointsPath isClosed="true" isClockwise="true" name="Path">
@@ -386,7 +386,7 @@
                                 <CubicDetachedVertex x="-1" y="1.2" inRotation="2.84" inDistance="4.7127" outRotation="0" outDistance="0" id="0:2522"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FF9C3548" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                     </Node>
                     <Node x="6" y="-34" name="head" id="0:1202">
@@ -395,7 +395,7 @@
                                 <CubicDetachedVertex x="26.6" y="-13.6" inRotation="0" inDistance="0" outRotation="2.0344" outDistance="2.3851" id="0:2523"/>
                                 <CubicDetachedVertex x="21.5" y="-10.8" inRotation="0.1138" inDistance="2.3485" outRotation="0" outDistance="0" id="0:2524"/>
                             </PointsPath>
-                            <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                         <Shape name="nose">
                             <PointsPath isClosed="true" isClockwise="true" name="Path">
@@ -411,7 +411,7 @@
                                     <CubicDetachedVertex x="-3" y="1" inRotation="0" inDistance="0" outRotation="-0.8622" outDistance="3.0732" id="0:2528"/>
                                     <CubicDetachedVertex x="3" y="1" inRotation="-2.2794" inDistance="3.0732" outRotation="0" outDistance="0" id="0:2529"/>
                                 </PointsPath>
-                                <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                                <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                             </Shape>
                         </Node>
                         <Node x="14" y="-24" opacity="0" name="eyes-closed" id="0:1204">
@@ -420,7 +420,7 @@
                                     <CubicDetachedVertex x="-3" y="-0.5" inRotation="0" inDistance="0" outRotation="0.7854" outDistance="2.8284" id="0:2530"/>
                                     <CubicDetachedVertex x="3" y="-0.5" inRotation="2.3562" inDistance="2.8284" outRotation="0" outDistance="0" id="0:2531"/>
                                 </PointsPath>
-                                <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                                <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                             </Shape>
                         </Node>
                         <Node x="14" y="-24" name="eyes-open" id="0:1205">
@@ -484,7 +484,7 @@
                                 <CubicDetachedVertex x="-20" y="-20" inRotation="1.5708" inDistance="10" outRotation="0" outDistance="0" id="0:2562"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FFA38D74" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                         <Node x="-4" y="-37" name="ear-left" id="0:1206">
                             <Shape name="ear-left-inner">
@@ -503,7 +503,7 @@
                                     <CubicDetachedVertex x="9" y="2" inRotation="0" inDistance="0" outRotation="0" outDistance="0" id="0:2569"/>
                                 </PointsPath>
                                 <Fill name="Fill"><SolidColor colorValue="FFA38D74" name="Color"/></Fill>
-                                <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                                <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                             </Shape>
                         </Node>
                         <Node x="8" y="-38" name="ear-right" id="0:1207">
@@ -515,7 +515,7 @@
                                     <CubicDetachedVertex x="6" y="2" inRotation="0" inDistance="0" outRotation="0" outDistance="0" id="0:2573"/>
                                 </PointsPath>
                                 <Fill name="Fill"><SolidColor colorValue="FFA38D74" name="Color"/></Fill>
-                                <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                                <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                             </Shape>
                         </Node>
                     </Node>
@@ -527,7 +527,7 @@
                                 <CubicDetachedVertex x="5" y="24" inRotation="-1.5708" inDistance="5" outRotation="0" outDistance="0" id="0:2576"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FFFFFFFF" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                         <Shape name="leg-front-near-shaft">
                             <Ellipse x="0" y="0" width="5" height="5" originX="0.5" originY="0.5" name="Path" id="0:2577"/>
@@ -548,14 +548,14 @@
                                 <CubicDetachedVertex x="7" y="12" inRotation="-1.5708" inDistance="4" outRotation="0" outDistance="0" id="0:2584"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FFFFFFFF" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                         <Shape name="haunch-line">
                             <PointsPath isClosed="false" isClockwise="true" name="Path">
                                 <CubicDetachedVertex x="7" y="11" inRotation="0" inDistance="0" outRotation="-1.3521" outDistance="9.2195" id="0:2585"/>
                                 <CubicDetachedVertex x="-7" y="-7" inRotation="0.0997" inDistance="10.0499" outRotation="0" outDistance="0" id="0:2586"/>
                             </PointsPath>
-                            <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                         <Shape name="leg-hind-near-shaft">
                             <Ellipse x="0" y="0" width="5" height="5" originX="0.5" originY="0.5" name="Path" id="0:2587"/>
@@ -622,7 +622,7 @@
                                 <CubicDetachedVertex x="8" y="0" inRotation="0" inDistance="2" outRotation="0" outDistance="0" id="0:2622"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FFA38D74" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                     </Node>
                     <Node x="11" y="-24" name="leg-front-far" id="0:1211">
@@ -633,7 +633,7 @@
                                 <CubicDetachedVertex x="4" y="24" inRotation="-1.5708" inDistance="5" outRotation="0" outDistance="0" id="0:2625"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FFFFFFFF" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                         <Shape name="leg-front-far-shaft">
                             <Ellipse x="0" y="0" width="5" height="5" originX="0.5" originY="0.5" name="Path" id="0:2626"/>
@@ -672,7 +672,7 @@
                                 <CubicDetachedVertex x="4" y="-9" inRotation="2.8198" inDistance="3.1623" outRotation="0" outDistance="0" id="0:2642"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FFA38D74" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                     </Node>
                 </Node>
@@ -690,7 +690,7 @@
                                 <CubicDetachedVertex x="-3.4" y="-1.8" outRotation="-1.5708" outDistance="0.6667"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FF9C3548" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                         <Shape name="bow-pattern">
                             <PointsPath isClosed="true" isClockwise="true" name="Path">
@@ -733,7 +733,7 @@
                                 <CubicDetachedVertex x="1.5" y="1" inRotation="0.8761" inDistance="3.9051"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FF9C3548" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                     </Node>
                     <Node x="4" y="-38" name="head" id="0:1102">
@@ -747,7 +747,7 @@
                                 <CubicDetachedVertex x="7" y="-11" inRotation="2.2655" inDistance="2.0827" outRotation="0.8761" outDistance="2.0827"/>
                                 <CubicDetachedVertex x="11" y="-10.6" inRotation="2.3562" inDistance="1.8856"/>
                             </PointsPath>
-                            <Stroke thickness="1.8" cap="round" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="round" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                         <Shape name="nose">
                             <PointsPath isClosed="true" isClockwise="true" name="Path">
@@ -767,7 +767,7 @@
                                     <CubicDetachedVertex x="5.6" y="1" outRotation="-0.9273" outDistance="2.6667"/>
                                     <CubicDetachedVertex x="10.4" y="1" inRotation="-2.2143" inDistance="2.6667"/>
                                 </PointsPath>
-                                <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                                <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                             </Shape>
                         </Node>
                         <Node x="7" y="-22" opacity="0" name="eyes-closed" id="0:1104">
@@ -780,7 +780,7 @@
                                     <CubicDetachedVertex x="5.6" y="-0.5" outRotation="0.8442" outDistance="2.4083"/>
                                     <CubicDetachedVertex x="10.4" y="-0.5" inRotation="2.2974" inDistance="2.4083"/>
                                 </PointsPath>
-                                <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                                <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                             </Shape>
                         </Node>
                         <Node x="7" y="-22" name="eyes-open" id="0:1105">
@@ -850,7 +850,7 @@
                                 <CubicDetachedVertex x="3" y="-2" inRotation="0" inDistance="9" outRotation="3.1416" outDistance="15"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FFA38D74" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                         <Node x="-11" y="-35" name="ear-left" id="0:1106">
                             <Shape name="ear-left-inner">
@@ -869,7 +869,7 @@
                                     <StraightVertex x="9" y="2"/>
                                 </PointsPath>
                                 <Fill name="Fill"><SolidColor colorValue="FFA38D74" name="Color"/></Fill>
-                                <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                                <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                             </Shape>
                         </Node>
                         <Node x="15" y="-35" name="ear-right" id="0:1107">
@@ -889,7 +889,7 @@
                                     <StraightVertex x="-7" y="2"/>
                                 </PointsPath>
                                 <Fill name="Fill"><SolidColor colorValue="FFA38D74" name="Color"/></Fill>
-                                <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                                <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                             </Shape>
                         </Node>
                     </Node>
@@ -901,7 +901,7 @@
                                 <CubicDetachedVertex x="1" y="20" inRotation="-1.5708" inDistance="6"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FFFFFFFF" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                         <Shape name="leg-front-near-shaft">
                             <Ellipse x="0" y="0" width="6" height="6" originX="0.5" originY="0.5" name="Path"/>
@@ -920,7 +920,7 @@
                                 <CubicDetachedVertex x="6" y="13.5" outRotation="-1.3258" outDistance="8.2462"/>
                                 <CubicDetachedVertex x="-5" y="-3.5" inRotation="0.1107" inDistance="9.0554"/>
                             </PointsPath>
-                            <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                         <Shape name="leg-hind-near-shaft">
                             <Ellipse x="0" y="0" width="5" height="5" originX="0.5" originY="0.5" name="Path"/>
@@ -976,7 +976,7 @@
                                 <CubicDetachedVertex x="8" y="0" inRotation="-1.5708" inDistance="5.5"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FFA38D74" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                     </Node>
                     <Node x="14" y="-20" name="leg-front-far" id="0:1111">
@@ -987,7 +987,7 @@
                                 <CubicDetachedVertex x="6" y="20" inRotation="-1.5708" inDistance="5.5"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FFFFFFFF" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                         <Shape name="leg-front-far-shaft">
                             <Ellipse x="0" y="0" width="6" height="6" originX="0.5" originY="0.5" name="Path"/>
@@ -1026,7 +1026,7 @@
                                 <CubicDetachedVertex x="4" y="-9" inRotation="2.8198" inDistance="3.1623"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FFA38D74" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                     </Node>
                 </Node>
@@ -1044,7 +1044,7 @@
                                 <CubicDetachedVertex x="-3.6" y="-1.8" outRotation="-1.5708" outDistance="0.6667"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FF9C3548" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                         <Shape name="bow-pattern">
                             <PointsPath isClosed="true" isClockwise="true" name="Path">
@@ -1099,7 +1099,7 @@
                                 <CubicDetachedVertex x="1.5" y="1" inRotation="0.852" inDistance="5.3151"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FF9C3548" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                     </Node>
                     <Node x="0" y="-38" name="head" id="0:1002">
@@ -1113,7 +1113,7 @@
                                 <CubicDetachedVertex x="0" y="-11" inRotation="2.2655" inDistance="2.0827" outRotation="0.8761" outDistance="2.0827"/>
                                 <CubicDetachedVertex x="4" y="-10.6" inRotation="2.3562" inDistance="1.8856"/>
                             </PointsPath>
-                            <Stroke thickness="1.8" cap="round" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="round" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                         <Shape name="nose">
                             <PointsPath isClosed="true" isClockwise="true" name="Path">
@@ -1133,7 +1133,7 @@
                                     <CubicDetachedVertex x="7" y="1" outRotation="-0.8622" outDistance="3.0732"/>
                                     <CubicDetachedVertex x="13" y="1" inRotation="-2.2794" inDistance="3.0732"/>
                                 </PointsPath>
-                                <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                                <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                             </Shape>
                         </Node>
                         <Node x="0" y="-22" opacity="0" name="eyes-closed" id="0:1004">
@@ -1146,7 +1146,7 @@
                                     <CubicDetachedVertex x="7" y="-0.5" outRotation="0.7854" outDistance="2.8284"/>
                                     <CubicDetachedVertex x="13" y="-0.5" inRotation="2.3562" inDistance="2.8284"/>
                                 </PointsPath>
-                                <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                                <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                             </Shape>
                         </Node>
                         <Node x="0" y="-22" name="eyes-open" id="0:1005">
@@ -1231,7 +1231,7 @@
                                 <CubicDetachedVertex x="0" y="-2" inRotation="0" inDistance="15" outRotation="3.1416" outDistance="15"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FFA38D74" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                         <Node x="15" y="-34" name="ear-right" id="0:1006">
                             <Shape name="ear-right-inner">
@@ -1250,7 +1250,7 @@
                                     <StraightVertex x="-9" y="2"/>
                                 </PointsPath>
                                 <Fill name="Fill"><SolidColor colorValue="FFA38D74" name="Color"/></Fill>
-                                <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                                <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                             </Shape>
                         </Node>
                         <Node x="-15" y="-34" name="ear-left" id="0:1007">
@@ -1270,7 +1270,7 @@
                                     <StraightVertex x="9" y="2"/>
                                 </PointsPath>
                                 <Fill name="Fill"><SolidColor colorValue="FFA38D74" name="Color"/></Fill>
-                                <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                                <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                             </Shape>
                         </Node>
                     </Node>
@@ -1282,7 +1282,7 @@
                                 <CubicDetachedVertex x="7" y="22" inRotation="-1.5708" inDistance="6"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FFFFFFFF" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                         <Shape name="leg-front-right-shaft">
                             <Ellipse x="0" y="0" width="7" height="7" originX="0.5" originY="0.5" name="Path"/>
@@ -1303,7 +1303,7 @@
                                 <CubicDetachedVertex x="6" y="22" inRotation="-1.5708" inDistance="6"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FFFFFFFF" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                         <Shape name="leg-front-left-shaft">
                             <Ellipse x="0" y="0" width="7" height="7" originX="0.5" originY="0.5" name="Path"/>
@@ -1368,7 +1368,7 @@
                                 <CubicDetachedVertex x="26" y="0" inRotation="0" inDistance="4"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FFA38D74" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                     </Node>
                     <Node x="26" y="-6" name="tail" id="0:1011">
@@ -1397,7 +1397,7 @@
                                 <CubicDetachedVertex x="-4" y="-9" inRotation="0.3218" inDistance="3.1623"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FFA38D74" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                     </Node>
                 </Node>
@@ -1439,7 +1439,7 @@
                         </TransitionViewModelCondition>
                     </StateTransition>
                 </AnimationState>
-                <!-- press: 250ms → idle -->
+                <!-- press: 200ms(100ms 납작 + 100ms 돌아옴) → idle -->
                 <AnimationState x="400" y="-160" animationId="0:22" reset="true" stateName="press" id="0:14">
                     <StateTransition stateToId="0:13" enableExitTime="true" exitTimeIsPercetange="true" exitTime="100"/>
                 </AnimationState>
@@ -3925,11 +3925,6 @@
                     <KeyFrameDouble value="-38" frame="0" interpolationType="hold"/>
                 </KeyedProperty>
             </KeyedObject>
-            <KeyedObject objectId="0:1002">
-                <KeyedProperty propertyKey="15">
-                    <KeyFrameDouble value="0" frame="0" interpolationType="hold"/>
-                </KeyedProperty>
-            </KeyedObject>
             <KeyedObject objectId="0:1005">
                 <KeyedProperty propertyKey="18">
                     <KeyFrameDouble value="1" frame="0" interpolationType="hold"/>
@@ -4066,11 +4061,6 @@
                     <KeyFrameDouble value="-38" frame="0" interpolationType="hold"/>
                 </KeyedProperty>
             </KeyedObject>
-            <KeyedObject objectId="0:1002">
-                <KeyedProperty propertyKey="15">
-                    <KeyFrameDouble value="0" frame="0" interpolationType="hold"/>
-                </KeyedProperty>
-            </KeyedObject>
             <KeyedObject objectId="0:1003">
                 <KeyedProperty propertyKey="18">
                     <KeyFrameDouble value="0" frame="0" interpolationType="hold"/>
@@ -4083,40 +4073,31 @@
             </KeyedObject>
         </LinearAnimation>
 
-        <LinearAnimation loopValue="oneShot" fps="60" duration="15" name="press" id="0:22">
+        <LinearAnimation loopValue="oneShot" fps="60" duration="12" name="press" id="0:22">
             <KeyedObject objectId="0:1003">
                 <KeyedProperty propertyKey="18">
                     <KeyFrameDouble value="1" frame="0" interpolationType="hold"/>
-                    <KeyFrameDouble value="0" frame="13" interpolationType="hold"/>
-                    <KeyFrameDouble value="0" frame="15" interpolationType="hold"/>
+                    <KeyFrameDouble value="0" frame="12" interpolationType="hold"/>
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="0:1005">
                 <KeyedProperty propertyKey="18">
                     <KeyFrameDouble value="0" frame="0" interpolationType="hold"/>
-                    <KeyFrameDouble value="1" frame="13" interpolationType="hold"/>
-                    <KeyFrameDouble value="1" frame="15" interpolationType="hold"/>
-                </KeyedProperty>
-            </KeyedObject>
-            <KeyedObject objectId="0:1002">
-                <KeyedProperty propertyKey="15">
-                    <KeyFrameDouble value="0" frame="0" interpolationType="cubic"><CubicEaseInterpolator x1="0" y1="0" x2="0.58" y2="1"/></KeyFrameDouble>
-                    <KeyFrameDouble value="0.1047" frame="6" interpolationType="cubic"><CubicEaseInterpolator x1="0" y1="0" x2="0.58" y2="1"/></KeyFrameDouble>
-                    <KeyFrameDouble value="0" frame="15" interpolationType="hold"/>
+                    <KeyFrameDouble value="1" frame="12" interpolationType="hold"/>
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="0:900">
                 <KeyedProperty propertyKey="17">
                     <KeyFrameDouble value="1" frame="0" interpolationType="cubic"><CubicEaseInterpolator x1="0" y1="0" x2="0.58" y2="1"/></KeyFrameDouble>
-                    <KeyFrameDouble value="0.95" frame="6" interpolationType="cubic"><CubicEaseInterpolator x1="0" y1="0" x2="0.58" y2="1"/></KeyFrameDouble>
-                    <KeyFrameDouble value="1" frame="15" interpolationType="hold"/>
+                    <KeyFrameDouble value="0.96" frame="6" interpolationType="cubic"><CubicEaseInterpolator x1="0" y1="0" x2="0.58" y2="1"/></KeyFrameDouble>
+                    <KeyFrameDouble value="1" frame="12" interpolationType="hold"/>
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="0:900">
                 <KeyedProperty propertyKey="16">
                     <KeyFrameDouble value="1" frame="0" interpolationType="cubic"><CubicEaseInterpolator x1="0" y1="0" x2="0.58" y2="1"/></KeyFrameDouble>
                     <KeyFrameDouble value="1.03" frame="6" interpolationType="cubic"><CubicEaseInterpolator x1="0" y1="0" x2="0.58" y2="1"/></KeyFrameDouble>
-                    <KeyFrameDouble value="1" frame="15" interpolationType="hold"/>
+                    <KeyFrameDouble value="1" frame="12" interpolationType="hold"/>
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="0:900">
@@ -4191,48 +4172,39 @@
             </KeyedObject>
         </LinearAnimation>
 
-        <LinearAnimation loopValue="oneShot" fps="60" duration="15" name="wake" id="0:25">
+        <LinearAnimation loopValue="oneShot" fps="60" duration="12" name="wake" id="0:25">
             <KeyedObject objectId="0:1003">
                 <KeyedProperty propertyKey="18">
                     <KeyFrameDouble value="1" frame="0" interpolationType="hold"/>
-                    <KeyFrameDouble value="0" frame="13" interpolationType="hold"/>
-                    <KeyFrameDouble value="0" frame="15" interpolationType="hold"/>
+                    <KeyFrameDouble value="0" frame="12" interpolationType="hold"/>
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="0:1005">
                 <KeyedProperty propertyKey="18">
                     <KeyFrameDouble value="0" frame="0" interpolationType="hold"/>
-                    <KeyFrameDouble value="1" frame="13" interpolationType="hold"/>
-                    <KeyFrameDouble value="1" frame="15" interpolationType="hold"/>
-                </KeyedProperty>
-            </KeyedObject>
-            <KeyedObject objectId="0:1002">
-                <KeyedProperty propertyKey="15">
-                    <KeyFrameDouble value="0" frame="0" interpolationType="cubic"><CubicEaseInterpolator x1="0" y1="0" x2="0.58" y2="1"/></KeyFrameDouble>
-                    <KeyFrameDouble value="0.1047" frame="6" interpolationType="cubic"><CubicEaseInterpolator x1="0" y1="0" x2="0.58" y2="1"/></KeyFrameDouble>
-                    <KeyFrameDouble value="0" frame="15" interpolationType="hold"/>
+                    <KeyFrameDouble value="1" frame="12" interpolationType="hold"/>
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="0:900">
                 <KeyedProperty propertyKey="17">
                     <KeyFrameDouble value="1" frame="0" interpolationType="cubic"><CubicEaseInterpolator x1="0" y1="0" x2="0.58" y2="1"/></KeyFrameDouble>
-                    <KeyFrameDouble value="0.95" frame="6" interpolationType="cubic"><CubicEaseInterpolator x1="0" y1="0" x2="0.58" y2="1"/></KeyFrameDouble>
-                    <KeyFrameDouble value="1" frame="15" interpolationType="hold"/>
+                    <KeyFrameDouble value="0.96" frame="6" interpolationType="cubic"><CubicEaseInterpolator x1="0" y1="0" x2="0.58" y2="1"/></KeyFrameDouble>
+                    <KeyFrameDouble value="1" frame="12" interpolationType="hold"/>
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="0:900">
                 <KeyedProperty propertyKey="16">
                     <KeyFrameDouble value="1" frame="0" interpolationType="cubic"><CubicEaseInterpolator x1="0" y1="0" x2="0.58" y2="1"/></KeyFrameDouble>
                     <KeyFrameDouble value="1.03" frame="6" interpolationType="cubic"><CubicEaseInterpolator x1="0" y1="0" x2="0.58" y2="1"/></KeyFrameDouble>
-                    <KeyFrameDouble value="1" frame="15" interpolationType="hold"/>
+                    <KeyFrameDouble value="1" frame="12" interpolationType="hold"/>
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="0:900">
                 <KeyedProperty propertyKey="14">
                     <KeyFrameDouble value="112" frame="0" interpolationType="cubic"><CubicEaseInterpolator x1="0" y1="0" x2="0.58" y2="1"/></KeyFrameDouble>
-                    <KeyFrameDouble value="108" frame="5" interpolationType="cubic"><CubicEaseInterpolator x1="0.42" y1="0" x2="1" y2="1"/></KeyFrameDouble>
-                    <KeyFrameDouble value="112" frame="11" interpolationType="hold"/>
-                    <KeyFrameDouble value="112" frame="15" interpolationType="hold"/>
+                    <KeyFrameDouble value="108" frame="4" interpolationType="cubic"><CubicEaseInterpolator x1="0.42" y1="0" x2="1" y2="1"/></KeyFrameDouble>
+                    <KeyFrameDouble value="112" frame="9" interpolationType="hold"/>
+                    <KeyFrameDouble value="112" frame="12" interpolationType="hold"/>
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="0:900">
@@ -5685,11 +5657,6 @@
                     <KeyFrameDouble value="1" frame="0" interpolationType="hold"/>
                 </KeyedProperty>
             </KeyedObject>
-            <KeyedObject objectId="0:1002">
-                <KeyedProperty propertyKey="15">
-                    <KeyFrameDouble value="0" frame="0" interpolationType="hold"/>
-                </KeyedProperty>
-            </KeyedObject>
             <KeyedObject objectId="0:1005">
                 <KeyedProperty propertyKey="18">
                     <KeyFrameDouble value="1" frame="0" interpolationType="hold"/>
@@ -5809,11 +5776,6 @@
                     <KeyFrameDouble value="-38" frame="0" interpolationType="hold"/>
                 </KeyedProperty>
             </KeyedObject>
-            <KeyedObject objectId="0:1002">
-                <KeyedProperty propertyKey="15">
-                    <KeyFrameDouble value="0" frame="0" interpolationType="hold"/>
-                </KeyedProperty>
-            </KeyedObject>
             <KeyedObject objectId="0:1005">
                 <KeyedProperty propertyKey="18">
                     <KeyFrameDouble value="1" frame="0" interpolationType="hold"/>
@@ -5860,7 +5822,7 @@
                                 <CubicDetachedVertex x="30.4" y="-16.6" inRotation="0" inDistance="0" outRotation="1.6657" outDistance="2.8127" id="0:3500"/>
                                 <CubicDetachedVertex x="25" y="-11.6" inRotation="-0.1587" inDistance="3.3757" outRotation="0" outDistance="0" id="0:3501"/>
                             </PointsPath>
-                            <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                         <Shape name="nose">
                             <PointsPath isClosed="true" isClockwise="true" name="Path">
@@ -5877,7 +5839,7 @@
                                     <CubicDetachedVertex x="-3" y="1" inRotation="0" inDistance="0" outRotation="-0.8622" outDistance="3.0732" id="0:3506"/>
                                     <CubicDetachedVertex x="3" y="1" inRotation="-2.2794" inDistance="3.0732" outRotation="0" outDistance="0" id="0:3507"/>
                                 </PointsPath>
-                                <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                                <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                             </Shape>
                         </Node>
                         <Node x="11" y="-27" opacity="0" name="eyes-closed" id="0:3203">
@@ -5886,7 +5848,7 @@
                                     <CubicDetachedVertex x="-3" y="-0.5" inRotation="0" inDistance="0" outRotation="0.7854" outDistance="2.8284" id="0:3508"/>
                                     <CubicDetachedVertex x="3" y="-0.5" inRotation="2.3562" inDistance="2.8284" outRotation="0" outDistance="0" id="0:3509"/>
                                 </PointsPath>
-                                <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                                <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                             </Shape>
                         </Node>
                         <Node x="11" y="-27" name="eyes-open" id="0:3204">
@@ -5904,7 +5866,7 @@
                                     <CubicDetachedVertex x="5" y="2" inRotation="1.4464" inDistance="8.0623" outRotation="0" outDistance="0" id="0:3514"/>
                                 </PointsPath>
                                 <Fill name="Fill"><SolidColor colorValue="FFA68F76" name="Color"/></Fill>
-                                <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                                <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                             </Shape>
                         </Node>
                         <Shape name="cheeks">
@@ -5931,7 +5893,7 @@
                                 <CubicDetachedVertex x="-19" y="-21" inRotation="1.5708" inDistance="10" outRotation="0" outDistance="0" id="0:3526"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FFD9C8B2" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                         <Node x="6" y="-41" name="ear-right" id="0:3206">
                             <Shape name="ear-right-shape">
@@ -5941,7 +5903,7 @@
                                     <CubicDetachedVertex x="-4" y="1" inRotation="0.3588" inDistance="4.272" outRotation="0" outDistance="0" id="0:3529"/>
                                 </PointsPath>
                                 <Fill name="Fill"><SolidColor colorValue="FFA68F76" name="Color"/></Fill>
-                                <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                                <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                             </Shape>
                         </Node>
                     </Node>
@@ -5953,7 +5915,7 @@
                                 <CubicDetachedVertex x="-1" y="23" inRotation="-1.5708" inDistance="2.33" outRotation="0" outDistance="0" id="0:3532"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FFD9C8B2" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                         <Shape name="leg-front-near-shaft">
                             <Ellipse x="0" y="0" width="5" height="5" originX="0.5" originY="0.5" name="Path" id="0:3533"/>
@@ -5974,14 +5936,14 @@
                                 <CubicDetachedVertex x="1" y="11" inRotation="-1.5708" inDistance="1.67" outRotation="0" outDistance="0" id="0:3540"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FFD9C8B2" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                         <Shape name="haunch-line">
                             <PointsPath isClosed="false" isClockwise="true" name="Path">
                                 <CubicDetachedVertex x="7" y="11" inRotation="0" inDistance="0" outRotation="-1.3521" outDistance="9.2195" id="0:3541"/>
                                 <CubicDetachedVertex x="-7" y="-7" inRotation="0.0997" inDistance="10.0499" outRotation="0" outDistance="0" id="0:3542"/>
                             </PointsPath>
-                            <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                         <Shape name="leg-hind-near-shaft">
                             <Ellipse x="0" y="0" width="5" height="5" originX="0.5" originY="0.5" name="Path" id="0:3543"/>
@@ -6017,7 +5979,7 @@
                                 <CubicDetachedVertex x="8" y="0" inRotation="0" inDistance="2" outRotation="0" outDistance="0" id="0:3560"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FFD9C8B2" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                     </Node>
                     <Node x="11" y="-24" name="leg-front-far" id="0:3210">
@@ -6028,7 +5990,7 @@
                                 <CubicDetachedVertex x="-1" y="23" inRotation="-1.5708" inDistance="2.33" outRotation="0" outDistance="0" id="0:3563"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FFD9C8B2" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                         <Shape name="leg-front-far-shaft">
                             <Ellipse x="0" y="0" width="5" height="5" originX="0.5" originY="0.5" name="Path" id="0:3564"/>
@@ -6052,7 +6014,7 @@
                                 <CubicDetachedVertex x="4" y="-7" inRotation="-2.7611" inDistance="2.6926" outRotation="0" outDistance="0" id="0:3574"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FFD9C8B2" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                     </Node>
                 </Node>
@@ -6068,7 +6030,7 @@
                                 <CubicDetachedVertex x="8" y="-10.5" inRotation="2.1588" inDistance="2.4037" outRotation="0.9828" outDistance="2.4037"/>
                                 <CubicDetachedVertex x="12.5" y="-9.5" inRotation="2.4669" inDistance="2.1344"/>
                             </PointsPath>
-                            <Stroke thickness="1.8" cap="round" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="round" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                         <Shape name="nose">
                             <PointsPath isClosed="true" isClockwise="true" name="Path">
@@ -6088,7 +6050,7 @@
                                     <CubicDetachedVertex x="5.6" y="1" outRotation="-0.9273" outDistance="2.6667"/>
                                     <CubicDetachedVertex x="10.4" y="1" inRotation="-2.2143" inDistance="2.6667"/>
                                 </PointsPath>
-                                <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                                <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                             </Shape>
                         </Node>
                         <Node x="7" y="-25" opacity="0" name="eyes-closed" id="0:3103">
@@ -6101,7 +6063,7 @@
                                     <CubicDetachedVertex x="5.6" y="-0.5" outRotation="0.8442" outDistance="2.4083"/>
                                     <CubicDetachedVertex x="10.4" y="-0.5" inRotation="2.2974" inDistance="2.4083"/>
                                 </PointsPath>
-                                <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                                <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                             </Shape>
                         </Node>
                         <Node x="7" y="-25" name="eyes-open" id="0:3104">
@@ -6120,7 +6082,7 @@
                                     <CubicDetachedVertex x="4" y="2" inRotation="1.5708" inDistance="8"/>
                                 </PointsPath>
                                 <Fill name="Fill"><SolidColor colorValue="FFA68F76" name="Color"/></Fill>
-                                <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                                <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                             </Shape>
                         </Node>
                         <Shape name="cheeks">
@@ -6145,7 +6107,7 @@
                                 <CubicDetachedVertex x="3" y="-2" inRotation="0" inDistance="9" outRotation="3.1416" outDistance="14"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FFD9C8B2" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                         <Node x="19" y="-37" name="ear-right" id="0:3106">
                             <Shape name="ear-right-shape">
@@ -6156,7 +6118,7 @@
                                     <CubicDetachedVertex x="-3" y="2" inRotation="1.5708" inDistance="7"/>
                                 </PointsPath>
                                 <Fill name="Fill"><SolidColor colorValue="FFA68F76" name="Color"/></Fill>
-                                <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                                <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                             </Shape>
                         </Node>
                     </Node>
@@ -6166,7 +6128,7 @@
                                 <StraightVertex x="0" y="19"/>
                                 <StraightVertex x="0" y="12"/>
                             </PointsPath>
-                            <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                     </Node>
                     <Node x="15" y="-20" name="leg-front-far" id="0:3108">
@@ -6175,7 +6137,7 @@
                                 <StraightVertex x="0" y="19"/>
                                 <StraightVertex x="0" y="12"/>
                             </PointsPath>
-                            <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                     </Node>
                     <Node x="-20" y="-14.5" name="leg-hind-near" id="0:3109">
@@ -6184,7 +6146,7 @@
                                 <CubicDetachedVertex x="6" y="13.5" outRotation="-1.3258" outDistance="8.2462"/>
                                 <CubicDetachedVertex x="-5" y="-3.5" inRotation="0.1107" inDistance="9.0554"/>
                             </PointsPath>
-                            <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                     </Node>
                     <Node x="0" y="0" name="body" id="0:3110">
@@ -6206,7 +6168,7 @@
                                 <CubicDetachedVertex x="20" y="0" inRotation="0" inDistance="5"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FFD9C8B2" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                     </Node>
                     <Node x="-22" y="-6" name="tail" id="0:3111">
@@ -6218,7 +6180,7 @@
                                 <CubicDetachedVertex x="4" y="-7" inRotation="-2.7611" inDistance="5.3852"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FFD9C8B2" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                     </Node>
                 </Node>
@@ -6234,7 +6196,7 @@
                                 <CubicDetachedVertex x="0" y="-10.5" inRotation="2.1588" inDistance="2.4037" outRotation="0.9828" outDistance="2.4037"/>
                                 <CubicDetachedVertex x="4.5" y="-9.5" inRotation="2.4669" inDistance="2.1344"/>
                             </PointsPath>
-                            <Stroke thickness="1.8" cap="round" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="round" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                         <Shape name="nose">
                             <PointsPath isClosed="true" isClockwise="true" name="Path">
@@ -6254,7 +6216,7 @@
                                     <CubicDetachedVertex x="7" y="1" outRotation="-0.8622" outDistance="3.0732"/>
                                     <CubicDetachedVertex x="13" y="1" inRotation="-2.2794" inDistance="3.0732"/>
                                 </PointsPath>
-                                <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                                <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                             </Shape>
                         </Node>
                         <Node x="0" y="-25" opacity="0" name="eyes-closed" id="0:3003">
@@ -6267,7 +6229,7 @@
                                     <CubicDetachedVertex x="7" y="-0.5" outRotation="0.7854" outDistance="2.8284"/>
                                     <CubicDetachedVertex x="13" y="-0.5" inRotation="2.3562" inDistance="2.8284"/>
                                 </PointsPath>
-                                <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                                <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                             </Shape>
                         </Node>
                         <Node x="0" y="-25" name="eyes-open" id="0:3004">
@@ -6286,7 +6248,7 @@
                                     <CubicDetachedVertex x="-4" y="2" inRotation="1.5708" inDistance="8"/>
                                 </PointsPath>
                                 <Fill name="Fill"><SolidColor colorValue="FFA68F76" name="Color"/></Fill>
-                                <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                                <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                             </Shape>
                         </Node>
                         <Node x="-20" y="-36" name="ear-left" id="0:3006">
@@ -6298,7 +6260,7 @@
                                     <CubicDetachedVertex x="4" y="2" inRotation="1.5708" inDistance="8"/>
                                 </PointsPath>
                                 <Fill name="Fill"><SolidColor colorValue="FFA68F76" name="Color"/></Fill>
-                                <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                                <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                             </Shape>
                         </Node>
                         <Shape name="cheeks">
@@ -6322,7 +6284,7 @@
                                 <CubicDetachedVertex x="0" y="-2" inRotation="0" inDistance="14" outRotation="3.1416" outDistance="14"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FFD9C8B2" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                     </Node>
                     <Node x="8" y="-20" name="leg-front-right" id="0:3007">
@@ -6331,7 +6293,7 @@
                                 <StraightVertex x="0" y="19"/>
                                 <StraightVertex x="0" y="12"/>
                             </PointsPath>
-                            <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                     </Node>
                     <Node x="-8" y="-20" name="leg-front-left" id="0:3008">
@@ -6340,7 +6302,7 @@
                                 <StraightVertex x="0" y="19"/>
                                 <StraightVertex x="0" y="12"/>
                             </PointsPath>
-                            <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="round" join="miter" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                     </Node>
                     <Node x="0" y="0" name="body" id="0:3009">
@@ -6362,7 +6324,7 @@
                                 <CubicDetachedVertex x="26" y="0" inRotation="0" inDistance="4"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FFD9C8B2" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                     </Node>
                     <Node x="24" y="-8" name="tail" id="0:3010">
@@ -6374,7 +6336,7 @@
                                 <CubicDetachedVertex x="-4" y="-7" inRotation="-0.3805" inDistance="5.3852"/>
                             </PointsPath>
                             <Fill name="Fill"><SolidColor colorValue="FFD9C8B2" name="Color"/></Fill>
-                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF111111" name="Color"/></Stroke>
+                            <Stroke thickness="1.8" cap="butt" join="round" name="Stroke"><SolidColor colorValue="FF3A2A20" name="Color"/></Stroke>
                         </Shape>
                     </Node>
                 </Node>
@@ -6414,7 +6376,7 @@
                         </TransitionViewModelCondition>
                     </StateTransition>
                 </AnimationState>
-                <!-- press: 250ms → idle -->
+                <!-- press: 200ms(100ms 납작 + 100ms 돌아옴) → idle -->
                 <AnimationState x="400" y="-160" animationId="0:222" reset="true" stateName="press" id="0:214">
                     <StateTransition stateToId="0:213" enableExitTime="true" exitTimeIsPercetange="true" exitTime="100"/>
                 </AnimationState>
@@ -7719,11 +7681,6 @@
                     <KeyFrameDouble value="1" frame="0" interpolationType="hold"/>
                 </KeyedProperty>
             </KeyedObject>
-            <KeyedObject objectId="0:3001">
-                <KeyedProperty propertyKey="15">
-                    <KeyFrameDouble value="0" frame="0" interpolationType="hold"/>
-                </KeyedProperty>
-            </KeyedObject>
             <KeyedObject objectId="0:3004">
                 <KeyedProperty propertyKey="18">
                     <KeyFrameDouble value="1" frame="0" interpolationType="hold"/>
@@ -7819,11 +7776,6 @@
                     <KeyFrameDouble value="0" frame="0" interpolationType="hold"/>
                 </KeyedProperty>
             </KeyedObject>
-            <KeyedObject objectId="0:3001">
-                <KeyedProperty propertyKey="15">
-                    <KeyFrameDouble value="0" frame="0" interpolationType="hold"/>
-                </KeyedProperty>
-            </KeyedObject>
             <KeyedObject objectId="0:3002">
                 <KeyedProperty propertyKey="18">
                     <KeyFrameDouble value="0" frame="0" interpolationType="hold"/>
@@ -7831,40 +7783,31 @@
             </KeyedObject>
         </LinearAnimation>
 
-        <LinearAnimation loopValue="oneShot" fps="60" duration="15" name="press" id="0:222">
+        <LinearAnimation loopValue="oneShot" fps="60" duration="12" name="press" id="0:222">
             <KeyedObject objectId="0:3002">
                 <KeyedProperty propertyKey="18">
                     <KeyFrameDouble value="1" frame="0" interpolationType="hold"/>
-                    <KeyFrameDouble value="0" frame="13" interpolationType="hold"/>
-                    <KeyFrameDouble value="0" frame="15" interpolationType="hold"/>
+                    <KeyFrameDouble value="0" frame="12" interpolationType="hold"/>
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="0:3004">
                 <KeyedProperty propertyKey="18">
                     <KeyFrameDouble value="0" frame="0" interpolationType="hold"/>
-                    <KeyFrameDouble value="1" frame="13" interpolationType="hold"/>
-                    <KeyFrameDouble value="1" frame="15" interpolationType="hold"/>
-                </KeyedProperty>
-            </KeyedObject>
-            <KeyedObject objectId="0:3001">
-                <KeyedProperty propertyKey="15">
-                    <KeyFrameDouble value="0" frame="0" interpolationType="cubic"><CubicEaseInterpolator x1="0" y1="0" x2="0.58" y2="1"/></KeyFrameDouble>
-                    <KeyFrameDouble value="0.1047" frame="6" interpolationType="cubic"><CubicEaseInterpolator x1="0" y1="0" x2="0.58" y2="1"/></KeyFrameDouble>
-                    <KeyFrameDouble value="0" frame="15" interpolationType="hold"/>
+                    <KeyFrameDouble value="1" frame="12" interpolationType="hold"/>
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="0:3900">
                 <KeyedProperty propertyKey="17">
                     <KeyFrameDouble value="1" frame="0" interpolationType="cubic"><CubicEaseInterpolator x1="0" y1="0" x2="0.58" y2="1"/></KeyFrameDouble>
-                    <KeyFrameDouble value="0.95" frame="6" interpolationType="cubic"><CubicEaseInterpolator x1="0" y1="0" x2="0.58" y2="1"/></KeyFrameDouble>
-                    <KeyFrameDouble value="1" frame="15" interpolationType="hold"/>
+                    <KeyFrameDouble value="0.96" frame="6" interpolationType="cubic"><CubicEaseInterpolator x1="0" y1="0" x2="0.58" y2="1"/></KeyFrameDouble>
+                    <KeyFrameDouble value="1" frame="12" interpolationType="hold"/>
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="0:3900">
                 <KeyedProperty propertyKey="16">
                     <KeyFrameDouble value="1" frame="0" interpolationType="cubic"><CubicEaseInterpolator x1="0" y1="0" x2="0.58" y2="1"/></KeyFrameDouble>
                     <KeyFrameDouble value="1.03" frame="6" interpolationType="cubic"><CubicEaseInterpolator x1="0" y1="0" x2="0.58" y2="1"/></KeyFrameDouble>
-                    <KeyFrameDouble value="1" frame="15" interpolationType="hold"/>
+                    <KeyFrameDouble value="1" frame="12" interpolationType="hold"/>
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="0:3901">
