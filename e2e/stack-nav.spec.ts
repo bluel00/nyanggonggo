@@ -172,3 +172,111 @@ test.describe("R2: 직접 진입·새로고침", () => {
     await expect(page.locator(CARDS)).toHaveCount(0);
   });
 });
+
+test.describe("상세 층 접근성(키보드·화면 읽기)", () => {
+  const TITLE = "#animal-detail-title";
+  const link = (page: Page) => page.locator(`[data-animal-id="${card}"] a`);
+  /** 지금 초점: 상세 제목인지, :focus-visible인지, 그려지는 테두리 모양 */
+  const focusState = (page: Page) =>
+    page.evaluate(() => {
+      const el = document.activeElement as HTMLElement | null;
+      return {
+        title: el?.id === "animal-detail-title",
+        where: el === document.body ? "body" : `${el?.tagName}#${el?.id}.${el?.getAttribute("data-slot")}:${el?.closest("[data-slot=stack-layer]") ? "layer" : "out"}`,
+        visible: !!el?.matches(":focus-visible"),
+        outline: el ? getComputedStyle(el).outlineStyle : "",
+      };
+    });
+  const cardLinkFocused = (page: Page, id: string) =>
+    page.evaluate((id) => document.activeElement === document.querySelector(`[data-animal-id="${id}"] a`), id);
+
+  /** 키보드로 카드를 열고 초점이 상세 제목에 올 때까지 기다린다 */
+  async function openWithKeyboard(page: Page) {
+    await link(page).focus();
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL(new RegExp(`/animals/${card}$`));
+    await openedDetail(page);
+    await expect.poll(async () => { const f = await focusState(page); return f.title || f.where; }, { message: "초점이 상세 제목" }).toBe(true);
+  }
+
+  test("키보드로 열면 초점이 상세 제목(테두리 보임)으로 가고, 층의 이름은 그 제목이다. Esc로 닫으면 누른 카드로 돌아온다", async ({ page }) => {
+    const left = await openListAt(page, card);
+    await openWithKeyboard(page);
+
+    const focus = await focusState(page);
+    await expect(page.locator(LAYER)).toHaveAttribute("data-opened-by", "keyboard");
+    expect(focus.visible, "키보드로 왔으면 :focus-visible").toBe(true);
+    expect(focus.outline, "테두리가 그려진다").not.toBe("none");
+    // 제목은 Tab 순서에 들어가지 않는다(초점은 스크립트로만 받는다)
+    await expect(page.locator(TITLE)).toHaveAttribute("tabindex", "-1");
+    const title = (await page.locator(TITLE).textContent())!.trim();
+    await expect(page.getByRole("dialog", { name: title })).toBeVisible();
+    await expect(page.locator(LAYER)).toHaveAttribute("aria-modal", "true");
+
+    await page.keyboard.press("Escape");
+    await expect(page).toHaveURL(LIST_URL);
+    await expect(page.locator(LAYER)).toHaveCount(0);
+    expect(await cardLinkFocused(page, card), "초점이 누른 카드로 돌아온다").toBe(true);
+    expect(await belowScrollTop(page), "초점을 옮기며 목록이 스크롤되지 않는다").toBe(left);
+  });
+
+  test("브라우저 뒤로가기로 닫아도 초점이 누른 카드로 돌아온다", async ({ page }) => {
+    const left = await openListAt(page, card);
+    await openWithKeyboard(page);
+    await page.goBack();
+    await expect(page.locator(LAYER)).toHaveCount(0);
+    expect(await cardLinkFocused(page, card)).toBe(true);
+    expect(await belowScrollTop(page)).toBe(left);
+  });
+
+  for (const how of ["터치", "클릭"] as const) {
+    test(`${how}로 열면 제목이 초점을 받아도 테두리는 그려지지 않는다`, async ({ page }) => {
+      await openListAt(page, card);
+      if (how === "터치") await link(page).tap();
+      else await link(page).click();
+      await openedDetail(page);
+      await expect.poll(async () => { const f = await focusState(page); return f.title || f.where; }, { message: "초점이 상세 제목" }).toBe(true);
+      // 그려지는 테두리가 없어야 한다. WebKit은 스크립트로 옮긴 초점을 :focus-visible로 보기도 해서(초점이 없던 상태에서 옮기면)
+      // :focus-visible 여부가 아니라 실제 테두리 모양을 본다(제목은 키보드로 연 층에서만 테두리를 그린다)
+      const state = await focusState(page);
+      expect(state.title).toBe(true);
+      expect(state.outline).toBe("none");
+      await expect(page.locator(LAYER)).toHaveAttribute("data-opened-by", "pointer");
+    });
+  }
+
+  test("사진 크게 보기가 열려 있으면 Esc는 뷰어만 닫고 상세 층은 그대로다", async ({ page }) => {
+    await openListAt(page, card);
+    await openWithKeyboard(page);
+    await page.locator(`${LAYER} [data-slot="image-carousel"] button`).first().click();
+    const viewer = page.locator('[role="dialog"]:not([data-slot="stack-layer"])');
+    await expect(viewer).toBeVisible();
+
+    await page.keyboard.press("Escape");
+    await expect(viewer).toHaveCount(0);
+    await expect(page.locator(LAYER)).toBeVisible();
+    await expect(page).toHaveURL(new RegExp(`/animals/${card}$`));
+  });
+
+  test("아래 목록은 화면 읽기 도구와 Tab에서 빠진다(inert)", async ({ page, browserName }) => {
+    await openListAt(page, card);
+    await openWithKeyboard(page);
+    expect(await page.locator(BELOW_SCROLL).evaluate((el) => (el as HTMLElement).inert)).toBe(true);
+
+    // Tab을 여러 번 눌러도 초점이 아래 목록으로 가지 않는다
+    for (let i = 0; i < 12; i += 1) {
+      await page.keyboard.press("Tab");
+      const inBelow = await page.evaluate((s) => !!document.activeElement?.closest(s), BELOW_SCROLL);
+      expect(inBelow, `Tab ${i + 1}번째`).toBe(false);
+    }
+
+    // 브라우저의 접근성 트리에서 아래 목록 카드가 빠졌다(Chromium만 CDP로 읽을 수 있다. Playwright의 역할 찾기는 inert를 보지 않는다)
+    if (browserName === "chromium") {
+      const cdp = await page.context().newCDPSession(page);
+      const { root } = await cdp.send("DOM.getDocument");
+      const { nodeId } = await cdp.send("DOM.querySelector", { nodeId: root.nodeId, selector: `${BELOW_SCROLL} [data-animal-id] a` });
+      const { nodes } = await cdp.send("Accessibility.getPartialAXTree", { nodeId, fetchRelatives: false });
+      expect(nodes[0]?.ignored, "아래 목록 카드는 접근성 트리에서 무시된다").toBe(true);
+    }
+  });
+});

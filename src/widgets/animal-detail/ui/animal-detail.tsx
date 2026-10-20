@@ -25,6 +25,9 @@ import { AnimalDetailSkeleton } from "./animal-detail-skeleton";
 import { ImageCarousel } from "./image-carousel";
 import { ImageViewer } from "./image-viewer";
 
+/** 상세 제목의 id. 상세 층(app/@modal)이 이 제목으로 이름을 붙인다(aria-labelledby) */
+export const DETAIL_TITLE_ID = "animal-detail-title";
+
 /**
  * 진입 효과가 끝나는 시점(누른 뒤). 정보 페이드가 가장 늦다: detail-info-delay 100ms + detail-info-duration 200ms(tokens).
  * 전환이 없을 때의 페이드(200ms)도 이 안에 끝난다. SETTLE은 마지막 프레임이 그려질 여유
@@ -144,7 +147,18 @@ export function AnimalDetail({ id, firstPhotoSize = null }: { id: string; firstP
         </div>
         {/* 보호중·종료 임박은 display-detail(Pretendard 24/32/700), 종료는 차분하게 title 크기(20/700)다(architecture.md 14.1).
             줄 높이는 상태와 상관없이 32px이라 뼈대(AnimalDetailSkeleton)에서 바뀔 때 제목 아래가 움직이지 않는다 */}
-        <h1 data-slot="detail-title" className={cn("mt-3", ended ? "text-title leading-8" : "text-display-detail")}>
+        {/* 상세 층(PRD-v1.5)의 이름이고, 층이 열리면 초점을 받는다(shared/ui/stack-layer.tsx). Tab 순서에는 넣지 않는다(-1).
+            초점 테두리는 키보드로 연 층에서 :focus-visible일 때만 그린다(터치·클릭으로 열면 WebKit도 그리지 않게 기본 테두리는 끈다) */}
+        <h1
+          id={DETAIL_TITLE_ID}
+          tabIndex={-1}
+          data-slot="detail-title"
+          className={cn(
+            // 색·두께는 카드 링크와 같다. outline-none이 테두리 모양 변수를 none으로 두므로 outline-solid로 다시 켠다
+            "mt-3 rounded-sm outline-none in-data-[opened-by=keyboard]:focus-visible:outline-solid in-data-[opened-by=keyboard]:focus-visible:outline-2 in-data-[opened-by=keyboard]:focus-visible:outline-offset-2 in-data-[opened-by=keyboard]:focus-visible:outline-ring",
+            ended ? "text-title leading-8" : "text-display-detail",
+          )}
+        >
           {animalTitle(animal)}
         </h1>
         <p className="mt-1 text-body text-text-2">
