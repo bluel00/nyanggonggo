@@ -55,7 +55,11 @@ function item(id, { upkind, kind, orgNm, photos, updTm, noticeEdtDays, processSt
 /** 종료 공고 id → 사진 장수(상세 제목 줄·도트 줄 자리 확인용, e2e/detail-title.spec.ts와 같아야 한다). 사진은 1:1이라 뼈대의 기본 칸과 같다 */
 const ENDED_CASES = { "990000202600011": 2, "990000202600012": 1 };
 
-/** updTm이 하나씩 이르다(최신순 정렬이 index 순서). 종료일은 7~16일 뒤로 돌려 종료임박순은 다른 순서가 된다 */
+/**
+ * updTm이 하나씩 이르다(최신순 정렬이 index 순서). 종료일은 7~16일 뒤로 돌려 종료임박순은 다른 순서가 된다.
+ * 5개 중 하나(index % 5 === 2)는 첫 사진이 4:3 가로이고 두 장이다: 카드(1:1)에서 잘린 부분이 상세 칸(4:3)에서 드러나고, 넘긴 장 위치를
+ * 볼 수 있다(e2e/detail-transition.spec.ts와 같아야 한다).
+ */
 const LIST_ITEMS = Array.from({ length: STUB_LIST.size }, (_, index) => {
   const minutes = STUB_LIST.size - index;
   const updTm = `2026-10-13 ${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}:00.0`;
@@ -63,7 +67,7 @@ const LIST_ITEMS = Array.from({ length: STUB_LIST.size }, (_, index) => {
     upkind: STUB_LIST.upkind,
     kind: "개",
     orgNm: STUB_LIST.orgNm,
-    photos: [[400, 400]],
+    photos: index % 5 === 2 ? [[600, 450], [400, 400]] : [[400, 400]],
     updTm,
     noticeEdtDays: 7 + (index % 10),
   });

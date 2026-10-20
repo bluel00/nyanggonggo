@@ -58,7 +58,7 @@ export default defineConfig({
   projects: [
     {
       name: "dev",
-      testIgnore: /(detail-loading|detail-photo|detail-title|home-rive|back-nav|motion)\.spec\.ts/,
+      testIgnore: /(detail-loading|detail-photo|detail-title|detail-transition|home-rive|back-nav|motion)\.spec\.ts/,
       // 브라우저는 localhost로 연다(개발 서버가 127.0.0.1을 다른 오리진으로 보고 dev 리소스를 막는다)
       use: { baseURL: "http://localhost:3000" },
     },
@@ -69,7 +69,7 @@ export default defineConfig({
     },
     {
       name: "production-stub",
-      testMatch: /(back-nav|detail-photo|detail-title)\.spec\.ts/,
+      testMatch: /(back-nav|detail-photo|detail-title|detail-transition)\.spec\.ts/,
       use: { baseURL: "http://localhost:3101" },
     },
   ],
