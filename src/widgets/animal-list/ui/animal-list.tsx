@@ -18,7 +18,7 @@ import {
 } from "@/entities/animal";
 import { FavoriteButton } from "@/features/animal-favorite";
 import { SHARE_BUTTON_LABEL } from "@/features/animal-share";
-import { warmFonts, warmFontsAfterLoad } from "@/shared/lib/font-warm";
+import { warmFonts, warmFontsAfterImages } from "@/shared/lib/font-warm";
 import { markListVisited } from "@/shared/lib/app-navigation";
 import {
   appScrollViewport,
@@ -51,12 +51,8 @@ export function AnimalList({ filter }: { filter: AnimalListFilter }) {
    */
   /**
    * 상세 화면의 글꼴 조각을 미리 받는다. 카드 → 상세 전환은 새 화면의 글꼴을 다 받을 때까지 커밋을 기다리므로(측정 약 +270ms),
-   * 상세의 고정 글자는 목록 첫 화면을 다 받은 뒤(load), 그 공고의 글자는 누르기 시작할 때(pointerdown)와 누를 때 받는다
+   * 상세의 고정 글자는 목록 첫 화면 사진을 다 받은 뒤 유휴 시간에(아래 effect), 그 공고의 글자는 누르기 시작할 때(pointerdown)와 누를 때 받는다
    */
-  useEffect(
-    () => warmFontsAfterLoad(`${Object.values(ANIMAL_COPY.detailRowLabels).join(" ")} ${ANIMAL_COPY.ageUnknown} ${SHARE_BUTTON_LABEL}`),
-    [],
-  );
   const warmDetail = (animal: Animal) => warmFonts(`${detailDisplayText(animal)} ${SHARE_BUTTON_LABEL}`);
   const select = (animal: Animal, selection: CardSelection) => {
     rememberSelectedAnimal(listKey, animal.id);
@@ -75,6 +71,14 @@ export function AnimalList({ filter }: { filter: AnimalListFilter }) {
   const listKey = filterKey(filter);
   useAnimalScrollRestoration(listKey, query.isSuccess);
   const feedRef = useFirstScreenEntrance(listKey, query.isPending);
+  useEffect(() => {
+    if (!query.isSuccess) return;
+    const firstScreen = [...(feedRef.current?.querySelectorAll<HTMLImageElement>('[data-slot="animal-card"] img') ?? [])].slice(0, EAGER_CARDS);
+    return warmFontsAfterImages(
+      firstScreen,
+      `${Object.values(ANIMAL_COPY.detailRowLabels).join(" ")} ${ANIMAL_COPY.ageUnknown} ${SHARE_BUTTON_LABEL}`,
+    );
+  }, [query.isSuccess, feedRef]);
   const sentinelRef = useLoadMore({
     enabled: query.hasNextPage && !query.isFetchingNextPage && !query.isFetchNextPageError,
     onLoadMore: () => void query.fetchNextPage(),
