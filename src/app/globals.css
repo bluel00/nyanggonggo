@@ -193,7 +193,64 @@
     scale: 1;
   }
 }
+/*
+ * 카드 → 상세 전환(README 움직임 표 "Card → detail", handoff View Transitions 결정, architecture.md 14.2 4단계).
+ * - 루트의 기본 크로스페이드는 끈다: 옛 화면(목록)은 숨기고 새 화면은 바로 보인다. 상세 바탕이 첫 프레임부터 불투명해
+ *   목록 사진이 반투명하게 비치지 않는다. 다른 이동(뒤로가기 등)도 같은 규칙이라 바로 바뀐다.
+ * - .card-detail(카드 사진 ↔ 상세 사진 칸, 카드 → 상세 이동에서만 짝): 칸이 300ms ease-emphasized로 커진다. 옛 사진(카드의
+ *   1:1)은 숨기고 새 사진(상세 칸)만 cover로 칸에 채워, 처음에는 카드처럼 잘려 보이다가 칸이 커지며 잘렸던 부분이 드러난다.
+ *   사진 위에 아무것도 겹치거나 섞지 않는다.
+ * - 전환 중에도 아래 화면이 눌리도록 오버레이는 포인터를 받지 않는다.
+ */
+::view-transition {
+  pointer-events: none;
+}
+::view-transition-old(root) {
+  display: none;
+}
+::view-transition-new(root) {
+  animation: none;
+}
+::view-transition-group(.card-detail) {
+  animation-duration: var(--detail-duration);
+  animation-timing-function: var(--ease-emphasized);
+}
+::view-transition-old(.card-detail) {
+  display: none;
+}
+::view-transition-new(.card-detail) {
+  animation: none;
+  height: 100%;
+  object-fit: cover;
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
+  /*
+   * 상세 진입 효과(AnimalDetail). --detail-elapsed는 카드를 누른 뒤 지난 시간이라, 로딩 화면 → 서버 페이지로 다시 그려져도
+   * 같은 시점에서 이어 간다(지난 만큼 앞당겨 시작한다).
+   * info: 전환이 있을 때 정보(상태·제목·정보 줄·CTA 바)가 100ms 뒤 200ms 페이드.
+   * fade: 전환을 지원하지 않는 브라우저. 바탕은 바로, 사진 칸과 정보만 200ms 페이드.
+   */
+  [data-detail-enter="info"] {
+    animation: fade-in var(--detail-info-duration) var(--ease-out) both;
+    animation-delay: calc(var(--detail-info-delay) - var(--detail-elapsed, 0ms));
+  }
+  [data-detail-enter="fade"] {
+    animation: fade-in var(--detail-info-duration) var(--ease-out) both;
+    animation-delay: calc(0ms - var(--detail-elapsed, 0ms));
+  }
   [data-enter="home"] {
     --enter-rise: var(--enter-distance);
     animation: enter-rise var(--enter-duration) var(--ease-out) both;

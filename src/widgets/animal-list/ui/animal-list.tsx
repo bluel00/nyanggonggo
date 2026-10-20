@@ -1,8 +1,24 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type Ref } from "react";
-import { AnimalCard, getStatusVariant, SPECIES_COPY, useAnimalsInfinite, type AnimalListFilter } from "@/entities/animal";
+import {
+  AnimalCard,
+  chooseDetailEntryMode,
+  ANIMAL_COPY,
+  detailDisplayText,
+  getStatusVariant,
+  seedAnimalDetail,
+  SPECIES_COPY,
+  startDetailEntry,
+  useAnimalsInfinite,
+  type Animal,
+  type AnimalListFilter,
+  type CardSelection,
+} from "@/entities/animal";
 import { FavoriteButton } from "@/features/animal-favorite";
+import { SHARE_BUTTON_LABEL } from "@/features/animal-share";
+import { warmFonts, warmFontsAfterImages } from "@/shared/lib/font-warm";
 import { markListVisited } from "@/shared/lib/app-navigation";
 import {
   appScrollViewport,
@@ -27,6 +43,24 @@ const EAGER_CARDS = 2;
  */
 export function AnimalList({ filter }: { filter: AnimalListFilter }) {
   const query = useAnimalsInfinite(filter);
+  const queryClient = useQueryClient();
+  /**
+   * 카드를 누를 때(architecture.md 14.2 4단계): 보던 카드를 기억하고(뒤로가기 복원), 사진이 로드된 카드면 그 공고를 상세 캐시에
+   * 넣고 진입 정보를 남긴다. 그러면 상세의 로딩 화면이 뼈대 대신 실제 상세를 그려 사진이 이어진다. 사진이 아직 없으면
+   * 실제 비율을 몰라 지금처럼 뼈대로 간다.
+   */
+  /**
+   * 상세 화면의 글꼴 조각을 미리 받는다. 카드 → 상세 전환은 새 화면의 글꼴을 다 받을 때까지 커밋을 기다리므로(측정 약 +270ms),
+   * 상세의 고정 글자는 목록 첫 화면 사진을 다 받은 뒤 유휴 시간에(아래 effect), 그 공고의 글자는 누르기 시작할 때(pointerdown)와 누를 때 받는다
+   */
+  const warmDetail = (animal: Animal) => warmFonts(`${detailDisplayText(animal)} ${SHARE_BUTTON_LABEL}`);
+  const select = (animal: Animal, selection: CardSelection) => {
+    rememberSelectedAnimal(listKey, animal.id);
+    warmDetail(animal);
+    if (!selection) return;
+    seedAnimalDetail(queryClient, animal);
+    startDetailEntry({ id: animal.id, ...selection, mode: chooseDetailEntryMode(getStatusVariant(animal, now) === "ended") });
+  };
   const [now] = useState(() => new Date());
   const copy = SPECIES_COPY[filter.species];
 
@@ -37,6 +71,14 @@ export function AnimalList({ filter }: { filter: AnimalListFilter }) {
   const listKey = filterKey(filter);
   useAnimalScrollRestoration(listKey, query.isSuccess);
   const feedRef = useFirstScreenEntrance(listKey, query.isPending);
+  useEffect(() => {
+    if (!query.isSuccess) return;
+    const firstScreen = [...(feedRef.current?.querySelectorAll<HTMLImageElement>('[data-slot="animal-card"] img') ?? [])].slice(0, EAGER_CARDS);
+    return warmFontsAfterImages(
+      firstScreen,
+      `${Object.values(ANIMAL_COPY.detailRowLabels).join(" ")} ${ANIMAL_COPY.ageUnknown} ${SHARE_BUTTON_LABEL}`,
+    );
+  }, [query.isSuccess, feedRef]);
   const sentinelRef = useLoadMore({
     enabled: query.hasNextPage && !query.isFetchingNextPage && !query.isFetchNextPageError,
     onLoadMore: () => void query.fetchNextPage(),
@@ -78,7 +120,9 @@ export function AnimalList({ filter }: { filter: AnimalListFilter }) {
           // 첫 카드 사진만 다른 요청보다 먼저 받는다(fetchpriority high는 화면당 한 장)
           highPriority={index === 0}
           href={`/animals/${animal.id}`}
-          onSelect={() => rememberSelectedAnimal(listKey, animal.id)}
+          onSelect={(selection) => select(animal, selection)}
+          onPress={() => warmDetail(animal)}
+          transition
           action={
             <FavoriteButton animalId={animal.id} variant="overlay" ended={getStatusVariant(animal, now) === "ended"} />
           }

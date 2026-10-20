@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { AnimalPhoto, PHOTO_SIZES } from "@/entities/animal";
 import { cn } from "@/shared/lib/utils";
+import { photoTransition, ViewTransition } from "@/shared/ui/view-transition";
 
 /**
  * 상세 메인 사진. 칸은 부모가 좌우 24px 안쪽으로 두고, 여기서 radius-card로 자르고 칸 바깥 둘레에 shadow-photo를 둔다
@@ -13,6 +14,13 @@ import { cn } from "@/shared/lib/utils";
  * 사진을 탭하면 onOpen(index). 1장이면 도트 없이 정적, 0장이면 카드와 같은 대체 UI.
  * 도트는 사진 아래(handoff 화면 3: 6px, 현재 text, 나머지 control-border, 간격 space-2). 도트 줄 자리(위 12px + 6px)는 사진 수와
  * 상관없이 늘 두고 1장 이하면 비워 둔다: 로딩 뼈대가 같은 자리를 두어 뼈대 → 상세에서 사진 아래가 움직이지 않는다(12절 B 54 결정).
+ *
+ * 카드 → 상세 전환(architecture.md 14.2 4단계): 사진 칸(track)은 목록 카드 사진과 같은 전환 이름을 갖는다(transitionId).
+ * firstPhotoSrc가 있으면(카드에서 들어옴) 첫 장은 카드가 받아 둔 주소를 그대로 쓰고, 처음 보이는 장(index)은 바로 받고 바로 디코드한다:
+ * 로딩 화면 → 서버 페이지로 다시 마운트돼도 보던 사진이 비는 프레임 없이 그려진다. 나머지 장은 지금처럼 지연 로딩이다: 전환은 새 화면의
+ * 사진이 로드될 때까지 커밋을 기다리므로, 아직 받지 않은 장까지 바로 받게 하면 상세가 그만큼 늦게 뜬다(2026-10-20 실측 약 +200ms).
+ * enter는 전환을 지원하지 않는 브라우저의 사진 페이드.
+ * 처음 그릴 때 index가 0이 아니면(로딩 화면에서 넘긴 뒤 서버 페이지로 바뀐 경우) 칠하기 전에 그 장으로 옮긴다.
  */
 export function ImageCarousel({
   images,
@@ -22,6 +30,9 @@ export function ImageCarousel({
   index,
   onIndexChange,
   onOpen,
+  transitionId,
+  firstPhotoSrc,
+  enter,
 }: {
   images: readonly string[];
   /** 사진 칸 비율(가로/세로). photoBoxRatio */
@@ -31,11 +42,19 @@ export function ImageCarousel({
   index: number;
   onIndexChange: (index: number) => void;
   onOpen: (index: number) => void;
+  /** 카드 → 상세 전환의 짝(공고 id) */
+  transitionId?: string;
+  /** 첫 장에 쓸, 이미 받아 둔 주소 */
+  firstPhotoSrc?: string;
+  /** 사진 칸에 붙일 진입 효과 속성(globals.css [data-detail-enter]) */
+  enter?: { "data-detail-enter": string; style: CSSProperties };
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
+  // 처음 그릴 때 보이는 장(로딩 화면 → 서버 페이지로 바뀐 경우 보던 장)
+  const [shownAtMount] = useState(index);
 
-  // 부모가 index를 바꾸면(뷰어를 닫은 뒤 등) 그 사진으로 스크롤한다
-  useEffect(() => {
+  // 부모가 index를 바꾸면(뷰어를 닫은 뒤 등) 그 사진으로 스크롤한다. 칠하기 전에 옮겨 첫 장이 한 프레임 보이지 않게 한다
+  useLayoutEffect(() => {
     const track = trackRef.current;
     if (!track || track.clientWidth === 0) return;
     if (Math.round(track.scrollLeft / track.clientWidth) !== index) {
@@ -61,12 +80,12 @@ export function ImageCarousel({
     if (next !== index && next >= 0 && next < images.length) onIndexChange(next);
   };
 
-  return (
-    <div>
+  const track = (
       <div
         ref={trackRef}
         data-slot="image-carousel"
         onScroll={handleScroll}
+        {...enter}
         className={cn(
           "flex snap-x snap-mandatory overflow-x-auto rounded-card [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
           !ended && "shadow-photo",
@@ -85,14 +104,21 @@ export function ImageCarousel({
               src={src}
               alt={`${alt} ${i + 1}`}
               ended={ended}
-              priority={i === 0}
+              priority={i === 0 || (Boolean(firstPhotoSrc) && i === shownAtMount)}
               highPriority={i === 0}
               fit="contain"
               sizes={PHOTO_SIZES.detail}
+              knownSrc={i === 0 ? firstPhotoSrc : undefined}
+              decodeSync={Boolean(firstPhotoSrc) && i === shownAtMount}
             />
           </button>
         ))}
       </div>
+  );
+
+  return (
+    <div>
+      {transitionId ? <ViewTransition {...photoTransition(transitionId)}>{track}</ViewTransition> : track}
       <CarouselDots count={images.length} index={index} />
     </div>
   );

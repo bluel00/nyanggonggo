@@ -1,4 +1,5 @@
-import { infiniteQueryOptions, queryOptions, useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { infiniteQueryOptions, queryOptions, useInfiniteQuery, useQuery, type QueryClient } from "@tanstack/react-query";
+import type { Animal } from "../model/animal";
 import type { AnimalListParams, AnimalRepository } from "../model/repository";
 import { animalRepository } from "./animal-repository";
 
@@ -47,6 +48,20 @@ export function animalOptions(id: string, repository: AnimalRepository = animalR
     queryKey: animalKeys.detail(id),
     queryFn: ({ signal }) => repository.getAnimalById(id, { signal }),
   });
+}
+
+/**
+ * 목록 카드를 누를 때 그 공고를 상세 쿼리 캐시에 미리 넣는다(architecture.md 14.2 4단계). 상세의 로딩 화면이 서버를 기다리지 않고
+ * 이 데이터로 실제 상세를 그린다. 이미 있으면(최근 상세 조회) 그대로 둔다.
+ *
+ * 받은 시각을 30초 앞당겨 둔다: staleTime(60초) 안이라 다시 조회하지 않으면서, 서버 페이지가 넘기는 데이터(누른 뒤 서버가 조회)가
+ * 서버·기기 시계가 조금 어긋나도 더 새것으로 보여 덮어쓴다(서버 데이터를 따른다).
+ */
+export const SEEDED_DETAIL_AGE_MS = 30_000;
+export function seedAnimalDetail(queryClient: QueryClient, animal: Animal): void {
+  const key = animalKeys.detail(animal.id);
+  if (queryClient.getQueryData(key) !== undefined) return;
+  queryClient.setQueryData(key, animal, { updatedAt: Date.now() - SEEDED_DETAIL_AGE_MS });
 }
 
 export function animalsByIdsOptions(ids: readonly string[], repository: AnimalRepository = animalRepository) {

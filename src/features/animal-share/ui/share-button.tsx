@@ -22,6 +22,9 @@ export const KAKAO_SDK_INTEGRITY = "sha384-oroumrnFVE0xtgqyDZJARgERibXg2C28380ua
 
 const getKakao = () => (window as unknown as { Kakao?: KakaoSdk }).Kakao;
 
+/** 공유 버튼 글자 */
+export const SHARE_BUTTON_LABEL = "카카오톡 공유";
+
 /**
  * 카카오톡 공유 버튼(bundle.css .cn-btn--share: kakao 배경, on-kakao 글자, 남은 폭).
  *
@@ -89,7 +92,7 @@ export function ShareButton({
         )}
       >
         <KakaoIcon />
-        카카오톡 공유
+        {SHARE_BUTTON_LABEL}
       </button>
     </>
   );

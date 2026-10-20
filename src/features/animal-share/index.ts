@@ -9,4 +9,4 @@ export {
   type ShareResult,
 } from "./model/share";
 export { buildShareContent, resolveShareOrigin } from "./model/share-content";
-export { KAKAO_SDK_INTEGRITY, KAKAO_SDK_URL, ShareButton } from "./ui/share-button";
+export { KAKAO_SDK_INTEGRITY, KAKAO_SDK_URL, SHARE_BUTTON_LABEL, ShareButton } from "./ui/share-button";

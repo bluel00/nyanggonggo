@@ -9,18 +9,30 @@ export {
   animalOptions,
   animalsByIdsOptions,
   animalsInfiniteOptions,
+  seedAnimalDetail,
   useAnimal,
   useAnimalsByIds,
   useAnimalsInfinite,
   type AnimalListFilter,
 } from "./api/queries";
-export { AnimalCard } from "./ui/animal-card";
+export {
+  chooseDetailEntryMode,
+  clearDetailEntry,
+  getDetailEntry,
+  setDetailEntryPhotoIndex,
+  startDetailEntry,
+  type CardPhotoSize,
+  type DetailEntry,
+  type DetailEntryMode,
+} from "./model/detail-entry";
+export { AnimalCard, type CardSelection } from "./ui/animal-card";
 export { AnimalPhoto, PHOTO_SIZES } from "./ui/animal-photo";
 export { CHARACTER_SRC, SpeciesCharacter, type CharacterHandle, type CharacterSpecies } from "./ui/species-character";
 export { StatusBadge, statusBadgeText } from "./ui/status-badge";
 export {
   ANIMAL_COPY,
   animalTitle,
+  detailDisplayText,
   SEX_LABEL,
   SPECIES_COPY,
   SPECIES_LABEL,
