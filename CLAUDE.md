@@ -5,14 +5,15 @@
 ## 진실의 원천 (충돌 시 우선순위)
 
 1. `docs/architecture.md`
-2. `docs/PRD-v1.4.md` (PRD v1.3의 변경분: 상세에서 뒤로가기)
-3. `docs/PRD-v1.3.md` (PRD v1.2의 변경분: 상세 사진 비율)
-4. `docs/PRD-v1.2.md` (PRD v1.1의 변경분: 캐릭터 모션)
-5. `docs/PRD-v1.1.md` (PRD v1.0의 변경분: 기타 축종, 홈 화면, 축종 기억)
-6. `docs/기능명세서.md`, `docs/PRD.md`
-7. `docs/design/handoff.md`, `docs/design/README.md`, `docs/design/tokens.*`
+2. `docs/PRD-v1.5.md` (PRD v1.4의 변경분: 상세를 목록 위에 얹기)
+3. `docs/PRD-v1.4.md` (PRD v1.3의 변경분: 상세에서 뒤로가기)
+4. `docs/PRD-v1.3.md` (PRD v1.2의 변경분: 상세 사진 비율)
+5. `docs/PRD-v1.2.md` (PRD v1.1의 변경분: 캐릭터 모션)
+6. `docs/PRD-v1.1.md` (PRD v1.0의 변경분: 기타 축종, 홈 화면, 축종 기억)
+7. `docs/기능명세서.md`, `docs/PRD.md`
+8. `docs/design/handoff.md`, `docs/design/README.md`, `docs/design/tokens.*`
 
-즉 `architecture.md` > `PRD-v1.4.md` > `PRD-v1.3.md` > `PRD-v1.2.md` > `PRD-v1.1.md` > `PRD.md`·`기능명세서.md`다. `PRD-v1.1.md`는 v1.0에서, `PRD-v1.2.md`는 v1.1에서, `PRD-v1.3.md`는 v1.2에서, `PRD-v1.4.md`는 v1.3에서 **바뀌는 부분만** 적은 문서이고, 적히지 않은 것은 앞 버전이 그대로 유효하다.
+즉 `architecture.md` > `PRD-v1.5.md` > `PRD-v1.4.md` > `PRD-v1.3.md` > `PRD-v1.2.md` > `PRD-v1.1.md` > `PRD.md`·`기능명세서.md`다. `PRD-v1.1.md`는 v1.0에서, `PRD-v1.2.md`는 v1.1에서, `PRD-v1.3.md`는 v1.2에서, `PRD-v1.4.md`는 v1.3에서, `PRD-v1.5.md`는 v1.4에서 **바뀌는 부분만** 적은 문서이고, 적히지 않은 것은 앞 버전이 그대로 유효하다.
 
 문서에 없거나 서로 충돌하면 **추측하지 말고** 멈춰서 질문하거나 보고에 적는다. 미확정 항목은 `docs/architecture.md` 12절에 추가한다.
 
