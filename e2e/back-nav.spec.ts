@@ -113,6 +113,21 @@ function offCenter(page: Page, animalId: string) {
   }, animalId);
 }
 
+/** 카드 사진의 decoding 속성을 스크롤 영역 안·밖으로 나눠 모은다 */
+function cardPhotoDecoding(page: Page) {
+  return page.evaluate(() => {
+    const scroll = document.querySelector<HTMLElement>('[data-slot="app-scroll"]')!.getBoundingClientRect();
+    const inView: string[] = [];
+    const outOfView: string[] = [];
+    for (const card of document.querySelectorAll<HTMLElement>("[data-animal-id]")) {
+      const box = card.getBoundingClientRect();
+      const visible = box.bottom > scroll.top && box.top < scroll.bottom;
+      for (const img of card.querySelectorAll("img")) (visible ? inView : outOfView).push(img.getAttribute("decoding") ?? "");
+    }
+    return { inView, outOfView };
+  });
+}
+
 async function goBack(page: Page, how: "화면 안" | "브라우저") {
   if (how === "화면 안") await page.getByRole("button", { name: "뒤로가기" }).click();
   else await page.goBack();
@@ -163,6 +178,9 @@ test.describe("R1: 목록 → 상세 → 뒤로가기", () => {
         await page.goto(LIST_URL);
         await loadPages(page, depth);
         await placeCardNearTop(page, card);
+        expect(new Set(Object.values(await cardPhotoDecoding(page)).flat()), "처음 들어올 때와 스크롤로 보인 카드").toEqual(
+          new Set(["async"]),
+        );
         await watchLeaveScroll(page);
         await openCard(page, card);
         const left = await leaveScroll(page);
@@ -176,6 +194,11 @@ test.describe("R1: 목록 → 상세 → 뒤로가기", () => {
         // 그 뒤에도 움직이지 않는다
         await page.waitForTimeout(500);
         expect(Math.abs((await scrollTop(page)) - left)).toBeLessThanOrEqual(1);
+        // 화면 안 카드 사진만 바로 디코드(12절 56), 나머지는 그대로 async
+        const decoding = await cardPhotoDecoding(page);
+        expect(decoding.inView.length).toBeGreaterThan(0);
+        expect(new Set(decoding.inView), "화면 안 카드 사진").toEqual(new Set(["sync"]));
+        expect(new Set(decoding.outOfView), "화면 밖 카드 사진").toEqual(new Set(["async"]));
       });
     }
   }

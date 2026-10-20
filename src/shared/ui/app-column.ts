@@ -105,15 +105,35 @@ export function scrollAppToAnimal(animalId: string): boolean {
 }
 
 /**
- * 카드가 그려질 때까지 기다렸다가(최대 FIND_FRAMES 프레임) 그 카드로 스크롤한다.
- * 찾았거나 포기하면 onSettled를 부른다. 돌려주는 함수를 부르면 기다리기를 멈춘다.
+ * 화면(스크롤 영역) 안에 걸친 카드의 사진을 바로 디코드하게 한다(decoding="sync"). 뒤로가기 복원에서만, 그리기 전에 부른다.
+ *
+ * 아이폰 사파리에서 목록으로 돌아오면 첫 프레임에 카드 사진만 회색 빈칸이었다가 다음 프레임에 나타났다(실기기 화면 기록,
+ * architecture.md 12절 56). 사파리는 큰 사진을 비동기로 디코드하고, 화면에서 안 보이던 사진의 디코드 결과를 버린다(추정).
+ * 처음 들어올 때와 스크롤로 새로 보이는 카드는 그대로 async다. React는 decoding을 "async"로 기억하지만 같은 값으로 다시
+ * 그릴 때는 속성을 건드리지 않으므로, 이 요소들은 목록을 떠날 때까지 sync로 남는다.
  */
-export function scrollAppToAnimalWhenReady(animalId: string, onSettled?: () => void): () => void {
+function decodeVisibleCardPhotosSync(): void {
+  const container = appScrollContainer();
+  if (!container) return;
+  const containerBox = container.getBoundingClientRect();
+  for (const card of container.querySelectorAll<HTMLElement>(`[${ANIMAL_ID_ATTRIBUTE}]`)) {
+    const cardBox = card.getBoundingClientRect();
+    if (cardBox.bottom <= containerBox.top || cardBox.top >= containerBox.bottom) continue;
+    for (const img of card.querySelectorAll("img")) img.setAttribute("decoding", "sync");
+  }
+}
+
+/**
+ * 카드가 그려질 때까지 기다렸다가(최대 FIND_FRAMES 프레임) 그 카드로 스크롤한다.
+ * 찾았거나(found true) 포기하면 onSettled를 부른다. 돌려주는 함수를 부르면 기다리기를 멈춘다.
+ */
+export function scrollAppToAnimalWhenReady(animalId: string, onSettled?: (found: boolean) => void): () => void {
   let frames = 0;
   let frame = 0;
   const find = () => {
-    if (scrollAppToAnimal(animalId) || frames >= FIND_FRAMES) {
-      onSettled?.();
+    const found = scrollAppToAnimal(animalId);
+    if (found || frames >= FIND_FRAMES) {
+      onSettled?.(found);
       return;
     }
     frames += 1;
@@ -151,13 +171,16 @@ export function useAnimalScrollRestoration(listKey: string, ready: boolean): voi
         return;
       }
       if (readyOnMount.current && selected.scrollTop !== null && restoreScrollTop(selected.scrollTop, selected.animalId)) {
+        decodeVisibleCardPhotosSync();
         finishedKey.current = listKey;
         return;
       }
       pending.current = { listKey, animalId: selected.animalId };
     }
 
-    return scrollAppToAnimalWhenReady(pending.current.animalId, () => {
+    return scrollAppToAnimalWhenReady(pending.current.animalId, (found) => {
+      // 캐시로 그려진 목록(이미 받은 사진)일 때만. 캐시가 지워져 다시 받는 사진은 처음 들어올 때와 같다(async)
+      if (found && readyOnMount.current) decodeVisibleCardPhotosSync();
       pending.current = null;
       finishedKey.current = listKey;
     });

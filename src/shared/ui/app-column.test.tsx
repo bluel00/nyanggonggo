@@ -34,7 +34,11 @@ function Cards({ ids }: { ids: string[] }) {
   return (
     <>
       {ids.map((id) => (
-        <div key={id} data-slot="animal-card" {...{ [ANIMAL_ID_ATTRIBUTE]: id }} />
+        <div key={id} data-slot="animal-card" {...{ [ANIMAL_ID_ATTRIBUTE]: id }}>
+          {/* 카드 사진(AnimalPhoto)처럼 plain img */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img alt="" decoding="async" />
+        </div>
       ))}
     </>
   );
@@ -108,6 +112,31 @@ describe("useAnimalScrollRestoration", () => {
       openScreen({ listKey: "k", ids: IDS });
     });
     expect(container.scrollTop).toBe(1000);
+  });
+
+  it("되돌릴 때 화면 안 카드 사진만 decoding=sync로 바꾸고, 처음 들어올 때는 그대로 async다", async () => {
+    const list = openScreen({ listKey: "k", ids: IDS });
+    const decodings = () => [...container.querySelectorAll("img")].slice(-IDS.length).map((img) => img.getAttribute("decoding"));
+    expect(decodings()).toEqual(["async", "async", "async", "async", "async"]);
+    container.scrollTop = 1000; // 화면 1000~1600: a3(800~1200), a4(1200~1600)
+    rememberSelectedAnimal("k", "a3");
+    list.unmount();
+    scrollAppToTop();
+
+    await act(async () => {
+      openScreen({ listKey: "k", ids: IDS });
+    });
+    expect(decodings()).toEqual(["async", "async", "sync", "sync", "async"]);
+  });
+
+  it("캐시가 지워져 다시 받은 목록에서는 decoding을 바꾸지 않는다", async () => {
+    rememberSelectedAnimal("k", "a3");
+    const back = openScreen({ listKey: "k", ready: false, ids: [] });
+    await act(async () => {
+      back.rerender(<List listKey="k" ready ids={IDS} />);
+    });
+    expect(container.scrollTop).toBe(700);
+    expect([...container.querySelectorAll("img")].map((img) => img.getAttribute("decoding"))).not.toContain("sync");
   });
 
   it("되돌린 자리에서 카드가 안 보이면(레이아웃이 달라짐) 카드를 가운데로 맞춘다", async () => {
