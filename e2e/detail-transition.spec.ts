@@ -1,8 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
-import { isCardInView, openedDetail } from "./helpers";
+import { openedDetail } from "./helpers";
+import { belowScrollTop, LAYER, LAYER_SCROLL } from "./stack";
 
 /**
- * 카드 → 상세 전환(architecture.md 14.2 4단계, 구조 D1). production 빌드 + 스텁 서버(e2e/upstream-stub.mjs).
+ * 카드 → 상세 전환(architecture.md 14.2 4단계, 구조 D1, PRD-v1.5 R5). production 빌드 + 스텁 서버(e2e/upstream-stub.mjs).
+ * 상세는 목록 위의 층에 얹힌다(PRD-v1.5). 목록 카드는 빠지지 않으므로 누른 카드에 겹친 출발 사진이 상세 사진 칸과 짝을 이룬다.
  *
  * 전환이 일어났는지는 View Transition 의사 요소의 애니메이션(document.getAnimations()의 pseudoElement)으로 본다. 페이지가 매 프레임
  * 기록한다(watchTransitions). 스텁 목록은 개·세종 120건이고 5개 중 하나(index % 5 === 2)는 첫 사진이 4:3이고 두 장이다.
@@ -13,8 +15,15 @@ const listItemId = (index: number) => String(990000202601000 + index);
 const TWO_PHOTOS = listItemId(2);
 const PHOTO_GROUP = (id: string) => `::view-transition-group(animal-photo-${id})`;
 
-/** pseudo: 전환 의사 요소 애니메이션, rootOldDisplay: 그때 옛 화면(root)의 display, enter: 보인 진입 효과(data-detail-enter 값 → 요소 수 최대) */
-type Watch = { pseudo: { name: string; duration: number }[]; rootOldDisplay: string[]; enter: Record<string, number> };
+/**
+ * pseudo: 전환 의사 요소 애니메이션(group이면 첫 키프레임의 가로·세로 = 출발 칸 크기), rootOldDisplay: 그때 옛 화면(root)의 display,
+ * enter: 보인 진입 효과(data-detail-enter 값 → 요소 수 최대)
+ */
+type Watch = {
+  pseudo: { name: string; duration: number; from?: { width: string; height: string } }[];
+  rootOldDisplay: string[];
+  enter: Record<string, number>;
+};
 
 /** View Transition 의사 요소 애니메이션과, 전환 중 옛 화면(root)의 display를 매 프레임 기록한다 */
 async function watchTransitions(page: Page) {
@@ -27,7 +36,9 @@ async function watchTransitions(page: Page) {
         const effect = animation.effect as KeyframeEffect | null;
         if (!effect?.pseudoElement || seen.has(animation)) continue;
         seen.add(animation);
-        w.__vt.pseudo.push({ name: effect.pseudoElement, duration: Number(effect.getTiming().duration) });
+        const first = effect.getKeyframes()[0] as { width?: string; height?: string } | undefined;
+        const from = first?.width && first.height ? { width: first.width, height: first.height } : undefined;
+        w.__vt.pseudo.push({ name: effect.pseudoElement, duration: Number(effect.getTiming().duration), from });
         w.__vt.rootOldDisplay.push(getComputedStyle(document.documentElement, "::view-transition-old(root)").display);
       }
       const counts: Record<string, number> = {};
@@ -69,12 +80,19 @@ test.describe("카드 → 상세 전환", () => {
   test("목록 → 상세: 사진 칸이 300ms로 이어지고, 정보는 100ms 뒤 200ms 페이드, 옛 화면은 비치지 않는다", async ({ page }) => {
     await watchTransitions(page);
     await openListWithPhoto(page, TWO_PHOTOS);
+    const cardPhoto = (await card(page, TWO_PHOTOS).locator("img").first().boundingBox())!;
     await card(page, TWO_PHOTOS).locator("a").click();
     await openedDetail(page);
 
     await expect.poll(async () => (await transitions(page)).pseudo.map((p) => p.name)).toContain(PHOTO_GROUP(TWO_PHOTOS));
     const vt = await transitions(page);
-    expect(vt.pseudo.find((p) => p.name === PHOTO_GROUP(TWO_PHOTOS))?.duration).toBe(300);
+    const group = vt.pseudo.find((p) => p.name === PHOTO_GROUP(TWO_PHOTOS))!;
+    expect(group.duration).toBe(300);
+    // 출발 칸은 카드 사진 칸(1:1)이다. 누름 효과(scale .98)만큼 작을 수 있다
+    const from = { width: parseFloat(group.from!.width), height: parseFloat(group.from!.height) };
+    expect(from.width / from.height).toBeCloseTo(1, 2);
+    expect(from.width).toBeGreaterThan(cardPhoto.width * 0.97);
+    expect(from.width).toBeLessThanOrEqual(cardPhoto.width + 0.5);
     // 루트(옛 목록 화면)는 숨겨 반투명하게 비치지 않는다
     expect(new Set(vt.rootOldDisplay)).toEqual(new Set(["none"]));
     // 정보 영역과 CTA 바가 진입 페이드(100ms 뒤 200ms, globals.css [data-detail-enter="info"])를 가졌다. 끝나면 속성을 뗀다
@@ -85,20 +103,24 @@ test.describe("카드 → 상세 전환", () => {
     expect(box.width / box.height).toBeCloseTo(4 / 3, 1);
   });
 
-  test("뒤로가기(화면 안 버튼·브라우저)에는 전환이 없고, 목록 복원은 그대로다", async ({ page }) => {
+  test("뒤로가기(화면 안 버튼·브라우저)에는 전환이 없고, 목록은 떠날 때 위치 그대로다", async ({ page }) => {
     await watchTransitions(page);
     await openListWithPhoto(page, TWO_PHOTOS);
     for (const how of ["화면 안", "브라우저"] as const) {
       await card(page, TWO_PHOTOS).locator("a").click();
       await openedDetail(page);
+      // 떠날 때(층 아래) 목록 위치. 누르기 전에는 Playwright가 카드를 화면으로 스크롤할 수 있어 누른 뒤에 읽는다
+      const left = await belowScrollTop(page);
       await expect.poll(async () => (await transitions(page)).pseudo.length).toBeGreaterThan(0);
       await page.waitForTimeout(400);
       await resetTransitions(page);
-      if (how === "화면 안") await page.getByRole("button", { name: "뒤로가기" }).click();
+      if (how === "화면 안") await page.locator(LAYER).getByRole("button", { name: "뒤로가기" }).click();
       else await page.goBack();
       await expect(page).toHaveURL(LIST_URL);
       await expect(card(page, TWO_PHOTOS)).toBeVisible();
-      await expect.poll(() => isCardInView(page, TWO_PHOTOS), { message: "열었던 카드가 화면 안" }).toBe(true);
+      expect(await belowScrollTop(page), "목록 위치 그대로").toBe(left);
+      // 겹쳤던 출발 사진은 상세가 얹힐 때 빠졌다. 카드의 사진은 원래 한 장이다
+      await expect(card(page, TWO_PHOTOS).locator("img")).toHaveCount(1);
       await page.waitForTimeout(400);
       expect(await moved(page), `${how} 뒤로가기`).toEqual([]);
     }
@@ -211,7 +233,8 @@ test("목록 데이터 화면 → 서버 데이터 화면: 사진이 비지 않�
   await track.evaluate((el) => el.scrollTo({ left: el.clientWidth }));
   await expect(page.locator('[data-slot="carousel-dots"] span[data-current="true"]')).toHaveCount(1);
   await expect.poll(() => page.locator('[data-slot="carousel-dots"] span').nth(1).getAttribute("data-current")).toBe("true");
-  const scroller = page.locator('[data-slot="app-scroll"]');
+  // 상세는 층 안에서 스크롤된다(PRD-v1.5)
+  const scroller = page.locator(LAYER_SCROLL);
   await scroller.evaluate((el) => el.scrollTo({ top: Math.min(40, el.scrollHeight - el.clientHeight) }));
   const scrollBefore = await scroller.evaluate((el) => el.scrollTop);
   // 진입 페이드가 끝난 뒤의 화면
