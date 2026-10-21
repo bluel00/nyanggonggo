@@ -12,8 +12,7 @@ import {
 } from "@/entities/animal";
 import { DEFAULT_ANIMAL_FILTER, toFilterHref, type AnimalArea, type AnimalSpecies } from "../model/filter";
 import { animationsFinished, enterOrder } from "@/shared/lib/motion";
-import { cn } from "@/shared/lib/utils";
-import { displayFont } from "@/shared/ui/display-font";
+import { DisplayText } from "@/shared/ui/display-text";
 import { rememberSpecies } from "../model/species-cookie";
 
 /**
@@ -25,7 +24,8 @@ import { rememberSpecies } from "../model/species-cookie";
  * 지역은 목록에서 넘겨받은 값을 그대로 다음 목록에 실어 보내고, 기억하지는 않는다(결정 G2).
  *
  * 누름 피드백은 카드 누름(100ms, scale .98)이고 reduced-motion이면 줄어들지 않는다(`motion-safe:`). 누르면 바로 목록으로 간다.
- * 등장(README 움직임 표): 제목(SpeciesPickerView) → 고양이 → 강아지 → 링크가 차례로 올라오며 나타난다(globals.css [data-enter]).
+ * 등장(README 움직임 표): 고양이 → 강아지 → 링크가 차례로 올라오며 나타난다(globals.css [data-enter]). 순서는 화면이 정한
+ * 시작 번호(enterFrom)부터 이어 붙인다(홈은 제목이 0이라 1부터).
  * 캐릭터 greet은 마지막 등장(링크)이 끝난 뒤 시작한다(Rive는 미리 받아 두고 인스턴스만 그때 만든다).
  *
  * 캐릭터는 Rive로 움직인다(greet → idle, 정지 SVG에서 교체). 카드를 누르는 순간(pointerdown, 키보드 Enter) 그 캐릭터에
@@ -33,7 +33,7 @@ import { rememberSpecies } from "../model/species-cookie";
  */
 const BIG_CHOICES: readonly CharacterSpecies[] = ["cat", "dog"];
 
-export function SpeciesChoice({ area }: { area: AnimalArea }) {
+export function SpeciesChoice({ area, enterFrom }: { area: AnimalArea; enterFrom: number }) {
   const catRef = useRef<CharacterHandle>(null);
   const dogRef = useRef<CharacterHandle>(null);
   const characterRef = { cat: catRef, dog: dogRef } as const;
@@ -69,7 +69,7 @@ export function SpeciesChoice({ area }: { area: AnimalArea }) {
           <Link
             key={species}
             data-enter="home"
-            style={enterOrder(index + 1)}
+            style={enterOrder(enterFrom + index)}
             href={listHref(species)}
             onClick={() => rememberSpecies(species)}
             onPointerDown={() => press(species)}
@@ -88,14 +88,14 @@ export function SpeciesChoice({ area }: { area: AnimalArea }) {
                 <SpeciesCharacter species={species} animated play={entered} ref={characterRef[species]} />
               </span>
             </span>
-            <span className={cn(displayFont.className, "text-display-title")}>{SPECIES_LABEL[species]}</span>
+            <DisplayText size="title">{SPECIES_LABEL[species]}</DisplayText>
           </Link>
         ))}
       </div>
       <Link
         ref={lastEnterRef}
         data-enter="home"
-        style={enterOrder(BIG_CHOICES.length + 1)}
+        style={enterOrder(enterFrom + BIG_CHOICES.length)}
         href={listHref("other")}
         onClick={() => rememberSpecies("other")}
         className="flex min-h-touch items-center self-center px-2 text-body text-text-2 underline underline-offset-[3px] hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"

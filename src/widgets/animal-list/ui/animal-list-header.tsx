@@ -3,12 +3,12 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { ANIMAL_COPY, SPECIES_COPY, type AnimalListFilter } from "@/entities/animal";
 import { homeHref } from "@/features/animal-filter";
-import { cn } from "@/shared/lib/utils";
-import { displayFont } from "@/shared/ui/display-font";
+import { DisplayText } from "@/shared/ui/display-text";
+import { ScreenHeader } from "@/shared/ui/screen-shell";
 
 /**
  * 목록 헤더(handoff 화면 1~2): 왼쪽 타이틀("고양이 공고" / "강아지 공고" / "기타 동물 공고"),
- * 오른쪽 액션(찜 목록 하트, 필터 버튼 순서). sticky, 세로 space-3 / 가로 space-4, 스크롤 구분선 없음.
+ * 오른쪽 액션(찜 목록 하트, 필터 버튼 순서). 헤더 줄 틀(ScreenHeader, sticky)에 채운다.
  *
  * 타이틀 자체가 홈(축종 선택)으로 가는 버튼 모양의 링크다(시안 Header-A, h1 안에 링크): 타이틀 + chevron-down, 높이 44px,
  * 누름 피드백. 링크 이름은 aria-label로 "고양이 공고, 다른 동물 고르기"에 고정한다(sr-only 숨김 텍스트는
@@ -21,18 +21,21 @@ import { displayFont } from "@/shared/ui/display-font";
 export function AnimalListHeader({ filter, actions }: { filter: AnimalListFilter; actions?: ReactNode }) {
   const listTitle = SPECIES_COPY[filter.species].listTitle;
   return (
-    <header className="sticky top-0 z-10 flex items-center justify-between gap-2 bg-bg px-page pt-[calc(var(--space-3)+env(safe-area-inset-top,0px))] pb-3">
-      <h1 className={cn(displayFont.className, "-ml-2 text-display-title")}>
-        <Link
-          href={homeHref({ region: filter.region, district: filter.district })}
-          aria-label={ANIMAL_COPY.homeEntryLabel(listTitle)}
-          className="inline-flex min-h-touch items-center gap-1 rounded-control px-2 text-text transition-transform duration-press ease-out motion-safe:active:scale-press focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-        >
-          {listTitle}
-          <ChevronDown aria-hidden size={20} strokeWidth={1.8} absoluteStrokeWidth />
-        </Link>
-      </h1>
-      {actions && <div className="flex items-center gap-2">{actions}</div>}
-    </header>
+    <ScreenHeader
+      sticky
+      start={
+        <DisplayText as="h1" size="title" className="-ml-2">
+          <Link
+            href={homeHref({ region: filter.region, district: filter.district })}
+            aria-label={ANIMAL_COPY.homeEntryLabel(listTitle)}
+            className="inline-flex min-h-touch items-center gap-1 rounded-control px-2 text-text transition-transform duration-press ease-out motion-safe:active:scale-press focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+          >
+            {listTitle}
+            <ChevronDown aria-hidden size={20} strokeWidth={1.8} absoluteStrokeWidth />
+          </Link>
+        </DisplayText>
+      }
+      end={actions}
+    />
   );
 }

@@ -32,12 +32,14 @@ function displayTexts(container: HTMLElement) {
 }
 
 describe("Jua를 쓰는 곳", () => {
-  it("글꼴을 가져와 쓰는 곳은 홈 서비스명·질문, 홈 고양이·강아지 라벨, 목록 제목뿐이다", () => {
+  it("글꼴을 가져오는 곳은 DisplayText뿐이고, 쓰는 곳은 홈 서비스명·질문, 홈 고양이·강아지 라벨, 목록 제목뿐이다", () => {
+    const files = sourceFiles(SRC).map((path) => [relative(SRC, path).replaceAll("\\", "/"), readFileSync(path, "utf8")] as const);
+    const importers = files.filter(([, text]) => text.includes("display-font")).map(([path]) => path);
+    expect(importers).toEqual(["shared/ui/display-text.tsx"]);
     const uses = Object.fromEntries(
-      sourceFiles(SRC)
-        .map((path) => [relative(SRC, path).replaceAll("\\", "/"), readFileSync(path, "utf8")] as const)
-        .filter(([, text]) => text.includes("display-font"))
-        .map(([path, text]) => [path, text.split("displayFont.className").length - 1]),
+      files
+        .filter(([path, text]) => path !== "shared/ui/display-text.tsx" && text.includes("<DisplayText"))
+        .map(([path, text]) => [path, text.split("<DisplayText").length - 1]),
     );
     expect(uses).toEqual({
       "views/species-picker/ui/species-picker-view.tsx": 2,

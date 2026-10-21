@@ -1,3 +1,4 @@
+import { readdirSync } from "node:fs";
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
@@ -12,6 +13,68 @@ const FSD_FOR_SERVER = "entities|features|widgets|views|shared/ui";
 const SERVER = "server";
 /** 위(views)에서 아래(shared) 순서 */
 const FSD_LAYERS = ["views", "widgets", "features", "entities", "shared"];
+/** slice로 나뉘는 계층. shared는 slice가 없고 파일 하나가 공개 API다(barrel을 두지 않는다) */
+const SLICE_LAYERS = ["views", "widgets", "features", "entities"];
+const TEST_FILES = ["**/*.test.ts", "**/*.test.tsx"];
+
+const slicesOf = (layer) =>
+  readdirSync(new URL(`./src/${layer}`, import.meta.url), { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name);
+
+/** 다른 slice를 공개 API(slice의 index.ts)를 거치지 않고 가져온다. own은 자기 slice(안에서는 상대경로로 가져온다) */
+const deepImport = (own) => ({
+  regex: `^@/(${SLICE_LAYERS.join("|")})/${own ? `(?!${own}/)` : ""}[^/]+/.+$`,
+  message: "다른 slice는 공개 API(slice의 index.ts)로만 import한다(테스트 파일은 예외).",
+});
+
+/**
+ * FSD 계층의 import 규칙. 같은 파일에 no-restricted-imports를 두 번 걸면 나중 설정이 덮어쓰므로 파일 묶음마다 한 번에 합친다.
+ * - src/server 금지, 계층 방향(views → widgets → features → entities → shared, 아래로만): 테스트에도 적용
+ * - 같은 계층의 다른 slice import 금지: 테스트에도 적용
+ * - 다른 slice는 공개 API(index)로만: app 계층에도 적용하고 테스트 파일은 뺀다
+ */
+function fsdConfigs() {
+  const restrict = (patterns) => ({ "no-restricted-imports": ["error", { patterns }] });
+  const layerRules = (layer) => {
+    const upper = FSD_LAYERS.slice(0, FSD_LAYERS.indexOf(layer));
+    return [
+      ...layerImport(SERVER).map((p) => ({
+        ...p,
+        message: "FSD 계층은 src/server를 import하지 않는다. 공유는 src/contract만.",
+      })),
+      ...(upper.length
+        ? layerImport(upper.join("|")).map((p) => ({
+            ...p,
+            message: `FSD 계층 방향 위반: ${layer}는 ${upper.join(", ")}를 import하지 않는다(views → widgets → features → entities → shared).`,
+          }))
+        : []),
+    ];
+  };
+  const sliceRules = (layer, slice, others) => {
+    const message = `같은 계층의 다른 slice를 import하지 않는다(${layer}/${slice}).`;
+    return [
+      { regex: `^@/${layer}/(?!${slice}(/|$))`, message },
+      ...(others.length ? [{ regex: `^(\\.\\./)+(${layer}/)?(${others.join("|")})(/|$)`, message }] : []),
+    ];
+  };
+
+  return [
+    { files: ["src/app/**"], ignores: TEST_FILES, rules: restrict([deepImport(null)]) },
+    { files: ["src/shared/**"], rules: restrict(layerRules("shared")) },
+    ...SLICE_LAYERS.flatMap((layer) => {
+      const slices = slicesOf(layer);
+      return slices.flatMap((slice) => {
+        const files = [`src/${layer}/${slice}/**`];
+        const patterns = [...layerRules(layer), ...sliceRules(layer, slice, slices.filter((s) => s !== slice))];
+        return [
+          { files, rules: restrict(patterns) },
+          { files, ignores: TEST_FILES, rules: restrict([...patterns, deepImport(slice)]) },
+        ];
+      });
+    }),
+  ];
+}
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -39,33 +102,7 @@ const eslintConfig = defineConfig([
       ],
     },
   },
-  // FSD 계층: src/server 금지 + 계층 방향(views → widgets → features → entities → shared, 아래로만).
-  // 같은 파일에 no-restricted-imports를 두 번 걸면 나중 설정이 덮어쓰므로 계층마다 한 번에 합친다.
-  ...FSD_LAYERS.map((layer, index) => {
-    const upper = FSD_LAYERS.slice(0, index);
-    return {
-      files: [`src/${layer}/**`],
-      rules: {
-        "no-restricted-imports": [
-          "error",
-          {
-            patterns: [
-              ...layerImport(SERVER).map((p) => ({
-                ...p,
-                message: "FSD 계층은 src/server를 import하지 않는다. 공유는 src/contract만.",
-              })),
-              ...(upper.length
-                ? layerImport(upper.join("|")).map((p) => ({
-                    ...p,
-                    message: `FSD 계층 방향 위반: ${layer}는 ${upper.join(", ")}를 import하지 않는다(views → widgets → features → entities → shared).`,
-                  }))
-                : []),
-            ],
-          },
-        ],
-      },
-    };
-  }),
+  ...fsdConfigs(),
   {
     files: ["src/contract/**"],
     rules: {

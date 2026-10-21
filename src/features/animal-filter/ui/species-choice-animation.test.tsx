@@ -73,7 +73,7 @@ const images = () => document.querySelectorAll<HTMLImageElement>('[data-slot="ch
 describe("홈 캐릭터 Rive", () => {
   it("움직임 줄이기 설정이면 런타임을 import하지 않고 .riv·WASM도 받지 않는다(정지 이미지만)", async () => {
     setReducedMotion(true);
-    render(<SpeciesChoice area={{ region: "6110000" }} />);
+    render(<SpeciesChoice area={{ region: "6110000" }} enterFrom={1} />);
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 20));
     });
@@ -85,7 +85,7 @@ describe("홈 캐릭터 Rive", () => {
 
   it("로드되면 같은 자리를 캔버스로 바꾸고, .riv는 한 번만 받아 두 캐릭터가 함께 쓴다", async () => {
     setReducedMotion(false);
-    render(<SpeciesChoice area={{ region: "6110000" }} />);
+    render(<SpeciesChoice area={{ region: "6110000" }} enterFrom={1} />);
     await waitFor(() => expect([...canvases()].every((canvas) => canvas.dataset.ready === "true")).toBe(true));
     expect(runtime.instances.map((instance) => instance.artboard).sort()).toEqual(["nyang-cat", "nyang-dog"]);
     const urls = fetchMock.mock.calls.map(([input]) => String(input));
@@ -97,7 +97,7 @@ describe("홈 캐릭터 Rive", () => {
   it("런타임이나 .riv 로드가 실패하면 정지 이미지를 그대로 두고 로그만 남긴다(console.error 없음)", async () => {
     setReducedMotion(false);
     fetchMock.mockImplementation(async () => new Response("nope", { status: 404 }));
-    render(<SpeciesChoice area={{ region: "6110000" }} />);
+    render(<SpeciesChoice area={{ region: "6110000" }} enterFrom={1} />);
     await waitFor(() => expect(console.warn).toHaveBeenCalled());
     expect(runtime.instances).toHaveLength(0);
     for (const image of images()) expect(image.className).not.toContain("invisible");
@@ -107,7 +107,7 @@ describe("홈 캐릭터 Rive", () => {
 
   it("카드를 누르는 순간(pointerdown) 그 캐릭터에만 press를 보내고, Enter도 같다", async () => {
     setReducedMotion(false);
-    render(<SpeciesChoice area={{ region: "6110000" }} />);
+    render(<SpeciesChoice area={{ region: "6110000" }} enterFrom={1} />);
     await waitFor(() => expect([...canvases()].every((canvas) => canvas.dataset.ready === "true")).toBe(true));
     fireEvent.pointerDown(screen.getByRole("link", { name: "강아지" }));
     expect(runtime.triggers).toEqual(["nyang-dog:press"]);
@@ -117,7 +117,7 @@ describe("홈 캐릭터 Rive", () => {
 
   it("로드 전에 눌러도 오류 없이 지나간다(이동은 늦추지 않는다)", () => {
     setReducedMotion(true);
-    render(<SpeciesChoice area={{ region: "6110000" }} />);
+    render(<SpeciesChoice area={{ region: "6110000" }} enterFrom={1} />);
     expect(() => fireEvent.pointerDown(screen.getByRole("link", { name: "고양이" }))).not.toThrow();
     expect(runtime.triggers).toEqual([]);
   });
