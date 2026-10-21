@@ -50,6 +50,9 @@ src/
 - FSD 계층(`entities` 등)은 `src/server/**`를 import하지 않는다.
 - 둘 다 import할 수 있는 것은 `src/contract`뿐이다.
 - FSD 계층 방향: `views → widgets → features → entities → shared`. 위에서 아래로만.
+- 같은 계층의 다른 slice는 import하지 않는다(`views`·`widgets`·`features`·`entities`, 테스트 파일 포함).
+- 다른 slice는 공개 API(slice의 `index.ts`)로만 import한다. `app` 계층도 같다. 테스트 파일은 예외다(slice 내부를 직접 시험한다). `shared`에는 slice가 없어 파일 하나가 공개 API이고 barrel(index)을 두지 않는다: 제목 글꼴 미리 불러오기가 그 모듈을 가져오는 화면(홈, 목록)에만 붙어야 한다.
+- 화면 틀(2026-10-20): `shared/ui/screen-shell.tsx`의 `ScreenShell`(헤더 + 본문, `center`면 본문이 화면 전체의 세로 가운데)과 `ScreenHeader`(높이 `--header-h` 이상, 위 안전 영역, 왼쪽·오른쪽 자리, `sticky`는 옵션). 헤더 내용은 위젯(목록 `AnimalListHeader`, 찜 `FavoriteListHeader`)과 뷰(홈 서비스명)가 채우고, 화면 틀에 놓는 것은 뷰다. 제목 글꼴(Jua)은 `shared/ui/display-text.tsx`의 `DisplayText`로만 쓴다. 등장 순서는 뷰가 정하고 `SpeciesChoice`는 시작 번호(`enterFrom`)만 받는다. 정리 전후 화면이 같음을 홈·목록(위·스크롤)·찜(빈 상태·카드·스크롤)·상세(얹은 층·직접 진입) 16장 픽셀 비교(움직임 줄이기, Rive 캔버스 가림, 안전 영역 0과 CDP로 흉내 낸 47/34)로 확인했고, LCP(7회 중앙값, 14.2 0단계 방법)는 홈 788 → 788, 목록 1,460 → 1,496, 상세 588 → 576ms, CLS는 전후 0이다(2026-10-21). 비교 스크립트는 저장소 밖 `nyanggonggo-review/perf-ui/shell-pixels`.
 - UI는 Domain(`Animal`)만 소비한다. WireDto나 UpstreamDto를 컴포넌트에서 쓰지 않는다.
 
 ## 4. 공공 API 계약
@@ -632,6 +635,12 @@ PRD v1.1이 공식화한 항목(2026-10-02). 구현은 v1.1을 따르므로 불�
     - 판정: EL이 실기기에서 쓸어넘기기 뒤로가기로 본다. **효과가 없으면 이 변경을 되돌리고 깜빡임을 받아들인다.**
     - 근본 해결 후보: 목록을 내리지 않고 상세를 위에 띄우기(목록 DOM과 디코드된 사진이 그대로 남아 돌아올 때 다시 그릴 것이 없다). 라우팅 구조(상세의 독립 주소, 공유 진입, 로딩 경계, 전환)를 바꾸는 큰 개편이라 그때 검토한다.
     - **결과(2026-10-20, EL 실기기)**: `decoding="sync"`는 효과가 없어 걷어 냈다(PRD-v1.5 R6). 시험판(`spike-stack-nav`, 목록 위에 상세 얹기)에서 깜빡임이 사라져 큰 개편을 기다리지 않고 바로 적용했다(PRD-v1.5, 7절). 시험판에서 본 "돌아온 직후 잠깐 스크롤 안 됨, 아래 사진이 잘려 보임"은 아래 목록을 `overflow: hidden`으로 막은 탓으로 보고 `inert`로 바꿨다(7절, R4).
+57. 상세 치수·이름 정리(2026-10-20, 백로그). 화면 틀 정리(3절 "화면 틀")에서 범위 밖으로 둔 것이다. 모두 화면은 맞고, 다른 컴포넌트의 치수를 복사해 적은 값이거나 shared가 도메인 이름을 아는 곳이다.
+    - 토스트 오프셋 `--toast-offset: calc(var(--touch) + var(--space-3) * 3)`(`app/globals.css`)은 상세 하단 CTA 바 높이(`pt-3` + touch + `pb-3`)에 간격 space-3을 더한 값을 따로 적은 것이다. CTA 바 클래스도 실제 상세와 뼈대(`animal-detail.tsx`, `animal-detail-skeleton.tsx`)에 같은 문자열로 두 번 있다.
+    - 상세 뒤로가기 위치 `top-[calc(var(--space-3)+var(--space-2)+env(safe-area-inset-top,0px))] left-8`은 사진 칸 여백(위 space-3 + 안전 영역, 좌우 `px-6`)에 8px을 더한 값이다(실제 상세·뼈대 두 곳).
+    - 카드 사진 `sizes`의 `448px`, `calc(100vw - 32px)`(`entities/animal/ui/animal-photo.tsx`)은 컬럼 480 − page 여백 16×2다.
+    - `calc(var(--space-3)+env(safe-area-inset-top,0px))`가 상세·뼈대·사진 뷰어 여러 곳에 반복된다.
+    - `shared/ui/view-transition.tsx`가 `animal-photo-<id>` 이름을 만든다(shared가 도메인 이름을 안다).
 
 ## 13. 다음 버전 계획 (기록만, 설계 전)
 
