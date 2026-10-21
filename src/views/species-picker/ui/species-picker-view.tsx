@@ -24,14 +24,14 @@ export function SpeciesPickerView({ area }: { area: AnimalArea }) {
         </div>
       </header>
       <main className="flex flex-1 flex-col justify-center gap-6 pb-[calc(var(--touch)+var(--space-3)*2)]">
-        {/* 등장 순서: 제목(부제 포함) 0 → 고양이 1 → 강아지 2 → 링크 3(SpeciesChoice) */}
+        {/* 등장 순서는 여기서 정한다: 제목(부제 포함) 0 → 고양이 1 → 강아지 2 → 링크 3(SpeciesChoice가 1부터 이어 붙인다) */}
         <div data-enter="home" style={enterOrder(0)} className="flex flex-col gap-2 text-center">
           <DisplayText as="h1" size="home">
             {ANIMAL_COPY.homeTitle}
           </DisplayText>
           <p className="whitespace-pre-line text-body text-text-2">{ANIMAL_COPY.homeDescription}</p>
         </div>
-        <SpeciesChoice area={area} />
+        <SpeciesChoice area={area} enterFrom={1} />
       </main>
     </div>
   );
