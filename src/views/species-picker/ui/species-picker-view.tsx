@@ -3,36 +3,45 @@ import { SpeciesChoice, type AnimalArea } from "@/features/animal-filter";
 import { SERVICE_NAME } from "@/shared/config/service";
 import { enterOrder } from "@/shared/lib/motion";
 import { DisplayText } from "@/shared/ui/display-text";
+import { ScreenHeader, ScreenShell } from "@/shared/ui/screen-shell";
 
 /**
  * 홈(축종 선택) 화면. 배치만 한다(로직 없음). area는 `app/home/page.tsx`가 URL과 쿠키로 정해 넘긴다.
  * 사진이 없는 화면이다(시안 "냥공고 홈 · 축종 선택"의 Main 390 / Home-PC 480).
  *
- * 위에 서비스명 줄, 그 아래 제목·선택지가 화면 세로 가운데에 온다. 서비스명 줄의 높이는 목록 헤더와 같고
- * (space-3 + touch + space-3), 본문 아래에 같은 높이를 비워 두어 본문이 남은 영역이 아니라 화면 전체의 가운데에 온다.
+ * 위에 서비스명 줄(목록 헤더와 같은 헤더 줄 틀), 그 아래 제목·선택지가 화면 전체의 세로 가운데에 온다(ScreenShell center).
+ * 등장 순서는 여기서 정한다: 제목(부제 포함) 0 → 고양이 1 → 강아지 2 → 링크 3(SpeciesChoice가 1부터 이어 붙인다).
  */
 export function SpeciesPickerView({ area }: { area: AnimalArea }) {
   return (
-    <div className="flex min-h-full flex-col px-page pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]">
-      {/* 목록 헤더와 같은 구조: 여백은 바깥, 44px 줄은 안쪽. 한 요소에 min-h-touch와 py-3을 함께 두면
-          border-box라 높이가 68이 아니라 48이 되어 본문이 10px 위로 올라간다 */}
-      <header className="py-3">
-        <div className="flex min-h-touch items-center">
-          <DisplayText as="p" size="logo" className="text-logo">
-            {SERVICE_NAME}
-          </DisplayText>
-        </div>
-      </header>
-      <main className="flex flex-1 flex-col justify-center gap-6 pb-[calc(var(--touch)+var(--space-3)*2)]">
-        {/* 등장 순서는 여기서 정한다: 제목(부제 포함) 0 → 고양이 1 → 강아지 2 → 링크 3(SpeciesChoice가 1부터 이어 붙인다) */}
-        <div data-enter="home" style={enterOrder(0)} className="flex flex-col gap-2 text-center">
-          <DisplayText as="h1" size="home">
-            {ANIMAL_COPY.homeTitle}
-          </DisplayText>
-          <p className="whitespace-pre-line text-body text-text-2">{ANIMAL_COPY.homeDescription}</p>
-        </div>
+    <ScreenShell
+      center
+      header={
+        <ScreenHeader
+          start={
+            <DisplayText as="p" size="logo" className="text-logo">
+              {SERVICE_NAME}
+            </DisplayText>
+          }
+        />
+      }
+    >
+      <div className="flex flex-col gap-6 px-page">
+        <HomeIntro />
         <SpeciesChoice area={area} enterFrom={1} />
-      </main>
+      </div>
+    </ScreenShell>
+  );
+}
+
+/** 제목과 부제. 함께 등장한다(순서 0) */
+function HomeIntro() {
+  return (
+    <div data-enter="home" style={enterOrder(0)} className="flex flex-col gap-2 text-center">
+      <DisplayText as="h1" size="home">
+        {ANIMAL_COPY.homeTitle}
+      </DisplayText>
+      <p className="whitespace-pre-line text-body text-text-2">{ANIMAL_COPY.homeDescription}</p>
     </div>
   );
 }

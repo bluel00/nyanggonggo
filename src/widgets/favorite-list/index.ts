@@ -1,1 +1,1 @@
-export { FavoriteList } from "./ui/favorite-list";
+export { FavoriteList, FavoriteListHeader } from "./ui/favorite-list";

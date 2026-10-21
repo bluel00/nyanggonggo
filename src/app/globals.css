@@ -22,6 +22,12 @@
   --radius: 0.625rem;
 }
 
+/* 헤더 줄 높이(handoff 화면 1~2: 세로 space-3 + 44px 줄 + space-3). 토큰에서 만든 값이다(새 치수 아님).
+   헤더 줄 틀과 화면 틀(홈의 세로 가운데 맞춤)이 함께 읽는다(src/shared/ui/screen-shell.tsx) */
+:root {
+  --header-h: calc(var(--touch) + var(--space-3) * 2);
+}
+
 /*
  * Tailwind v4 매핑(docs/design/handoff.md (a) 표를 CSS-first @theme으로 옮김). 값은 모두 토큰 var()를 참조한다.
  * 괄호 안의 shadcn 별칭(background, foreground, primary, …)도 같은 토큰을 가리킨다.

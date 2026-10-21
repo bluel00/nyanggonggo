@@ -8,6 +8,7 @@ import { markListVisited } from "@/shared/lib/app-navigation";
 import { scrollAppToTop } from "@/shared/ui/app-column";
 import { BackButton, useGoBack } from "@/shared/ui/back-button";
 import { Button } from "@/shared/ui/button";
+import { ScreenHeader } from "@/shared/ui/screen-shell";
 import { SkeletonCard } from "@/shared/ui/skeleton-card";
 
 const subscribeNothing = () => () => {};
@@ -18,25 +19,18 @@ const subscribeNothing = () => () => {};
  * - 조회되지 않는 id는 화면에서 빼고 저장은 유지한다(architecture.md 8절)
  * - 여기서 찜을 해제하면 카드가 바로 빠진다. 새 id 목록으로 다시 조회하는 동안 이전 결과를 유지해 깜빡이지 않는다
  * - 서버 렌더에서는 찜 목록을 모르므로 클라이언트에서 저장값을 읽기 전까지 스켈레톤(빈 상태가 잠깐 보이지 않게)
+ * 헤더는 FavoriteListHeader, 둘을 화면 틀에 놓는 것은 views/favorites다.
  */
 export function FavoriteList() {
   const ids = useFavoriteIds();
   const isClient = useSyncExternalStore(subscribeNothing, () => true, () => false);
   const query = useQuery({ ...animalsByIdsOptions(ids), placeholderData: keepPreviousData });
   const [now] = useState(() => new Date());
-  const goBack = useGoBack();
 
   useEffect(() => {
     markListVisited(); // 상세의 뒤로가기가 이 화면으로 돌아올 수 있게(shared/lib/app-navigation)
     scrollAppToTop();
   }, []);
-
-  const header = (
-    <header className="sticky top-0 z-10 flex items-center gap-1 bg-bg px-2 pt-[calc(var(--space-3)+env(safe-area-inset-top,0px))] pb-3">
-      <BackButton onClick={goBack} className="bg-bg" />
-      <h1 className="text-title">{ANIMAL_COPY.favoritesTitle}</h1>
-    </header>
-  );
 
   let body;
   if (!isClient || (ids.length > 0 && query.isPending)) {
@@ -82,11 +76,22 @@ export function FavoriteList() {
       );
   }
 
+  return body;
+}
+
+/** 찜 목록 헤더: 뒤로가기 + 제목. 헤더 줄 틀(ScreenHeader, sticky)에 채운다. 뒤로가기는 터치 영역 안쪽 여백만큼 왼쪽으로 당긴다 */
+export function FavoriteListHeader() {
+  const goBack = useGoBack();
   return (
-    <main>
-      {header}
-      {body}
-    </main>
+    <ScreenHeader
+      sticky
+      start={
+        <div className="flex items-center gap-1">
+          <BackButton onClick={goBack} className="-ml-2 bg-bg" />
+          <h1 className="text-title">{ANIMAL_COPY.favoritesTitle}</h1>
+        </div>
+      }
+    />
   );
 }
 
