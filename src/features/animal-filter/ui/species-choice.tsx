@@ -12,8 +12,7 @@ import {
 } from "@/entities/animal";
 import { DEFAULT_ANIMAL_FILTER, toFilterHref, type AnimalArea, type AnimalSpecies } from "../model/filter";
 import { animationsFinished, enterOrder } from "@/shared/lib/motion";
-import { cn } from "@/shared/lib/utils";
-import { displayFont } from "@/shared/ui/display-font";
+import { DisplayText } from "@/shared/ui/display-text";
 import { rememberSpecies } from "../model/species-cookie";
 
 /**
@@ -88,7 +87,7 @@ export function SpeciesChoice({ area }: { area: AnimalArea }) {
                 <SpeciesCharacter species={species} animated play={entered} ref={characterRef[species]} />
               </span>
             </span>
-            <span className={cn(displayFont.className, "text-display-title")}>{SPECIES_LABEL[species]}</span>
+            <DisplayText size="title">{SPECIES_LABEL[species]}</DisplayText>
           </Link>
         ))}
       </div>
