@@ -135,13 +135,18 @@ type Animal = {
   regionText: string                 // orgNm
   shelterName: string | null         // careNm. UI 라벨("보호소")은 미정(12절)
   foundPlaceText: string | null      // happenPlace
+  shelterAddressText: string | null  // careAddr. 상세 정보 줄(종료 공고는 숨김, 이슈 #3)
+  shelterTelText: string | null      // careTel 원문. 상세 정보 줄(종료 공고는 숨김, 이슈 #3)
   noticePeriodText: string | null    // "MM.DD ~ MM.DD"
   specialMarkText: string | null     // specialMark(특이사항). 상세에서만 노출
   kindText: string | null            // 품종 이름(kindFullNm의 "[축종]" 뒤). 기타 축종은 실제 동물
 }
 ```
 
-- 연락처(`careTel`, `careAddr`, `careOwnerNm`)와 종료 사유(`endReason`)는 WireDto와 Domain 어디에도 넣지 않는다(PRD: 보호소 연락 정보 비노출).
+- 담당자 이름(`careOwnerNm`)과 종료 사유(`endReason`)는 WireDto와 Domain 어디에도 넣지 않는다. 연락처 값(주소·전화·담당자 이름)은 로그에 남기지 않는다.
+- 보호소 주소(`careAddr`)·전화(`careTel`)는 상세의 정보 줄에 보인다(2026-10-22, 이슈 [#3](https://github.com/bluel00/nyanggonggo/issues/3). PRD 비범위 "보호소 직접 연락"을 대체). 서버 Mapper가 앞뒤 공백만 지워 `shelterAddressText`·`shelterTelText`로 내려준다. 화면 규칙은 `entities/animal/model/shelter-contact.ts`의 `getShelterContact`가 정한다.
+  - 정보 줄 순서: 발견 장소 → 보호소 → 주소 → 전화 → 공고 기간 → 특이사항. 값은 그냥 글자(선택·복사 가능)이고, 값이 없으면 그 줄을 뺀다. 종료 공고는 주소·전화 줄을 숨긴다(보호소 이름은 그대로).
+  - 줄 끝의 작은 글자 링크(보조 글자색 + 작은 아이콘, 누르는 영역 44×44px): 주소 [지도]는 카카오맵 검색결과 바로가기 `https://map.kakao.com/link/search/<encodeURIComponent(주소)>`를 새 탭(`rel="noopener"`)으로 연다(카카오 지도 Web API 가이드 "지도 URL" → "지도 검색결과 바로가기". 키·SDK 없음). 전화 [전화]는 숫자만 남긴 `tel:` 링크다(숫자가 없으면 링크 없이 값만). 주소가 길면 줄바꿈하고 링크는 첫 줄 끝에 둔다. 링크가 있는 줄은 위아래 6px를 더해 이웃한 두 링크의 누르는 영역이 겹치지 않는다.
 - 파생값은 domain 서비스에서 계산한다: `dDay`(KST 기준, 기준 시각을 주입 가능하게), `isSoon`(D-day 3 이하). 종료 판정은 `processState`가 한다. `dDay`는 `number | null`이며 규칙은 10절을 따른다.
 - `species`: `cat | dog | other`. 업스트림 `upKindNm`의 `고양이`/`개`/`기타`를 서버 Mapper가 옮기고, 그 외 값은 항목을 건너뛴다(로그).
 - `kindText`(확정, 2026-10-01): `kindFullNm`에서 `[<축종>]` 접두어를 떼고 앞뒤 공백을 지운 값이다. 접두어가 없으면 값 전체를 쓰고, 비어 있거나 품종을 특정할 수 없는 값(`기타`, `기타축종`)이면 `null`이다(4절, 12.A P12).
