@@ -8,8 +8,9 @@ import { consoleLogger } from "@/server/logger";
 export async function GET(request: Request) {
   try {
     const ids = parseIdsQuery(new URL(request.url).searchParams, ANIMAL_BY_IDS_MAX);
-    const body = AnimalByIdsResponseSchema.parse({ items: await getAnimalService().getByIds(ids) });
-    return jsonResponse(body, SERVER_TUNING.cacheControl);
+    const body = AnimalByIdsResponseSchema.parse(await getAnimalService().getByIds(ids));
+    // 일부 실패한 응답은 CDN에 남기지 않는다(다시 시도나 다음 진입이 같은 실패를 받지 않게)
+    return jsonResponse(body, body.failedIds.length > 0 ? "no-store" : SERVER_TUNING.cacheControl);
   } catch (error) {
     return errorResponse(error, consoleLogger);
   }

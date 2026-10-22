@@ -28,5 +28,6 @@ export function getAnimalService(perf?: PageCacheObserver): AnimalService {
     pageSize: SERVER_TUNING.listPageSize,
     byIdsConcurrency: SERVER_TUNING.byIdsConcurrency,
     now: () => new Date(),
+    logger: consoleLogger,
   });
 }

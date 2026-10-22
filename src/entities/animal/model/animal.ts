@@ -31,3 +31,9 @@ export type AnimalPage = {
   items: Animal[];
   nextCursor: string | null;
 };
+
+/** 여러 id 조회 결과. 못 찾은 id는 어디에도 없고, 오류로 조회하지 못한 id는 failedIds에 있다(이슈 #5) */
+export type AnimalsByIds = {
+  items: Animal[];
+  failedIds: string[];
+};

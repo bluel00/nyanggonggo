@@ -1,4 +1,4 @@
-import type { Animal, AnimalPage } from "./animal";
+import type { Animal, AnimalPage, AnimalsByIds } from "./animal";
 
 export type AnimalListParams = {
   species: Animal["species"];
@@ -18,5 +18,5 @@ export type AnimalRequestOptions = { signal?: AbortSignal };
 export interface AnimalRepository {
   getAnimals(params: AnimalListParams, options?: AnimalRequestOptions): Promise<AnimalPage>;
   getAnimalById(id: string, options?: AnimalRequestOptions): Promise<Animal>;
-  getAnimalsByIds(ids: string[], options?: AnimalRequestOptions): Promise<Animal[]>;
+  getAnimalsByIds(ids: string[], options?: AnimalRequestOptions): Promise<AnimalsByIds>;
 }

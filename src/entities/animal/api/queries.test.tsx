@@ -5,6 +5,8 @@ import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AnimalWireDto } from "@/contract/animals";
 import { createQueryClient, QUERY_GC_TIME_MS } from "@/shared/api/query-client";
+import type { AnimalsByIds } from "../model/animal";
+import { toAnimal } from "../model/mapper";
 import {
   animalKeys,
   animalsInfiniteOptions,
@@ -12,6 +14,7 @@ import {
   useAnimal,
   useAnimalsByIds,
   useAnimalsInfinite,
+  useRetryFailedAnimals,
 } from "./queries";
 
 /**
@@ -43,7 +46,7 @@ const fetchMock = vi.fn(async (input: string | URL | Request) => {
       cursor === null ? { items: [wire("1"), wire("2")], nextCursor: "Mg" } : { items: [wire("3")], nextCursor: null },
     );
   }
-  if (url.pathname === "/api/animals/by-ids") return Response.json({ items: [wire("2")] });
+  if (url.pathname === "/api/animals/by-ids") return Response.json({ items: [wire("2")], failedIds: [] });
   return Response.json(wire(url.pathname.split("/").pop()!));
 });
 
@@ -192,6 +195,45 @@ describe("useAnimalsByIds", () => {
   it("ids가 있으면 받는다", async () => {
     const { result } = renderHook(() => useAnimalsByIds(["2", "9"]), { wrapper: wrapper() });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data?.map((a) => a.id)).toEqual(["2"]);
+    expect(result.current.data?.items.map((a) => a.id)).toEqual(["2"]);
+  });
+});
+
+describe("useRetryFailedAnimals", () => {
+  it("실패한 id만 다시 받아 같은 ids의 캐시에 입력 순서대로 합치고, 아직 실패한 id는 남긴다(이슈 #5)", async () => {
+    const client = createQueryClient();
+    const ids = ["1", "2", "3", "4"];
+    const repository = {
+      getAnimals: vi.fn(),
+      getAnimalById: vi.fn(),
+      getAnimalsByIds: vi.fn(async () => ({ items: [toAnimal(wire("3"))], failedIds: ["4"] })),
+    };
+    client.setQueryData(animalKeys.byIds(ids), { items: [toAnimal(wire("2"))], failedIds: ["3", "4"] });
+
+    const { result } = renderHook(() => useRetryFailedAnimals(repository), { wrapper: providerFor(client) });
+    await act(() => result.current.mutateAsync({ ids, failedIds: ["3", "4"] }));
+
+    expect(repository.getAnimalsByIds).toHaveBeenCalledWith(["3", "4"]);
+    const data = client.getQueryData<AnimalsByIds>(animalKeys.byIds(ids));
+    expect(data?.items.map((a) => a.id)).toEqual(["2", "3"]);
+    expect(data?.failedIds).toEqual(["4"]);
+  });
+
+  it("다시 받기가 전부 실패하면 캐시를 그대로 둔다", async () => {
+    const client = createQueryClient();
+    const ids = ["2", "3"];
+    const before = { items: [toAnimal(wire("2"))], failedIds: ["3"] };
+    const repository = {
+      getAnimals: vi.fn(),
+      getAnimalById: vi.fn(),
+      getAnimalsByIds: vi.fn(async () => Promise.reject(new Error("502"))),
+    };
+    client.setQueryData(animalKeys.byIds(ids), before);
+
+    const { result } = renderHook(() => useRetryFailedAnimals(repository), { wrapper: providerFor(client) });
+    await act(() => result.current.mutateAsync({ ids, failedIds: ["3"] }).catch(() => {}));
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(client.getQueryData(animalKeys.byIds(ids))).toBe(before);
   });
 });

@@ -43,9 +43,14 @@ export type AnimalListResponse = z.infer<typeof AnimalListResponseSchema>;
 /** GET /api/animals/by-ids 한 번에 보낼 수 있는 id 최대 개수. 서버는 넘으면 400, 클라이언트는 이 단위로 나눠 보낸다. */
 export const ANIMAL_BY_IDS_MAX = 50;
 
-/** GET /api/animals/by-ids. 못 찾은 id는 빠지고, 순서는 요청한 ids 순서를 따른다. */
+/**
+ * GET /api/animals/by-ids. 못 찾은 id는 빠지고, 순서는 요청한 ids 순서를 따른다.
+ * 업스트림 오류로 조회하지 못한 id는 items에서 빠지고 failedIds에 요청 순서대로 담긴다(이슈 #5).
+ * 하나도 불러오지 못했는데 실패가 있으면 이 응답 대신 오류(502/504)다.
+ */
 export const AnimalByIdsResponseSchema = z.object({
   items: z.array(AnimalWireDtoSchema),
+  failedIds: z.array(z.string()),
 });
 
 export type AnimalByIdsResponse = z.infer<typeof AnimalByIdsResponseSchema>;

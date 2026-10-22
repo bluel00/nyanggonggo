@@ -29,13 +29,28 @@ const wire = (id: string): AnimalWireDto => ({
   kindText: null,
 });
 
-/** 서버처럼: 요청 순서를 유지하고 없는 id(9로 시작)는 뺀다 */
+/** 업스트림 오류가 나는 id. 테스트가 바꾼다 */
+let failing = new Set<string>();
+
+/**
+ * 서버처럼: 요청 순서를 유지하고 없는 id(9로 시작)는 빼며, failing의 id는 failedIds에 담는다.
+ * 하나도 못 불러오고 실패가 있으면 502.
+ */
 const fetchMock = vi.fn(async (input: string | URL | Request) => {
   const ids = new URL(String(input), "http://localhost").searchParams.get("ids")!.split(",");
-  return Response.json({ items: ids.filter((id) => !id.startsWith("9")).map(wire) });
+  const items = ids.filter((id) => !id.startsWith("9") && !failing.has(id)).map(wire);
+  const failedIds = ids.filter((id) => failing.has(id));
+  if (items.length === 0 && failedIds.length > 0) {
+    return Response.json({ error: { code: "upstream_error", message: "x" } }, { status: 502 });
+  }
+  return Response.json({ items, failedIds });
 });
 
+const requestedIds = () =>
+  fetchMock.mock.calls.map(([input]) => new URL(String(input), "http://localhost").searchParams.get("ids"));
+
 beforeEach(() => {
+  failing = new Set();
   localStorage.clear();
   vi.stubGlobal("fetch", fetchMock);
 });
@@ -100,5 +115,54 @@ describe("FavoriteList", () => {
     expect(await screen.findByText("지금은 찜한 공고를 불러오지 못했어요")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "다시 시도" }));
     expect(await screen.findByText("지역1")).toBeTruthy();
+  });
+
+  describe("일부 실패(이슈 #5)", () => {
+    it("받은 카드는 보이고, 목록 위 한 줄과 [다시 시도]가 보이며, 실패한 id는 저장에 남는다", async () => {
+      failing = new Set(["2"]);
+      const { container } = renderList(["3", "2", "1"]);
+      expect(await screen.findByText("일부 공고를 불러오지 못했어요")).toBeTruthy();
+      expect(cardTitles(container)).toEqual(["지역3", "지역1"]);
+      expect(screen.getByRole("button", { name: "다시 시도" })).toBeTruthy();
+      expect(JSON.parse(localStorage.getItem(FAVORITES_STORAGE_KEY)!)).toEqual(["3", "2", "1"]);
+    });
+
+    it("[다시 시도]는 실패한 것만 다시 받고, 성공하면 저장 순서대로 끼워 넣고 줄이 사라진다", async () => {
+      failing = new Set(["2"]);
+      const { container } = renderList(["3", "2", "1"]);
+      await screen.findByText("일부 공고를 불러오지 못했어요");
+      failing = new Set();
+      fireEvent.click(screen.getByRole("button", { name: "다시 시도" }));
+      await screen.findByText("지역2");
+      expect(requestedIds()).toEqual(["3,2,1", "2"]);
+      expect(cardTitles(container)).toEqual(["지역3", "지역2", "지역1"]);
+      expect(screen.queryByText("일부 공고를 불러오지 못했어요")).toBeNull();
+    });
+
+    it("다시 시도가 또 실패하면 카드와 줄을 그대로 둔다", async () => {
+      failing = new Set(["2"]);
+      const { container } = renderList(["3", "2", "1"]);
+      await screen.findByText("일부 공고를 불러오지 못했어요");
+      fireEvent.click(screen.getByRole("button", { name: "다시 시도" }));
+      await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+      await waitFor(() => expect(screen.getByRole("button", { name: "다시 시도" }).hasAttribute("disabled")).toBe(false));
+      expect(cardTitles(container)).toEqual(["지역3", "지역1"]);
+      expect(screen.getByText("일부 공고를 불러오지 못했어요")).toBeTruthy();
+    });
+
+    it("전부 실패하면 지금의 오류 화면이고 저장은 그대로다", async () => {
+      failing = new Set(["1", "2"]);
+      renderList(["1", "2"]);
+      expect(await screen.findByText("지금은 찜한 공고를 불러오지 못했어요")).toBeTruthy();
+      expect(screen.queryByText("일부 공고를 불러오지 못했어요")).toBeNull();
+      expect(JSON.parse(localStorage.getItem(FAVORITES_STORAGE_KEY)!)).toEqual(["1", "2"]);
+    });
+
+    it("못 찾은 id는 지금처럼 조용히 빠진다(줄 없음)", async () => {
+      const { container } = renderList(["1", "999"]);
+      await screen.findByText("지역1");
+      expect(cardTitles(container)).toEqual(["지역1"]);
+      expect(screen.queryByText("일부 공고를 불러오지 못했어요")).toBeNull();
+    });
   });
 });

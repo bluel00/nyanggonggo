@@ -2,7 +2,7 @@
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
-import { AnimalCard, ANIMAL_COPY, animalsByIdsOptions, getStatusVariant } from "@/entities/animal";
+import { AnimalCard, ANIMAL_COPY, animalsByIdsOptions, getStatusVariant, useRetryFailedAnimals } from "@/entities/animal";
 import { FavoriteButton, useFavoriteIds } from "@/features/animal-favorite";
 import { markListVisited } from "@/shared/lib/app-navigation";
 import { scrollAppToTop } from "@/shared/ui/app-column";
@@ -17,6 +17,8 @@ const subscribeNothing = () => () => {};
  * 찜 목록(명세 4.5). 저장된 id로 서버에서 다시 조회한다(사본 저장 안 함). 목록과 같은 카드, 카드 탭 → 상세.
  * - 순서: 최근에 찜한 것이 앞(by-ids는 요청 순서를 유지)
  * - 조회되지 않는 id는 화면에서 빼고 저장은 유지한다(architecture.md 8절)
+ * - 일부만 오류로 받지 못하면 받은 카드는 두고 목록 위 한 줄과 [다시 시도](실패한 것만 다시 받음)를 보인다.
+ *   전부 실패하면 오류 화면. 어느 쪽이든 저장은 그대로다(이슈 #5)
  * - 여기서 찜을 해제하면 카드가 바로 빠진다. 새 id 목록으로 다시 조회하는 동안 이전 결과를 유지해 깜빡이지 않는다
  * - 서버 렌더에서는 찜 목록을 모르므로 클라이언트에서 저장값을 읽기 전까지 스켈레톤(빈 상태가 잠깐 보이지 않게)
  * 헤더는 FavoriteListHeader, 둘을 화면 틀에 놓는 것은 views/favorites다.
@@ -25,6 +27,7 @@ export function FavoriteList() {
   const ids = useFavoriteIds();
   const isClient = useSyncExternalStore(subscribeNothing, () => true, () => false);
   const query = useQuery({ ...animalsByIdsOptions(ids), placeholderData: keepPreviousData });
+  const retry = useRetryFailedAnimals();
   const [now] = useState(() => new Date());
 
   useEffect(() => {
@@ -51,7 +54,25 @@ export function FavoriteList() {
       </div>
     );
   } else {
-    const animals = (ids.length > 0 ? (query.data ?? []) : []).filter((animal) => ids.includes(animal.id));
+    const animals = (ids.length > 0 ? (query.data?.items ?? []) : []).filter((animal) => ids.includes(animal.id));
+    // 이전 ids의 결과를 잠시 보여 주는 동안(placeholder)은 그 실패를 다시 받을 캐시가 없어 줄을 숨긴다
+    const failedIds =
+      ids.length > 0 && !query.isPlaceholderData ? (query.data?.failedIds ?? []).filter((id) => ids.includes(id)) : [];
+    const partialError = failedIds.length > 0 && animals.length > 0 && (
+      // 디자인 미정: 목록 위 한 줄 문구와 텍스트 버튼
+      <div role="status" className="flex items-center justify-between gap-2 px-page">
+        <p className="text-body text-text-2">{ANIMAL_COPY.favoritesPartialError}</p>
+        <Button
+          variant="ghost"
+          size="touch"
+          className="-mr-3 px-3"
+          disabled={retry.isPending}
+          onClick={() => retry.mutate({ ids, failedIds })}
+        >
+          다시 시도
+        </Button>
+      </div>
+    );
     body =
       animals.length === 0 ? (
         // 명세 4.5.2 문구를 축종 중립으로 바꿔 쓴다(여러 축종이 섞인다, entities/animal/ui/labels.ts)
@@ -60,19 +81,22 @@ export function FavoriteList() {
           <p className="text-body text-text-2">{ANIMAL_COPY.favoritesEmptyDescription}</p>
         </div>
       ) : (
-        <FeedList>
-          {animals.map((animal) => (
-            <AnimalCard
-              key={animal.id}
-              animal={animal}
-              now={now}
-              href={`/animals/${animal.id}`}
-              action={
-                <FavoriteButton animalId={animal.id} variant="overlay" ended={getStatusVariant(animal, now) === "ended"} />
-              }
-            />
-          ))}
-        </FeedList>
+        <>
+          {partialError}
+          <FeedList>
+            {animals.map((animal) => (
+              <AnimalCard
+                key={animal.id}
+                animal={animal}
+                now={now}
+                href={`/animals/${animal.id}`}
+                action={
+                  <FavoriteButton animalId={animal.id} variant="overlay" ended={getStatusVariant(animal, now) === "ended"} />
+                }
+              />
+            ))}
+          </FeedList>
+        </>
       );
   }
 
