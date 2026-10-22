@@ -3,6 +3,7 @@ import { AnimalListResponseSchema } from "@/contract/animals";
 import fixture from "../../../docs/fixtures/upstream-items.json";
 import { mapUpstreamItem, type MappedAnimal } from "../mapper";
 import type { AnimalSource } from "../source/animal-source";
+import { UpstreamError } from "../upstream/client";
 import { UpstreamAnimalItemSchema } from "../upstream/dto";
 import { InvalidRequestError, NotFoundError } from "./errors";
 import { createAnimalService, decodeCursor, encodeCursor, type AnimalListParams } from "./service";
@@ -268,13 +269,14 @@ describe("getById", () => {
 describe("getByIds", () => {
   it("입력 순서를 유지하고 못 찾은 id는 조용히 제외한다", async () => {
     const result = await service().getByIds([ID.dog, "000", ID.ended, "111", ID.sexQ]);
-    expect(ids({ items: result })).toEqual([ID.dog, ID.ended, ID.sexQ]);
+    expect(ids(result)).toEqual([ID.dog, ID.ended, ID.sexQ]);
+    expect(result.failedIds).toEqual([]);
   });
 
   it("중복 id는 한 번만 조회한다", async () => {
     const source = fakeSource();
     const result = await service(source).getByIds([ID.dog, ID.dog, ID.sexQ]);
-    expect(ids({ items: result })).toEqual([ID.dog, ID.sexQ]);
+    expect(ids(result)).toEqual([ID.dog, ID.sexQ]);
     expect(source.getById).toHaveBeenCalledTimes(2);
   });
 
@@ -295,8 +297,44 @@ describe("getByIds", () => {
     expect(peak).toBe(2);
   });
 
-  it("조회 중 업스트림 오류는 전체 실패로 전달한다", async () => {
-    const source: AnimalSource = { list: vi.fn(), getById: vi.fn(async () => Promise.reject(new Error("boom"))) };
-    await expect(service(source).getByIds([ID.dog])).rejects.toThrow("boom");
+  /** failing에 든 id는 업스트림 오류, 나머지는 픽스처에서 찾는다(없으면 못 찾음) */
+  function flakySource(failing: string[]): AnimalSource {
+    return {
+      list: vi.fn(),
+      getById: vi.fn(async (id: string) => {
+        if (failing.includes(id)) throw new UpstreamError("timeout", {});
+        return mapped.find((m) => m.wire.id === id) ?? null;
+      }),
+    };
+  }
+
+  it("일부 id의 업스트림 오류는 나머지를 막지 않고 failedIds에 요청 순서대로 담는다", async () => {
+    const logger = { warn: vi.fn() };
+    const svc = createAnimalService(flakySource([ID.sexQ, ID.dog]), {
+      pageSize: 20,
+      byIdsConcurrency: 2,
+      now: () => NOW,
+      logger,
+    });
+    const result = await svc.getByIds([ID.dog, ID.ended, "000", ID.sexQ, ID.protectedCat]);
+    expect(ids(result)).toEqual([ID.ended, ID.protectedCat]);
+    expect(result.failedIds).toEqual([ID.dog, ID.sexQ]);
+    expect(logger.warn).toHaveBeenCalledWith("by-ids partial failure", { failed: 2, total: 5, reasons: ["timeout"] });
+  });
+
+  it("하나도 불러오지 못하고 업스트림 오류가 있으면 첫 오류로 전체 실패(못 찾은 id가 섞여도)", async () => {
+    await expect(service(flakySource([ID.dog])).getByIds([ID.dog])).rejects.toBeInstanceOf(UpstreamError);
+    await expect(service(flakySource([ID.dog])).getByIds(["000", ID.dog])).rejects.toMatchObject({ reason: "timeout" });
+  });
+
+  it("업스트림 오류가 아닌 예외는 그대로 전체 실패로 전달한다", async () => {
+    const source: AnimalSource = {
+      list: vi.fn(),
+      getById: vi.fn(async (id: string) => {
+        if (id === ID.dog) throw new Error("boom");
+        return mapped.find((m) => m.wire.id === id) ?? null;
+      }),
+    };
+    await expect(service(source).getByIds([ID.ended, ID.dog])).rejects.toThrow("boom");
   });
 });

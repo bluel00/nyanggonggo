@@ -18,12 +18,22 @@ function upstreamBody(items: unknown[]) {
   return { response: { header: { resultCode: "00" }, body: { items: { item: items }, totalCount: items.length } } };
 }
 
-const upstreamFetch = vi.fn(async (input: string | URL | Request) => {
+async function fixtureUpstream(input: string | URL | Request) {
   const url = new URL(String(input));
   const id = url.searchParams.get("desertion_no");
   const items = id ? fixture.items.filter((i) => i.desertionNo === id) : fixture.items;
   return Response.json(upstreamBody(items));
-});
+}
+
+const upstreamFetch = vi.fn(fixtureUpstream);
+
+/** 이 desertion_no들의 단건 조회만 업스트림 500 */
+function failUpstreamFor(ids: string[]) {
+  upstreamFetch.mockImplementation(async (input) => {
+    const id = new URL(String(input)).searchParams.get("desertion_no");
+    return id && ids.includes(id) ? new Response("oops", { status: 500 }) : fixtureUpstream(input);
+  });
+}
 
 beforeEach(() => {
   vi.stubEnv("DATA_GO_KR_SERVICE_KEY", FAKE_KEY);
@@ -37,6 +47,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
   upstreamFetch.mockClear();
+  upstreamFetch.mockImplementation(fixtureUpstream);
 });
 
 const req = (path: string) => new Request(`http://localhost${path}`);
@@ -157,6 +168,25 @@ describe("GET /api/animals/by-ids", () => {
     expect(response.status).toBe(200);
     const body = await response.json();
     expect(body.items.map((i: { id: string }) => i.id)).toEqual(["448539202600280", "427346202600847"]);
+    expect(body.failedIds).toEqual([]);
+    expect(response.headers.get("Cache-Control")).not.toBe("no-store");
+  });
+
+  it("일부 id만 업스트림 오류면 200으로 나머지와 failedIds를 주고 캐시하지 않는다(이슈 #5)", async () => {
+    failUpstreamFor(["427346202600847"]);
+    const response = await getByIds(req("/api/animals/by-ids?ids=448539202600280,1,427346202600847"));
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.items.map((i: { id: string }) => i.id)).toEqual(["448539202600280"]);
+    expect(body.failedIds).toEqual(["427346202600847"]);
+    expect(response.headers.get("Cache-Control")).toBe("no-store");
+  });
+
+  it("모든 id가 업스트림 오류면 지금처럼 502", async () => {
+    failUpstreamFor(["448539202600280", "427346202600847"]);
+    const response = await getByIds(req("/api/animals/by-ids?ids=448539202600280,427346202600847"));
+    expect(response.status).toBe(502);
+    expect((await response.json()).error.code).toBe("upstream_error");
   });
 
   it("ids가 없거나 51개 이상이면 400", async () => {

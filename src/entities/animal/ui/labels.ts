@@ -62,6 +62,8 @@ export const ANIMAL_COPY = {
   /** 🐾는 README가 허용한 유일한 이모지(찜 빈 상태) */
   favoritesEmptyDescription: "마음에 드는 공고를 저장해보세요 🐾",
   favoritesErrorTitle: "지금은 찜한 공고를 불러오지 못했어요",
+  /** 찜 목록 위 한 줄. 일부 공고만 오류로 받지 못했을 때(이슈 #5) */
+  favoritesPartialError: "일부 공고를 불러오지 못했어요",
   detailErrorTitle: "지금은 공고를 불러오지 못했어요",
   /** 상세 정보 줄의 이름 */
   detailRowLabels: {

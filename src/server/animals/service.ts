@@ -1,7 +1,9 @@
-import type { AnimalListResponse, AnimalWireDto } from "@/contract/animals";
+import type { AnimalByIdsResponse, AnimalListResponse, AnimalWireDto } from "@/contract/animals";
+import { noopLogger, type Logger } from "../logger";
 import type { MappedAnimal } from "../mapper";
 import { mapWithConcurrency } from "@/shared/lib/concurrency";
 import type { AnimalSource } from "../source/animal-source";
+import { UpstreamError } from "../upstream/client";
 import { InvalidRequestError, NotFoundError } from "./errors";
 
 /**
@@ -24,12 +26,14 @@ export type AnimalServiceOptions = {
   byIdsConcurrency: number;
   /** 기준 시각. endingSoon 정렬의 "오늘(KST)" 판정에 쓴다. */
   now: () => Date;
+  /** by-ids 일부 실패를 남긴다. 기본은 남기지 않는다 */
+  logger?: Logger;
 };
 
 export type AnimalService = {
   list(params: AnimalListParams): Promise<AnimalListResponse>;
   getById(id: string): Promise<AnimalWireDto>;
-  getByIds(ids: string[]): Promise<AnimalWireDto[]>;
+  getByIds(ids: string[]): Promise<AnimalByIdsResponse>;
 };
 
 export function createAnimalService(source: AnimalSource, options: AnimalServiceOptions): AnimalService {
@@ -58,9 +62,29 @@ export function createAnimalService(source: AnimalSource, options: AnimalService
 
     async getByIds(ids) {
       const unique = [...new Set(ids)];
-      const found = await mapWithConcurrency(unique, options.byIdsConcurrency, (id) => source.getById(id));
+      // 업스트림 오류는 id별로 받아 두고 나머지 조회를 막지 않는다(이슈 #5). 그 밖의 오류는 그대로 던진다.
+      const results = await mapWithConcurrency(unique, options.byIdsConcurrency, (id) =>
+        source.getById(id).then(
+          (animal) => ({ id, animal, error: null }),
+          (error: unknown) => {
+            if (error instanceof UpstreamError) return { id, animal: null, error };
+            throw error;
+          },
+        ),
+      );
       // 못 찾은 id는 조용히 제외하고 입력 순서를 유지한다.
-      return found.flatMap((animal) => (animal ? [animal.wire] : []));
+      const items = results.flatMap(({ animal }) => (animal ? [animal.wire] : []));
+      const failed = results.flatMap(({ id, error }) => (error ? [{ id, error }] : []));
+      // 하나도 불러오지 못했으면 지금까지처럼 요청 전체를 실패로 돌려준다(첫 오류가 502/504를 정한다).
+      if (items.length === 0 && failed[0]) throw failed[0].error;
+      if (failed.length > 0) {
+        (options.logger ?? noopLogger).warn("by-ids partial failure", {
+          failed: failed.length,
+          total: unique.length,
+          reasons: [...new Set(failed.map(({ error }) => error.reason))],
+        });
+      }
+      return { items, failedIds: failed.map(({ id }) => id) };
     },
   };
 }

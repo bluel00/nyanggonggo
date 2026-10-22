@@ -1,4 +1,4 @@
-export type { Animal, AnimalPage } from "./model/animal";
+export type { Animal, AnimalPage, AnimalsByIds } from "./model/animal";
 export type { AnimalListParams, AnimalRepository, AnimalRequestOptions } from "./model/repository";
 export { toAnimal } from "./model/mapper";
 export { getDDay, isSoon } from "./model/dDay";
@@ -14,6 +14,7 @@ export {
   useAnimal,
   useAnimalsByIds,
   useAnimalsInfinite,
+  useRetryFailedAnimals,
   type AnimalListFilter,
 } from "./api/queries";
 export {

@@ -110,11 +110,25 @@ describe("createAnimalRepository", () => {
 
   describe("getAnimalsByIds", () => {
     it("ids를 쉼표로 이어 보내고 응답 순서대로 Domain을 돌려준다", async () => {
-      const { repository, requested } = setup({ items: [wire({ id: "3" }), wire({ id: "1" })] });
-      const animals = await repository.getAnimalsByIds(["3", "2", "1"]);
+      const { repository, requested } = setup({ items: [wire({ id: "3" }), wire({ id: "1" })], failedIds: [] });
+      const result = await repository.getAnimalsByIds(["3", "2", "1"]);
       expect(requested().pathname).toBe("/api/animals/by-ids");
       expect(requested().searchParams.get("ids")).toBe("3,2,1");
-      expect(animals.map((a) => a.id)).toEqual(["3", "1"]);
+      expect(result.items.map((a) => a.id)).toEqual(["3", "1"]);
+      expect(result.failedIds).toEqual([]);
+    });
+
+    it("서버가 알려 준 failedIds를 그대로 돌려준다", async () => {
+      const { repository } = setup({ items: [wire({ id: "3" })], failedIds: ["1"] });
+      await expect(repository.getAnimalsByIds(["3", "2", "1"])).resolves.toMatchObject({
+        items: [{ id: "3" }],
+        failedIds: ["1"],
+      });
+    });
+
+    it("요청이 실패하면(전부 실패) ApiError를 던진다", async () => {
+      const { repository } = setup({ error: { code: "upstream_error", message: "공고 정보를 불러오지 못했어요." } }, 502);
+      await expect(repository.getAnimalsByIds(["3"])).rejects.toMatchObject({ kind: "http", status: 502 });
     });
 
     describe("상한을 넘는 ids는 청크로 나눈다", () => {
@@ -132,7 +146,7 @@ describe("createAnimalRepository", () => {
           // 서버처럼 요청 순서를 유지하고 못 찾은 id는 뺀다. 응답 도착 순서는 일부러 뒤섞는다.
           await new Promise((r) => setTimeout(r, delayMs * (4 - Number(requestedIds[0]) % 4)));
           running -= 1;
-          return Response.json({ items: requestedIds.filter(known).map((id) => wire({ id })) });
+          return Response.json({ items: requestedIds.filter(known).map((id) => wire({ id })), failedIds: [] });
         });
         const repository = createAnimalRepository({ http: createHttpClient({ fetch }) });
         const requestedChunks = () =>
@@ -150,9 +164,10 @@ describe("createAnimalRepository", () => {
 
       it("결과는 입력 순서를 유지하고, 못 찾은 id는 빠지며 나머지는 정상 반환된다", async () => {
         const { repository } = chunkedSetup(1);
-        const animals = await repository.getAnimalsByIds(ids);
-        expect(animals.map((a) => a.id)).toEqual(ids.filter(known));
-        expect(animals).toHaveLength(25);
+        const { items, failedIds } = await repository.getAnimalsByIds(ids);
+        expect(items.map((a) => a.id)).toEqual(ids.filter(known));
+        expect(items).toHaveLength(25);
+        expect(failedIds).toEqual([]);
       });
 
       it("동시 요청은 상한(3) 이내", async () => {
@@ -169,22 +184,35 @@ describe("createAnimalRepository", () => {
         expect(requestedChunks()).toEqual([["1005", "1001"]]);
       });
 
-      it("한 청크라도 실패하면 전체가 실패한다", async () => {
+      /** failing(청크 첫 id)에 해당하는 청크는 502, 나머지는 known만 돌려준다 */
+      function failingChunks(failing: (first: string) => boolean) {
         const fetch = vi.fn<FetchLike>(async (input) => {
-          const first = new URL(input, "http://localhost").searchParams.get("ids")!.split(",")[0];
-          if (first === ids[ANIMAL_BY_IDS_MAX]) {
+          const requestedIds = new URL(input, "http://localhost").searchParams.get("ids")!.split(",");
+          if (failing(requestedIds[0]!)) {
             return Response.json({ error: { code: "upstream_error", message: "공고 정보를 불러오지 못했어요." } }, { status: 502 });
           }
-          return Response.json({ items: [] });
+          return Response.json({ items: requestedIds.filter(known).map((id) => wire({ id })), failedIds: [] });
         });
-        const repository = createAnimalRepository({ http: createHttpClient({ fetch }) });
+        return createAnimalRepository({ http: createHttpClient({ fetch }) });
+      }
+
+      it("한 청크가 실패하면 나머지 청크는 그대로 두고, 실패한 청크의 id를 모두 failedIds에 담는다", async () => {
+        const repository = failingChunks((first) => first === ids[ANIMAL_BY_IDS_MAX]);
+        const { items, failedIds } = await repository.getAnimalsByIds(ids);
+        const failedChunk = ids.slice(ANIMAL_BY_IDS_MAX, ANIMAL_BY_IDS_MAX * 2);
+        expect(failedIds).toEqual(failedChunk);
+        expect(items.map((a) => a.id)).toEqual(ids.filter((id) => known(id) && !failedChunk.includes(id)));
+      });
+
+      it("모든 청크가 실패하면 전체가 실패한다", async () => {
+        const repository = failingChunks(() => true);
         await expect(repository.getAnimalsByIds(ids)).rejects.toMatchObject({ kind: "http", status: 502 });
       });
     });
 
     it("빈 배열이면 호출하지 않고 빈 결과", async () => {
-      const { fetch, repository } = setup({ items: [] });
-      await expect(repository.getAnimalsByIds([])).resolves.toEqual([]);
+      const { fetch, repository } = setup({ items: [], failedIds: [] });
+      await expect(repository.getAnimalsByIds([])).resolves.toEqual({ items: [], failedIds: [] });
       expect(fetch).not.toHaveBeenCalled();
     });
   });

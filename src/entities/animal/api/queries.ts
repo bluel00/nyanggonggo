@@ -1,5 +1,13 @@
-import { infiniteQueryOptions, queryOptions, useInfiniteQuery, useQuery, type QueryClient } from "@tanstack/react-query";
-import type { Animal } from "../model/animal";
+import {
+  infiniteQueryOptions,
+  queryOptions,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from "@tanstack/react-query";
+import type { Animal, AnimalsByIds } from "../model/animal";
 import type { AnimalListParams, AnimalRepository } from "../model/repository";
 import { animalRepository } from "./animal-repository";
 
@@ -84,4 +92,35 @@ export function useAnimal(id: string) {
 /** 찜 목록 조회. ids가 비면 요청하지 않는다(enabled: false). */
 export function useAnimalsByIds(ids: readonly string[]) {
   return useQuery(animalsByIdsOptions(ids));
+}
+
+/**
+ * 찜 목록에서 오류로 받지 못한 공고만 다시 받아 그 ids의 by-ids 캐시에 합친다(이슈 #5).
+ * 이미 받은 공고는 다시 받지 않는다. 다시 받다가 전부 실패하면 캐시를 그대로 두고 mutation이 오류가 된다.
+ */
+export function useRetryFailedAnimals(repository: AnimalRepository = animalRepository) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ failedIds }: { ids: readonly string[]; failedIds: string[] }) =>
+      repository.getAnimalsByIds(failedIds),
+    onSuccess: (retried, { ids, failedIds }) => {
+      queryClient.setQueryData<AnimalsByIds>(animalKeys.byIds(ids), (current) =>
+        current ? mergeRetried(ids, current, failedIds, retried) : current,
+      );
+    },
+  });
+}
+
+/** 다시 받은 결과를 ids 순서대로 끼워 넣는다. 다시 요청하지 않은 실패는 그대로 남긴다 */
+function mergeRetried(
+  ids: readonly string[],
+  current: AnimalsByIds,
+  requested: readonly string[],
+  retried: AnimalsByIds,
+): AnimalsByIds {
+  const byId = new Map([...current.items, ...retried.items].map((animal) => [animal.id, animal]));
+  return {
+    items: [...new Set(ids)].flatMap((id) => byId.get(id) ?? []),
+    failedIds: [...current.failedIds.filter((id) => !requested.includes(id)), ...retried.failedIds],
+  };
 }
