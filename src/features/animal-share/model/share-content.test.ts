@@ -23,19 +23,19 @@ const animal = (overrides: Partial<Animal> = {}): Animal => ({
 const NOW = kst("2026-09-21T09:00:00");
 
 describe("buildShareContent", () => {
-  it("상세 링크, 지역 기반 제목, 상태·보호소 설명, 대표 사진의 프록시 절대 URL", () => {
+  it("상세 링크, 지역 기반 제목, 공고 한 줄 요약 설명(보호소 이름 없음), 대표 사진의 프록시 절대 URL", () => {
     expect(buildShareContent(animal(), "https://nyang.test", NOW)).toEqual({
       url: "https://nyang.test/animals/450650202602282",
       title: "제주특별자치도 고양이",
-      description: "보호중 · D-10 · 제2동물보호센터",
+      description: "암컷 · 나이 미상 · 보호중 · D-10",
       imageUrl: `https://nyang.test/api/image-proxy?src=${encodeURIComponent(IMG)}`,
     });
   });
 
-  it("종료 공고는 '종료', 보호소가 없으면 설명에서 뺀다", () => {
+  it("종료 공고는 상태 자리에 '종료'", () => {
     const content = buildShareContent(animal({ status: "ended", shelterName: null, species: "dog" }), "https://nyang.test", NOW);
     expect(content.title).toBe("제주특별자치도 강아지");
-    expect(content.description).toBe("종료");
+    expect(content.description).toBe("암컷 · 나이 미상 · 종료");
   });
 
   it("기타 공고는 제목에 실제 동물 이름을 쓴다", () => {

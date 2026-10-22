@@ -31,9 +31,11 @@ export { CHARACTER_SRC, SpeciesCharacter, type CharacterHandle, type CharacterSp
 export { StatusBadge, statusBadgeText } from "./ui/status-badge";
 export {
   ANIMAL_COPY,
+  animalSummaryText,
   animalTitle,
   detailDisplayText,
   SEX_LABEL,
+  sexAgeText,
   SPECIES_COPY,
   SPECIES_LABEL,
   speciesText,

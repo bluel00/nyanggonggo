@@ -1,4 +1,7 @@
 import type { Animal } from "../model/animal";
+import { getDDay } from "../model/dDay";
+import { getStatusVariant } from "../model/status";
+import { statusBadgeText } from "./status-badge";
 
 /** 축종 표기. 필터 옵션, 사진 alt, 공유 제목이 함께 쓴다. */
 export const SPECIES_LABEL: Record<Animal["species"], string> = {
@@ -91,6 +94,23 @@ export const SEX_LABEL: Record<Animal["sex"], string> = {
   unknown: "성별 미상",
 };
 
+/** 성별 · 나이. 상세 제목 아래 줄과 공유 설명이 같은 표기를 쓴다(모르면 "성별 미상", "나이 미상") */
+export function sexAgeText(animal: Pick<Animal, "sex" | "ageText">): string {
+  return `${SEX_LABEL[animal.sex]} · ${animal.ageText ?? ANIMAL_COPY.ageUnknown}`;
+}
+
+/**
+ * 공고 한 줄 요약: 성별 · 나이 · 상태(· D-N) · 특이사항. 카카오 공유 카드 설명과 링크 미리보기(og·twitter) 설명이 같은 문자열을 쓴다(이슈 #2).
+ * 상태는 배지와 같은 문구다(종료는 "종료"). 특이사항은 원문 그대로이고 줄바꿈·연속 공백만 공백 하나로 바꾼다. 비어 있으면 뺀다.
+ * 길이는 자르지 않는다: 카카오 피드 템플릿은 설명에 글자 수 제한이 없고 2줄을 넘으면 줄임표로 보인다(카카오 개발자 문서 메시지 템플릿 공통).
+ */
+export function animalSummaryText(animal: Animal, now: Date): string {
+  const variant = getStatusVariant(animal, now);
+  const status = statusBadgeText(variant, variant === "ended" ? null : getDDay(animal, now));
+  const specialMark = animal.specialMarkText?.replace(/\s+/g, " ").trim() || null;
+  return [sexAgeText(animal), status, specialMark].filter(Boolean).join(" · ");
+}
+
 /**
  * 상세 화면에 보일 글자(제목, 상태·D-day, 성별·나이, 정보 줄 이름과 값). 카드를 누를 때 이 글자의 글꼴 조각을 미리 받는 데 쓴다
  * (architecture.md 14.2 4단계): 카드 → 상세 전환은 새 화면의 글꼴을 다 받을 때까지 커밋을 기다려, 받지 않은 글자가 있으면 그만큼 늦게 떴다.
@@ -99,8 +119,7 @@ export function detailDisplayText(animal: Animal): string {
   return [
     animalTitle(animal),
     "보호중 임박 종료 · D-day 0123456789",
-    SEX_LABEL[animal.sex],
-    animal.ageText ?? ANIMAL_COPY.ageUnknown,
+    sexAgeText(animal),
     ...Object.values(ANIMAL_COPY.detailRowLabels),
     animal.shelterName,
     animal.foundPlaceText,
