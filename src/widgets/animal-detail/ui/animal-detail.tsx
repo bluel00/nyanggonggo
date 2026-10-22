@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState, type CSSProperties } from "react";
+import { MapPin, Phone } from "lucide-react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import {
   ANIMAL_COPY,
   animalTitle,
   clearDetailEntry,
   getDDay,
   getDetailEntry,
+  getShelterContact,
   getStatusVariant,
   setDetailEntryPhotoIndex,
   sexAgeText,
@@ -107,12 +109,34 @@ export function AnimalDetail({ id, firstPhotoSize = null }: { id: string; firstP
   const enterMode = entering && entry && !ended && entry.mode !== "none" ? entry.mode : null;
   const enterStyle = { "--detail-elapsed": `${elapsedMs}ms` } as CSSProperties;
   const infoEnter = enterMode ? { "data-detail-enter": enterMode === "morph" ? "info" : "fade", style: enterStyle } : {};
-  const rows = [
-    [ANIMAL_COPY.detailRowLabels.shelter, animal.shelterName],
-    [ANIMAL_COPY.detailRowLabels.foundPlace, animal.foundPlaceText],
-    [ANIMAL_COPY.detailRowLabels.noticePeriod, animal.noticePeriodText],
-    [ANIMAL_COPY.detailRowLabels.specialMark, animal.specialMarkText],
-  ].filter((row): row is [string, string] => row[1] !== null);
+  const contact = getShelterContact(animal);
+  const { map, tel } = ANIMAL_COPY.detailContactActions;
+  const rows: DetailRow[] = [
+    { label: ANIMAL_COPY.detailRowLabels.foundPlace, value: animal.foundPlaceText },
+    { label: ANIMAL_COPY.detailRowLabels.shelter, value: animal.shelterName },
+    {
+      label: ANIMAL_COPY.detailRowLabels.shelterAddress,
+      value: contact.address?.text ?? null,
+      action: contact.address && (
+        <ContactLink href={contact.address.mapUrl} label={map.label} newTab>
+          <MapPin aria-hidden className="size-3.5" />
+          {map.text}
+        </ContactLink>
+      ),
+    },
+    {
+      label: ANIMAL_COPY.detailRowLabels.shelterTel,
+      value: contact.tel?.text ?? null,
+      action: contact.tel?.href && (
+        <ContactLink href={contact.tel.href} label={tel.label}>
+          <Phone aria-hidden className="size-3.5" />
+          {tel.text}
+        </ContactLink>
+      ),
+    },
+    { label: ANIMAL_COPY.detailRowLabels.noticePeriod, value: animal.noticePeriodText },
+    { label: ANIMAL_COPY.detailRowLabels.specialMark, value: animal.specialMarkText },
+  ].filter((row) => row.value !== null);
 
   return (
     <article data-slot="animal-detail" className="flex min-h-full flex-col">
@@ -166,10 +190,19 @@ export function AnimalDetail({ id, firstPhotoSize = null }: { id: string; firstP
         </p>
         {rows.length > 0 && (
           <dl className="mt-6 grid grid-cols-[auto_1fr] gap-x-4 gap-y-3 text-body">
-            {rows.map(([label, value]) => (
-              <div key={label} className="contents">
-                <dt className="text-text-2">{label}</dt>
-                <dd>{value}</dd>
+            {rows.map(({ label, value, action }) => (
+              // 링크가 있는 줄은 위아래 6px를 더해, 이웃한 두 링크(44px)의 누르는 영역이 겹치지 않게 한다(줄 20px + 간격 12px + 6px×2 = 44px)
+              <div key={label} data-slot="detail-row" className="contents">
+                <dt className={cn("text-text-2", action && "py-1.5")}>{label}</dt>
+                {action ? (
+                  // 값은 그냥 글자(선택·복사 가능)이고, 길면 줄바꿈한다. 링크는 첫 줄 끝에 둔다(items-start)
+                  <dd className="flex items-start gap-2 py-1.5">
+                    <span className="min-w-0 flex-1 break-words">{value}</span>
+                    {action}
+                  </dd>
+                ) : (
+                  <dd>{value}</dd>
+                )}
               </div>
             ))}
           </dl>
@@ -197,6 +230,26 @@ export function AnimalDetail({ id, firstPhotoSize = null }: { id: string; firstP
         />
       )}
     </article>
+  );
+}
+
+type DetailRow = { label: string; value: string | null; action?: ReactNode };
+
+/**
+ * 주소·전화 줄 끝의 작은 글자 링크(이슈 #3). 채운 버튼이 아니라 보조 글자색 + 작은 아이콘이다.
+ * 누르는 영역은 44×44px이고, 위아래 음수 여백으로 줄 높이(20px)는 그대로 둔다.
+ */
+function ContactLink({ href, label, newTab = false, children }: { href: string; label: string; newTab?: boolean; children: ReactNode }) {
+  return (
+    <a
+      href={href}
+      aria-label={label}
+      data-slot="contact-link"
+      {...(newTab ? { target: "_blank", rel: "noopener" } : {})}
+      className="-my-3 inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-0.5 rounded-sm text-caption text-text-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+    >
+      {children}
+    </a>
   );
 }
 

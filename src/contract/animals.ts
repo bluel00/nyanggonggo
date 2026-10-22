@@ -2,7 +2,7 @@ import { z } from "zod";
 
 /**
  * 서버(BFF) ↔ 브라우저 계약. 원시 타입만 쓴다(날짜는 문자열).
- * 연락처(careTel, careAddr, careOwnerNm)와 종료 사유(endReason)는 넣지 않는다.
+ * 담당자 이름(careOwnerNm)과 종료 사유(endReason)는 넣지 않는다. 보호소 주소·전화는 상세 정보 줄에 쓴다(이슈 #3).
  */
 export const AnimalWireDtoSchema = z.object({
   id: z.string(),
@@ -16,6 +16,10 @@ export const AnimalWireDtoSchema = z.object({
   regionText: z.string(),
   shelterName: z.string().nullable(),
   foundPlaceText: z.string().nullable(),
+  /** 보호소 주소(careAddr). 공백뿐이면 null */
+  shelterAddressText: z.string().nullable(),
+  /** 보호소 전화(careTel) 원문. 공백뿐이면 null */
+  shelterTelText: z.string().nullable(),
   /** `MM.DD ~ MM.DD` */
   noticePeriodText: z.string().nullable(),
   /** 특이사항(specialMark). 공백뿐이면 null */

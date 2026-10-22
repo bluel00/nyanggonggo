@@ -64,7 +64,19 @@ export const ANIMAL_COPY = {
   favoritesErrorTitle: "지금은 찜한 공고를 불러오지 못했어요",
   detailErrorTitle: "지금은 공고를 불러오지 못했어요",
   /** 상세 정보 줄의 이름 */
-  detailRowLabels: { shelter: "보호소", foundPlace: "발견 장소", noticePeriod: "공고 기간", specialMark: "특이사항" },
+  detailRowLabels: {
+    foundPlace: "발견 장소",
+    shelter: "보호소",
+    shelterAddress: "주소",
+    shelterTel: "전화",
+    noticePeriod: "공고 기간",
+    specialMark: "특이사항",
+  },
+  /** 주소·전화 줄 끝의 작은 글자 링크. text는 보이는 글자, label은 접근성 이름이다(이슈 #3) */
+  detailContactActions: {
+    map: { text: "지도", label: "지도에서 주소 보기(새 탭)" },
+    tel: { text: "전화", label: "보호소에 전화" },
+  },
   /** 나이를 모를 때 */
   ageUnknown: "나이 미상",
 } as const;
@@ -121,8 +133,11 @@ export function detailDisplayText(animal: Animal): string {
     "보호중 임박 종료 · D-day 0123456789",
     sexAgeText(animal),
     ...Object.values(ANIMAL_COPY.detailRowLabels),
+    ...Object.values(ANIMAL_COPY.detailContactActions).map((action) => action.text),
     animal.shelterName,
     animal.foundPlaceText,
+    animal.shelterAddressText,
+    animal.shelterTelText,
     animal.noticePeriodText,
     animal.specialMarkText,
   ]

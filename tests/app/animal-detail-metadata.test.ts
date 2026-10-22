@@ -24,6 +24,8 @@ const wire: AnimalWireDto = {
   regionText: "제주특별자치도",
   shelterName: "제2동물보호센터",
   foundPlaceText: null,
+  shelterAddressText: null,
+  shelterTelText: null,
   noticePeriodText: null,
   specialMarkText: null,
   kindText: null,
