@@ -29,6 +29,8 @@ const animal: Animal = {
   regionText: "서울특별시",
   shelterName: null,
   foundPlaceText: null,
+  shelterAddressText: null,
+  shelterTelText: null,
   noticePeriodText: null,
   specialMarkText: null,
   kindText: null,

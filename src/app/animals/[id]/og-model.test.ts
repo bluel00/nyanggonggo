@@ -16,6 +16,8 @@ const animal = (overrides: Partial<Animal> = {}): Animal => ({
   regionText: "제주특별자치도",
   shelterName: "제2동물보호센터",
   foundPlaceText: "서귀포시",
+  shelterAddressText: null,
+  shelterTelText: null,
   noticePeriodText: null,
   specialMarkText: null,
   kindText: null,

@@ -3,6 +3,7 @@ export type { AnimalListParams, AnimalRepository, AnimalRequestOptions } from ".
 export { toAnimal } from "./model/mapper";
 export { getDDay, isSoon } from "./model/dDay";
 export { getPrimaryImage, getStatusVariant, type AnimalStatusVariant } from "./model/status";
+export { getShelterContact, kakaoMapSearchUrl, telHref, type ShelterContact } from "./model/shelter-contact";
 export { animalRepository, createAnimalRepository } from "./api/animal-repository";
 export {
   animalKeys,

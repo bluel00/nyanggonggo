@@ -21,6 +21,9 @@ const PHOTO_CASES = {
   "990000202600003": [[1200, 1600], [1600, 1200]], // 세로 → 가로가 섞임
 };
 
+/** 보호소 연락처. 지어낸 값이다(e2e/detail-contact.spec.ts와 같아야 한다). 담당자 이름은 화면에 나오면 안 된다 */
+const CARE = { careAddr: "E2E시 가상구 테스트로 1 (예시동)", careTel: "000-0000-0000", careOwnerNm: "E2E 담당자" };
+
 /** KST 오늘에서 days만큼 옮긴 yyyyMMdd. 어느 날 돌려도 보호중 공고다 */
 function ymd(days) {
   const d = new Date(Date.now() + 9 * 3600_000 + days * 86_400_000);
@@ -46,6 +49,7 @@ function item(id, { upkind, kind, fullKind = kind, orgNm, photos, updTm, noticeE
     noticeEdt: ymd(noticeEdtDays),
     orgNm,
     careNm: "E2E 보호소",
+    ...CARE,
     specialMark: "E2E 고정 공고",
     updTm,
     ...Object.fromEntries(photos.map(([w, h], i) => [`popfile${i + 1}`, photo(w, h)])),

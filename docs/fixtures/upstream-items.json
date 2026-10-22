@@ -2,7 +2,7 @@
   "_note": "공공 API(abandonmentPublic_v2) 실제 응답 XML 샘플의 <item>을 필드명 그대로 옮긴 것. 모든 값은 문자열. JSON 응답(_type=json)의 래퍼 구조(response.body.items.item)는 아직 검증되지 않았으므로, 이 파일은 item 단위 픽스처로만 쓴다.",
   "items": [
     {
-      "_case": "보호중 고양이. 사진 2장, 특이사항에 개체관리번호 접두어, 연락처 필드 포함(Mapper가 버려야 함)",
+      "_case": "보호중 고양이. 사진 2장, 특이사항에 개체관리번호 접두어, 연락처 필드 포함(Mapper는 주소·전화만 옮기고 담당자 이름은 버린다, 이슈 #3)",
       "desertionNo": "450650202602282",
       "happenDt": "20260921",
       "happenPlace": "서귀포시 남원읍 의귀리1537",

@@ -27,11 +27,11 @@ describe("Upstream → Wire → Animal", () => {
     expect(animals.map((a) => a.id)).toEqual(dtos.map((d) => d.desertionNo));
   });
 
-  it("연락처와 종료 사유가 Domain 어디에도 없다", () => {
+  it("담당자 이름과 종료 사유가 Domain 어디에도 없다", () => {
     for (const [i, animal] of animals.entries()) {
       const dto = dtos[i];
       const serialized = JSON.stringify(animal);
-      for (const key of ["careTel", "careAddr", "careOwnerNm", "endReason"] as const) {
+      for (const key of ["careOwnerNm", "endReason"] as const) {
         expect(animal).not.toHaveProperty(key);
         const value = dto[key]?.trim();
         // careOwnerNm은 orgNm(regionText로 공개)과 같은 값일 수 있다(픽스처 1: 제주특별자치도).

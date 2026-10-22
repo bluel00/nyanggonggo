@@ -87,6 +87,8 @@ describe("animalSummaryText (공유 카드·링크 미리보기 설명)", () => 
     regionText: "제주특별자치도",
     shelterName: "가상 보호소",
     foundPlaceText: null,
+    shelterAddressText: null,
+    shelterTelText: null,
     noticePeriodText: null,
     specialMarkText: "줄무늬 꼬리, 사람을 잘 따름",
     kindText: null,

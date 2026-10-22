@@ -1,4 +1,4 @@
-/** FE Domain. UI는 이 타입만 소비한다(architecture.md 6절). 종료 사유와 연락처는 넣지 않는다. */
+/** FE Domain. UI는 이 타입만 소비한다(architecture.md 6절). 담당자 이름과 종료 사유는 넣지 않는다. */
 export type Animal = {
   id: string;
   species: "cat" | "dog" | "other";
@@ -15,6 +15,10 @@ export type Animal = {
   shelterName: string | null;
   /** happenPlace */
   foundPlaceText: string | null;
+  /** careAddr. 상세 정보 줄(종료 공고는 숨긴다) */
+  shelterAddressText: string | null;
+  /** careTel 원문. 상세 정보 줄(종료 공고는 숨긴다) */
+  shelterTelText: string | null;
   /** `MM.DD ~ MM.DD` */
   noticePeriodText: string | null;
   /** 특이사항(specialMark). 상세에서만 보여 준다 */

@@ -22,6 +22,8 @@ const wire = (id: string): AnimalWireDto => ({
   regionText: `지역${id}`,
   shelterName: null,
   foundPlaceText: null,
+  shelterAddressText: null,
+  shelterTelText: null,
   noticePeriodText: null,
   specialMarkText: null,
   kindText: null,

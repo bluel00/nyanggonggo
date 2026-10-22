@@ -31,7 +31,9 @@ const WIRE_KEYS = [
   "noticePeriodText",
   "regionText",
   "sex",
+  "shelterAddressText",
   "shelterName",
+  "shelterTelText",
   "specialMarkText",
   "species",
   "status",
@@ -54,17 +56,35 @@ describe("mapUpstreamItem", () => {
     }
   });
 
-  it("연락처(careTel, careAddr, careOwnerNm)는 결과 어디에도 없다", () => {
+  it("담당자 이름(careOwnerNm)은 결과 어디에도 없다", () => {
     for (const dto of dtos) {
-      const result = map(dto);
-      const serialized = JSON.stringify(result);
-      for (const key of ["careTel", "careAddr", "careOwnerNm"] as const) {
-        expect(serialized).not.toContain(key);
-        // careOwnerNm은 orgNm(regionText로 공개)과 같은 값일 수 있다(픽스처 1: 제주특별자치도).
-        const value = dto[key]?.trim();
-        if (value && value !== dto.orgNm) expect(serialized).not.toContain(value);
-      }
+      const serialized = JSON.stringify(map(dto));
+      expect(serialized).not.toContain("careOwnerNm");
+      // careOwnerNm은 orgNm(regionText로 공개)과 같은 값일 수 있다(픽스처 1: 제주특별자치도).
+      const value = dto.careOwnerNm?.trim();
+      if (value && value !== dto.orgNm) expect(serialized).not.toContain(value);
     }
+  });
+
+  it("보호소 주소·전화는 원문에서 앞뒤 공백만 지우고, 비어 있으면 null이다(이슈 #3)", () => {
+    // 지어낸 값이다
+    const { wire } = map({ ...PROTECTED_CAT, careAddr: " 가상특별시 예시구 테스트로 12 ", careTel: " 000-1234-5678 " });
+    expect(wire.shelterAddressText).toBe("가상특별시 예시구 테스트로 12");
+    expect(wire.shelterTelText).toBe("000-1234-5678");
+    const empty = map({ ...PROTECTED_CAT, careAddr: "  ", careTel: undefined }).wire;
+    expect(empty.shelterAddressText).toBeNull();
+    expect(empty.shelterTelText).toBeNull();
+  });
+
+  it("경고 로그에 연락처 값(주소, 전화, 담당자 이름)을 넣지 않는다", () => {
+    const logger = spyLogger();
+    // 지어낸 값이다
+    const contact = { careAddr: "가상특별시 예시구 테스트로 12", careTel: "000-1234-5678", careOwnerNm: "가상담당자" };
+    mapUpstreamItem({ ...PROTECTED_CAT, ...contact, upKindNm: "새" }, { logger });
+    mapUpstreamItem({ ...PROTECTED_CAT, ...contact, processState: "공고중" }, { logger });
+    expect(logger.warn).toHaveBeenCalledTimes(2);
+    const serialized = JSON.stringify(logger.warn.mock.calls);
+    for (const value of Object.values(contact)) expect(serialized).not.toContain(value);
   });
 
   it("종료(안락사)는 ended이고, 결과 어디에도 endReason 값이 없다", () => {
@@ -259,6 +279,8 @@ describe("mapUpstreamItem", () => {
       regionText: "제주특별자치도",
       shelterName: null,
       foundPlaceText: null,
+      shelterAddressText: null,
+      shelterTelText: null,
       noticePeriodText: null,
       specialMarkText: null,
       kindText: null,
