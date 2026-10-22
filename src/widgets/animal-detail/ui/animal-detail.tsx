@@ -9,7 +9,7 @@ import {
   getDetailEntry,
   getStatusVariant,
   setDetailEntryPhotoIndex,
-  SEX_LABEL,
+  sexAgeText,
   speciesText,
   StatusBadge,
   useAnimal,
@@ -162,7 +162,7 @@ export function AnimalDetail({ id, firstPhotoSize = null }: { id: string; firstP
           {animalTitle(animal)}
         </h1>
         <p className="mt-1 text-body text-text-2">
-          {SEX_LABEL[animal.sex]} · {animal.ageText ?? ANIMAL_COPY.ageUnknown}
+          {sexAgeText(animal)}
         </p>
         {rows.length > 0 && (
           <dl className="mt-6 grid grid-cols-[auto_1fr] gap-x-4 gap-y-3 text-body">

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Animal } from "@/entities/animal";
+import { buildShareContent } from "@/features/animal-share";
 import { buildOgModel, buildOgText } from "./og-model";
 
 const kst = (iso: string) => new Date(`${iso}+09:00`);
@@ -33,6 +34,7 @@ describe("buildOgModel", () => {
       dDayText: "D-10",
       imageSrc: "http://openapi.animal.go.kr/openapi/files/1.jpg",
       ended: false,
+      description: "암컷 · 나이 미상 · 보호중 · D-10",
     });
   });
 
@@ -63,10 +65,22 @@ describe("buildOgModel", () => {
 });
 
 describe("buildOgText", () => {
-  it("제목과 설명", () => {
-    expect(buildOgText(buildOgModel(animal(), NOW), "냥공고")).toEqual({
+  it("제목은 그대로, 설명은 공고 한 줄 요약(성별 · 나이 · 상태 · 특이사항, 보호소 이름 없음)", () => {
+    // 특이사항은 지어낸 문장이다
+    expect(buildOgText(buildOgModel(animal({ ageText: "2024(년생)", specialMarkText: "검은 코,\n조용한 편" }), NOW), "냥공고")).toEqual({
       title: "제주특별자치도 고양이 공고 | 냥공고",
-      description: "보호중 · D-10 · 제2동물보호센터",
+      description: "암컷 · 2024(년생) · 보호중 · D-10 · 검은 코, 조용한 편",
     });
+  });
+
+  it("링크 미리보기 설명은 카카오 공유 카드 설명과 같은 문자열이다", () => {
+    const cases = [
+      animal({ specialMarkText: "꼬리가 짧고\n  잘 웃는 얼굴" }),
+      animal({ status: "ended", sex: "unknown" }),
+      animal({ ageText: "2026(60일미만)(년생)", specialMarkText: "   " }),
+    ];
+    for (const a of cases) {
+      expect(buildOgText(buildOgModel(a, NOW), "냥공고").description).toBe(buildShareContent(a, "https://nyang.test", NOW).description);
+    }
   });
 });
