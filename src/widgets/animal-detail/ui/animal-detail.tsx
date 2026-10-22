@@ -37,6 +37,12 @@ export const DETAIL_TITLE_ID = "animal-detail-title";
 const DETAIL_ENTER_TOTAL_MS = 300;
 const DETAIL_ENTER_SETTLE_MS = 50;
 
+/**
+ * 정보 줄 값의 줄바꿈(이슈 #11). 한글은 기본으로 글자 단위로 끊겨 주소가 "(노 / 량진동)"처럼 갈라졌다. 띄어쓰기에서만 바꾸고(keep-all),
+ * 띄어쓰기가 없는 긴 값(긴 단어, URL)은 줄을 넘치지 않게 어디서든 끊는다(overflow-wrap: anywhere. min-content도 줄어 그리드 칸을 밀지 않는다)
+ */
+const DETAIL_VALUE_WRAP = "break-keep wrap-anywhere";
+
 const STATUS_TEXT = {
   protected: "text-status-protected-text",
   soon: "text-status-soon-text",
@@ -197,11 +203,15 @@ export function AnimalDetail({ id, firstPhotoSize = null }: { id: string; firstP
                 {action ? (
                   // 값은 그냥 글자(선택·복사 가능)이고, 길면 줄바꿈한다. 링크는 첫 줄 끝에 둔다(items-start)
                   <dd className="flex items-start gap-2 py-1.5">
-                    <span className="min-w-0 flex-1 break-words">{value}</span>
+                    <span data-slot="detail-value" className={cn("min-w-0 flex-1", DETAIL_VALUE_WRAP)}>
+                      {value}
+                    </span>
                     {action}
                   </dd>
                 ) : (
-                  <dd>{value}</dd>
+                  <dd data-slot="detail-value" className={DETAIL_VALUE_WRAP}>
+                    {value}
+                  </dd>
                 )}
               </div>
             ))}

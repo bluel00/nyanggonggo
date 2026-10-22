@@ -24,13 +24,24 @@ const PHOTO_CASES = {
 /** 보호소 연락처. 지어낸 값이다(e2e/detail-contact.spec.ts와 같아야 한다). 담당자 이름은 화면에 나오면 안 된다 */
 const CARE = { careAddr: "E2E시 가상구 테스트로 1 (예시동)", careTel: "000-0000-0000", careOwnerNm: "E2E 담당자" };
 
+/**
+ * 정보 줄 줄바꿈 확인용 공고(e2e/detail-wrap.spec.ts와 같아야 한다). 지어낸 값이다.
+ * 주소·발견 장소는 띄어쓰기가 있는 긴 한글(띄어쓰기에서만 줄이 바뀌어야 한다), 특이사항은 띄어쓰기 없는 긴 값(넘치지 않아야 한다)
+ */
+const WRAP_ID = "990000202600021";
+const WRAP_VALUES = {
+  careAddr: "가상특별시 예시구 테스트대로 123길 45 (가나다라동, 예시주상복합아파트 101동)",
+  happenPlace: "가상특별시 예시구 테스트대로 앞 버스정류장 근처 공원 산책로 입구 화단",
+  specialMark: "E2E-LONG-VALUE-WITHOUT-ANY-SPACES-".repeat(4),
+};
+
 /** KST 오늘에서 days만큼 옮긴 yyyyMMdd. 어느 날 돌려도 보호중 공고다 */
 function ymd(days) {
   const d = new Date(Date.now() + 9 * 3600_000 + days * 86_400_000);
   return d.toISOString().slice(0, 10).replaceAll("-", "");
 }
 
-function item(id, { upkind, kind, fullKind = kind, orgNm, photos, updTm, noticeEdtDays, processState = "보호중", animal = "믹스" }) {
+function item(id, { upkind, kind, fullKind = kind, orgNm, photos, updTm, noticeEdtDays, processState = "보호중", animal = "믹스", extra = {} }) {
   return {
     desertionNo: id,
     processState,
@@ -53,6 +64,7 @@ function item(id, { upkind, kind, fullKind = kind, orgNm, photos, updTm, noticeE
     specialMark: "E2E 고정 공고",
     updTm,
     ...Object.fromEntries(photos.map(([w, h], i) => [`popfile${i + 1}`, photo(w, h)])),
+    ...extra,
   };
 }
 
@@ -137,6 +149,18 @@ const BY_ID = new Map([
       processState: "종료(입양)",
     }),
   ]),
+  [
+    WRAP_ID,
+    item(WRAP_ID, {
+      upkind: "422400",
+      kind: "고양이",
+      orgNm: "서울특별시 종로구",
+      photos: [[400, 400]],
+      updTm: "2026-10-14 08:00:00.0",
+      noticeEdtDays: 7,
+      extra: WRAP_VALUES,
+    }),
+  ],
 ]);
 
 /**
