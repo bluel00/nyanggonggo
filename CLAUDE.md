@@ -13,11 +13,11 @@
 7. `docs/기능명세서.md`, `docs/PRD.md`
 8. `docs/design/handoff.md`, `docs/design/README.md`, `docs/design/tokens.*`
 
-즉 `architecture.md` > `PRD-v1.5.md` > `PRD-v1.4.md` > `PRD-v1.3.md` > `PRD-v1.2.md` > `PRD-v1.1.md` > `PRD.md`·`기능명세서.md`다. `PRD-v1.1.md`는 v1.0에서, `PRD-v1.2.md`는 v1.1에서, `PRD-v1.3.md`는 v1.2에서, `PRD-v1.4.md`는 v1.3에서, `PRD-v1.5.md`는 v1.4에서 **바뀌는 부분만** 적은 문서이고, 적히지 않은 것은 앞 버전이 그대로 유효하다.
+즉 `architecture.md` > `PRD-v1.5.md` > `PRD-v1.4.md` > `PRD-v1.3.md` > `PRD-v1.2.md` > `PRD-v1.1.md` > `PRD.md`·`기능명세서.md`다. `PRD-v1.1.md`는 v1.0에서, `PRD-v1.2.md`는 v1.1에서, `PRD-v1.3.md`는 v1.2에서, `PRD-v1.4.md`는 v1.3에서, `PRD-v1.5.md`는 v1.4에서 **바뀌는 부분만** 적은 문서다.
 
 문서별로 무엇이 무엇을 대체했는지는 `docs/PRD.md` 맨 앞 색인과 대체된 문서 0절의 "대체된 곳"에 있다.
 
-**읽기 규칙**: 변경 문서는 그 시점의 기록이다. 과거 문서의 비범위나 구현 방식이 지금도 유효하다고 가정하지 않는다. 충돌하거나 불명확하면 멈추고 EL에게 묻는다.
+**읽기 규칙**: 변경 문서에 적히지 않은 것은 앞 버전을 따른다. 다만 앞 버전의 비범위나 구현 방식은 이후 이슈나 `architecture.md`에서 바뀌었을 수 있으니, `PRD.md` 색인과 `architecture.md`를 먼저 확인한다. 충돌하거나 불명확하면 멈추고 EL에게 묻는다.
 
 문서에 없거나 서로 충돌하면 **추측하지 말고** 멈춰서 질문하거나 보고에 적는다. 미확정 항목은 `docs/architecture.md` 12절에 추가한다.
 
