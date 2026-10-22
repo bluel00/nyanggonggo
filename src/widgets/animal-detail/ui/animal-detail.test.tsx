@@ -149,6 +149,26 @@ describe("AnimalDetail", () => {
     expect(screen.getByText("성별 미상 · 나이 미상")).toBeTruthy();
   });
 
+  it("모든 정보 줄 값은 띄어쓰기에서만 줄이 바뀌고(keep-all), 띄어쓰기 없는 긴 값은 넘치지 않게 끊는다(이슈 #11)", async () => {
+    fetchMock.mockResolvedValue(
+      Response.json(wire({ shelterAddressText: "가상특별시 예시구 테스트로 12", shelterTelText: "000-1234-5678", specialMarkText: "보호센터 내 출산" })),
+    );
+    const { container } = renderDetail();
+    await screen.findByRole("heading");
+    const values = [...container.querySelectorAll('[data-slot="detail-value"]')];
+    expect(values.map((value) => value.textContent)).toEqual([
+      "서귀포시 남원읍",
+      "제2동물보호센터",
+      "가상특별시 예시구 테스트로 12",
+      "000-1234-5678",
+      "09.21 ~ 10.01",
+      "보호센터 내 출산",
+    ]);
+    for (const value of values) {
+      expect(value.className.split(" ")).toEqual(expect.arrayContaining(["break-keep", "wrap-anywhere"]));
+    }
+  });
+
   describe("보호소 주소·전화(이슈 #3, 지어낸 값)", () => {
     const ADDRESS = "가상특별시 예시구 테스트로 12 (샘플동)";
     const TEL = "000-1234-5678";
