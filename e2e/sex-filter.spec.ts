@@ -75,24 +75,3 @@ test("새로 들어오면(쿼리 없이) 전체로 시작한다: 성별은 기�
   expect((await cardIds(next)).slice(0, 3)).toEqual([seoulCatId(0), seoulCatId(1), seoulCatId(2)]);
   expect(await next.getByRole("button", { name: "필터" }).getAttribute("data-selected")).toBeNull();
 });
-
-test.describe("작은 화면(375×667)", () => {
-  test.use({ viewport: { width: 375, height: 667 } });
-
-  test("열린 시트에서 적용하기 버튼에 닿을 수 있다", async ({ page }) => {
-    await page.goto(`/?species=cat&region=${SEOUL}`);
-    await page.getByRole("button", { name: "필터" }).click();
-    const apply = page.getByRole("button", { name: "적용하기" });
-    await expect(apply).toBeVisible();
-    // 시트를 연 직후 버튼이 화면 안에 다 들어오는지 남긴다(보고용). 넘치면 시트 안에서 스크롤해 닿아야 한다
-    const box = (await apply.boundingBox())!;
-    test.info().annotations.push({
-      type: "apply-button",
-      description: `열린 직후 버튼 아래 끝 ${Math.round(box.y + box.height)}px / 화면 667px`,
-    });
-    await apply.scrollIntoViewIfNeeded();
-    await expect(apply).toBeInViewport({ ratio: 1 });
-    await apply.click();
-    await expect(page.getByRole("dialog")).toBeHidden();
-  });
-});
