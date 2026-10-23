@@ -103,6 +103,21 @@ const eslintConfig = defineConfig([
     },
   },
   ...fsdConfigs(),
+  // 테스트 전용 코드(tests/, 별칭 @tests)는 운영 코드에서 import하지 않는다(이슈 #27).
+  // no-restricted-imports는 계층 규칙이 파일 묶음마다 이미 쓰고 있어(같은 규칙을 다시 걸면 덮어쓴다) 다른 규칙으로 막는다.
+  {
+    files: ["src/**"],
+    ignores: TEST_FILES,
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "ImportDeclaration[source.value=/^(@tests\\u002F|(\\.\\.\\u002F)+tests\\u002F)/]",
+          message: "테스트 전용 코드(tests/)는 운영 코드에서 import하지 않는다.",
+        },
+      ],
+    },
+  },
   {
     files: ["src/contract/**"],
     rules: {
