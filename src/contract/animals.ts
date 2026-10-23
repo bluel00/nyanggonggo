@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+/** 공고 id(desertionNo) 형식: 숫자 문자열 1~32자리. 서버 요청 검사, 상세 경로, 찜 저장값이 모두 이것을 쓴다(이슈 #31) */
+export function isAnimalId(value: string): boolean {
+  return /^\d{1,32}$/.test(value);
+}
+
 /** 축종 값. Wire의 species와 목록 쿼리의 species가 같은 목록이다 */
 export const ANIMAL_SPECIES = ["cat", "dog", "other"] as const;
 /** 공고 상태 값(Wire). 목록 쿼리는 여기에 all을 더한다 */

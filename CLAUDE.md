@@ -26,7 +26,7 @@
 - 공공 API는 브라우저에서 직접 호출하지 않는다. Next 서버(Route Handler)에서만 호출한다.
 - 모델은 3단계로 분리한다: `UpstreamDto`(1:1 + Zod) → `AnimalWireDto`(계약, `src/contract`) → `Animal`(FE Domain, `src/entities`). 서로 재활용하지 않는다.
 - Zod는 도착 검증만 한다. 가공, 변환, 파생은 Mapper와 domain 서비스가 한다.
-- `src/server/**`와 FSD 계층은 서로 import하지 않는다. 공유는 `src/contract`뿐이다. 이 규칙은 ESLint로 강제한다.
+- `src/server/**`는 FSD 계층(`entities`, `features`, `widgets`, `views`, `shared/ui`)을 import하지 않고, FSD 계층은 `src/server/**`를 import하지 않는다. 둘이 함께 쓰는 것은 `src/contract`와 `shared/ui`를 뺀 `shared`(지금은 `shared/api`, `shared/lib`)다. 이 규칙은 ESLint로 강제한다.
 - FSD 계층 방향: `views → widgets → features → entities → shared`. `views`는 배치만 하고 로직이 없다.
 - UI는 Domain(`Animal`)만 소비한다.
 

@@ -6,8 +6,11 @@
  */
 const KAKAO_MAP_SEARCH = "https://map.kakao.com/link/search/";
 
-/** 주소 → 카카오맵 검색 URL. 검색어는 경로 한 칸이라 `/`·`?`·`#`까지 모두 인코딩한다 */
-export function kakaoMapSearchUrl(address: string): string {
+/**
+ * 주소 → 지도 검색 URL. 이름은 역할(지도에서 주소 찾기)이고, 지금 구현은 카카오맵이다(이슈 #31: 공급자는 이 함수 안에만 둔다).
+ * 검색어는 경로 한 칸이라 `/`·`?`·`#`까지 모두 인코딩한다
+ */
+export function mapSearchUrl(address: string): string {
   return KAKAO_MAP_SEARCH + encodeURIComponent(address);
 }
 

@@ -3,7 +3,7 @@ import { z } from "zod";
 import { ApiErrorResponseSchema } from "@/contract/animals";
 import { InvalidRequestError, NotFoundError } from "../animals/errors";
 import { ServerConfigError } from "../config";
-import { UpstreamError } from "../upstream/client";
+import { UpstreamError } from "../source/errors";
 import { errorResponse, jsonResponse } from "./respond";
 
 const FAKE_KEY = "test-key-SECRET";

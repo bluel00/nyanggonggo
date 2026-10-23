@@ -1,3 +1,4 @@
+import { isAnimalId } from "@/contract/animals";
 import { toAnimal } from "@/entities/animal";
 import { getAnimalService } from "@/server/animals/container";
 import { SERVER_TUNING } from "@/server/config";
@@ -20,13 +21,12 @@ export const size = OG_SIZE;
 export const contentType = "image/png";
 export const revalidate = 3600;
 
-const ID_PATTERN = /^\d{1,32}$/;
 const fontsPromise = loadOgFonts(undefined, consoleLogger);
 
 export default async function Image({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const fonts = await fontsPromise;
-  const model = ID_PATTERN.test(id) ? await loadModel(id) : null;
+  const model = isAnimalId(id) ? await loadModel(id) : null;
   const photo = model
     ? await fetchOgImage(model.imageSrc, createHttpClient(), { timeoutMs: SERVER_TUNING.imageProxyTimeoutMs, logger: consoleLogger })
     : null;

@@ -11,7 +11,7 @@ import { noopLogger, type Logger } from "../logger";
 import type { MappedAnimal } from "../mapper";
 import { mapWithConcurrency } from "@/shared/lib/concurrency";
 import type { AnimalSource } from "../source/animal-source";
-import { UpstreamError } from "../upstream/client";
+import { UpstreamError } from "../source/errors";
 import { InvalidRequestError, NotFoundError } from "./errors";
 
 /**

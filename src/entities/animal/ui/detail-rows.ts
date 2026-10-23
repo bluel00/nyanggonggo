@@ -1,5 +1,5 @@
 import type { Animal } from "../model/animal";
-import { kakaoMapSearchUrl, telHref } from "../model/shelter-contact";
+import { mapSearchUrl, telHref } from "../model/shelter-contact";
 import { animalTitle, sexAgeText } from "./labels";
 
 /** 정보 줄 끝 링크의 동작 종류(역할 이름). 링크 주소는 `detailRowHref`가 이 종류에서 만든다 */
@@ -49,7 +49,7 @@ export function detailRows(animal: Animal): DetailRow[] {
 export function detailRowHref(row: DetailRow): string | null {
   switch (row.action) {
     case "map":
-      return kakaoMapSearchUrl(row.value);
+      return mapSearchUrl(row.value);
     case "call":
       return telHref(row.value);
     case null:

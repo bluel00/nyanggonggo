@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type Ref } from "react";
 import {
   allowsMotion,
+  ANIMAL_CARD_SELECTOR,
   ANIMAL_CARD_STILL_SELECTOR,
   AnimalCard,
   chooseDetailEntryMode,
@@ -25,7 +26,7 @@ import { warmFonts, warmFontsAfterImages } from "@/shared/lib/font-warm";
 import { markListVisited } from "@/shared/lib/app-navigation";
 import { appScrollViewport, scrollAppToTop } from "@/shared/ui/app-column";
 import { Button } from "@/shared/ui/button";
-import { SkeletonCard } from "@/shared/ui/skeleton-card";
+import { SKELETON_CARD_SELECTOR, SkeletonCard } from "@/shared/ui/skeleton-card";
 
 /** 다음 페이지를 미리 부를 거리(sentinel이 화면 아래 이만큼 앞에 오면) */
 const PREFETCH_MARGIN = "600px 0px";
@@ -68,7 +69,7 @@ export function AnimalList({ filter }: { filter: AnimalListFilter }) {
   const feedRef = useFirstScreenEntrance(listKey, query.isPending);
   useEffect(() => {
     if (!query.isSuccess) return;
-    const firstScreen = [...(feedRef.current?.querySelectorAll<HTMLImageElement>('[data-slot="animal-card"] img') ?? [])].slice(0, EAGER_CARDS);
+    const firstScreen = [...(feedRef.current?.querySelectorAll<HTMLImageElement>(`${ANIMAL_CARD_SELECTOR} img`) ?? [])].slice(0, EAGER_CARDS);
     return warmFontsAfterImages(
       firstScreen,
       `${Object.values(DETAIL_ROW_LABELS).join(" ")} ${ANIMAL_COPY.ageUnknown} ${SHARE_BUTTON_LABEL}`,
@@ -164,7 +165,7 @@ function useFirstScreenEntrance(listKey: string, pending: boolean) {
 
   useEffect(() => {
     if (!pending) return;
-    const skeletons = ref.current?.querySelectorAll<HTMLElement>('[data-slot="skeleton-card"]') ?? [];
+    const skeletons = ref.current?.querySelectorAll<HTMLElement>(SKELETON_CARD_SELECTOR) ?? [];
     const viewport = appScrollViewport();
     if (skeletons.length < 2 || !viewport) return;
     const top = skeletons[0].getBoundingClientRect().top;
@@ -177,10 +178,11 @@ function useFirstScreenEntrance(listKey: string, pending: boolean) {
     if (pending || awaiting.current?.listKey !== listKey) return;
     const { count } = awaiting.current;
     awaiting.current = null;
-    const cards = ref.current?.querySelectorAll<HTMLElement>('[data-slot="animal-card"]') ?? [];
+    const cards = ref.current?.querySelectorAll<HTMLElement>(ANIMAL_CARD_SELECTOR) ?? [];
     let order = 0;
     for (const card of [...cards].slice(0, count)) {
       if (card.matches(ANIMAL_CARD_STILL_SELECTOR)) continue;
+      // app/globals.css의 [data-enter="list"]가 읽는다
       card.dataset.enter = "list";
       card.style.setProperty("--enter-i", String(order++));
       const done = (event: AnimationEvent) => {

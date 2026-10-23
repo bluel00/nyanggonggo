@@ -3,7 +3,7 @@ import { AnimalListResponseSchema } from "@/contract/animals";
 import fixture from "../../../docs/fixtures/upstream-items.json";
 import { mapUpstreamItem, type MappedAnimal } from "../mapper";
 import type { AnimalSource } from "../source/animal-source";
-import { UpstreamError } from "../upstream/client";
+import { UpstreamError } from "../source/errors";
 import { UpstreamAnimalItemSchema } from "../upstream/dto";
 import { InvalidRequestError, NotFoundError } from "./errors";
 import { createAnimalService, decodeCursor, encodeCursor, type AnimalListParams } from "./service";

@@ -1,5 +1,5 @@
 import type { ImageSizeResult, ImageSizeTiming } from "../images/image-size";
-import type { UpstreamPageCache } from "../upstream/client";
+import type { UpstreamPageCache } from "../upstream/page-cache";
 
 /**
  * 요청 단위 계측(architecture.md 12절 52). 상세 첫 방문의 지연을 콜드 스타트, 공공 API, 사진 크기 읽기로 나눠 보려고 쓴다.

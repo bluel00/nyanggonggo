@@ -1,5 +1,5 @@
 import { unstable_cache } from "next/cache";
-import type { UpstreamPageCache } from "./client";
+import type { UpstreamPageCache } from "./page-cache";
 
 /**
  * 업스트림 페이지 캐시의 서버 구현(Next 데이터 캐시). `unstable_cache`는 콜백이 성공한 결과만 저장하므로

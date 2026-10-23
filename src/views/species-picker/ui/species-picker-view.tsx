@@ -37,6 +37,7 @@ export function SpeciesPickerView({ area }: { area: AnimalArea }) {
 /** 제목과 부제. 함께 등장한다(순서 0) */
 function HomeIntro() {
   return (
+    // data-enter="home"은 app/globals.css의 [data-enter="home"]이 읽는다
     <div data-enter="home" style={enterOrder(0)} className="flex flex-col gap-2 text-center">
       <DisplayText as="h1" size="home">
         {ANIMAL_COPY.homeTitle}
