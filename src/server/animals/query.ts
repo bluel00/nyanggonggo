@@ -1,4 +1,11 @@
 import { z } from "zod";
+import {
+  ANIMAL_LIST_DEFAULTS,
+  ANIMAL_LIST_SEXES,
+  AnimalListSortSchema,
+  AnimalListSpeciesSchema,
+  AnimalListStatusSchema,
+} from "@/contract/animals";
 import { InvalidRequestError } from "./errors";
 import type { AnimalListParams } from "./service";
 
@@ -10,14 +17,12 @@ import type { AnimalListParams } from "./service";
  */
 const DIGITS = /^\d{1,32}$/;
 
-const SEXES = ["female", "male"] as const;
-
 const ListQuerySchema = z.object({
-  species: z.enum(["cat", "dog", "other"]).default("cat"),
+  species: AnimalListSpeciesSchema.default(ANIMAL_LIST_DEFAULTS.species),
   region: z.string().regex(DIGITS).optional(),
   district: z.string().regex(DIGITS).optional(),
-  status: z.enum(["protected", "ended", "all"]).default("protected"),
-  sort: z.enum(["latest", "endingSoon"]).default("latest"),
+  status: AnimalListStatusSchema.default(ANIMAL_LIST_DEFAULTS.status),
+  sort: AnimalListSortSchema.default(ANIMAL_LIST_DEFAULTS.sort),
   // 커서는 앞 페이지 마지막 항목의 정렬 키를 base64url로 감싼 값이다(service.ts). 여유를 두고 128자까지 받는다
   cursor: z.string().max(128).optional(),
 }).refine((query) => query.district === undefined || query.region !== undefined, {
@@ -42,7 +47,7 @@ export function parseListQuery(searchParams: URLSearchParams): AnimalListParams 
 
 function readSex(searchParams: URLSearchParams): AnimalListParams["sex"] {
   const value = read(searchParams, "sex");
-  return SEXES.find((sex) => sex === value) ?? "all";
+  return ANIMAL_LIST_SEXES.find((sex) => sex === value) ?? ANIMAL_LIST_DEFAULTS.sex;
 }
 
 export function parseAnimalId(raw: string): string {

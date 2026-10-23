@@ -1,4 +1,12 @@
-import type { AnimalByIdsResponse, AnimalListResponse, AnimalWireDto } from "@/contract/animals";
+import type {
+  AnimalByIdsResponse,
+  AnimalListResponse,
+  AnimalListSex,
+  AnimalListSort,
+  AnimalListSpecies,
+  AnimalListStatus,
+  AnimalWireDto,
+} from "@/contract/animals";
 import { noopLogger, type Logger } from "../logger";
 import type { MappedAnimal } from "../mapper";
 import { mapWithConcurrency } from "@/shared/lib/concurrency";
@@ -11,15 +19,15 @@ import { InvalidRequestError, NotFoundError } from "./errors";
  */
 
 export type AnimalListParams = {
-  species: AnimalWireDto["species"];
+  species: AnimalListSpecies;
   /** 시도 코드(upr_cd) */
   region?: string;
   /** 시군구 코드(org_cd). region과 함께만 온다 */
   district?: string;
-  status: AnimalWireDto["status"] | "all";
+  status: AnimalListStatus;
   /** 성별. all이면 거르지 않는다(성별 미상은 all에서만 나온다) */
-  sex: Exclude<AnimalWireDto["sex"], "unknown"> | "all";
-  sort: "latest" | "endingSoon";
+  sex: AnimalListSex;
+  sort: AnimalListSort;
   cursor?: string;
 };
 
@@ -44,7 +52,7 @@ export function createAnimalService(source: AnimalSource, options: AnimalService
       const anchor = cursor === undefined ? null : decodeCursor(cursor);
       const all = await source.list({ species, uprCd: region ?? "all", ...(district ? { orgCd: district } : {}) });
 
-      const compare = sort === "latest" ? compareLatest : compareEndingSoon(kstYmd(options.now()));
+      const compare = COMPARATORS[sort](kstYmd(options.now()));
       // 상태·성별은 업스트림 페이지 캐시를 읽은 뒤 여기서 거른다(캐시 키에 넣지 않는다, architecture.md 5절)
       const sorted = all
         .filter((animal) => status === "all" || animal.wire.status === status)
@@ -126,6 +134,12 @@ function compareEndingSoon(today: string): Comparator {
     return byDate || compareText(a.wire.id, b.wire.id);
   };
 }
+
+/** 정렬 값 → 비교기(today: 기준 시각의 KST 날짜 `YYYYMMDD`). 계약에 정렬을 더하면 여기에 비교기가 없어 타입 오류가 난다 */
+const COMPARATORS: Record<AnimalListSort, (today: string) => Comparator> = {
+  latest: () => compareLatest,
+  endingSoon: compareEndingSoon,
+};
 
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 

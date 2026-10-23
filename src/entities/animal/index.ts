@@ -10,6 +10,8 @@ export {
   animalOptions,
   animalsByIdsOptions,
   animalsInfiniteOptions,
+  isSameListFilter,
+  listFilterKey,
   seedAnimalDetail,
   useAnimal,
   useAnimalsByIds,

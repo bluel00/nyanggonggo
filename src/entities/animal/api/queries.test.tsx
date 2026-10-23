@@ -9,7 +9,9 @@ import { toAnimal } from "../model/mapper";
 import {
   animalKeys,
   animalsInfiniteOptions,
+  isSameListFilter,
   LIST_GC_TIME_MS,
+  listFilterKey,
   useAnimal,
   useAnimalsByIds,
   useAnimalsInfinite,
@@ -83,6 +85,30 @@ describe("animalKeys", () => {
     const base = { species: "cat", status: "protected", sort: "latest" } as const;
     expect(animalKeys.list({ ...base, sex: "female" })).not.toEqual(animalKeys.list({ ...base, sex: "all" }));
     expect(animalKeys.list({ ...base, sex: "female" })).not.toEqual(animalKeys.list({ ...base, sex: "male" }));
+  });
+});
+
+describe("isSameListFilter, listFilterKey", () => {
+  const base = { species: "cat", status: "protected", sex: "all", sort: "latest" } as const;
+
+  it("지역이 undefined인 것과 없는 것은 같은 목록이다", () => {
+    expect(isSameListFilter(base, { ...base, region: undefined, district: undefined })).toBe(true);
+    expect(listFilterKey(base)).toBe(listFilterKey({ ...base, region: undefined }));
+  });
+
+  it("필터 6종 중 하나라도 다르면 다른 목록이다", () => {
+    const seoul = { ...base, region: "6110000" };
+    for (const other of [
+      { ...seoul, species: "dog" },
+      { ...seoul, region: "6260000" },
+      { ...seoul, district: "3000000" },
+      { ...seoul, status: "all" },
+      { ...seoul, sex: "female" },
+      { ...seoul, sort: "endingSoon" },
+    ] as const) {
+      expect(isSameListFilter(seoul, other)).toBe(false);
+      expect(listFilterKey(seoul)).not.toBe(listFilterKey(other));
+    }
   });
 });
 

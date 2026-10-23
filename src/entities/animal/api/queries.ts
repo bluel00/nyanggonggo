@@ -14,12 +14,29 @@ import { animalRepository } from "./animal-repository";
 /** 목록 필터. URL search params(species, region, district, status, sex, sort)와 같다. 커서는 내부 상태라 넣지 않는다. */
 export type AnimalListFilter = Omit<AnimalListParams, "cursor">;
 
-/** 쿼리 키 팩토리. 목록 키는 필터 6종(species, region, district, status, sex, sort)으로 정해진다(상세 → 뒤로가기 때 같은 키로 캐시를 되살린다). */
+/**
+ * 목록 필터의 정체(이슈 #28). 필터 6종(species, region, district, status, sex, sort)만 남기고 지역이 없으면 null로 고정한다.
+ * 목록 쿼리 키, 필터 비교(`isSameListFilter`), 문자열 키(`listFilterKey`)가 모두 이것으로 만든다.
+ */
+function listFilterIdentity({ species, region, district, status, sex, sort }: AnimalListFilter) {
+  return { species, region: region ?? null, district: district ?? null, status, sex, sort };
+}
+
+/** 같은 목록인지(지역이 undefined와 없음은 같다) */
+export function isSameListFilter(a: AnimalListFilter, b: AnimalListFilter): boolean {
+  return listFilterKey(a) === listFilterKey(b);
+}
+
+/** 필터를 문자열 하나로(effect 의존성 등). 같은 목록이면 같은 문자열이다 */
+export function listFilterKey(filter: AnimalListFilter): string {
+  return JSON.stringify(listFilterIdentity(filter));
+}
+
+/** 쿼리 키 팩토리. 목록 키는 필터 6종으로 정해진다(상세 → 뒤로가기 때 같은 키로 캐시를 되살린다). */
 export const animalKeys = {
   all: ["animals"] as const,
   lists: () => [...animalKeys.all, "list"] as const,
-  list: ({ species, region, district, status, sex, sort }: AnimalListFilter) =>
-    [...animalKeys.lists(), { species, region: region ?? null, district: district ?? null, status, sex, sort }] as const,
+  list: (filter: AnimalListFilter) => [...animalKeys.lists(), listFilterIdentity(filter)] as const,
   details: () => [...animalKeys.all, "detail"] as const,
   detail: (id: string) => [...animalKeys.details(), id] as const,
   byIds: (ids: readonly string[]) => [...animalKeys.all, "by-ids", [...ids]] as const,

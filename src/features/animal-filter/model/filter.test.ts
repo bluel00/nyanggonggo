@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { isSameListFilter } from "@/entities/animal";
 import {
   DEFAULT_ANIMAL_FILTER,
   DEFAULT_REGION,
-  isSameFilter,
   parseAnimalFilter,
   toFilterHref,
   toFilterQuery,
@@ -114,17 +114,17 @@ describe("toFilterQuery / toFilterHref", () => {
     { species: "cat", region: BUSAN, status: "protected", sex: "all", sort: "latest" },
     { species: "cat", region: BUSAN, district: BUSAN_JUNG, status: "ended", sex: "all", sort: "latest" },
   ] as const)("parse ∘ toFilterQuery 왕복 %#", (filter) => {
-    expect(isSameFilter(parseAnimalFilter(qs(toFilterQuery(filter))), filter)).toBe(true);
+    expect(isSameListFilter(parseAnimalFilter(qs(toFilterQuery(filter))), filter)).toBe(true);
   });
 });
 
-describe("isSameFilter", () => {
+describe("isSameListFilter", () => {
   it("region/district 없음과 undefined를 같게 본다", () => {
     const nationwide = { species: "cat", status: "protected", sex: "all", sort: "latest" } as const;
-    expect(isSameFilter(nationwide, { ...nationwide, region: undefined, district: undefined })).toBe(true);
-    expect(isSameFilter(DEFAULT_ANIMAL_FILTER, { ...DEFAULT_ANIMAL_FILTER, district: undefined })).toBe(true);
+    expect(isSameListFilter(nationwide, { ...nationwide, region: undefined, district: undefined })).toBe(true);
+    expect(isSameListFilter(DEFAULT_ANIMAL_FILTER, { ...DEFAULT_ANIMAL_FILTER, district: undefined })).toBe(true);
     // 시군구를 고른 필터는 시도 전체와 다르다
-    expect(isSameFilter(DEFAULT_ANIMAL_FILTER, { ...DEFAULT_ANIMAL_FILTER, district: JONGNO })).toBe(false);
+    expect(isSameListFilter(DEFAULT_ANIMAL_FILTER, { ...DEFAULT_ANIMAL_FILTER, district: JONGNO })).toBe(false);
   });
 });
 
@@ -146,6 +146,6 @@ describe("성별(이슈 #20): 쿼리 ↔ 필터", () => {
   });
 
   it("성별이 다르면 다른 필터", () => {
-    expect(isSameFilter(DEFAULT_ANIMAL_FILTER, { ...DEFAULT_ANIMAL_FILTER, sex: "male" })).toBe(false);
+    expect(isSameListFilter(DEFAULT_ANIMAL_FILTER, { ...DEFAULT_ANIMAL_FILTER, sex: "male" })).toBe(false);
   });
 });
