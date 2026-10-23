@@ -2,7 +2,7 @@
 
 import { SlidersHorizontal } from "lucide-react";
 import { useState, type ReactNode } from "react";
-import { SPECIES_LABEL, type AnimalListFilter } from "@/entities/animal";
+import { SEX_LABEL, SPECIES_LABEL, type AnimalListFilter } from "@/entities/animal";
 import { DISTRICTS, SIDO } from "@/shared/config/regions";
 import { Button } from "@/shared/ui/button";
 import { Chip } from "@/shared/ui/chip";
@@ -31,6 +31,13 @@ const STATUS_OPTIONS = [
   { value: "protected", label: "보호중" },
   { value: "ended", label: "종료" },
   { value: "all", label: "전체" },
+] as const;
+
+/** 성별(이슈 #20). 성별 미상은 전체에서만 보인다. 보호 상태와 같은 칩 묶음 */
+const SEX_OPTIONS = [
+  { value: "all", label: "전체" },
+  { value: "female", label: SEX_LABEL.female },
+  { value: "male", label: SEX_LABEL.male },
 ] as const;
 
 const SORT_OPTIONS = [
@@ -74,8 +81,14 @@ export function AnimalFilterSheet({ filter }: { filter: AnimalListFilter }) {
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetTrigger asChild>
-        {/* 필터 버튼: 흰 바탕 + shadow-control(README, 칩보다 진한 그림자) */}
-        <Chip className="shadow-control">
+        {/* 필터 버튼: 흰 바탕 + shadow-control(README, 칩보다 진한 그림자). 성별을 골랐으면 칩의 선택 모양으로 보이고
+            이름에 성별을 붙인다(이슈 #20, 목록 위 필터 요약이 따로 없다). 토글이 아니라 aria-pressed는 뺀다 */}
+        <Chip
+          className="shadow-control"
+          selected={filter.sex !== "all"}
+          aria-pressed={undefined}
+          aria-label={filter.sex === "all" ? undefined : `필터, ${SEX_LABEL[filter.sex]}`}
+        >
           <SlidersHorizontal aria-hidden className="size-4" strokeWidth={1.8} />
           필터
         </Chip>
@@ -122,13 +135,24 @@ export function AnimalFilterSheet({ filter }: { filter: AnimalListFilter }) {
         </Section>
 
         <Section label="보호 상태">
-          <div className="flex flex-wrap gap-2">
+          {/* 칩 묶음마다 이름을 붙인다: 보호 상태와 성별에 같은 "전체"가 있어 화면 읽기에서 구분되게 */}
+          <div role="group" aria-label="보호 상태" className="flex flex-wrap gap-2">
             {STATUS_OPTIONS.map((option) => (
               <Chip
                 key={option.value}
                 selected={draft.status === option.value}
                 onClick={() => update({ status: option.value })}
               >
+                {option.label}
+              </Chip>
+            ))}
+          </div>
+        </Section>
+
+        <Section label="성별">
+          <div role="group" aria-label="성별" className="flex flex-wrap gap-2">
+            {SEX_OPTIONS.map((option) => (
+              <Chip key={option.value} selected={draft.sex === option.value} onClick={() => update({ sex: option.value })}>
                 {option.label}
               </Chip>
             ))}

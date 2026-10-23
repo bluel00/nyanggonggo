@@ -95,7 +95,9 @@ const updTmAgo = (minutes) => `2026-10-13 ${String(Math.floor(minutes / 60)).pad
 /**
  * 고양이·서울(upr_cd 6110000) 30건. 개발·production 서버의 화면 E2E(목록·필터·지역·축종 기억·움직임·상세 로딩)가
  * 상세(서버 렌더)로 들어갈 공고 id를 여기서 얻는다(e2e/helpers.ts의 loadStubItems). 목록 자체는 대개 page.route로 고정한다.
+ * 성별은 index % 3으로 암컷(F) / 수컷(M) / 미상(Q)을 돌린다(e2e/sex-filter.spec.ts와 같아야 한다).
  */
+const SEOUL_CAT_SEX = ["F", "M", "Q"];
 const SEOUL_DISTRICTS = ["서울특별시 종로구", "서울특별시 마포구", "서울특별시 강남구"];
 const SEOUL_CAT_ITEMS = Array.from({ length: 30 }, (_, index) =>
   item(String(990000202602000 + index), {
@@ -106,6 +108,7 @@ const SEOUL_CAT_ITEMS = Array.from({ length: 30 }, (_, index) =>
     photos: [[400, 400]],
     updTm: updTmAgo(30 - index),
     noticeEdtDays: 5 + (index % 10),
+    extra: { sexCd: SEOUL_CAT_SEX[index % SEOUL_CAT_SEX.length] },
   }),
 );
 

@@ -7,6 +7,8 @@ export type AnimalListParams = {
   /** 시군구 코드(org_cd). region이 있을 때만 */
   district?: string;
   status: Animal["status"] | "all";
+  /** 성별. all이면 거르지 않는다(성별 미상은 all에서만 나온다) */
+  sex: Exclude<Animal["sex"], "unknown"> | "all";
   sort: "latest" | "endingSoon";
   cursor?: string;
 };

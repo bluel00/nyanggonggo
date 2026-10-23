@@ -36,6 +36,7 @@ const service = (source = fakeSource(), pageSize = 20, now = NOW) =>
 const params = (overrides: Partial<AnimalListParams> = {}): AnimalListParams => ({
   species: "cat",
   status: "protected",
+  sex: "all",
   sort: "latest",
   ...overrides,
 });
@@ -336,5 +337,26 @@ describe("getByIds", () => {
       }),
     };
     await expect(service(source).getByIds([ID.ended, ID.dog])).rejects.toThrow("boom");
+  });
+});
+
+describe("list: 성별 필터(이슈 #20)", () => {
+  it("고른 성별만 남기고, 성별 미상(Q)은 all에서만 나온다", async () => {
+    expect(ids(await service().list(params({ sex: "female" })))).toEqual([ID.dog, ID.protectedCat, ID.optionalSfe]);
+    expect(ids(await service().list(params({ sex: "male" })))).toEqual([ID.twoBrackets]);
+    const all = ids(await service().list(params({ sex: "all" })));
+    expect(all).toContain(ID.sexQ);
+    expect(all).toHaveLength(5);
+  });
+
+  it("상태 필터와 함께 걸리고, 거른 뒤에 페이지를 나눈다", async () => {
+    expect(ids(await service().list(params({ status: "ended", sex: "male" })))).toEqual([]);
+    expect(ids(await service().list(params({ status: "all", sex: "female" })))).toContain(ID.ended);
+
+    const first = await service(fakeSource(), 2).list(params({ sex: "female" }));
+    expect(ids(first)).toEqual([ID.dog, ID.protectedCat]);
+    const second = await service(fakeSource(), 2).list(params({ sex: "female", cursor: first.nextCursor! }));
+    expect(ids(second)).toEqual([ID.optionalSfe]);
+    expect(second.nextCursor).toBeNull();
   });
 });

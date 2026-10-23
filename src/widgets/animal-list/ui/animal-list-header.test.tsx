@@ -11,6 +11,7 @@ const filter = (species: AnimalListFilter["species"]): AnimalListFilter => ({
   species,
   region: BUSAN,
   status: "protected",
+  sex: "all",
   sort: "latest",
 });
 

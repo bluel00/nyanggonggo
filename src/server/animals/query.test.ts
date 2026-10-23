@@ -6,13 +6,14 @@ const qs = (s: string) => new URLSearchParams(s);
 
 describe("parseListQuery", () => {
   it("기본값: species=cat, status=protected, sort=latest", () => {
-    expect(parseListQuery(qs(""))).toEqual({ species: "cat", status: "protected", sort: "latest" });
+    expect(parseListQuery(qs(""))).toEqual({ species: "cat", status: "protected", sex: "all", sort: "latest" });
   });
 
   it("빈 문자열은 값이 없는 것으로 본다", () => {
     expect(parseListQuery(qs("species=&status=&region=&cursor="))).toEqual({
       species: "cat",
       status: "protected",
+      sex: "all",
       sort: "latest",
     });
   });
@@ -22,13 +23,14 @@ describe("parseListQuery", () => {
       species: "dog",
       region: "6260000",
       status: "ended",
+      sex: "all",
       sort: "endingSoon",
       cursor: "MjA",
     });
   });
 
   it("species=other(기타 축종)를 받는다", () => {
-    expect(parseListQuery(qs("species=other"))).toEqual({ species: "other", status: "protected", sort: "latest" });
+    expect(parseListQuery(qs("species=other"))).toEqual({ species: "other", status: "protected", sex: "all", sort: "latest" });
   });
 
   it("district는 region과 함께 받는다", () => {
@@ -45,7 +47,7 @@ describe("parseListQuery", () => {
   });
 
   it("알 수 없는 파라미터(page 등)는 무시한다", () => {
-    expect(parseListQuery(qs("page=3"))).toEqual({ species: "cat", status: "protected", sort: "latest" });
+    expect(parseListQuery(qs("page=3"))).toEqual({ species: "cat", status: "protected", sex: "all", sort: "latest" });
   });
 
   it.each(["species=bird", "status=notice", "sort=oldest", "region=부산", "region=26-00", "species=CAT"])(
@@ -75,5 +77,19 @@ describe("parseIdsQuery", () => {
     expect(() => parseIdsQuery(qs("ids=,,"), 50)).toThrow(InvalidRequestError);
     expect(() => parseIdsQuery(qs("ids=1,2,3"), 2)).toThrow(InvalidRequestError);
     expect(() => parseIdsQuery(qs("ids=1,x"), 50)).toThrow(InvalidRequestError);
+  });
+});
+
+describe("parseListQuery: sex(이슈 #20)", () => {
+  it("female, male을 읽고 없으면 all", () => {
+    expect(parseListQuery(qs("sex=female")).sex).toBe("female");
+    expect(parseListQuery(qs("sex=male")).sex).toBe("male");
+    expect(parseListQuery(qs("")).sex).toBe("all");
+  });
+
+  it("잘못된 값은 400이 아니라 all(전체)로 본다", () => {
+    for (const value of ["unknown", "all", "F", "FEMALE", "", "female,male"]) {
+      expect(parseListQuery(qs(`sex=${value}`)).sex).toBe("all");
+    }
   });
 });

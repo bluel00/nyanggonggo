@@ -237,7 +237,7 @@ function useLoadMore({ enabled, pages, onLoadMore }: { enabled: boolean; pages: 
 
 /** 필터가 바뀌면 내부 스크롤 컨테이너를 맨 위로(첫 렌더는 제외) */
 function filterKey(filter: AnimalListFilter): string {
-  return `${filter.species}|${filter.region ?? ""}|${filter.district ?? ""}|${filter.status}|${filter.sort}`;
+  return `${filter.species}|${filter.region ?? ""}|${filter.district ?? ""}|${filter.status}|${filter.sex}|${filter.sort}`;
 }
 
 function useScrollTopOnFilterChange(filter: AnimalListFilter) {

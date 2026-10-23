@@ -32,9 +32,18 @@ function setup(body: unknown, status = 200) {
 
 describe("createAnimalRepository", () => {
   describe("getAnimals", () => {
+    it("sex는 전체면 보내지 않고, 고르면 sex=로 보낸다(이슈 #20)", async () => {
+      const all = setup({ items: [], nextCursor: null });
+      await all.repository.getAnimals({ species: "cat", status: "protected", sex: "all", sort: "latest" });
+      expect(all.requested().searchParams.has("sex")).toBe(false);
+      const female = setup({ items: [], nextCursor: null });
+      await female.repository.getAnimals({ species: "cat", status: "protected", sex: "female", sort: "latest" });
+      expect(female.requested().searchParams.get("sex")).toBe("female");
+    });
+
     it("쿼리를 만들고 응답을 Domain으로 바꾼다(날짜 → KST 00:00 Date)", async () => {
       const { repository, requested } = setup({ items: [wire(), wire({ id: "2", status: "ended" })], nextCursor: "MjA" });
-      const page = await repository.getAnimals({ species: "cat", region: "6260000", status: "all", sort: "endingSoon", cursor: "MjA" });
+      const page = await repository.getAnimals({ species: "cat", region: "6260000", status: "all", sex: "all", sort: "endingSoon", cursor: "MjA" });
 
       const url = requested();
       expect(url.pathname).toBe("/api/animals");
@@ -53,8 +62,8 @@ describe("createAnimalRepository", () => {
 
     it("district는 region과 함께 보내고, region이 없으면 보내지 않는다", async () => {
       const { fetch, repository } = setup({ items: [], nextCursor: null });
-      await repository.getAnimals({ species: "cat", region: "6110000", district: "3000000", status: "protected", sort: "latest" });
-      await repository.getAnimals({ species: "cat", district: "3000000", status: "protected", sort: "latest" });
+      await repository.getAnimals({ species: "cat", region: "6110000", district: "3000000", status: "protected", sex: "all", sort: "latest" });
+      await repository.getAnimals({ species: "cat", district: "3000000", status: "protected", sex: "all", sort: "latest" });
       const [first, second] = fetch.mock.calls.map(([input]) => new URL(input, "http://localhost"));
       expect(first.searchParams.get("district")).toBe("3000000");
       expect(second.searchParams.has("district")).toBe(false);
@@ -62,13 +71,13 @@ describe("createAnimalRepository", () => {
 
     it("region과 cursor가 없으면 보내지 않는다", async () => {
       const { repository, requested } = setup({ items: [], nextCursor: null });
-      await repository.getAnimals({ species: "dog", status: "protected", sort: "latest" });
+      await repository.getAnimals({ species: "dog", status: "protected", sex: "all", sort: "latest" });
       expect([...requested().searchParams.keys()].sort()).toEqual(["sort", "species", "status"]);
     });
 
     it("계약과 다른 응답은 contract ApiError(어긋난 경로를 담는다)", async () => {
       const { repository } = setup({ items: [{ ...wire(), species: "bird", careTel: "010-0000-0000" }], nextCursor: null });
-      const error = await repository.getAnimals({ species: "cat", status: "protected", sort: "latest" }).catch((e) => e);
+      const error = await repository.getAnimals({ species: "cat", status: "protected", sex: "all", sort: "latest" }).catch((e) => e);
       expect(error).toBeInstanceOf(ApiError);
       expect(error).toMatchObject({ kind: "contract", endpoint: "/api/animals", issues: ["items.0.species"] });
       expect(JSON.stringify(error)).not.toContain("010-0000-0000");
@@ -76,7 +85,7 @@ describe("createAnimalRepository", () => {
 
     it("서버 오류는 서버가 준 code/message를 가진 ApiError", async () => {
       const { repository } = setup({ error: { code: "upstream_error", message: "공고 정보를 불러오지 못했어요." } }, 502);
-      await expect(repository.getAnimals({ species: "cat", status: "protected", sort: "latest" })).rejects.toMatchObject({
+      await expect(repository.getAnimals({ species: "cat", status: "protected", sex: "all", sort: "latest" })).rejects.toMatchObject({
         kind: "http",
         status: 502,
         code: "upstream_error",
@@ -87,7 +96,7 @@ describe("createAnimalRepository", () => {
     it("signal을 fetch로 전달한다", async () => {
       const { fetch, repository } = setup({ items: [], nextCursor: null });
       const controller = new AbortController();
-      await repository.getAnimals({ species: "cat", status: "protected", sort: "latest" }, { signal: controller.signal });
+      await repository.getAnimals({ species: "cat", status: "protected", sex: "all", sort: "latest" }, { signal: controller.signal });
       const signal = fetch.mock.calls[0][1]?.signal as AbortSignal;
       controller.abort();
       expect(signal.aborted).toBe(true);

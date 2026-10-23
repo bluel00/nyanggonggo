@@ -75,12 +75,12 @@ src/
 
 ```
 Route Handler (app/api/animals)                       # 얇게: 파싱 → service → 응답 검증 → JSON
-  → 입력 검증(Zod, server/animals/query): species, region, status, sort, cursor
+  → 입력 검증(Zod, server/animals/query): species, region, status, sex, sort, cursor
   → AnimalService.list (server/animals/service, 순수, 소스 주입)
       → AnimalSource.list(species, uprCd | all)       # (upkind, upr_cd) 단위 전체 수집 + 캐시
           → upstream client: 1페이지(totalCount) → 나머지 페이지 병렬(동시성 3) → extract → parseUpstreamItems(item 단위 safeParse)
           → 서버 Mapper: UpstreamDto → { wire: AnimalWireDto, sortKeys }
-      → 필터(status) → 정렬 → 커서 자르기
+      → 필터(status, sex) → 정렬 → 커서 자르기
   → AnimalListResponse { items: AnimalWireDto[], nextCursor: string | null } 를 Zod로 검증 후 응답
 ```
 
@@ -89,6 +89,8 @@ Route Handler (app/api/animals)                       # 얇게: 파싱 → servi
 - 캐시 키: `(upkind, upr_cd | all, org_cd | all)`. 요청의 `region`은 `upr_cd`, `district`는 `org_cd`로 보낸다. `district`는 `region`과 함께만 받는다(시군구만 오면 400). 전국(`region` 없음)에는 `upr_cd`/`org_cd`를 보내지 않는다(가짜 코드에 의존하지 않음). `state` 파라미터는 **사용하지 않는다**(`notice`/`protect` 의미가 검증되지 않았고 `종료` 값이 없음). status는 서버에서 `processState`로 판정한다.
 - status 판정: `processState`가 `종료`로 시작하면 `ended`, 그 외는 `protected`. Zod는 `processState`를 enum이 아니라 `string`으로 받는다. 알 수 없는 값은 주입된 로거(`logger.warn`, 기본 no-op)로 남긴다.
 - status 필터: `protected`(기본), `ended`, `all`(10절).
+- sex 필터(확정, 2026-10-23, 이슈 [#20](https://github.com/bluel00/nyanggonggo/issues/20)): `female`, `male`, `all`(기본, 파라미터 없음). 고른 성별만 남기고, 성별 미상(`sexCd`가 `M`/`F`가 아닌 것)은 `all`에서만 나온다. status처럼 서버가 페이지 캐시를 읽은 뒤 메모리에서 거르고 그다음 정렬·커서를 자른다(업스트림 `sex_cd`는 쓰지 않는다). 잘못된 값은 다른 파라미터와 달리 400이 아니라 `all`로 본다.
+- 캐시 키와 필터(2026-10-23): 업스트림 페이지 캐시 키는 위 `(upkind, upr_cd, org_cd)`와 페이지뿐이고 status·sex를 넣지 않는다. 둘 다 같은 페이지를 읽은 뒤 거르므로 결과가 같고, 넣으면 같은 페이지를 값마다 따로 받는다. 걸러진 결과를 담는 서버 캐시는 없다. 거른 결과가 갈리는 곳은 CDN(`/api/animals` 응답, 키는 쿼리스트링이라 `sex`가 들어간다. 클라이언트는 전체면 `sex`를 보내지 않아 지금과 같은 주소를 쓴다)과 클라이언트 목록 쿼리 키(`animalKeys.list`, 필터 6종 species·region·district·status·sex·sort)다.
 - 정렬 정의: `latest` = `noticeSdt` 내림차순, 동률이면 `updTm` 내림차순, 그다음 `desertionNo` 내림차순. `endingSoon` = 기준 시각(서비스에 주입하는 clock)의 오늘(KST) 기준으로 `noticeEdt`가 지나지 않은 공고(당일 포함)를 `noticeEdt` 오름차순으로 먼저, 지난 공고를 그 뒤에 `noticeEdt` 내림차순으로 둔다. `noticeEdt`가 `YYYYMMDD` 형식이 아니면 맨 뒤. 동률은 `desertionNo` 오름차순. (보호중인데 종료일이 지난 공고가 42.1%라 단순 오름차순이면 임박순 앞쪽이 지난 공고로 채워진다, 12절.) 정렬 키가 없으면 빈 문자열로 둔다. `sortKeys`는 응답에 넣지 않는다.
 - 커서(확정, 2026-09-29): **앞 페이지 마지막 항목의 정렬 키**(id, noticeSdt, noticeEdt, updTm)를 base64url로 감싼 불투명 문자열. 다음 페이지는 정렬 순서에서 그 항목보다 뒤에 오는 항목부터다(이분 탐색). 잘못된 커서는 400, 끝을 넘으면 빈 목록, 마지막 페이지는 `nextCursor: null`. 목록은 요청마다 새로 조립하므로 offset을 쓰면 사이에 공고가 하나만 추가되거나 상태가 바뀌어도 경계에서 중복/누락이 생긴다(12절 38)
 - 상세: 개별 `desertion_no` 조회(캐시는 id별). 찜 목록(`GET /api/animals/by-ids?ids=a,b,c`, 응답 `{ items, failedIds }`)도 1차는 id별 조회를 병렬(동시성 제한)로 하고, 조회되지 않는 id는 응답에서 제외하며 입력 순서를 유지한다. 중복 id는 한 번만 조회한다. 조회 중 업스트림 오류(`UpstreamError`)가 난 id는 `items`에서 빠지고 `failedIds`에 입력 순서대로 담긴다(찜이 조용히 사라지지 않게 실패를 알린다, 이슈 [#5](https://github.com/bluel00/nyanggonggo/issues/5)). 하나도 불러오지 못했는데 실패가 있으면 지금까지처럼 요청 전체를 실패(첫 오류로 502/504)로 돌려준다. 그 밖의 예외는 요청 전체 실패다. `failedIds`가 있는 응답은 `Cache-Control: no-store`(CDN에 남기지 않아 다시 시도가 같은 실패를 받지 않게)이고 서버 로그에 `by-ids partial failure`(실패 수, 전체 수, 원인 종류. id와 URL 없음)를 남긴다. 클라이언트는 청크 요청이 실패하면 그 청크의 id를 모두 `failedIds`로 보고, 받은 공고가 하나도 없을 때만 오류를 던진다.
@@ -160,7 +162,7 @@ type Animal = {
 ```ts
 // Port — entities/animal
 interface AnimalRepository {
-  getAnimals(params: { species; region?; status; sort; cursor? }): Promise<AnimalPage> // { items: Animal[]; nextCursor: string | null }
+  getAnimals(params: { species; region?; district?; status; sex; sort; cursor? }): Promise<AnimalPage> // { items: Animal[]; nextCursor: string | null }
   getAnimalById(id: string): Promise<Animal>
   getAnimalsByIds(ids: string[]): Promise<Animal[]>
 }
@@ -173,7 +175,7 @@ interface AnimalRepository {
 | 종류 | 담당 | 규칙 |
 |---|---|---|
 | 서버 상태(목록, 상세, 찜 목록) | TanStack Query (`useInfiniteQuery` 등) | 다른 저장소나 `useState`로 복사 금지. 가공은 `select` 또는 렌더 시 파생 |
-| 필터/정렬 | URL search params | `species`(`cat` \| `dog` \| `other`), `region`, `district`, `status`, `sort`만. 기본 `status=protected`, `sort=latest`. 모르는 값은 기본값으로 본다. `species`의 기본값(`cat`)은 **파서 안전망일 뿐**이고, 목록 진입 판정은 축종이 없으면 홈으로 보낸다(아래). **`page`는 URL에 넣지 않는다**(내부 커서). 구현 규칙은 아래 |
+| 필터/정렬 | URL search params | `species`(`cat` \| `dog` \| `other`), `region`, `district`, `status`, `sex`(`female` \| `male`, 없으면 전체), `sort`만. 기본 `status=protected`, 성별 전체, `sort=latest`. 모르는 값은 기본값으로 본다. `species`의 기본값(`cat`)은 **파서 안전망일 뿐**이고, 목록 진입 판정은 축종이 없으면 홈으로 보낸다(아래). **`page`는 URL에 넣지 않는다**(내부 커서). 구현 규칙은 아래 |
 | 찜 목록 | localStorage + 작은 훅 | id 배열만 저장. 읽을 때 Zod로 검증 |
 | 일시적 UI(필터 시트 draft, 뷰어 index, 토스트) | 컴포넌트 로컬 state | 시트 draft는 [적용하기]에서만 URL 반영, 닫히면 버림 |
 
@@ -210,9 +212,10 @@ interface AnimalRepository {
 - 지역(확정, 2026-09-22): URL의 `region`은 시도 코드(`upr_cd`), `district`는 시군구 코드(`org_cd`, 선택). 라벨은 정적 목록(`src/shared/config/regions.ts`)에서 매핑한다. 필터 시트는 시도 → 시군구 2단계 select이며 시도를 바꾸면 시군구는 "전체"로 돌아간다.
   - **기본 지역은 서울특별시 전체**(`region=6110000`, `district` 없음). URL에 `region`이 없을 때만 적용한다. 2026-09-22에는 서울/종로구였지만, 종로구 고양이 보호중 공고가 5~6건뿐이라 첫 화면이 휑하다는 피드백으로 2026-09-28에 시도 단위로 넓혔다(12절 27). 시군구는 사용자가 고를 때만 URL에 붙는다.
   - 전국은 `region=all`로 URL에 남긴다(생략하면 기본 지역이 되므로). `region`만 있으면 그 시도 전체. 목록에 없는 `region`(옛 코드 등)은 기본 지역, 그 시도에 없는 `district`는 버린다.
-  - **지역은 기본값이어도 URL에 늘 쓴다**(확정, 2026-09-29). 지역이 없는 `/`는 "기억된 지역"을 뜻하게 됐기 때문에, 앱이 만드는 목록 주소(필터 적용, 홈 선택)가 지역을 생략하면 뒤로가기·새로고침·공유 링크가 그 사이에 바뀐 기억에 흔들린다. **축종도 기억 대상이 되면서 같은 규칙을 쓴다**(확정, 2026-10-02, PRD-v1.1 4절). `status`/`sort`는 기억 대상이 아니라 URL과 기본값이 항상 같으므로 그대로 생략한다.
+  - **지역은 기본값이어도 URL에 늘 쓴다**(확정, 2026-09-29). 지역이 없는 `/`는 "기억된 지역"을 뜻하게 됐기 때문에, 앱이 만드는 목록 주소(필터 적용, 홈 선택)가 지역을 생략하면 뒤로가기·새로고침·공유 링크가 그 사이에 바뀐 기억에 흔들린다. **축종도 기억 대상이 되면서 같은 규칙을 쓴다**(확정, 2026-10-02, PRD-v1.1 4절). `status`/`sort`는 기억 대상이 아니라 URL과 기본값이 항상 같으므로 그대로 생략한다. `sex`도 같다(전체면 생략).
   - **지역 없이 들어온 주소도 예외로 두지 않는다**: `app/page.tsx`가 쓸 수 있는 `region`이 없으면(없거나 모르는 코드) 기억된 지역(없으면 기본 지역)을 채워 `redirect`한다. `utm_*` 같은 다른 파라미터는 그대로 옮긴다. 채운 주소에는 지역이 있으므로 다시 리다이렉트하지 않는다(루프 없음, 실측 307 1회).
 
+- 성별(확정, 2026-10-23, 이슈 [#20](https://github.com/bluel00/nyanggonggo/issues/20)): 필터 시트의 "성별" 칩 묶음(전체 / 암컷 / 수컷, 보호 상태와 같은 `Chip` 묶음)으로 고른다. **쿠키에 기억하지 않는다**: 적용하기는 지금처럼 지역·축종만 기억하고(`useApplyAnimalFilter`), 성별은 URL(`sex`)에만 있다. 그래서 뒤로가기(얹은 상세를 걷어 냄)와 목록 링크 공유에서는 유지되고, 쿼리 없이 새로 들어오면(`/`, 홈 선택, 공유 상세의 뒤로가기) 전체로 시작한다. 목록 위 필터 요약은 없다(handoff 화면 1~2 "필터 적용 여부를 표시할지는 미정"). 성별을 고른 상태면 헤더의 [필터] 버튼을 칩의 선택 모양(`data-selected`)으로 보이고 이름을 "필터, 암컷"처럼 바꾼다. 버튼은 토글이 아니라 `aria-pressed`는 두지 않는다. 보호 상태·성별 묶음에 모두 "전체"가 있어 각 묶음을 이름 있는 `role="group"`으로 둔다. 찜·상세·홈 축종 선택은 바꾸지 않았다.
 - 목록 진입 판정(확정, 2026-10-02, PRD-v1.1 4절): `/`로 들어왔을 때 할 일은 순수 함수 `resolveAnimalListEntry`(`features/animal-filter/model/entry.ts`)가 정한다. 입력은 searchParams와 기억 쿠키 둘, 출력은 "이 필터로 그린다" 또는 "이 주소로 리다이렉트한다"다. `app/page.tsx`는 쿠키를 읽어 넘기고 결과를 따르기만 한다(얇게).
   - **축종을 먼저 본다**: URL의 `species` → 축종 쿠키 → 둘 다 없으면 홈(`/home`). 홈으로 보낼 때는 **지역을 판정하지 않는다**(지역은 홈이 다시 정한다).
   - 모르는 `species` 값(`panda`)은 "없음"으로 본다(지역의 모르는 코드와 같은 취급). 그 값은 버리고 옮기지 않는다.
@@ -649,6 +652,7 @@ PRD v1.1이 공식화한 항목(2026-10-02). 구현은 v1.1을 따르므로 불�
     - `calc(var(--space-3)+env(safe-area-inset-top,0px))`가 상세·뼈대·사진 뷰어 여러 곳에 반복된다.
     - `shared/ui/view-transition.tsx`가 `animal-photo-<id>` 이름을 만든다(shared가 도메인 이름을 안다).
 58. 사진 넘김(2026-10-21, EL): 목록 카드 넘김은 하지 않는다(상세가 목록 위에 바로 얹혀 들어가는 비용이 작고, 세로 스크롤 중 가로 넘김 오작동 위험이 크다). 상세의 넘김 UI는 지금 그대로(손가락 넘김 + 도트) 둔다. 상세의 중심은 사진이고, 44px 넘김 버튼 줄은 사진과 주의를 나누며 정보를 아래로 민다. 우리 사용자가 둘째 사진을 놓친다는 근거가 없다. 중복 사진은 결정 55대로 거르지 않는다(원인은 데이터 제공 쪽, 판별에 사진 다운로드가 필요). 다시 볼 조건: 둘째 사진을 못 찾는다는 피드백이나 데이터가 생길 때.
+59. 작은 화면의 필터 시트 적용하기(2026-10-23, 이슈 [#20](https://github.com/bluel00/nyanggonggo/issues/20)에서 확인, 고칠지는 정하지 않음): 375×667에서 시트는 최대 높이(85%, 567px)에 닿고 내용은 684px라, 연 직후 [적용하기]가 화면 아래(724~768px)에 있어 시트 안에서 117px 내려야 보인다. 성별 묶음(88px)을 넣기 전에도 내용 약 596px로 버튼 아래쪽 약 13px가 잘려 있었다(계산값). 버튼은 시트 스크롤 끝에 있어 닿을 수는 있다(`e2e/sex-filter.spec.ts`). 고정 하단 버튼(sticky) 등은 디자인 결정이 필요하다.
 
 ## 13. 다음 버전 계획 (기록만, 설계 전)
 
