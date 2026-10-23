@@ -23,6 +23,8 @@ const ENDED_OTHER = byId("447512202600622");
 
 const WIRE_KEYS = [
   "ageText",
+  "endReasonText",
+  "endResultText",
   "foundPlaceText",
   "id",
   "images",
@@ -87,15 +89,33 @@ describe("mapUpstreamItem", () => {
     for (const value of Object.values(contact)) expect(serialized).not.toContain(value);
   });
 
-  it("종료(안락사)는 ended이고, 결과 어디에도 endReason 값이 없다", () => {
+  it("종료(안락사)는 ended, 결과는 괄호 안 원문, 종료 사유는 원문 그대로 보낸다(이슈 #41)", () => {
     const logger = spyLogger();
-    const result = map(ENDED_EUTHANASIA, logger);
-    expect(result.wire.status).toBe("ended");
-    expect(ENDED_EUTHANASIA.endReason).toBeTruthy();
-    const serialized = JSON.stringify(result);
-    expect(serialized).not.toContain("endReason");
-    expect(serialized).not.toContain(ENDED_EUTHANASIA.endReason!);
+    const { wire } = map(ENDED_EUTHANASIA, logger);
+    expect(wire.status).toBe("ended");
+    expect(wire.endResultText).toBe("안락사");
+    expect(wire.endReasonText).toBe("교통사고 전신 마비");
     expect(logger.warn).not.toHaveBeenCalled();
+  });
+
+  describe("endResultText(종료 결과)", () => {
+    it.each([
+      ["종료(입양)", "입양"],
+      ["종료(자연사)", "자연사"],
+      [" 종료 ( 반환 ) ", "반환"],
+      ["종료(처음보는값)", "처음보는값"],
+      ["종료", null],
+      ["종료()", null],
+      ["종료(  )", null],
+      ["보호중", null],
+    ])("%s → %s", (processState, expected) => {
+      expect(map({ ...PROTECTED_CAT, processState }).wire.endResultText).toBe(expected);
+    });
+  });
+
+  it("종료 사유가 없거나 공백뿐이면 null", () => {
+    expect(map(PROTECTED_CAT).wire.endReasonText).toBeNull();
+    expect(map({ ...ENDED_EUTHANASIA, endReason: "  " }).wire.endReasonText).toBeNull();
   });
 
   it("종료로 시작하는 다른 값도 ended이다", () => {
@@ -273,6 +293,7 @@ describe("mapUpstreamItem", () => {
       species: "cat",
       images: [],
       status: "protected",
+      endResultText: null,
       noticeEndDate: "2026-10-01",
       sex: "unknown",
       ageText: null,
@@ -283,6 +304,7 @@ describe("mapUpstreamItem", () => {
       shelterTelText: null,
       noticePeriodText: null,
       specialMarkText: null,
+      endReasonText: null,
       kindText: null,
     });
     expect(result.sortKeys).toEqual({ noticeSdt: "", noticeEdt: "20261001", updTm: "" });
@@ -301,9 +323,16 @@ describe("mapUpstreamItem", () => {
       expect(map(PROTECTED_CAT).wire.specialMarkText).toBe("개체관리번호 26501 - 척추손상에 의한 후구마비");
     });
 
-    it("종료 사유와 같은 문구면 내보내지 않는다(종료 사유 비노출, architecture.md 10절)", () => {
+    it("종료 사유와 같은 문구면 특이사항을 비워 종료 사유 한 번만 보낸다(architecture.md 10절, 이슈 #41)", () => {
       expect(ENDED_EUTHANASIA.specialMark).toBe(ENDED_EUTHANASIA.endReason);
-      expect(map(ENDED_EUTHANASIA).wire.specialMarkText).toBeNull();
+      const { wire } = map(ENDED_EUTHANASIA);
+      expect(wire.specialMarkText).toBeNull();
+      expect(wire.endReasonText).toBe(ENDED_EUTHANASIA.endReason);
+    });
+
+    it("공백 차이만 있으면 같은 문구로 본다", () => {
+      const { wire } = map({ ...ENDED_EUTHANASIA, specialMark: `  ${ENDED_EUTHANASIA.endReason} ` });
+      expect(wire.specialMarkText).toBeNull();
     });
 
     it("종료 공고라도 문구가 다르면 특이사항은 보낸다", () => {

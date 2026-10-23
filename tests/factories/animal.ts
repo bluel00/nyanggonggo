@@ -15,6 +15,7 @@ export function makeWire(overrides: Partial<AnimalWireDto> = {}): AnimalWireDto 
     species: "cat",
     images: [],
     status: "protected",
+    endResultText: null,
     noticeEndDate: "2026-10-01",
     sex: "unknown",
     ageText: null,
@@ -25,6 +26,7 @@ export function makeWire(overrides: Partial<AnimalWireDto> = {}): AnimalWireDto 
     shelterTelText: null,
     noticePeriodText: null,
     specialMarkText: null,
+    endReasonText: null,
     kindText: null,
     ...overrides,
   };
@@ -36,6 +38,7 @@ export function makeAnimal(overrides: Partial<Animal> = {}): Animal {
     species: "cat",
     images: [],
     status: "protected",
+    endResultText: null,
     noticeEndAt: new Date("2026-10-01T00:00:00+09:00"),
     sex: "unknown",
     ageText: null,
@@ -46,6 +49,7 @@ export function makeAnimal(overrides: Partial<Animal> = {}): Animal {
     shelterTelText: null,
     noticePeriodText: null,
     specialMarkText: null,
+    endReasonText: null,
     kindText: null,
     ...overrides,
   };

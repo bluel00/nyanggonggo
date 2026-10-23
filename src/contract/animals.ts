@@ -12,13 +12,18 @@ export const ANIMAL_STATUSES = ["protected", "ended"] as const;
 
 /**
  * 서버(BFF) ↔ 브라우저 계약. 원시 타입만 쓴다(날짜는 문자열).
- * 담당자 이름(careOwnerNm)과 종료 사유(endReason)는 넣지 않는다. 보호소 주소·전화는 상세 정보 줄에 쓴다(이슈 #3).
+ * 담당자 이름(careOwnerNm)은 넣지 않는다. 보호소 주소·전화는 상세 정보 줄에 쓴다(이슈 #3).
  */
 export const AnimalWireDtoSchema = z.object({
   id: z.string(),
   species: z.enum(ANIMAL_SPECIES),
   images: z.array(z.string()),
   status: z.enum(ANIMAL_STATUSES),
+  /**
+   * 종료 결과(processState "종료(…)"의 괄호 안 낱말: 입양, 반환, 자연사…) 원문(이슈 #41).
+   * 값 목록을 고정하지 않는 자유 문자열이다. 종료가 아니거나 괄호가 없거나 비어 있으면 null
+   */
+  endResultText: z.string().nullable(),
   /** 공고 종료일, KST 달력 날짜 `YYYY-MM-DD` */
   noticeEndDate: z.string().nullable(),
   sex: z.enum(["male", "female", "unknown"]),
@@ -34,6 +39,8 @@ export const AnimalWireDtoSchema = z.object({
   noticePeriodText: z.string().nullable(),
   /** 특이사항(specialMark). 공백뿐이면 null */
   specialMarkText: z.string().nullable(),
+  /** 종료 사유(endReason) 원문(이슈 #41). 공백뿐이면 null */
+  endReasonText: z.string().nullable(),
   /**
    * 품종 이름(`kindFullNm`의 `[축종]` 뒤). 기타 축종은 이 값이 실제 동물(토끼, 앵무새…)이라
    * 화면에서 "어떤 동물인지" 보여 주는 데 쓴다. 뽑을 수 없으면 null
