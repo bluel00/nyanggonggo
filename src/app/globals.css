@@ -260,6 +260,7 @@
    * info: 전환이 있을 때 정보(상태·제목·정보 줄·CTA 바)가 100ms 뒤 200ms 페이드.
    * fade: 전환을 지원하지 않는 브라우저. 바탕은 바로, 사진 칸과 정보만 200ms 페이드.
    */
+  /* 붙이는 곳: widgets/animal-detail/ui/animal-detail.tsx(infoEnter, 사진 칸은 ImageCarousel의 enter) */
   [data-detail-enter="info"] {
     animation: fade-in var(--detail-info-duration) var(--ease-out) both;
     animation-delay: calc(var(--detail-info-delay) - var(--detail-elapsed, 0ms));
@@ -268,22 +269,26 @@
     animation: fade-in var(--detail-info-duration) var(--ease-out) both;
     animation-delay: calc(0ms - var(--detail-elapsed, 0ms));
   }
+  /* 붙이는 곳: views/species-picker/ui/species-picker-view.tsx(제목), features/animal-filter/ui/species-choice.tsx(선택지) */
   [data-enter="home"] {
     --enter-rise: var(--enter-distance);
     animation: enter-rise var(--enter-duration) var(--ease-out) both;
     animation-delay: calc(var(--enter-i, 0) * var(--enter-stagger));
   }
+  /* 붙이는 곳: widgets/animal-list/ui/animal-list.tsx(useFirstScreenEntrance) */
   [data-enter="list"] {
     --enter-rise: var(--list-enter-distance);
     animation: enter-rise var(--list-enter-duration) var(--ease-out) both;
     animation-delay: calc(var(--enter-i, 0) * var(--list-enter-stagger));
   }
+  /* 붙이는 곳: features/animal-favorite/ui/favorite-button.tsx */
   [data-heart-pop] {
     animation: heart-pop var(--heart-duration) both;
   }
 }
 
 /* 하단 CTA 바가 있는 화면에서는 토스트를 CTA 위로 올린다(handoff 화면 6: CTA 바 높이 + space-3 + safe area) */
+/* 붙이는 곳: app-column은 shared/ui/app-shell.tsx, bottom-cta는 widgets/animal-detail/ui/animal-detail.tsx */
 [data-slot="app-column"]:has([data-slot="bottom-cta"]) {
   --toast-offset: calc(var(--bottom-cta-h) + var(--space-3));
 }

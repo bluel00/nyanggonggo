@@ -122,6 +122,7 @@ export function AnimalDetail({ id, firstPhotoSize = null }: { id: string; firstP
   // 움직임 줄이기는 진입 효과 CSS(globals.css no-preference)가 거르고 entry.mode도 이미 none이므로 false
   const enterMode = entering && entry && allowsMotion(animal, false) && entry.mode !== "none" ? entry.mode : null;
   const enterStyle = { "--detail-elapsed": `${elapsedMs}ms` } as CSSProperties;
+  // data-detail-enter는 app/globals.css의 [data-detail-enter="info"|"fade"]가 읽는다
   const infoEnter = enterMode ? { "data-detail-enter": enterMode === "morph" ? "info" : "fade", style: enterStyle } : {};
   const rows = detailRows(animal).map((row) => ({ ...row, link: row.action ? <ContactLink row={row} /> : null }));
 
@@ -162,6 +163,7 @@ export function AnimalDetail({ id, firstPhotoSize = null }: { id: string; firstP
           tabIndex={-1}
           data-slot="detail-title"
           className={cn(
+            // in-data-[opened-by=keyboard]: shared/ui/stack-layer.tsx가 층에 붙이는 data-opened-by를 읽는다
             // 색·두께는 카드 링크와 같다. outline-none이 테두리 모양 변수를 none으로 두므로 outline-solid로 다시 켠다
             "mt-3 rounded-sm outline-none in-data-[opened-by=keyboard]:focus-visible:outline-solid in-data-[opened-by=keyboard]:focus-visible:outline-2 in-data-[opened-by=keyboard]:focus-visible:outline-offset-2 in-data-[opened-by=keyboard]:focus-visible:outline-ring",
             ended ? "text-title leading-8" : "text-display-detail",
@@ -197,6 +199,7 @@ export function AnimalDetail({ id, firstPhotoSize = null }: { id: string; firstP
         )}
       </div>
 
+      {/* data-slot="bottom-cta"는 app/globals.css의 [data-slot="app-column"]:has([data-slot="bottom-cta"])가 읽는다(토스트를 CTA 위로) */}
       <BottomCtaBar {...infoEnter} data-slot="bottom-cta">
         {/* 하트 튐·누름은 CSS(motion-safe:, no-preference)가 움직임 줄이기를 거르므로 false */}
         <FavoriteButton animalId={animal.id} still={!allowsMotion(animal, false)} />

@@ -17,6 +17,7 @@ export function AppShell({ children, stack, overlay }: { children: ReactNode; st
   return (
     <div className="min-h-dvh bg-canvas">
       <div
+        // app/globals.css의 [data-slot="app-column"]:has([data-slot="bottom-cta"])도 이 이름을 읽는다(토스트 위치)
         data-slot="app-column"
         className="relative mx-auto flex h-dvh w-full max-w-column flex-col overflow-hidden bg-linear-to-b from-bg to-bg-end"
       >

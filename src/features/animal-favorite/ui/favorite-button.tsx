@@ -34,6 +34,7 @@ export function FavoriteButton({
     <Heart
       key={pops}
       aria-hidden
+      // app/globals.css의 [data-heart-pop]이 읽는다
       data-heart-pop={pop ? "" : undefined}
       className={cn("size-[22px]", !still && !isFavorite && "motion-safe:transition-[fill-opacity] motion-safe:duration-[var(--heart-off-duration)]")}
       strokeWidth={1.8}

@@ -60,6 +60,7 @@ export function SpeciesChoice({ area, enterFrom }: { area: AnimalArea; enterFrom
         {BIG_CHOICES.map((species, index) => (
           <Link
             key={species}
+            // app/globals.css의 [data-enter="home"]이 읽는다
             data-enter="home"
             style={enterOrder(enterFrom + index)}
             href={listHref(species)}
@@ -86,6 +87,7 @@ export function SpeciesChoice({ area, enterFrom }: { area: AnimalArea; enterFrom
       </div>
       <Link
         ref={lastEnterRef}
+        // app/globals.css의 [data-enter="home"]이 읽는다
         data-enter="home"
         style={enterOrder(enterFrom + BIG_CHOICES.length)}
         href={listHref("other")}

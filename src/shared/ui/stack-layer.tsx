@@ -36,6 +36,7 @@ export function StackLayer({ children, labelledBy, label }: { children: ReactNod
     if (!layer || !below) return;
     // inert를 걸면 아래 화면에 있던 초점이 빠지므로 먼저 기억한다(마우스로 누르면 링크가 초점을 받지 않는 브라우저도 있다)
     const opener = document.activeElement instanceof HTMLElement && below.contains(document.activeElement) ? document.activeElement : null;
+    // widgets/animal-detail/ui/animal-detail.tsx의 제목 클래스(in-data-[opened-by=keyboard])가 읽는다
     layer.dataset.openedBy = opener?.matches(":focus-visible") ? "keyboard" : "pointer";
     below.inert = true;
 
