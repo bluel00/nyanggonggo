@@ -8,6 +8,7 @@ import {
   ANIMAL_COPY,
   detailDisplayText,
   getStatusVariant,
+  listFilterKey,
   seedAnimalDetail,
   SPECIES_COPY,
   startDetailEntry,
@@ -61,7 +62,7 @@ export function AnimalList({ filter }: { filter: AnimalListFilter }) {
   useEffect(() => markListVisited(), []);
   useScrollTopOnFilterChange(filter);
   // 상세는 이 목록 위에 얹히고(PRD-v1.5) 목록은 내려가지 않으므로, 돌아왔을 때 따로 되돌릴 것이 없다
-  const listKey = filterKey(filter);
+  const listKey = listFilterKey(filter);
   const feedRef = useFirstScreenEntrance(listKey, query.isPending);
   useEffect(() => {
     if (!query.isSuccess) return;
@@ -236,12 +237,8 @@ function useLoadMore({ enabled, pages, onLoadMore }: { enabled: boolean; pages: 
 }
 
 /** 필터가 바뀌면 내부 스크롤 컨테이너를 맨 위로(첫 렌더는 제외) */
-function filterKey(filter: AnimalListFilter): string {
-  return `${filter.species}|${filter.region ?? ""}|${filter.district ?? ""}|${filter.status}|${filter.sex}|${filter.sort}`;
-}
-
 function useScrollTopOnFilterChange(filter: AnimalListFilter) {
-  const key = filterKey(filter);
+  const key = listFilterKey(filter);
   const previous = useRef(key);
   useEffect(() => {
     if (previous.current === key) return;

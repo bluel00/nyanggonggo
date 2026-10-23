@@ -1,5 +1,6 @@
 import {
   ANIMAL_BY_IDS_MAX,
+  ANIMAL_LIST_DEFAULTS,
   AnimalByIdsResponseSchema,
   AnimalListResponseSchema,
   AnimalWireDtoSchema,
@@ -33,7 +34,7 @@ export function createAnimalRepository({
       if (region) query.set("region", region);
       if (region && district) query.set("district", district);
       // 전체면 보내지 않는다(성별을 고르지 않은 요청이 지금과 같은 주소 = 같은 CDN 캐시를 쓴다)
-      if (sex !== "all") query.set("sex", sex);
+      if (sex !== ANIMAL_LIST_DEFAULTS.sex) query.set("sex", sex);
       if (cursor) query.set("cursor", cursor);
       const response = await getValidated(http, `${baseUrl}/api/animals?${query}`, AnimalListResponseSchema, options);
       return { items: response.items.map(toAnimal), nextCursor: response.nextCursor };

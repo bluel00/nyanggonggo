@@ -3,7 +3,6 @@ export {
   DEFAULT_REGION,
   hasRegionParam,
   REGION_ALL,
-  isSameFilter,
   isSpecies,
   parseAnimalArea,
   parseAnimalFilter,

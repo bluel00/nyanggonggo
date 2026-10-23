@@ -1,3 +1,10 @@
+import {
+  ANIMAL_LIST_DEFAULTS,
+  ANIMAL_LIST_SEXES,
+  ANIMAL_LIST_SORTS,
+  ANIMAL_LIST_STATUSES,
+  ANIMAL_SPECIES,
+} from "@/contract/animals";
 import type { AnimalListFilter } from "@/entities/animal";
 import { findSido, resolveDistrict } from "@/shared/config/regions";
 
@@ -20,26 +27,19 @@ export const DEFAULT_REGION = "6110000";
 /** URL에서 "전국"을 뜻하는 값 */
 export const REGION_ALL = "all";
 
+/** 기본 필터. species·status·sex·sort의 기본값은 계약(ANIMAL_LIST_DEFAULTS)이고 지역만 화면이 정한다 */
 export const DEFAULT_ANIMAL_FILTER = {
-  species: "cat",
+  ...ANIMAL_LIST_DEFAULTS,
   region: DEFAULT_REGION,
-  status: "protected",
-  sex: "all",
-  sort: "latest",
 } as const satisfies AnimalListFilter;
 
 export const FILTER_KEYS = ["species", "region", "district", "status", "sex", "sort"] as const;
 
-const SPECIES = ["cat", "dog", "other"] as const;
 export type AnimalSpecies = AnimalListFilter["species"];
-
-const STATUSES = ["protected", "ended", "all"] as const;
-const SEXES = ["all", "female", "male"] as const;
-const SORTS = ["latest", "endingSoon"] as const;
 
 /** 아는 축종 값인지. URL 파라미터와 쿠키가 같은 판정을 쓴다 */
 export function isSpecies(value: string | undefined | null): value is AnimalSpecies {
-  return SPECIES.includes(value as AnimalSpecies);
+  return ANIMAL_SPECIES.includes(value as AnimalSpecies);
 }
 
 /** Next의 searchParams 객체 또는 URLSearchParams */
@@ -125,11 +125,11 @@ export function parseAnimalFilter(
   }: { rememberedArea?: AnimalArea | null; rememberedSpecies?: AnimalSpecies | null } = {},
 ): AnimalListFilter {
   return {
-    species: pick(SPECIES, read(params, "species"), rememberedSpecies ?? DEFAULT_ANIMAL_FILTER.species),
+    species: pick(ANIMAL_SPECIES, read(params, "species"), rememberedSpecies ?? DEFAULT_ANIMAL_FILTER.species),
     ...parseAnimalArea(params, rememberedArea ?? DEFAULT_AREA),
-    status: pick(STATUSES, read(params, "status"), DEFAULT_ANIMAL_FILTER.status),
-    sex: pick(SEXES, read(params, "sex"), DEFAULT_ANIMAL_FILTER.sex),
-    sort: pick(SORTS, read(params, "sort"), DEFAULT_ANIMAL_FILTER.sort),
+    status: pick(ANIMAL_LIST_STATUSES, read(params, "status"), DEFAULT_ANIMAL_FILTER.status),
+    sex: pick(ANIMAL_LIST_SEXES, read(params, "sex"), DEFAULT_ANIMAL_FILTER.sex),
+    sort: pick(ANIMAL_LIST_SORTS, read(params, "sort"), DEFAULT_ANIMAL_FILTER.sort),
   };
 }
 
@@ -156,15 +156,4 @@ export function toFilterQuery(filter: AnimalListFilter, base: URLSearchParams = 
 export function toFilterHref(pathname: string, filter: AnimalListFilter, base?: URLSearchParams): string {
   const query = toFilterQuery(filter, base);
   return query ? `${pathname}?${query}` : pathname;
-}
-
-export function isSameFilter(a: AnimalListFilter, b: AnimalListFilter): boolean {
-  return (
-    a.species === b.species &&
-    (a.region ?? null) === (b.region ?? null) &&
-    (a.district ?? null) === (b.district ?? null) &&
-    a.status === b.status &&
-    a.sex === b.sex &&
-    a.sort === b.sort
-  );
 }

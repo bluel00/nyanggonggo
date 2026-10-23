@@ -2,6 +2,15 @@
 
 import { SlidersHorizontal } from "lucide-react";
 import { useState, type ReactNode } from "react";
+import {
+  ANIMAL_LIST_SEXES,
+  ANIMAL_LIST_SORTS,
+  ANIMAL_LIST_STATUSES,
+  ANIMAL_SPECIES,
+  type AnimalListSex,
+  type AnimalListSort,
+  type AnimalListStatus,
+} from "@/contract/animals";
 import { SEX_LABEL, SPECIES_LABEL, type AnimalListFilter } from "@/entities/animal";
 import { DISTRICTS, SIDO } from "@/shared/config/regions";
 import { Button } from "@/shared/ui/button";
@@ -13,11 +22,14 @@ import { Sheet, SheetClose, SheetContent, SheetFooter, SheetTitle, SheetTrigger 
 import { REGION_ALL } from "../model/filter";
 import { useApplyAnimalFilter } from "../model/use-apply-animal-filter";
 
-const SPECIES_OPTIONS = [
-  { value: "cat", label: SPECIES_LABEL.cat },
-  { value: "dog", label: SPECIES_LABEL.dog },
-  { value: "other", label: SPECIES_LABEL.other },
-] as const;
+/**
+ * 선택지. 값과 순서는 계약의 값 목록(이슈 #28)이고, 라벨은 값마다 `Record`라 계약에 값을 더하면 라벨이 없을 때 타입 오류가 난다.
+ */
+function options<T extends string>(values: readonly T[], labels: Record<T, string>) {
+  return values.map((value) => ({ value, label: labels[value] }));
+}
+
+const SPECIES_OPTIONS = options(ANIMAL_SPECIES, SPECIES_LABEL);
 
 const SIDO_OPTIONS = [{ value: REGION_ALL, label: "전체 시/도" }, ...SIDO.map((s) => ({ value: s.code, label: s.name }))];
 const DISTRICT_ALL = "";
@@ -27,23 +39,12 @@ function districtOptions(region: string | undefined) {
   return [{ value: DISTRICT_ALL, label: "전체 시/군/구" }, ...districts.map((d) => ({ value: d.code, label: d.name }))];
 }
 
-const STATUS_OPTIONS = [
-  { value: "protected", label: "보호중" },
-  { value: "ended", label: "종료" },
-  { value: "all", label: "전체" },
-] as const;
+const STATUS_OPTIONS = options<AnimalListStatus>(ANIMAL_LIST_STATUSES, { protected: "보호중", ended: "종료", all: "전체" });
 
 /** 성별(이슈 #20). 성별 미상은 전체에서만 보인다. 보호 상태와 같은 칩 묶음 */
-const SEX_OPTIONS = [
-  { value: "all", label: "전체" },
-  { value: "female", label: SEX_LABEL.female },
-  { value: "male", label: SEX_LABEL.male },
-] as const;
+const SEX_OPTIONS = options<AnimalListSex>(ANIMAL_LIST_SEXES, { all: "전체", female: SEX_LABEL.female, male: SEX_LABEL.male });
 
-const SORT_OPTIONS = [
-  { value: "latest", label: "최신순" },
-  { value: "endingSoon", label: "종료임박순" },
-] as const;
+const SORT_OPTIONS = options<AnimalListSort>(ANIMAL_LIST_SORTS, { latest: "최신순", endingSoon: "종료임박순" });
 
 function Section({ label, children }: { label: string; children: ReactNode }) {
   return (

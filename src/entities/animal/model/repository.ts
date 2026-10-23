@@ -1,15 +1,17 @@
+import type { AnimalListSex, AnimalListSort, AnimalListSpecies, AnimalListStatus } from "@/contract/animals";
 import type { Animal, AnimalPage, AnimalsByIds } from "./animal";
 
+/** 목록 요청 값. species·status·sex·sort의 값 목록은 계약(src/contract/animals.ts)이 정한다(이슈 #28) */
 export type AnimalListParams = {
-  species: Animal["species"];
+  species: AnimalListSpecies;
   /** 시도 코드(upr_cd). 없으면 전국 */
   region?: string;
   /** 시군구 코드(org_cd). region이 있을 때만 */
   district?: string;
-  status: Animal["status"] | "all";
+  status: AnimalListStatus;
   /** 성별. all이면 거르지 않는다(성별 미상은 all에서만 나온다) */
-  sex: Exclude<Animal["sex"], "unknown"> | "all";
-  sort: "latest" | "endingSoon";
+  sex: AnimalListSex;
+  sort: AnimalListSort;
   cursor?: string;
 };
 

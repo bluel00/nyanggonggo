@@ -6,7 +6,6 @@ import {
   ANIMAL_COPY,
   SPECIES_LABEL,
   SpeciesCharacter,
-  type AnimalListFilter,
   type CharacterHandle,
   type CharacterSpecies,
 } from "@/entities/animal";
@@ -51,17 +50,9 @@ export function SpeciesChoice({ area, enterFrom }: { area: AnimalArea; enterFrom
       cancelled = true;
     };
   }, []);
-  const listHref = (species: AnimalSpecies) => {
-    const filter: AnimalListFilter = {
-      species,
-      region: area.region,
-      district: area.district,
-      status: DEFAULT_ANIMAL_FILTER.status,
-      sex: DEFAULT_ANIMAL_FILTER.sex,
-      sort: DEFAULT_ANIMAL_FILTER.sort,
-    };
-    return toFilterHref("/", filter);
-  };
+  // 지역은 넘겨받은 값 그대로다(전국 `{}`이면 region이 undefined여야 하므로 `...area`가 아니라 두 값을 직접 넣는다)
+  const listHref = (species: AnimalSpecies) =>
+    toFilterHref("/", { ...DEFAULT_ANIMAL_FILTER, species, region: area.region, district: area.district });
 
   return (
     <div className="flex flex-col gap-6">
