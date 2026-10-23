@@ -4,7 +4,7 @@ export { toAnimal } from "./model/mapper";
 export { getDDay, isSoon } from "./model/dDay";
 export { getPrimaryImage, getStatusVariant, type AnimalStatusVariant } from "./model/status";
 export { allowsMotion } from "./model/motion";
-export { getShelterContact, kakaoMapSearchUrl, telHref, type ShelterContact } from "./model/shelter-contact";
+export { kakaoMapSearchUrl, telHref } from "./model/shelter-contact";
 export { animalRepository, createAnimalRepository } from "./api/animal-repository";
 export {
   animalKeys,
@@ -30,6 +30,15 @@ export {
   type DetailEntry,
   type DetailEntryMode,
 } from "./model/detail-entry";
+export {
+  DETAIL_ROW_ACTION_COPY,
+  DETAIL_ROW_LABELS,
+  detailDisplayText,
+  detailRowHref,
+  detailRows,
+  type DetailRow,
+  type DetailRowAction,
+} from "./ui/detail-rows";
 export { ANIMAL_CARD_STILL_ATTR, ANIMAL_CARD_STILL_SELECTOR, AnimalCard, type CardSelection } from "./ui/animal-card";
 export { AnimalPhoto, PHOTO_SIZES } from "./ui/animal-photo";
 export { photoTransition } from "./ui/photo-transition";
@@ -40,7 +49,6 @@ export {
   animalSubtitle,
   animalSummaryText,
   animalTitle,
-  detailDisplayText,
   photoAlt,
   SEX_LABEL,
   sexAgeText,

@@ -8,6 +8,7 @@ import {
   AnimalCard,
   chooseDetailEntryMode,
   ANIMAL_COPY,
+  DETAIL_ROW_LABELS,
   detailDisplayText,
   listFilterKey,
   seedAnimalDetail,
@@ -70,7 +71,7 @@ export function AnimalList({ filter }: { filter: AnimalListFilter }) {
     const firstScreen = [...(feedRef.current?.querySelectorAll<HTMLImageElement>('[data-slot="animal-card"] img') ?? [])].slice(0, EAGER_CARDS);
     return warmFontsAfterImages(
       firstScreen,
-      `${Object.values(ANIMAL_COPY.detailRowLabels).join(" ")} ${ANIMAL_COPY.ageUnknown} ${SHARE_BUTTON_LABEL}`,
+      `${Object.values(DETAIL_ROW_LABELS).join(" ")} ${ANIMAL_COPY.ageUnknown} ${SHARE_BUTTON_LABEL}`,
     );
   }, [query.isSuccess, feedRef]);
   const sentinelRef = useLoadMore({
