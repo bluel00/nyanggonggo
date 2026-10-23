@@ -3,7 +3,7 @@ import { ApiErrorResponseSchema, type ApiErrorResponse } from "@/contract/animal
 import { InvalidRequestError, NotFoundError } from "../animals/errors";
 import { ServerConfigError } from "../config";
 import type { Logger } from "../logger";
-import { UpstreamError } from "../upstream/client";
+import { UpstreamError } from "../source/errors";
 
 /**
  * Route Handler 공용 응답. 오류 응답은 계약 `ApiErrorResponse`(`{ error: { code, message } }`, src/contract)로 통일하고,

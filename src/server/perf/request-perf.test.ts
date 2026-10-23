@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import type { UpstreamPageCache } from "../upstream/client";
+import type { UpstreamPageCache } from "../upstream/page-cache";
 import { createRequestPerf, resetColdFlagForTest, type RequestPerfOptions } from "./request-perf";
 
 /** 부를 때마다 정해진 시각을 돌려주는 시계. 시각은 테스트가 clock.t로 옮긴다 */

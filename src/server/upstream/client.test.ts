@@ -8,10 +8,10 @@ import wrapperFixture from "../../../docs/fixtures/upstream-wrapper.json";
 import {
   createUpstreamClient,
   UPSTREAM_ENDPOINT,
-  UpstreamError,
   type UpstreamClientOptions,
-  type UpstreamPageCache,
 } from "./client";
+import { UpstreamError } from "../source/errors";
+import type { UpstreamPageCache } from "./page-cache";
 
 const FAKE_KEY = "test-key-a+b/c==";
 const items = fixture.items;

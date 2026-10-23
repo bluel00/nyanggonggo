@@ -2,8 +2,10 @@ import type { AnimalWireDto } from "@/contract/animals";
 import { HttpError, type HttpClient } from "@/shared/api/http-client";
 import { mapWithConcurrency } from "@/shared/lib/concurrency";
 import { noopLogger, type Logger } from "../logger";
+import { UpstreamError } from "../source/errors";
 import type { UpstreamAnimalItemDto } from "./dto";
 import { extractPage } from "./extract";
+import type { UpstreamPageCache } from "./page-cache";
 import { parseUpstreamItems } from "./parse";
 
 /** 서버에서만 호출하므로 http를 허용한다. */
@@ -33,31 +35,8 @@ const KNOWN_ERROR_CODES = new Set([
  */
 export const QUOTA_EXCEEDED_CODE = "22";
 
-/**
- * timeout: 타임아웃. auth: 서버 설정/인증 오류(서비스키 미등록 등). quota_exceeded: 일일 호출 한도 초과(코드 22).
- * failed: 그 외 업스트림 실패. 클라이언트 응답은 timeout(504)을 빼고 모두 502로 같다(구분은 서버 로그용).
- */
-export type UpstreamErrorReason = "timeout" | "auth" | "quota_exceeded" | "failed";
-
 /** 로그에 남기는 업스트림 본문 최대 길이 */
 const LOG_SNIPPET_MAX = 200;
-
-/** 업스트림 실패. detail은 서버 로그용이며 비밀값이 가려져 있다. 클라이언트에 노출하지 않는다. */
-export class UpstreamError extends Error {
-  constructor(
-    readonly reason: UpstreamErrorReason,
-    readonly detail: Record<string, unknown>,
-  ) {
-    super(`Upstream request failed (${reason})`);
-    this.name = "UpstreamError";
-  }
-}
-
-/**
- * 검증을 통과한 업스트림 페이지를 캐시한다. load가 성공해야만 저장하고, 실패(예외)는 저장하지 않는다.
- * key에는 서비스키가 없다(요청 파라미터만). 서버에서는 Next 캐시(`next-page-cache.ts`), 테스트에서는 가짜를 쓴다.
- */
-export type UpstreamPageCache = <T>(key: string, load: () => Promise<T>) => Promise<T>;
 
 /** 캐시 없이 매번 부른다(기본값) */
 const NO_PAGE_CACHE: UpstreamPageCache = (_key, load) => load();
