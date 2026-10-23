@@ -21,7 +21,7 @@
 | 상태 관리 | 서버 상태는 TanStack Query, 필터는 URL, 나머지는 로컬. 전역 스토어 없음 | 확정 |
 | HTTP 클라이언트 | 네이티브 `fetch` + 얇은 `httpClient` 래퍼. axios 사용 안 함 | 확정 |
 | 찜 저장 | id만 저장, `/favorites` 진입 시 재조회 | 확정 |
-| 종료 공고 | 표시한다(status 필터). 종료 사유는 노출하지 않는다 | 확정 |
+| 종료 공고 | 표시한다(status 필터). 상태 표기는 "종료 · <결과>", 종료 사유는 상세 정보 줄(이슈 [#41](https://github.com/bluel00/nyanggonggo/issues/41)) | 확정 |
 | 배포 | Vercel Hobby. GitHub Pages는 서버 기능이 없어 부적합 | 확정 |
 | 디자인 방향 | 방향 A "햇살 담요"(2026-10-14). 원칙·글꼴·전환·간격 결정과 구현 계획은 14절 | 확정(구현 전) |
 
@@ -130,7 +130,8 @@ type Animal = {
   id: string
   species: 'cat' | 'dog'
   images: string[]
-  status: 'protected' | 'ended'      // 종료 사유는 넣지 않는다
+  status: 'protected' | 'ended'
+  endResultText: string | null       // processState "종료(…)" 괄호 안 원문(입양, 자연사…). 값 목록 고정 안 함(이슈 #41)
   noticeEndAt: Date | null
   sex: 'male' | 'female' | 'unknown'
   ageText: string | null             // 1단계는 API 원문 유지, 표기 정제는 미정
@@ -141,13 +142,14 @@ type Animal = {
   shelterTelText: string | null      // careTel 원문. 상세 정보 줄(종료 공고는 숨김, 이슈 #3)
   noticePeriodText: string | null    // "MM.DD ~ MM.DD"
   specialMarkText: string | null     // specialMark(특이사항). 상세에서만 노출
+  endReasonText: string | null       // endReason(종료 사유) 원문. 상세 정보 줄(이슈 #41)
   kindText: string | null            // 품종 이름(kindFullNm의 "[축종]" 뒤). 기타 축종은 실제 동물
 }
 ```
 
-- 담당자 이름(`careOwnerNm`)과 종료 사유(`endReason`)는 WireDto와 Domain 어디에도 넣지 않는다. 연락처 값(주소·전화·담당자 이름)은 로그에 남기지 않는다.
+- 담당자 이름(`careOwnerNm`)은 WireDto와 Domain 어디에도 넣지 않는다. 연락처 값(주소·전화·담당자 이름)은 로그에 남기지 않는다. 종료 사유(`endReason`)는 2026-10-23부터 내보낸다(10절, 이슈 [#41](https://github.com/bluel00/nyanggonggo/issues/41)).
 - 보호소 주소(`careAddr`)·전화(`careTel`)는 상세의 정보 줄에 보인다(2026-10-22, 이슈 [#3](https://github.com/bluel00/nyanggonggo/issues/3). PRD 비범위 "보호소 직접 연락"을 대체). 서버 Mapper가 앞뒤 공백만 지워 `shelterAddressText`·`shelterTelText`로 내려준다. 화면 규칙(줄 순서, 종료 공고는 주소·전화 숨김, 지도·전화 링크)은 `entities/animal/ui/detail-rows.ts`의 `detailRows`가 정한다(이슈 [#30](https://github.com/bluel00/nyanggonggo/issues/30)). 링크 주소는 `entities/animal/model/shelter-contact.ts`의 `mapSearchUrl`·`telHref`가 만든다.
-  - 정보 줄 순서: 발견 장소 → 보호소 → 주소 → 전화 → 공고 기간 → 특이사항. 값은 그냥 글자(선택·복사 가능)이고, 값이 없으면 그 줄을 뺀다. 종료 공고는 주소·전화 줄을 숨긴다(보호소 이름은 그대로).
+  - 정보 줄 순서: 발견 장소 → 보호소 → 주소 → 전화 → 공고 기간 → 종료 사유 → 특이사항(종료 사유는 이슈 #41). 값은 그냥 글자(선택·복사 가능)이고, 값이 없으면 그 줄을 뺀다. 종료 공고는 주소·전화 줄을 숨긴다(보호소 이름은 그대로).
   - 줄 끝의 작은 글자 링크(보조 글자색 + 작은 아이콘, 누르는 영역 44×44px): 주소 [지도]는 카카오맵 검색결과 바로가기 `https://map.kakao.com/link/search/<encodeURIComponent(주소)>`를 새 탭(`rel="noopener"`)으로 연다(카카오 지도 Web API 가이드 "지도 URL" → "지도 검색결과 바로가기". 키·SDK 없음). 전화 [전화]는 숫자만 남긴 `tel:` 링크다(숫자가 없으면 링크 없이 값만). 주소가 길면 줄바꿈하고 링크는 첫 줄 끝에 둔다. 링크가 있는 줄은 위아래 6px를 더해 이웃한 두 링크의 누르는 영역이 겹치지 않는다.
 - 파생값은 domain 서비스에서 계산한다: `dDay`(KST 기준, 기준 시각을 주입 가능하게), `isSoon`(D-day 3 이하). 종료 판정은 `processState`가 한다. `dDay`는 `number | null`이며 규칙은 10절을 따른다.
 - `species`: `cat | dog | other`. 업스트림 `upKindNm`의 `고양이`/`개`/`기타`를 서버 Mapper가 옮기고, 그 외 값은 항목을 건너뛴다(로그).
@@ -298,11 +300,16 @@ interface AnimalRepository {
 
 - 종료 공고(안락사, 자연사 포함)는 status 필터(`ended`, `all`)로 표시한다. 기본은 `protected`.
 - D-day 정책(확정): 종료(`ended`) 공고, `noticeEndAt`이 없는 공고, `noticeEndAt`이 오늘(KST)보다 과거인 보호중 공고는 `dDay = null`, 당일은 0. `isSoon`은 `dDay !== null && dDay <= 3`. 종료일이 지난 보호중 공고는 서버에서 제외하지 않고, 배지는 "보호중"만 표시한다(D-day 없음).
-- 종료 사유는 UI, WireDto, Domain 어디에도 노출하지 않는다. 종료 카드는 회색 배지 + 사진 채도 소폭 낮춤(`saturate(.7)`).
+- 종료 결과와 종료 사유를 보여 준다(2026-10-23, 이슈 [#41](https://github.com/bluel00/nyanggonggo/issues/41). 이전 결정 "종료 사유 비노출"을 대체한다).
+  - 결과: 서버 Mapper가 `processState`의 "종료(…)" 괄호 안 낱말을 원문 그대로 `endResultText`로 보낸다(자유 문자열, 값 목록을 enum으로 고정하지 않는다). 종료가 아니거나 괄호가 없거나 비면 `null`.
+  - 상태 표기: 종료 공고는 "종료 · <결과>", 결과가 없으면 "종료". 카드 배지, 상세 배지, 공유 카드·링크 미리보기 요약, OG 이미지 배지가 모두 `entities/animal/ui/status-badge.tsx`의 `statusBadgeText` 하나를 쓴다. 결과에 따라 색·모양을 바꾸지 않는다.
+  - 종료 사유: `endReason` 원문을 `endReasonText`로 보내고, 상세 정보 줄의 "종료 사유"로 보인다(`detailRows`).
+  - 하지 않는 것: 결과별 필터, 결과별 문구 다듬기, 결과별 색.
+- 종료 카드는 회색 배지 + 사진 채도 소폭 낮춤(`saturate(.7)`).
 - 종료 상세의 찜/공유는 활성 상태로 둔다.
 - 우선 이 계획대로 구현하고, 이후 관찰한다: 종료 비율(`processState` 값 집계), 종료 카드의 진입률과 공유율(이벤트에 status 포함).
 - Mapper는 알 수 없는 `processState` 값을 주입된 로거로 남긴다(Mapper는 `process.env`를 읽지 않는다).
-- 특이사항(`specialMark`)은 상세에서 보여 주지만, **종료 사유(`endReason`)와 같은 문구이면 내보내지 않는다**. 보호소가 두 필드에 같은 문장을 적는 경우가 있어(픽스처 `427346202600847`) 그대로 내보내면 종료 사유가 특이사항 칸으로 드러난다. 판정은 서버 Mapper에서 한다(공백 차이 무시).
+- 특이사항(`specialMark`)은 상세에서 보여 주지만, **종료 사유(`endReason`)와 같은 문구이면 특이사항을 비운다**. 보호소가 두 필드에 같은 문장을 적는 경우가 있어(픽스처 `427346202600847`) 그대로 내보내면 같은 문장이 두 줄로 보인다. 같으면 "종료 사유" 줄 하나로 보인다(이슈 #41). 판정은 서버 Mapper에서 한다(앞뒤 공백 차이 무시).
 
 ## 11. 문서 반영 현황 (PRD, 기능명세서)
 
@@ -384,7 +391,7 @@ PRD v1.1이 공식화한 항목(2026-10-02). 구현은 v1.1을 따르므로 불�
 18. `Cache-Control`(`s-maxage=60, stale-while-revalidate=300`) 값은 초기값이며 튜닝 필요. CDN 캐시 키에 쿼리스트링이 포함되는지(Vercel) 확인
 19. 최대 페이지 가드(조합당 20페이지, `numOfRows=500`이면 10,000건): 넘으면 잘린 목록을 돌려주고 경고 로그를 남긴다. 고양이 2,529건은 6페이지. 개 규모는 22
 20. by-ids의 id별 upstream 호출: 찜 50개면 캐시 미스 시 최대 50회 호출. 공공 API 일일 트래픽 한도와 호출 간격 제한은 미검증
-21. 종료 공고 정책: 종료 공고의 대부분은 사망이 아니다. 종료(입양) 233, 방사 57, 기증 39, 반환 22건이 자연사 754, 안락사 53건과 같은 "종료" 배지로 보인다(12.A P5). 종료 사유 비노출(10절)은 유지하고 **결정 보류**, 다음 UI 단계에서 재검토
+21. ~~종료 공고 정책~~ **확정됨(2026-10-23, 이슈 [#41](https://github.com/bluel00/nyanggonggo/issues/41))**: 종료 공고는 "종료 · <결과>"로 보이고 종료 사유는 상세 정보 줄에 보인다(10절). 이전 기록: 종료 공고의 대부분은 사망이 아니다. 종료(입양) 233, 방사 57, 기증 39, 반환 22건이 자연사 754, 안락사 53건과 같은 "종료" 배지로 보인다(12.A P5). 종료 사유 비노출(10절)은 유지하고 결정 보류, 다음 UI 단계에서 재검토
 22. 개(`upkind=417000`) 규모와 페이지 수, 페이지 크기: 미측정(이전 샘플 전체 7,249건에서 역산하면 5천 건 미만으로 보이나 추정). 최대 페이지 가드와 수집 시간 확인 필요
 23. ~~이미지 프록시와 `next/image` 미사용, 원본 크기 그대로 내려받기~~ **해결됨(2026-10-07)**: 프록시가 허용 폭(480/828/1080) WebP로 줄인다. 규칙과 `next/image`를 쓰지 않는 이유는 9절 "이미지 프록시 리사이즈". 바이트는 실제 사진 5장 기준 828 폭에서 원본의 5~56%(46 참고). 남은 확인: 원본 파일명에 등록 시각이 있어 URL별 내용이 바뀌지 않는다는 가정(긴 캐시의 근거). 이전 기록: 이미지 프록시(`/api/image-proxy`)와 `next/image` 미사용: 카드 이미지는 plain `<img loading="lazy">`가 프록시를 가리킨다. Vercel Image Optimization을 함께 쓰면 최적화 호출과 대역폭 비용이 이중으로 들 수 있어, 지금은 프록시 응답의 CDN 캐시(`SERVER_TUNING.imageProxyCacheControl`: `max-age=86400, s-maxage=604800, stale-while-revalidate=86400`)로 충분하다고 본다. **튜닝 필요**: 원본 이미지 크기(리사이즈 없이 내려받는 바이트), 목록 스크롤 시 데이터 사용량, CDN 적중률을 보고 `next/image`(또는 리사이즈) 도입 여부를 다시 판단. 원본 파일명에 등록 시각이 있어 URL별 내용이 바뀌지 않는다는 가정(긴 캐시의 근거)도 검증 필요. 원본 크기와 데이터 사용량은 42에서 실측했다(사진 1장 1300×1733 / 약 147KB, 카드 표시 크기는 380×475 CSS px)
 24. 이미지 프록시 실패 처리와 제약: 원본 4xx/5xx/타임아웃/이미지가 아닌 응답/10MB 초과는 200 + 투명 1x1 PNG(`Cache-Control: no-store`, `X-Image-Proxy: fallback`)로 내려 카드 사진 영역의 배경색이 보이게 한다. 리다이렉트는 따라가지 않는다(`redirect: "error"`). 원본이 정상적으로 리다이렉트하는 경우가 있는지, 실패 비율은 얼마인지 로그로 확인 필요. 사진 없는 공고의 플레이스홀더 디자인은 미정(handoff)
