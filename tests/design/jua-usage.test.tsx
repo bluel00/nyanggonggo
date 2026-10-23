@@ -54,7 +54,7 @@ describe("Jua를 쓰는 곳", () => {
   });
 
   it.each(["cat", "dog", "other"] as const)("목록 헤더(%s): 제목만 Jua다", (species) => {
-    const filter: AnimalListFilter = { species, region: "6110000", status: "protected", sort: "latest" };
+    const filter: AnimalListFilter = { species, region: "6110000", status: "protected", sex: "all", sort: "latest" };
     const { container } = render(<AnimalListHeader filter={filter} actions={<button>필터</button>} />);
     expect(displayTexts(container)).toEqual([SPECIES_COPY[species].listTitle]);
   });

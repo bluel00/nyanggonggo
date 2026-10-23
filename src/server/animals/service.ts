@@ -17,6 +17,8 @@ export type AnimalListParams = {
   /** 시군구 코드(org_cd). region과 함께만 온다 */
   district?: string;
   status: AnimalWireDto["status"] | "all";
+  /** 성별. all이면 거르지 않는다(성별 미상은 all에서만 나온다) */
+  sex: Exclude<AnimalWireDto["sex"], "unknown"> | "all";
   sort: "latest" | "endingSoon";
   cursor?: string;
 };
@@ -38,12 +40,16 @@ export type AnimalService = {
 
 export function createAnimalService(source: AnimalSource, options: AnimalServiceOptions): AnimalService {
   return {
-    async list({ species, region, district, status, sort, cursor }) {
+    async list({ species, region, district, status, sex, sort, cursor }) {
       const anchor = cursor === undefined ? null : decodeCursor(cursor);
       const all = await source.list({ species, uprCd: region ?? "all", ...(district ? { orgCd: district } : {}) });
 
       const compare = sort === "latest" ? compareLatest : compareEndingSoon(kstYmd(options.now()));
-      const sorted = all.filter((animal) => status === "all" || animal.wire.status === status).sort(compare);
+      // 상태·성별은 업스트림 페이지 캐시를 읽은 뒤 여기서 거른다(캐시 키에 넣지 않는다, architecture.md 5절)
+      const sorted = all
+        .filter((animal) => status === "all" || animal.wire.status === status)
+        .filter((animal) => sex === "all" || animal.wire.sex === sex)
+        .sort(compare);
 
       const start = anchor === null ? 0 : firstIndexAfter(sorted, compare, anchor);
       const page = sorted.slice(start, start + options.pageSize);

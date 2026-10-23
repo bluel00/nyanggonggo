@@ -73,7 +73,7 @@ afterEach(() => {
   fetchMock.mockReset();
 });
 
-function renderList(filter: AnimalListFilter = { species: "cat", status: "protected", sort: "latest" }) {
+function renderList(filter: AnimalListFilter = { species: "cat", status: "protected", sex: "all", sort: "latest" }) {
   const client = createQueryClient();
   // 테스트에서는 재시도 지연을 없앤다(재시도 정책 자체는 query-client 테스트가 확인)
   client.setDefaultOptions({ queries: { ...client.getDefaultOptions().queries, retry: false } });
@@ -160,7 +160,7 @@ describe("AnimalList", () => {
 
   it("결과가 0건이면 빈 상태 문구", async () => {
     fetchMock.mockResolvedValue(Response.json({ items: [], nextCursor: null }));
-    renderList({ species: "dog", status: "ended", sort: "latest" });
+    renderList({ species: "dog", status: "ended", sex: "all", sort: "latest" });
     await screen.findByText("조건에 맞는 강아지가 없어요");
     expect(screen.getByText("필터를 바꿔서 다시 찾아보세요")).toBeTruthy();
   });
@@ -207,7 +207,7 @@ describe("AnimalList 상세로 갈 때(PRD-v1.5 R6)", () => {
     const host = document.createElement("div");
     scroll.appendChild(host);
     const client = createQueryClient();
-    render(<AnimalList filter={{ species: "cat", status: "protected", sort: "latest" }} />, {
+    render(<AnimalList filter={{ species: "cat", status: "protected", sex: "all", sort: "latest" }} />, {
       container: host,
       wrapper: ({ children }: { children: ReactNode }) => <QueryClientProvider client={client}>{children}</QueryClientProvider>,
     });

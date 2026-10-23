@@ -57,6 +57,7 @@ export function SpeciesChoice({ area, enterFrom }: { area: AnimalArea; enterFrom
       region: area.region,
       district: area.district,
       status: DEFAULT_ANIMAL_FILTER.status,
+      sex: DEFAULT_ANIMAL_FILTER.sex,
       sort: DEFAULT_ANIMAL_FILTER.sort,
     };
     return toFilterHref("/", filter);

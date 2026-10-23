@@ -162,6 +162,21 @@ describe("GET /api/animals/[id]", () => {
   });
 });
 
+describe("GET /api/animals: sex(이슈 #20)", () => {
+  it("고른 성별만 주고, 잘못된 값은 400이 아니라 전체로 본다", async () => {
+    const sexes = async (query: string) => {
+      const response = await getList(req(`/api/animals?species=cat&status=all${query}`));
+      expect(response.status).toBe(200);
+      return (await response.json()).items.map((i: { sex: string }) => i.sex);
+    };
+    expect(new Set(await sexes("&sex=female"))).toEqual(new Set(["female"]));
+    expect(new Set(await sexes("&sex=male"))).toEqual(new Set(["male"]));
+    const all = await sexes("");
+    expect(all).toContain("unknown");
+    expect(await sexes("&sex=bogus")).toEqual(all);
+  });
+});
+
 describe("GET /api/animals/by-ids", () => {
   it("입력 순서를 유지하고 못 찾은 id는 뺀다", async () => {
     const response = await getByIds(req("/api/animals/by-ids?ids=448539202600280,1,427346202600847"));

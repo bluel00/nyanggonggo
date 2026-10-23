@@ -107,20 +107,22 @@ describe("app/page: 축종과 지역이 다 있으면 그대로 그린다", () =
       species: "cat",
       region: SEOUL,
       status: "protected",
+      sex: "all",
       sort: "latest",
     });
   });
 
   it("URL 값을 필터로 넘긴다(page는 무시)", async () => {
     expect(
-      await renderPage({ species: "dog", region: BUSAN, status: "all", sort: "endingSoon", page: "3" }),
-    ).toEqual({ species: "dog", region: BUSAN, status: "all", sort: "endingSoon" });
+      await renderPage({ species: "dog", region: BUSAN, status: "all", sex: "all", sort: "endingSoon", page: "3" }),
+    ).toEqual({ species: "dog", region: BUSAN, status: "all", sex: "all", sort: "endingSoon" });
   });
 
   it("region=all이면 전국으로 그린다", async () => {
     expect(await renderPage({ species: "cat", region: "all" })).toEqual({
       species: "cat",
       status: "protected",
+      sex: "all",
       sort: "latest",
     });
   });

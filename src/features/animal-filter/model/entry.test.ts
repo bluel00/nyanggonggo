@@ -53,7 +53,7 @@ describe("resolveAnimalListEntry: 축종을 먼저 판정한다(결정 B)", () =
   it("축종과 지역이 다 있으면 리다이렉트 없이 그린다", () => {
     expect(entry(`species=dog&region=${BUSAN}&status=ended&sort=endingSoon`, { species: "cat", region: SEOUL })).toEqual({
       kind: "render",
-      filter: { species: "dog", region: BUSAN, status: "ended", sort: "endingSoon" },
+      filter: { species: "dog", region: BUSAN, status: "ended", sex: "all", sort: "endingSoon" },
     });
   });
 
@@ -61,7 +61,7 @@ describe("resolveAnimalListEntry: 축종을 먼저 판정한다(결정 B)", () =
     const result = resolveAnimalListEntry(qs(`species=cat&region=all&sort=endingSoon`));
     expect(result).toEqual({
       kind: "render",
-      filter: { species: "cat", status: "protected", sort: "endingSoon" },
+      filter: { species: "cat", status: "protected", sex: "all", sort: "endingSoon" },
     });
   });
 
@@ -86,7 +86,7 @@ describe("resolveAnimalListEntry: 목록에서 뺀 창원시 옛 코드(12절 41
   it("고친 주소로 다시 들어오면 리다이렉트 없이 5670000 목록을 그린다", () => {
     expect(entry(`species=dog&region=${GYEONGNAM}&district=${CHANGWON}`)).toEqual({
       kind: "render",
-      filter: { species: "dog", region: GYEONGNAM, district: CHANGWON, status: "protected", sort: "latest" },
+      filter: { species: "dog", region: GYEONGNAM, district: CHANGWON, status: "protected", sex: "all", sort: "latest" },
     });
   });
 
@@ -99,7 +99,7 @@ describe("resolveAnimalListEntry: 목록에서 뺀 창원시 옛 코드(12절 41
   it("목록에 없는 다른 시군구 코드는 지금처럼 시도만 그린다(리다이렉트하지 않는다)", () => {
     expect(entry(`species=cat&region=${GYEONGNAM}&district=9999999`)).toEqual({
       kind: "render",
-      filter: { species: "cat", region: GYEONGNAM, status: "protected", sort: "latest" },
+      filter: { species: "cat", region: GYEONGNAM, status: "protected", sex: "all", sort: "latest" },
     });
   });
 

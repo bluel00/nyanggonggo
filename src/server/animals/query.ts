@@ -6,8 +6,11 @@ import type { AnimalListParams } from "./service";
  * 요청 파라미터 검증. 빈 문자열은 값이 없는 것으로 본다.
  * region(시도 코드), district(시군구 코드), id(desertionNo)는 숫자 문자열만 확인한다(architecture.md 12절).
  * district는 region과 함께만 받는다(시군구만 오면 400).
+ * sex만은 잘못된 값을 400으로 거절하지 않고 all(전체)로 본다(이슈 #20).
  */
 const DIGITS = /^\d{1,32}$/;
+
+const SEXES = ["female", "male"] as const;
 
 const ListQuerySchema = z.object({
   species: z.enum(["cat", "dog", "other"]).default("cat"),
@@ -34,7 +37,12 @@ export function parseListQuery(searchParams: URLSearchParams): AnimalListParams 
     cursor: read(searchParams, "cursor"),
   });
   if (!result.success) throw invalid(result.error);
-  return result.data;
+  return { ...result.data, sex: readSex(searchParams) };
+}
+
+function readSex(searchParams: URLSearchParams): AnimalListParams["sex"] {
+  const value = read(searchParams, "sex");
+  return SEXES.find((sex) => sex === value) ?? "all";
 }
 
 export function parseAnimalId(raw: string): string {

@@ -67,21 +67,27 @@ function wrapper() {
   return providerFor(createQueryClient());
 }
 
-const LIST_FILTER = { species: "cat", status: "protected", sort: "latest" } as const;
+const LIST_FILTER = { species: "cat", status: "protected", sex: "all", sort: "latest" } as const;
 
 describe("animalKeys", () => {
-  it("목록 키는 필터 4종으로 정해지고 region이 없으면 null로 고정된다", () => {
-    expect(animalKeys.list({ species: "cat", status: "protected", sort: "latest" })).toEqual([
+  it("목록 키는 필터 6종으로 정해지고 region이 없으면 null로 고정된다", () => {
+    expect(animalKeys.list({ species: "cat", status: "protected", sex: "all", sort: "latest" })).toEqual([
       "animals",
       "list",
-      { species: "cat", region: null, district: null, status: "protected", sort: "latest" },
+      { species: "cat", region: null, district: null, status: "protected", sex: "all", sort: "latest" },
     ]);
+  });
+
+  it("성별이 다르면 다른 키다(이슈 #20)", () => {
+    const base = { species: "cat", status: "protected", sort: "latest" } as const;
+    expect(animalKeys.list({ ...base, sex: "female" })).not.toEqual(animalKeys.list({ ...base, sex: "all" }));
+    expect(animalKeys.list({ ...base, sex: "female" })).not.toEqual(animalKeys.list({ ...base, sex: "male" }));
   });
 });
 
 describe("useAnimalsInfinite", () => {
   it("첫 페이지를 받고 nextCursor로 다음 페이지를 이어 받는다", async () => {
-    const { result } = renderHook(() => useAnimalsInfinite({ species: "cat", status: "protected", sort: "latest" }), {
+    const { result } = renderHook(() => useAnimalsInfinite({ species: "cat", status: "protected", sex: "all", sort: "latest" }), {
       wrapper: wrapper(),
     });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));

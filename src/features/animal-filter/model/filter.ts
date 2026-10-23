@@ -4,14 +4,15 @@ import { findSido, resolveDistrict } from "@/shared/config/regions";
 /**
  * 목록 필터 ↔ URL search params(단일 진실 소스, architecture.md 7절).
  *
- * - 읽기: species, region, district, status, sort만 본다. 없거나 잘못된 값은 기본값으로 본다.
+ * - 읽기: species, region, district, status, sex, sort만 본다. 없거나 잘못된 값은 기본값으로 본다.
  *   서버(/api/animals)는 잘못된 값을 400으로 거절하지만, 화면은 깨지지 않도록 기본값으로 보여 준다.
  * - 지역: URL에 region이 없으면 **기억된 지역**(쿠키), 그것도 없으면 기본 지역(서울 전체, 시군구 없음).
  *   region=all이면 전국(서버에 upr_cd/org_cd를 보내지 않음). region=시도코드면 그 시도, district가 그 시도의
  *   시군구면 그 시군구. 코드 목록은 정적 데이터(shared/config/regions).
  * - 쓰기: **축종과 지역은 기본값이어도 늘 URL에 쓴다.** 둘은 기억 대상(쿠키)이라 주소에서 빠지면 "기억된 값"을
  *   뜻하게 되고, 앱이 만드는 목록 주소가 생략하면 뒤로가기나 공유 링크가 그 사이 바뀐 기억에 흔들린다
- *   (architecture.md 7절, PRD-v1.1 4절). status와 sort는 기억 대상이 아니라 기본값과 같으면 생략한다.
+ *   (architecture.md 7절, PRD-v1.1 4절). status, sex, sort는 기억 대상이 아니라 기본값과 같으면 생략한다.
+ *   성별(sex)은 쿠키에 기억하지 않는다. 주소에 없으면 늘 전체다(이슈 #20).
  *   page는 URL에 넣지 않는다(커서는 useInfiniteQuery 내부 상태).
  */
 /** 기본 지역: 서울특별시 전체(시군구 없음). 2026-09-28에 종로구에서 서울 전체로 넓혔다(architecture.md 7절) */
@@ -23,15 +24,17 @@ export const DEFAULT_ANIMAL_FILTER = {
   species: "cat",
   region: DEFAULT_REGION,
   status: "protected",
+  sex: "all",
   sort: "latest",
 } as const satisfies AnimalListFilter;
 
-export const FILTER_KEYS = ["species", "region", "district", "status", "sort"] as const;
+export const FILTER_KEYS = ["species", "region", "district", "status", "sex", "sort"] as const;
 
 const SPECIES = ["cat", "dog", "other"] as const;
 export type AnimalSpecies = AnimalListFilter["species"];
 
 const STATUSES = ["protected", "ended", "all"] as const;
+const SEXES = ["all", "female", "male"] as const;
 const SORTS = ["latest", "endingSoon"] as const;
 
 /** 아는 축종 값인지. URL 파라미터와 쿠키가 같은 판정을 쓴다 */
@@ -125,6 +128,7 @@ export function parseAnimalFilter(
     species: pick(SPECIES, read(params, "species"), rememberedSpecies ?? DEFAULT_ANIMAL_FILTER.species),
     ...parseAnimalArea(params, rememberedArea ?? DEFAULT_AREA),
     status: pick(STATUSES, read(params, "status"), DEFAULT_ANIMAL_FILTER.status),
+    sex: pick(SEXES, read(params, "sex"), DEFAULT_ANIMAL_FILTER.sex),
     sort: pick(SORTS, read(params, "sort"), DEFAULT_ANIMAL_FILTER.sort),
   };
 }
@@ -144,6 +148,7 @@ export function toFilterQuery(filter: AnimalListFilter, base: URLSearchParams = 
   next.set("region", filter.region ?? REGION_ALL);
   if (filter.district) next.set("district", filter.district);
   if (filter.status !== DEFAULT_ANIMAL_FILTER.status) next.set("status", filter.status);
+  if (filter.sex !== DEFAULT_ANIMAL_FILTER.sex) next.set("sex", filter.sex);
   if (filter.sort !== DEFAULT_ANIMAL_FILTER.sort) next.set("sort", filter.sort);
   return next.toString();
 }
@@ -159,6 +164,7 @@ export function isSameFilter(a: AnimalListFilter, b: AnimalListFilter): boolean 
     (a.region ?? null) === (b.region ?? null) &&
     (a.district ?? null) === (b.district ?? null) &&
     a.status === b.status &&
+    a.sex === b.sex &&
     a.sort === b.sort
   );
 }

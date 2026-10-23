@@ -18,7 +18,7 @@ const BUSAN_JUNG = "3250000";
 describe("기본값", () => {
   it("서울 전체(시군구 없음)", () => {
     expect(DEFAULT_REGION).toBe(SEOUL);
-    expect(DEFAULT_ANIMAL_FILTER).toEqual({ species: "cat", region: SEOUL, status: "protected", sort: "latest" });
+    expect(DEFAULT_ANIMAL_FILTER).toEqual({ species: "cat", region: SEOUL, status: "protected", sex: "all", sort: "latest" });
     expect(DEFAULT_ANIMAL_FILTER).not.toHaveProperty("district");
   });
 });
@@ -30,7 +30,7 @@ describe("parseAnimalFilter", () => {
   });
 
   it("region=all은 전국(region, district 없음)", () => {
-    expect(parseAnimalFilter(qs("region=all"))).toEqual({ species: "cat", status: "protected", sort: "latest" });
+    expect(parseAnimalFilter(qs("region=all"))).toEqual({ species: "cat", status: "protected", sex: "all", sort: "latest" });
     expect(parseAnimalFilter(qs(`region=all&district=${JONGNO}`))).not.toHaveProperty("district");
   });
 
@@ -56,8 +56,8 @@ describe("parseAnimalFilter", () => {
 
   it("URL 값을 읽는다(Next searchParams 객체, 배열이면 첫 값)", () => {
     expect(
-      parseAnimalFilter({ species: "dog", region: [SEOUL, "x"], district: GANGNAM, status: "all", sort: "endingSoon" }),
-    ).toEqual({ species: "dog", region: SEOUL, district: GANGNAM, status: "all", sort: "endingSoon" });
+      parseAnimalFilter({ species: "dog", region: [SEOUL, "x"], district: GANGNAM, status: "all", sex: "all", sort: "endingSoon" }),
+    ).toEqual({ species: "dog", region: SEOUL, district: GANGNAM, status: "all", sex: "all", sort: "endingSoon" });
   });
 
   it("잘못된 species/status/sort는 기본값", () => {
@@ -69,6 +69,7 @@ describe("parseAnimalFilter", () => {
       species: "other",
       region: SEOUL,
       status: "protected",
+      sex: "all",
       sort: "latest",
     });
   });
@@ -81,11 +82,11 @@ describe("toFilterQuery / toFilterHref", () => {
   });
 
   it("전국은 region=all로 남긴다(생략하면 기본 지역이 되므로)", () => {
-    expect(toFilterQuery({ species: "cat", status: "protected", sort: "latest" })).toBe("species=cat&region=all");
+    expect(toFilterQuery({ species: "cat", status: "protected", sex: "all", sort: "latest" })).toBe("species=cat&region=all");
   });
 
   it("species=other는 URL에 쓰고, 다시 읽으면 같은 필터다", () => {
-    const filter = { species: "other", region: SEOUL, status: "protected", sort: "latest" } as const;
+    const filter = { species: "other", region: SEOUL, status: "protected", sex: "all", sort: "latest" } as const;
     expect(toFilterQuery(filter)).toBe(`species=other&region=${SEOUL}`);
     expect(parseAnimalFilter(qs(toFilterQuery(filter)))).toEqual(filter);
   });
@@ -109,9 +110,9 @@ describe("toFilterQuery / toFilterHref", () => {
 
   it.each([
     DEFAULT_ANIMAL_FILTER,
-    { species: "dog", status: "all", sort: "endingSoon" },
-    { species: "cat", region: BUSAN, status: "protected", sort: "latest" },
-    { species: "cat", region: BUSAN, district: BUSAN_JUNG, status: "ended", sort: "latest" },
+    { species: "dog", status: "all", sex: "all", sort: "endingSoon" },
+    { species: "cat", region: BUSAN, status: "protected", sex: "all", sort: "latest" },
+    { species: "cat", region: BUSAN, district: BUSAN_JUNG, status: "ended", sex: "all", sort: "latest" },
   ] as const)("parse ∘ toFilterQuery 왕복 %#", (filter) => {
     expect(isSameFilter(parseAnimalFilter(qs(toFilterQuery(filter))), filter)).toBe(true);
   });
@@ -119,10 +120,32 @@ describe("toFilterQuery / toFilterHref", () => {
 
 describe("isSameFilter", () => {
   it("region/district 없음과 undefined를 같게 본다", () => {
-    const nationwide = { species: "cat", status: "protected", sort: "latest" } as const;
+    const nationwide = { species: "cat", status: "protected", sex: "all", sort: "latest" } as const;
     expect(isSameFilter(nationwide, { ...nationwide, region: undefined, district: undefined })).toBe(true);
     expect(isSameFilter(DEFAULT_ANIMAL_FILTER, { ...DEFAULT_ANIMAL_FILTER, district: undefined })).toBe(true);
     // 시군구를 고른 필터는 시도 전체와 다르다
     expect(isSameFilter(DEFAULT_ANIMAL_FILTER, { ...DEFAULT_ANIMAL_FILTER, district: JONGNO })).toBe(false);
+  });
+});
+
+describe("성별(이슈 #20): 쿼리 ↔ 필터", () => {
+  it("sex=female|male을 읽고, 없거나 잘못된 값이면 전체(all)", () => {
+    expect(parseAnimalFilter(qs("species=cat&region=all&sex=female")).sex).toBe("female");
+    expect(parseAnimalFilter(qs("species=cat&region=all&sex=male")).sex).toBe("male");
+    expect(parseAnimalFilter(qs("species=cat&region=all")).sex).toBe("all");
+    expect(parseAnimalFilter(qs("species=cat&region=all&sex=unknown")).sex).toBe("all");
+    expect(parseAnimalFilter(qs("species=cat&region=all&sex=Q")).sex).toBe("all");
+  });
+
+  it("전체면 쿼리에 쓰지 않고, 고르면 sex=로 쓴다. 다시 읽으면 같은 필터", () => {
+    const female = { ...DEFAULT_ANIMAL_FILTER, sex: "female" } as const;
+    expect(toFilterQuery(DEFAULT_ANIMAL_FILTER)).not.toContain("sex");
+    expect(toFilterQuery(female)).toBe(`species=cat&region=${SEOUL}&sex=female`);
+    expect(parseAnimalFilter(qs(toFilterQuery(female)))).toEqual(female);
+    expect(toFilterQuery(DEFAULT_ANIMAL_FILTER, qs("sex=male"))).not.toContain("sex");
+  });
+
+  it("성별이 다르면 다른 필터", () => {
+    expect(isSameFilter(DEFAULT_ANIMAL_FILTER, { ...DEFAULT_ANIMAL_FILTER, sex: "male" })).toBe(false);
   });
 });
