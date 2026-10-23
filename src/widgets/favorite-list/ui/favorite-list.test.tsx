@@ -3,31 +3,15 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { AnimalWireDto } from "@/contract/animals";
 import { FAVORITES_STORAGE_KEY } from "@/features/animal-favorite";
 import { createQueryClient } from "@/shared/api/query-client";
 import { FavoriteList } from "./favorite-list";
+import { makeWire } from "@tests/factories/animal";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ back: vi.fn(), push: vi.fn() }) }));
 vi.mock("@/shared/ui/toast", () => ({ showToast: vi.fn() }));
 
-const wire = (id: string): AnimalWireDto => ({
-  id,
-  species: "cat",
-  images: [],
-  status: "protected",
-  noticeEndDate: "2026-10-01",
-  sex: "unknown",
-  ageText: null,
-  regionText: `지역${id}`,
-  shelterName: null,
-  foundPlaceText: null,
-  shelterAddressText: null,
-  shelterTelText: null,
-  noticePeriodText: null,
-  specialMarkText: null,
-  kindText: null,
-});
+const wire = (id: string) => makeWire({ id, regionText: `지역${id}` });
 
 /** 업스트림 오류가 나는 id. 테스트가 바꾼다 */
 let failing = new Set<string>();

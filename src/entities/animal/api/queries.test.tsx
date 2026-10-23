@@ -3,7 +3,6 @@ import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { AnimalWireDto } from "@/contract/animals";
 import { createQueryClient, QUERY_GC_TIME_MS } from "@/shared/api/query-client";
 import type { AnimalsByIds } from "../model/animal";
 import { toAnimal } from "../model/mapper";
@@ -16,27 +15,12 @@ import {
   useAnimalsInfinite,
   useRetryFailedAnimals,
 } from "./queries";
+import { makeWire } from "@tests/factories/animal";
 
 /**
  * 훅은 기본 어댑터(animalRepository)를 그대로 쓴다. 네트워크 대신 전역 fetch를 가짜로 바꾼다.
  */
-const wire = (id: string): AnimalWireDto => ({
-  id,
-  species: "cat",
-  images: [],
-  status: "protected",
-  noticeEndDate: "2026-10-01",
-  sex: "unknown",
-  ageText: null,
-  regionText: "서울특별시",
-  shelterName: null,
-  foundPlaceText: null,
-  shelterAddressText: null,
-  shelterTelText: null,
-  noticePeriodText: null,
-  specialMarkText: null,
-  kindText: null,
-});
+const wire = (id: string) => makeWire({ id });
 
 const fetchMock = vi.fn(async (input: string | URL | Request) => {
   const url = new URL(String(input), "http://localhost");

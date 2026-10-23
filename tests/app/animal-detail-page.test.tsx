@@ -10,6 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AnimalWireDto } from "@/contract/animals";
 import { createQueryClient } from "@/shared/api/query-client";
 import { AnimalDetailView } from "@/views/animal-detail";
+import { makeWire } from "@tests/factories/animal";
 
 const getById = vi.fn<(id: string) => Promise<AnimalWireDto>>();
 vi.mock("@/server/animals/container", () => ({ getAnimalService: () => ({ getById }) }));
@@ -20,23 +21,7 @@ vi.mock("next/navigation", async (importOriginal) => ({
 
 const { default: Page } = await import("@/app/animals/[id]/page");
 
-const wire: AnimalWireDto = {
-  id: "450650202602282",
-  species: "cat",
-  images: [],
-  status: "protected",
-  noticeEndDate: "2026-10-01",
-  sex: "female",
-  ageText: "2024(년생)",
-  regionText: "제주특별자치도",
-  shelterName: "제2동물보호센터",
-  foundPlaceText: null,
-  shelterAddressText: null,
-  shelterTelText: null,
-  noticePeriodText: null,
-  specialMarkText: null,
-  kindText: null,
-};
+const wire = makeWire({ id: "450650202602282", sex: "female", ageText: "2024(년생)", regionText: "제주특별자치도", shelterName: "제2동물보호센터" });
 
 const clientFetch = vi.fn();
 beforeEach(() => {

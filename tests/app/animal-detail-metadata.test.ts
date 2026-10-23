@@ -1,6 +1,7 @@
 /** app/animals/[id]/page.tsx generateMetadata: 서비스를 가짜로 바꿔 공공 API를 호출하지 않는다 */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { AnimalWireDto } from "@/contract/animals";
+import { makeWire } from "@tests/factories/animal";
 
 const getById = vi.fn<(id: string) => Promise<AnimalWireDto>>();
 vi.mock("@/server/animals/container", () => ({ getAnimalService: () => ({ getById }) }));
@@ -13,23 +14,7 @@ beforeEach(() => {
   vi.setSystemTime(new Date("2026-09-21T09:00:00+09:00"));
 });
 
-const wire: AnimalWireDto = {
-  id: "1",
-  species: "cat",
-  images: [],
-  status: "protected",
-  noticeEndDate: "2026-10-01",
-  sex: "female",
-  ageText: null,
-  regionText: "제주특별자치도",
-  shelterName: "제2동물보호센터",
-  foundPlaceText: null,
-  shelterAddressText: null,
-  shelterTelText: null,
-  noticePeriodText: null,
-  specialMarkText: null,
-  kindText: null,
-};
+const wire = makeWire({ sex: "female", regionText: "제주특별자치도", shelterName: "제2동물보호센터" });
 const meta = (id: string) => generateMetadata({ params: Promise.resolve({ id }) });
 
 describe("상세 generateMetadata", () => {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Animal } from "../model/animal";
 import { ANIMAL_COPY, animalSummaryText, animalTitle, SEX_LABEL, sexAgeText, SPECIES_COPY, SPECIES_LABEL, speciesText } from "./labels";
+import { makeAnimal } from "@tests/factories/animal";
 
 const SPECIES: Animal["species"][] = ["cat", "dog", "other"];
 
@@ -76,24 +77,16 @@ describe("animalSummaryText (공유 카드·링크 미리보기 설명)", () => 
   const kst = (iso: string) => new Date(`${iso}+09:00`);
   const NOW = kst("2026-09-21T09:00:00");
   // 특이사항은 지어낸 문장이다
-  const animal = (overrides: Partial<Animal> = {}): Animal => ({
-    id: "1",
-    species: "cat",
-    images: [],
-    status: "protected",
-    noticeEndAt: kst("2026-09-29T00:00:00"),
-    sex: "female",
-    ageText: "2026(60일미만)(년생)",
-    regionText: "제주특별자치도",
-    shelterName: "가상 보호소",
-    foundPlaceText: null,
-    shelterAddressText: null,
-    shelterTelText: null,
-    noticePeriodText: null,
-    specialMarkText: "줄무늬 꼬리, 사람을 잘 따름",
-    kindText: null,
-    ...overrides,
-  });
+  const animal = (overrides: Partial<Animal> = {}): Animal =>
+    makeAnimal({
+      noticeEndAt: kst("2026-09-29T00:00:00"),
+      sex: "female",
+      ageText: "2026(60일미만)(년생)",
+      regionText: "제주특별자치도",
+      shelterName: "가상 보호소",
+      specialMarkText: "줄무늬 꼬리, 사람을 잘 따름",
+      ...overrides,
+    });
 
   it("보호 중: 성별 · 나이 · 상태 · D-N · 특이사항, 보호소 이름은 없다", () => {
     expect(animalSummaryText(animal(), NOW)).toBe("암컷 · 2026(60일미만)(년생) · 보호중 · D-8 · 줄무늬 꼬리, 사람을 잘 따름");

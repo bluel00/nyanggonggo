@@ -3,10 +3,10 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { AnimalWireDto } from "@/contract/animals";
 import type { AnimalListFilter } from "@/entities/animal";
 import { createQueryClient } from "@/shared/api/query-client";
 import { AnimalList } from "./animal-list";
+import { makeWire } from "@tests/factories/animal";
 
 /** 가짜 IntersectionObserver: 테스트가 trigger()로 교차를 흉내 낸다 */
 class FakeIntersectionObserver {
@@ -37,23 +37,7 @@ class FakeIntersectionObserver {
 }
 const triggerSentinel = () => act(() => FakeIntersectionObserver.instances.forEach((o) => o.trigger()));
 
-const wire = (id: string): AnimalWireDto => ({
-  id,
-  species: "cat",
-  images: [],
-  status: "protected",
-  noticeEndDate: "2026-10-01",
-  sex: "unknown",
-  ageText: null,
-  regionText: `지역${id}`,
-  shelterName: `보호소${id}`,
-  foundPlaceText: null,
-  shelterAddressText: null,
-  shelterTelText: null,
-  noticePeriodText: null,
-  specialMarkText: null,
-  kindText: null,
-});
+const wire = (id: string) => makeWire({ id, regionText: `지역${id}`, shelterName: `보호소${id}` });
 
 const fetchMock = vi.fn<(input: string | URL | Request) => Promise<Response>>();
 const listRequests = () =>

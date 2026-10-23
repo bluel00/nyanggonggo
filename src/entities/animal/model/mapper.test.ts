@@ -1,24 +1,17 @@
 import { describe, expect, it } from "vitest";
-import type { AnimalWireDto } from "@/contract/animals";
 import { toAnimal } from "./mapper";
+import { makeWire } from "@tests/factories/animal";
 
-const wire: AnimalWireDto = {
+const wire = makeWire({
   id: "450650202602282",
-  species: "cat",
   images: ["http://a.test/1.jpg", "http://a.test/2%5B1%5D.jpg"],
-  status: "protected",
-  noticeEndDate: "2026-10-01",
   sex: "female",
   ageText: "2024(년생)",
   regionText: "제주특별자치도",
   shelterName: "제2동물보호센터",
   foundPlaceText: "서귀포시 남원읍 의귀리1537",
-  shelterAddressText: null,
-  shelterTelText: null,
   noticePeriodText: "09.21 ~ 10.01",
-  specialMarkText: null,
-  kindText: null,
-};
+});
 
 describe("toAnimal", () => {
   it("noticeEndDate를 그날 00:00 KST의 Date로 바꾼다", () => {

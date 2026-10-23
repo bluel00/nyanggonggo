@@ -3,25 +3,20 @@ import { ANIMAL_BY_IDS_MAX, type AnimalWireDto } from "@/contract/animals";
 import { ApiError } from "@/shared/api/api-request";
 import { createHttpClient, type FetchLike } from "@/shared/api/http-client";
 import { BY_IDS_CHUNK_CONCURRENCY, createAnimalRepository } from "./animal-repository";
+import { makeWire } from "@tests/factories/animal";
 
-const wire = (overrides: Partial<AnimalWireDto> = {}): AnimalWireDto => ({
-  id: "450650202602282",
-  species: "cat",
-  images: ["http://a.test/1.jpg", "http://a.test/2%5B1%5D.jpg"],
-  status: "protected",
-  noticeEndDate: "2026-10-01",
-  sex: "female",
-  ageText: "2024(년생)",
-  regionText: "제주특별자치도",
-  shelterName: "제2동물보호센터",
-  foundPlaceText: "서귀포시 남원읍",
-  shelterAddressText: null,
-  shelterTelText: null,
-  noticePeriodText: "09.21 ~ 10.01",
-  specialMarkText: null,
-  kindText: null,
-  ...overrides,
-});
+const wire = (overrides: Partial<AnimalWireDto> = {}): AnimalWireDto =>
+  makeWire({
+    id: "450650202602282",
+    images: ["http://a.test/1.jpg", "http://a.test/2%5B1%5D.jpg"],
+    sex: "female",
+    ageText: "2024(년생)",
+    regionText: "제주특별자치도",
+    shelterName: "제2동물보호센터",
+    foundPlaceText: "서귀포시 남원읍",
+    noticePeriodText: "09.21 ~ 10.01",
+    ...overrides,
+  });
 
 function setup(body: unknown, status = 200) {
   const fetch = vi.fn<FetchLike>(async () => Response.json(body, { status }));
