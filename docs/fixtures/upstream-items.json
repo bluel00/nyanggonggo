@@ -94,7 +94,7 @@
       "updTm": "2026-09-21 11:08:32.0"
     },
     {
-      "_case": "종료(안락사): processState가 '종료'로 시작, endReason 필드 존재(Domain/Wire에 넣지 않음), 사진 파일명에 [1], noticeEdt가 과거",
+      "_case": "종료(안락사): processState가 '종료'로 시작, endReason 필드 존재(특이사항과 같은 문구, 상세의 종료 사유 줄로 한 번만 보낸다. 이슈 #41), 사진 파일명에 [1], noticeEdt가 과거",
       "desertionNo": "427346202600847",
       "happenDt": "20260908",
       "happenPlace": "범어로 18길 22 ",

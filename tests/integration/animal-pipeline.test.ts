@@ -27,22 +27,21 @@ describe("Upstream → Wire → Animal", () => {
     expect(animals.map((a) => a.id)).toEqual(dtos.map((d) => d.desertionNo));
   });
 
-  it("담당자 이름과 종료 사유가 Domain 어디에도 없다", () => {
+  it("담당자 이름이 Domain 어디에도 없다", () => {
     for (const [i, animal] of animals.entries()) {
       const dto = dtos[i];
-      const serialized = JSON.stringify(animal);
-      for (const key of ["careOwnerNm", "endReason"] as const) {
-        expect(animal).not.toHaveProperty(key);
-        const value = dto[key]?.trim();
-        // careOwnerNm은 orgNm(regionText로 공개)과 같은 값일 수 있다(픽스처 1: 제주특별자치도).
-        if (value && value !== dto.orgNm.trim()) expect(serialized).not.toContain(value);
-      }
+      expect(animal).not.toHaveProperty("careOwnerNm");
+      const value = dto.careOwnerNm?.trim();
+      // careOwnerNm은 orgNm(regionText로 공개)과 같은 값일 수 있다(픽스처 1: 제주특별자치도).
+      if (value && value !== dto.orgNm.trim()) expect(JSON.stringify(animal)).not.toContain(value);
     }
   });
 
-  it("종료(안락사) → ended, 임박 아님", () => {
+  it("종료(안락사) → ended, 임박 아님, 결과와 종료 사유가 Domain까지 온다(이슈 #41)", () => {
     const ended = byId("427346202600847");
     expect(ended.status).toBe("ended");
+    expect(ended.endResultText).toBe("안락사");
+    expect(ended.endReasonText).toBe("교통사고 전신 마비");
     expect(getDDay(ended, NOW)).toBeNull();
     expect(isSoon(ended, NOW)).toBe(false);
   });

@@ -39,6 +39,12 @@ describe("detailRows", () => {
     ]);
   });
 
+  it("종료 사유가 있으면 공고 기간 뒤, 특이사항 앞에 원문 그대로 둔다(이슈 #41)", () => {
+    const rows = detailRows({ ...full, status: "ended", endReasonText: "가상 종료 사유" });
+    expect(rows.map((row) => row.label)).toEqual(["발견 장소", "보호소", "공고 기간", "종료 사유", "특이사항"]);
+    expect(rows[3]).toEqual({ label: "종료 사유", value: "가상 종료 사유", action: null });
+  });
+
   it("전화에 숫자가 없으면 줄은 두고 동작만 뺀다", () => {
     const tel = detailRows({ ...full, shelterTelText: "미정" }).find((row) => row.label === "전화");
     expect(tel).toEqual({ label: "전화", value: "미정", action: null });

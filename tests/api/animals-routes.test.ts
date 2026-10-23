@@ -80,15 +80,14 @@ describe("GET /api/animals", () => {
     expect(new URL(String(upstreamFetch.mock.calls[0][0])).searchParams.get("upkind")).toBe("422400");
   });
 
-  it("응답에 담당자 이름, 종료 사유, sortKeys가 없다", async () => {
+  it("응답에 담당자 이름, sortKeys가 없다", async () => {
     const text = await (await getList(req("/api/animals?status=all"))).text();
-    for (const key of ["careTel", "careAddr", "careOwnerNm", "endReason", "sortKeys"]) {
+    for (const key of ["careTel", "careAddr", "careOwnerNm", "sortKeys"]) {
       expect(text).not.toContain(key);
     }
     for (const item of fixture.items) {
       // careOwnerNm은 orgNm(regionText로 공개)과 같은 값일 수 있다(픽스처 1: 제주특별자치도).
       if (item.careOwnerNm !== item.orgNm) expect(text).not.toContain(item.careOwnerNm);
-      if (item.endReason) expect(text).not.toContain(item.endReason);
     }
   });
 

@@ -47,6 +47,7 @@ export function mapUpstreamItem(
     species,
     images: toImages(dto),
     status: toStatus(dto, logger),
+    endResultText: toEndResult(dto.processState),
     noticeEndDate: noticeEnd ? formatIsoDate(noticeEnd) : null,
     sex: toSex(dto.sexCd ?? ""),
     ageText: nonEmpty(dto.age),
@@ -59,7 +60,8 @@ export function mapUpstreamItem(
       noticeStart && noticeEnd
         ? `${formatMonthDay(noticeStart)} ~ ${formatMonthDay(noticeEnd)}`
         : null,
-    specialMarkText: specialMarkWithoutEndReason(dto),
+    specialMarkText: specialMarkUnlessEndReason(dto),
+    endReasonText: nonEmpty(dto.endReason),
     kindText: toKindText(dto.kindFullNm),
   };
 
@@ -75,10 +77,10 @@ export function mapUpstreamItem(
 
 /**
  * 특이사항. 보호소가 종료 사유(endReason)와 같은 문구를 특이사항에도 적는 경우가 있어(픽스처 427346202600847),
- * 그대로 내보내면 노출하지 않기로 한 종료 사유가 특이사항 칸으로 드러난다(PRD, architecture.md 10절).
- * 두 값이 같으면(공백 차이 무시) 내보내지 않는다. 문구가 다르면 특이사항은 그대로 보낸다.
+ * 그대로 보내면 상세에 같은 문장이 "종료 사유"와 "특이사항" 두 줄로 보인다(architecture.md 10절, 이슈 #41).
+ * 두 값이 같으면(공백 차이 무시) 특이사항을 비워 "종료 사유" 줄 하나로 보이게 한다. 문구가 다르면 특이사항은 그대로 보낸다.
  */
-function specialMarkWithoutEndReason(dto: UpstreamAnimalItemDto): string | null {
+function specialMarkUnlessEndReason(dto: UpstreamAnimalItemDto): string | null {
   const specialMark = nonEmpty(dto.specialMark);
   const endReason = nonEmpty(dto.endReason);
   return specialMark !== null && specialMark === endReason ? null : specialMark;
@@ -125,6 +127,15 @@ function toStatus(dto: UpstreamAnimalItemDto, logger: Logger): AnimalWireDto["st
     });
   }
   return "protected";
+}
+
+/**
+ * `종료(입양)` → `입양`. 괄호 안 낱말을 원문 그대로 쓴다(값 목록을 고정하지 않는다, 이슈 #41).
+ * 종료가 아니거나 괄호가 없거나 괄호 안이 비면 null
+ */
+function toEndResult(processState: string): string | null {
+  const match = /^종료\s*\((.*)\)$/.exec(processState.trim());
+  return match ? nonEmpty(match[1]) : null;
 }
 
 function toSex(sexCd: string): AnimalWireDto["sex"] {

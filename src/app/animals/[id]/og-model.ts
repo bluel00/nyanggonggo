@@ -44,7 +44,7 @@ export function buildOgModel(animal: Animal, now: Date): OgModel {
     sub: animalSubtitle(animal),
     speciesLabel: speciesText(animal),
     variant,
-    badgeText: statusBadgeText(variant, null),
+    badgeText: statusBadgeText(animal, now, { dDay: false }),
     dDayText: dDay === null ? null : dDayText(dDay),
     imageSrc: getPrimaryImage(animal),
     ended,

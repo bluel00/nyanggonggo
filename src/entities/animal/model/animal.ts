@@ -1,9 +1,11 @@
-/** FE Domain. UI는 이 타입만 소비한다(architecture.md 6절). 담당자 이름과 종료 사유는 넣지 않는다. */
+/** FE Domain. UI는 이 타입만 소비한다(architecture.md 6절). 담당자 이름은 넣지 않는다. */
 export type Animal = {
   id: string;
   species: "cat" | "dog" | "other";
   images: string[];
   status: "protected" | "ended";
+  /** 종료 결과(입양, 반환, 자연사…) 원문. 값 목록을 고정하지 않는다. 종료가 아니거나 모르면 null(이슈 #41) */
+  endResultText: string | null;
   /** 공고 종료일 00:00 KST */
   noticeEndAt: Date | null;
   sex: "male" | "female" | "unknown";
@@ -23,6 +25,8 @@ export type Animal = {
   noticePeriodText: string | null;
   /** 특이사항(specialMark). 상세에서만 보여 준다 */
   specialMarkText: string | null;
+  /** 종료 사유(endReason) 원문. 상세 정보 줄에만 쓴다(이슈 #41) */
+  endReasonText: string | null;
   /** 품종 이름. 기타 축종은 실제 동물(토끼, 앵무새…)이다. 뽑을 수 없으면 null */
   kindText: string | null;
 };

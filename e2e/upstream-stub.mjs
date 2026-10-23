@@ -70,6 +70,8 @@ function item(id, { upkind, kind, fullKind = kind, orgNm, photos, updTm, noticeE
 
 /** 종료 공고 id → 사진 장수(상세 제목 줄·도트 줄 자리 확인용, e2e/detail-title.spec.ts와 같아야 한다). 사진은 1:1이라 뼈대의 기본 칸과 같다 */
 const ENDED_CASES = { "990000202600011": 2, "990000202600012": 1 };
+/** 종료 사유가 있는 종료 공고 id → 종료 사유. 지어낸 값이다(e2e/ended-result.spec.ts와 같아야 한다, 이슈 #41) */
+const ENDED_REASONS = { "990000202600011": "E2E 입양 완료" };
 
 /**
  * updTm이 하나씩 이르다(최신순 정렬이 index 순서). 종료일은 7~16일 뒤로 돌려 종료임박순은 다른 순서가 된다.
@@ -150,6 +152,7 @@ const BY_ID = new Map([
       updTm: "2026-10-14 09:00:00.0",
       noticeEdtDays: -1,
       processState: "종료(입양)",
+      extra: id in ENDED_REASONS ? { endReason: ENDED_REASONS[id] } : {},
     }),
   ]),
   [

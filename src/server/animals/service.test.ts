@@ -242,17 +242,16 @@ describe("list: 커서", () => {
 });
 
 describe("응답 계약", () => {
-  it("계약 스키마를 통과하고 sortKeys, 담당자 이름, 종료 사유가 없다", async () => {
+  it("계약 스키마를 통과하고 sortKeys, 담당자 이름이 없다", async () => {
     const result = await service().list(params({ status: "all" }));
     expect(AnimalListResponseSchema.parse(result)).toEqual(result);
     const serialized = JSON.stringify(result);
-    for (const key of ["sortKeys", "noticeSdt", "updTm", "careTel", "careAddr", "careOwnerNm", "endReason"]) {
+    for (const key of ["sortKeys", "noticeSdt", "updTm", "careTel", "careAddr", "careOwnerNm"]) {
       expect(serialized).not.toContain(key);
     }
     for (const dto of dtos) {
       // careOwnerNm은 orgNm(regionText로 공개)과 같은 값일 수 있다(픽스처 1: 제주특별자치도).
       if (dto.careOwnerNm && dto.careOwnerNm !== dto.orgNm) expect(serialized).not.toContain(dto.careOwnerNm);
-      if (dto.endReason) expect(serialized).not.toContain(dto.endReason);
     }
   });
 });
