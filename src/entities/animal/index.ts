@@ -3,6 +3,7 @@ export type { AnimalListParams, AnimalRepository, AnimalRequestOptions } from ".
 export { toAnimal } from "./model/mapper";
 export { getDDay, isSoon } from "./model/dDay";
 export { getPrimaryImage, getStatusVariant, type AnimalStatusVariant } from "./model/status";
+export { allowsMotion } from "./model/motion";
 export { getShelterContact, kakaoMapSearchUrl, telHref, type ShelterContact } from "./model/shelter-contact";
 export { animalRepository, createAnimalRepository } from "./api/animal-repository";
 export {
@@ -33,12 +34,14 @@ export { AnimalCard, type CardSelection } from "./ui/animal-card";
 export { AnimalPhoto, PHOTO_SIZES } from "./ui/animal-photo";
 export { photoTransition } from "./ui/photo-transition";
 export { CHARACTER_SRC, SpeciesCharacter, type CharacterHandle, type CharacterSpecies } from "./ui/species-character";
-export { StatusBadge, statusBadgeText } from "./ui/status-badge";
+export { dDayText, StatusBadge, statusBadgeText } from "./ui/status-badge";
 export {
   ANIMAL_COPY,
+  animalSubtitle,
   animalSummaryText,
   animalTitle,
   detailDisplayText,
+  photoAlt,
   SEX_LABEL,
   sexAgeText,
   SPECIES_COPY,

@@ -90,6 +90,23 @@ describe("AnimalDetail", () => {
     expect(dDay.className).toContain("text-status-soon-text");
   });
 
+  it("당일은 'D-day'(임박 주황)", async () => {
+    fetchMock.mockResolvedValue(Response.json(wire({ noticeEndDate: "2026-09-21" })));
+    const { container } = renderDetail();
+    await screen.findByRole("heading");
+    const dDay = container.querySelector('[data-slot="d-day"]')!;
+    expect(dDay.textContent).toBe("D-day");
+    expect(dDay.className).toContain("text-status-soon-text");
+    expect(container.querySelector('[data-slot="status-badge"]')?.textContent).toBe("임박");
+  });
+
+  it("사진 alt는 카드와 같은 '<축종> 사진, <지역>' 뒤에 사진 번호", async () => {
+    fetchMock.mockResolvedValue(Response.json(wire()));
+    renderDetail();
+    await screen.findByRole("heading");
+    expect(screen.getAllByRole("img")[0].getAttribute("alt")).toBe("고양이 사진, 제주특별자치도 1");
+  });
+
   it("만료된 보호중(dDay null)은 D-day를 보이지 않는다", async () => {
     fetchMock.mockResolvedValue(Response.json(wire({ noticeEndDate: "2026-09-20" })));
     const { container } = renderDetail();

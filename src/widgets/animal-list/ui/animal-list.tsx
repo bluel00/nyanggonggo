@@ -3,11 +3,11 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type Ref } from "react";
 import {
+  allowsMotion,
   AnimalCard,
   chooseDetailEntryMode,
   ANIMAL_COPY,
   detailDisplayText,
-  getStatusVariant,
   listFilterKey,
   seedAnimalDetail,
   SPECIES_COPY,
@@ -53,7 +53,7 @@ export function AnimalList({ filter }: { filter: AnimalListFilter }) {
     warmDetail(animal);
     if (!selection) return;
     seedAnimalDetail(queryClient, animal);
-    startDetailEntry({ id: animal.id, ...selection, mode: chooseDetailEntryMode(getStatusVariant(animal, now) === "ended") });
+    startDetailEntry({ id: animal.id, ...selection, mode: chooseDetailEntryMode(animal) });
   };
   const [now] = useState(() => new Date());
   const copy = SPECIES_COPY[filter.species];
@@ -117,9 +117,8 @@ export function AnimalList({ filter }: { filter: AnimalListFilter }) {
           onSelect={(selection) => select(animal, selection)}
           onPress={() => warmDetail(animal)}
           transition
-          action={
-            <FavoriteButton animalId={animal.id} variant="overlay" ended={getStatusVariant(animal, now) === "ended"} />
-          }
+          // 하트 튐·누름은 CSS(motion-safe:, no-preference)가 움직임 줄이기를 거르므로 false
+          action={<FavoriteButton animalId={animal.id} variant="overlay" still={!allowsMotion(animal, false)} />}
         />
       ))}
       {query.isFetchingNextPage && <SkeletonCard />}
@@ -146,7 +145,7 @@ function FeedList({ children, ref }: { children: ReactNode; ref?: Ref<HTMLDivEle
 
 /**
  * 목록 첫 화면 등장(README 움직임 표): 뼈대 다음에 첫 페이지가 그려지는 순간, 첫 화면에 들어가는 카드에만 한 번 data-enter="list"와
- * 순서를 붙인다(globals.css). 종료 카드는 뺀다. 칠하기 전(layout effect)에 붙여 카드가 한 번 보였다 사라지는 깜빡임이 없다.
+ * 순서를 붙인다(globals.css). 움직이지 않는 카드(data-still, 종료 카드)는 뺀다. 칠하기 전(layout effect)에 붙여 카드가 한 번 보였다 사라지는 깜빡임이 없다.
  *
  * 몇 장이 첫 화면인지는 **뼈대가 칠해진 뒤**(effect) 뼈대 위치로 정해 두고, 카드를 그릴 때는 레이아웃을 읽지 않는다.
  * 카드를 그리는 커밋 안에서 위치를 읽으면 레이아웃이 강제로 앞당겨져 지연 로딩 사진까지 첫 사진과 함께 받기 시작해
@@ -179,7 +178,7 @@ function useFirstScreenEntrance(listKey: string, pending: boolean) {
     const cards = ref.current?.querySelectorAll<HTMLElement>('[data-slot="animal-card"]') ?? [];
     let order = 0;
     for (const card of [...cards].slice(0, count)) {
-      if (card.dataset.status === "ended") continue;
+      if (card.dataset.still !== undefined) continue;
       card.dataset.enter = "list";
       card.style.setProperty("--enter-i", String(order++));
       const done = (event: AnimationEvent) => {

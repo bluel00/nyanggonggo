@@ -3,8 +3,9 @@
 import { useEffect, useImperativeHandle, useRef, useState, type Ref } from "react";
 import { cn } from "@/shared/lib/utils";
 import { describeError, warnClient } from "@/shared/lib/client-log";
+import { prefersReducedMotion } from "@/shared/lib/use-reduced-motion";
 import { CHARACTER_PRESS_TRIGGER, CHARACTER_STATE_MACHINE } from "../lib/character-animation-assets";
-import { loadCharacterAnimation, prefersReducedMotion, type CharacterAnimationKit } from "../lib/character-animation";
+import { loadCharacterAnimation, type CharacterAnimationKit } from "../lib/character-animation";
 import type { Animal } from "../model/animal";
 
 /** 캐릭터가 있는 축종. 기타는 종이 분산되어 하나로 대표할 수 없어 캐릭터를 만들지 않는다(docs/design/characters.md) */
@@ -77,6 +78,7 @@ export function SpeciesCharacter({
   );
 
   useEffect(() => {
+    // 움직임을 줄이도록 설정했으면 런타임·WASM·.riv를 아예 받지 않는다(characters.md: 기본 포즈로 정지)
     if (!animated || prefersReducedMotion()) return;
     let cancelled = false;
     void loadCharacterAnimation().then((loaded) => {

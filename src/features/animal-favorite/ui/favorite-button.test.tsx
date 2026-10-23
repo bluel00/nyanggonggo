@@ -81,7 +81,7 @@ describe("FavoriteButton", () => {
     });
 
     it("종료 공고는 채움만: 튐·끄기 페이드·누름 효과가 없다", () => {
-      render(<FavoriteButton animalId="1" variant="overlay" ended />);
+      render(<FavoriteButton animalId="1" variant="overlay" still />);
       const button = screen.getByRole("button");
       expect(button.className).not.toContain("scale-press");
       fireEvent.click(button);

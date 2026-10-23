@@ -3,16 +3,18 @@
 import { MapPin, Phone } from "lucide-react";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import {
+  allowsMotion,
   ANIMAL_COPY,
   animalTitle,
   clearDetailEntry,
+  dDayText,
   getDDay,
   getDetailEntry,
   getShelterContact,
   getStatusVariant,
+  photoAlt,
   setDetailEntryPhotoIndex,
   sexAgeText,
-  speciesText,
   StatusBadge,
   useAnimal,
   type DetailEntry,
@@ -110,10 +112,11 @@ export function AnimalDetail({ id, firstPhotoSize = null }: { id: string; firstP
   const animal = query.data;
   const variant = getStatusVariant(animal, now);
   const ended = variant === "ended";
-  const dDay = ended ? null : getDDay(animal, now);
-  const alt = `${speciesText(animal)} 사진, ${animal.regionText}`;
+  const dDay = getDDay(animal, now);
+  const alt = photoAlt(animal);
   // 진입 효과(globals.css [data-detail-enter]). 종료 공고(서버 데이터로 종료가 된 경우 포함)와 효과 없음은 붙이지 않는다
-  const enterMode = entering && entry && !ended && entry.mode !== "none" ? entry.mode : null;
+  // 움직임 줄이기는 진입 효과 CSS(globals.css no-preference)가 거르고 entry.mode도 이미 none이므로 false
+  const enterMode = entering && entry && allowsMotion(animal, false) && entry.mode !== "none" ? entry.mode : null;
   const enterStyle = { "--detail-elapsed": `${elapsedMs}ms` } as CSSProperties;
   const infoEnter = enterMode ? { "data-detail-enter": enterMode === "morph" ? "info" : "fade", style: enterStyle } : {};
   const contact = getShelterContact(animal);
@@ -169,7 +172,7 @@ export function AnimalDetail({ id, firstPhotoSize = null }: { id: string; firstP
           <StatusBadge variant={variant} dDay={null} />
           {dDay !== null && (
             <span data-slot="d-day" className={cn("text-title", STATUS_TEXT[variant])}>
-              {dDay === 0 ? "D-day" : `D-${dDay}`}
+              {dDayText(dDay)}
             </span>
           )}
         </div>
@@ -218,7 +221,8 @@ export function AnimalDetail({ id, firstPhotoSize = null }: { id: string; firstP
       </div>
 
       <BottomCtaBar {...infoEnter} data-slot="bottom-cta">
-        <FavoriteButton animalId={animal.id} ended={ended} />
+        {/* 하트 튐·누름은 CSS(motion-safe:, no-preference)가 움직임 줄이기를 거르므로 false */}
+        <FavoriteButton animalId={animal.id} still={!allowsMotion(animal, false)} />
         <ShareButton animal={animal} />
       </BottomCtaBar>
 
