@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Animal } from "../model/animal";
 import { AnimalCard } from "./animal-card";
 import { statusBadgeText } from "./status-badge";
+import { makeAnimal } from "@tests/factories/animal";
 
 afterEach(cleanup);
 
@@ -11,24 +12,18 @@ const kst = (iso: string) => new Date(`${iso}+09:00`);
 const NOW = kst("2026-09-21T09:00:00");
 const IMG = "http://openapi.animal.go.kr/openapi/service/rest/fileDownloadSrvc/files/shelter/2026/09/1%5B1%5D.jpg";
 
-const animal = (overrides: Partial<Animal> = {}): Animal => ({
-  id: "450650202602282",
-  species: "cat",
-  images: [IMG, "http://openapi.animal.go.kr/b.jpg"],
-  status: "protected",
-  noticeEndAt: kst("2026-10-01T00:00:00"),
-  sex: "female",
-  ageText: "2024(년생)",
-  regionText: "제주특별자치도",
-  shelterName: "제2동물보호센터",
-  foundPlaceText: "서귀포시 남원읍",
-  shelterAddressText: null,
-  shelterTelText: null,
-  noticePeriodText: "09.21 ~ 10.01",
-  specialMarkText: null,
-  kindText: null,
-  ...overrides,
-});
+const animal = (overrides: Partial<Animal> = {}): Animal =>
+  makeAnimal({
+    id: "450650202602282",
+    images: [IMG, "http://openapi.animal.go.kr/b.jpg"],
+    sex: "female",
+    ageText: "2024(년생)",
+    regionText: "제주특별자치도",
+    shelterName: "제2동물보호센터",
+    foundPlaceText: "서귀포시 남원읍",
+    noticePeriodText: "09.21 ~ 10.01",
+    ...overrides,
+  });
 
 function renderCard(a: Animal) {
   const { container } = render(<AnimalCard animal={a} now={NOW} />);

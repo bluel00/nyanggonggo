@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { Animal } from "@/entities/animal";
 import { KAKAO_SDK_INTEGRITY, KAKAO_SDK_URL, ShareButton } from "./share-button";
+import { makeAnimal } from "@tests/factories/animal";
 
 const showToast = vi.fn();
 vi.mock("@/shared/ui/toast", () => ({ showToast: (message: string) => showToast(message) }));
@@ -18,23 +18,7 @@ afterEach(() => {
   delete (window as unknown as { Kakao?: unknown }).Kakao;
 });
 
-const animal: Animal = {
-  id: "1",
-  species: "cat",
-  images: [],
-  status: "protected",
-  noticeEndAt: null,
-  sex: "unknown",
-  ageText: null,
-  regionText: "서울특별시",
-  shelterName: null,
-  foundPlaceText: null,
-  shelterAddressText: null,
-  shelterTelText: null,
-  noticePeriodText: null,
-  specialMarkText: null,
-  kindText: null,
-};
+const animal = makeAnimal({ noticeEndAt: null });
 
 describe("카카오 SDK 상수", () => {
   it("Full SDK(minified) 2.8.3과 sha384 integrity를 함께 둔다", () => {

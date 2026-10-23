@@ -1,27 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { Animal } from "@/entities/animal";
 import { buildShareContent, resolveShareOrigin } from "./share-content";
+import { makeAnimal } from "@tests/factories/animal";
 
 const kst = (iso: string) => new Date(`${iso}+09:00`);
 const IMG = "http://openapi.animal.go.kr/openapi/files/1%5B1%5D.jpg";
-const animal = (overrides: Partial<Animal> = {}): Animal => ({
-  id: "450650202602282",
-  species: "cat",
-  images: [IMG],
-  status: "protected",
-  noticeEndAt: kst("2026-10-01T00:00:00"),
-  sex: "female",
-  ageText: null,
-  regionText: "제주특별자치도",
-  shelterName: "제2동물보호센터",
-  foundPlaceText: null,
-  shelterAddressText: null,
-  shelterTelText: null,
-  noticePeriodText: null,
-  specialMarkText: null,
-  kindText: null,
-  ...overrides,
-});
+const animal = (overrides: Partial<Animal> = {}): Animal =>
+  makeAnimal({ id: "450650202602282", images: [IMG], sex: "female", regionText: "제주특별자치도", shelterName: "제2동물보호센터", ...overrides });
 const NOW = kst("2026-09-21T09:00:00");
 
 describe("buildShareContent", () => {

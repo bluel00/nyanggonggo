@@ -6,30 +6,25 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AnimalWireDto } from "@/contract/animals";
 import { createQueryClient } from "@/shared/api/query-client";
 import { AnimalDetail } from "./animal-detail";
+import { makeWire } from "@tests/factories/animal";
 
 const back = vi.fn();
 const push = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ back, push }) }));
 
 const IMG = "http://openapi.animal.go.kr/openapi/service/rest/fileDownloadSrvc/files/shelter/2026/09/1.jpg";
-const wire = (overrides: Partial<AnimalWireDto> = {}): AnimalWireDto => ({
-  id: "450650202602282",
-  species: "cat",
-  images: [IMG],
-  status: "protected",
-  noticeEndDate: "2026-10-01",
-  sex: "female",
-  ageText: "2024(년생)",
-  regionText: "제주특별자치도",
-  shelterName: "제2동물보호센터",
-  foundPlaceText: "서귀포시 남원읍",
-  shelterAddressText: null,
-  shelterTelText: null,
-  noticePeriodText: "09.21 ~ 10.01",
-  specialMarkText: null,
-  kindText: null,
-  ...overrides,
-});
+const wire = (overrides: Partial<AnimalWireDto> = {}): AnimalWireDto =>
+  makeWire({
+    id: "450650202602282",
+    images: [IMG],
+    sex: "female",
+    ageText: "2024(년생)",
+    regionText: "제주특별자치도",
+    shelterName: "제2동물보호센터",
+    foundPlaceText: "서귀포시 남원읍",
+    noticePeriodText: "09.21 ~ 10.01",
+    ...overrides,
+  });
 
 const fetchMock = vi.fn<(input: string | URL | Request) => Promise<Response>>();
 

@@ -1,28 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { Animal } from "./animal";
 import { getDDay, isSoon } from "./dDay";
+import { makeAnimal } from "@tests/factories/animal";
 
 const kst = (iso: string) => new Date(`${iso}+09:00`);
 const END = kst("2026-10-01T00:00:00");
 
-const animal = (overrides: Partial<Animal> = {}): Animal => ({
-  id: "1",
-  species: "cat",
-  images: [],
-  status: "protected",
-  noticeEndAt: END,
-  sex: "unknown",
-  ageText: null,
-  regionText: "서울특별시",
-  shelterName: null,
-  foundPlaceText: null,
-  shelterAddressText: null,
-  shelterTelText: null,
-  noticePeriodText: null,
-  specialMarkText: null,
-  kindText: null,
-  ...overrides,
-});
+const animal = (overrides: Partial<Animal> = {}): Animal => makeAnimal({ noticeEndAt: END, ...overrides });
 
 describe("getDDay", () => {
   it("기준일 2026-09-21, 종료일 2026-10-01 → 10", () => {
