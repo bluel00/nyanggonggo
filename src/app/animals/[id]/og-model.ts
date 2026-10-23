@@ -1,6 +1,8 @@
 import {
+  animalSubtitle,
   animalSummaryText,
   animalTitle,
+  dDayText,
   getDDay,
   getPrimaryImage,
   getStatusVariant,
@@ -35,15 +37,15 @@ export type OgModel = {
 export function buildOgModel(animal: Animal, now: Date): OgModel {
   const variant = getStatusVariant(animal, now);
   const ended = variant === "ended";
-  const dDay = ended ? null : getDDay(animal, now);
+  const dDay = getDDay(animal, now);
   return {
     title: animalTitle(animal),
     region: animal.regionText,
-    sub: animal.shelterName ?? animal.foundPlaceText,
+    sub: animalSubtitle(animal),
     speciesLabel: speciesText(animal),
     variant,
     badgeText: statusBadgeText(variant, null),
-    dDayText: dDay === null ? null : dDay === 0 ? "D-day" : `D-${dDay}`,
+    dDayText: dDay === null ? null : dDayText(dDay),
     imageSrc: getPrimaryImage(animal),
     ended,
     description: animalSummaryText(animal, now),

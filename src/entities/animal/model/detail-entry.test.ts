@@ -19,18 +19,18 @@ afterEach(() => {
 describe("chooseDetailEntryMode", () => {
   it("보호 중: 전환을 지원하면 morph, 아니면 fade", () => {
     setEnvironment({ reducedMotion: false, viewTransitions: true });
-    expect(chooseDetailEntryMode(false)).toBe("morph");
+    expect(chooseDetailEntryMode({ status: "protected" })).toBe("morph");
     setEnvironment({ reducedMotion: false, viewTransitions: false });
-    expect(chooseDetailEntryMode(false)).toBe("fade");
+    expect(chooseDetailEntryMode({ status: "protected" })).toBe("fade");
   });
 
   it("종료 공고는 효과 없음", () => {
     setEnvironment({ reducedMotion: false, viewTransitions: true });
-    expect(chooseDetailEntryMode(true)).toBe("none");
+    expect(chooseDetailEntryMode({ status: "ended" })).toBe("none");
   });
 
   it("움직임 줄이기면 효과 없음", () => {
     setEnvironment({ reducedMotion: true, viewTransitions: true });
-    expect(chooseDetailEntryMode(false)).toBe("none");
+    expect(chooseDetailEntryMode({ status: "protected" })).toBe("none");
   });
 });

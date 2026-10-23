@@ -12,11 +12,16 @@ const VARIANT_CLASS: Record<AnimalStatusVariant, { badge: string; dot: string }>
   ended: { badge: "bg-status-ended-bg text-status-ended-text", dot: "bg-status-ended" },
 };
 
+/** D-day 표기(이슈 #29): 당일은 "D-day", 그 밖은 "D-n". 배지, 상세의 D-day, OG 이미지가 모두 이것을 쓴다 */
+export function dDayText(dDay: number): string {
+  return dDay === 0 ? "D-day" : `D-${dDay}`;
+}
+
 export function statusBadgeText(variant: AnimalStatusVariant, dDay: number | null): string {
   if (variant === "ended") return "종료";
   const label = variant === "soon" ? "임박" : "보호중";
   if (dDay === null) return label;
-  return `${label} · ${dDay === 0 ? "D-day" : `D-${dDay}`}`;
+  return `${label} · ${dDayText(dDay)}`;
 }
 
 export function StatusBadge({

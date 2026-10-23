@@ -11,31 +11,31 @@ import { useFavorite } from "../model/use-favorites";
  * - overlay: 카드 사진 위. 흰 원(photo-pill)은 40px이고 누르는 영역은 44px 그대로다(handoff 찜 하트)
  *
  * 움직임(README 움직임 표): 켤 때 하트를 바로 채우고 아이콘만 1 → 1.2(45%) → 1로 튄다(280ms, globals.css [data-heart-pop]).
- * 흰 원 크기는 그대로다. 끌 때는 채움이 120ms에 걸쳐 사라진다. 종료 공고(`ended`)와 움직임 줄이기는 채움만 바로 바뀌고
+ * 흰 원 크기는 그대로다. 끌 때는 채움이 120ms에 걸쳐 사라진다. 움직이지 않는 공고(`still`, 종료 공고)와 움직임 줄이기는 채움만 바로 바뀌고
  * 튐·페이드·누름 효과가 없다.
  */
 export function FavoriteButton({
   animalId,
   variant = "outline",
-  ended = false,
+  still = false,
   className,
 }: {
   animalId: string;
   variant?: "outline" | "overlay";
-  /** 종료 공고면 움직임 없이 채움만 바꾼다 */
-  ended?: boolean;
+  /** 움직이지 않는 공고(entities의 allowsMotion이 false, 종료 공고)면 움직임 없이 채움만 바꾼다 */
+  still?: boolean;
   className?: string;
 }) {
   const { isFavorite, toggle } = useFavorite(animalId);
   // 켤 때마다 1씩 늘려 아이콘을 다시 그린다(애니메이션을 처음부터). 0이면 아직 켠 적이 없어 튀지 않는다
   const [pops, setPops] = useState(0);
-  const pop = pops > 0 && isFavorite && !ended;
+  const pop = pops > 0 && isFavorite && !still;
   const heart = (
     <Heart
       key={pops}
       aria-hidden
       data-heart-pop={pop ? "" : undefined}
-      className={cn("size-[22px]", !ended && !isFavorite && "motion-safe:transition-[fill-opacity] motion-safe:duration-[var(--heart-off-duration)]")}
+      className={cn("size-[22px]", !still && !isFavorite && "motion-safe:transition-[fill-opacity] motion-safe:duration-[var(--heart-off-duration)]")}
       strokeWidth={1.8}
       fill="currentColor"
       fillOpacity={isFavorite ? 1 : 0}
@@ -56,7 +56,7 @@ export function FavoriteButton({
       }}
       className={cn(
         "group inline-flex size-touch flex-none items-center justify-center rounded-pill text-text",
-        !ended && "transition-[scale] duration-press ease-out motion-safe:active:scale-press",
+        !still && "transition-[scale] duration-press ease-out motion-safe:active:scale-press",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
         variant === "outline" && "bg-surface shadow-control active:bg-bg",
         className,

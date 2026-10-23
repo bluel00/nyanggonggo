@@ -17,11 +17,6 @@ const importRuntime: RuntimeImporter = () => import("@rive-app/canvas-lite");
 
 let pending: Promise<CharacterAnimationKit | null> | null = null;
 
-/** 움직임을 줄이도록 설정했으면 런타임·WASM·.riv를 아예 받지 않는다(characters.md: 기본 포즈로 정지) */
-export function prefersReducedMotion(): boolean {
-  return typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true;
-}
-
 async function fetchBytes(url: string): Promise<ArrayBuffer> {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`HTTP ${response.status} ${url}`);

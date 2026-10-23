@@ -1,3 +1,7 @@
+import { prefersReducedMotion } from "@/shared/lib/use-reduced-motion";
+import type { Animal } from "./animal";
+import { allowsMotion } from "./motion";
+
 /**
  * 목록 카드 → 상세 진입 정보(architecture.md 14.2 4단계, 구조 D1). 카드를 누르는 순간 목록 위젯이 남기고 상세 위젯이 읽는다.
  *
@@ -57,8 +61,8 @@ export function resetDetailEntriesForTest(): void {
   entries.clear();
 }
 
-/** 진입 효과를 고른다. 종료 공고·움직임 줄이기는 효과 없음, View Transitions가 없으면 페이드 */
-export function chooseDetailEntryMode(ended: boolean): DetailEntryMode {
-  if (ended || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return "none";
+/** 진입 효과를 고른다. 움직이지 않는 공고(종료·움직임 줄이기, allowsMotion)는 효과 없음, View Transitions가 없으면 페이드 */
+export function chooseDetailEntryMode(animal: Pick<Animal, "status">): DetailEntryMode {
+  if (!allowsMotion(animal, prefersReducedMotion())) return "none";
   return typeof document.startViewTransition === "function" ? "morph" : "fade";
 }

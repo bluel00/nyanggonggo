@@ -9,10 +9,11 @@ import { ViewTransition } from "@/shared/ui/view-transition";
 import type { Animal } from "../model/animal";
 import type { CardPhotoSize } from "../model/detail-entry";
 import { getDDay } from "../model/dDay";
+import { allowsMotion } from "../model/motion";
 import { getPrimaryImage, getStatusVariant } from "../model/status";
 import { AnimalPhoto, PHOTO_SIZES } from "./animal-photo";
 import { CARD_TO_DETAIL, photoTransition } from "./photo-transition";
-import { animalTitle, speciesText } from "./labels";
+import { animalSubtitle, animalTitle, photoAlt } from "./labels";
 import { StatusBadge } from "./status-badge";
 
 /**
@@ -20,7 +21,8 @@ import { StatusBadge } from "./status-badge";
  *
  * - 흰 카드(surface, radius-card) + shadow-card, 종료는 납작한 shadow-card-ended. 글자 영역 10/12/12px.
  * - 누름(README 움직임 표): scale .98 + shadow-card-pressed, 100ms. 종료 카드와 움직임 줄이기에는 누름 효과가 없다.
- *   등장 효과는 목록 위젯이 첫 화면 카드에만 붙인다(data-enter, 여기서는 하지 않는다)
+ *   등장 효과는 목록 위젯이 첫 화면 카드에만 붙인다(data-enter, 여기서는 하지 않는다). 움직이지 않는 카드(allowsMotion)에는
+ *   data-still을 달아 목록이 등장에서 뺀다
  * - 사진 1:1 cover, 가운데(center). 이미지 프록시 경유 plain img(lazy). 종료 공고는 saturate(.7), 딤 없음.
  *   4:5 center 35%는 4:3 가로 사진(약 절반)에서 한쪽에 치우친 동물의 얼굴을 잘라 1:1로 바꿨다(architecture.md 12절 51)
  * - 배지: 사진 좌상단(12px), photo-pill 배경. 종료 공고는 "종료"만, 그 외는 D-day가 있을 때만 붙인다
@@ -72,11 +74,13 @@ export function AnimalCard({
 }) {
   const variant = getStatusVariant(animal, now);
   const ended = variant === "ended";
-  const alt = `${speciesText(animal)} 사진, ${animal.regionText}`;
-  const sub = animal.shelterName ?? animal.foundPlaceText;
+  const alt = photoAlt(animal);
+  const sub = animalSubtitle(animal);
+  // 움직임 효과(전환·누름·첫 화면 등장)를 붙이는지. 움직임 줄이기는 전환만 여기서 보고, 누름·등장은 CSS(motion-safe)가 거른다
+  const motion = allowsMotion(animal);
   // 전환 경계는 실제로 이어질 때만 둔다: 경계가 있으면 React가 전환(0ms라도)을 열고 새 화면의 글꼴·사진을 기다린다
   const reducedMotion = usePrefersReducedMotion();
-  const morph = transition && !ended && !reducedMotion;
+  const morph = transition && allowsMotion(animal, reducedMotion);
   /** 상세로 떠나는 중인 사진(누른 순간부터 상세가 얹힐 때까지). 이 동안만 전환 경계가 있다 */
   const [departing, setDeparting] = useState<CardSelection>(null);
   const photo = (
@@ -86,7 +90,7 @@ export function AnimalCard({
         <DepartingPhoto id={animal.id} href={href} src={departing.photoSrc} onArrived={() => setDeparting(null)} />
       )}
       <div className="absolute top-3 left-3">
-        <StatusBadge variant={variant} dDay={ended ? null : getDDay(animal, now)} onPhoto />
+        <StatusBadge variant={variant} dDay={getDDay(animal, now)} onPhoto />
       </div>
     </div>
   );
@@ -107,7 +111,7 @@ export function AnimalCard({
     ended ? "shadow-card-ended" : "shadow-card",
   );
   return (
-    <div data-slot="animal-card" data-status={variant} data-animal-id={animal.id} className="relative">
+    <div data-slot="animal-card" data-status={variant} data-still={motion ? undefined : ""} data-animal-id={animal.id} className="relative">
       {href ? (
         <Link
           href={href}
@@ -122,7 +126,7 @@ export function AnimalCard({
           scroll={false}
           className={cn(
             className,
-            !ended &&
+            motion &&
               "transition-[scale,box-shadow] duration-press ease-out motion-safe:active:scale-press motion-safe:active:shadow-card-pressed",
             "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
           )}

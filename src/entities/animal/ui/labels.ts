@@ -101,6 +101,16 @@ export function animalTitle(animal: Pick<Animal, "species" | "kindText" | "regio
   return animal.species === "other" ? `${speciesText(animal)} · ${animal.regionText}` : animal.regionText;
 }
 
+/** 공고 사진의 alt: "<축종> 사진, <지역>". 카드와 상세가 같이 쓴다(상세 캐러셀은 뒤에 사진 번호를 붙인다) */
+export function photoAlt(animal: Pick<Animal, "species" | "kindText" | "regionText">): string {
+  return `${speciesText(animal)} 사진, ${animal.regionText}`;
+}
+
+/** 카드 2줄과 OG 이미지 보조 줄: 보호소, 없으면 발견 장소. 둘 다 없으면 null(줄을 그리지 않는다) */
+export function animalSubtitle(animal: Pick<Animal, "shelterName" | "foundPlaceText">): string | null {
+  return animal.shelterName ?? animal.foundPlaceText;
+}
+
 /** 성별 표기(handoff 화면 3: 암컷 / 수컷 / 성별 미상, 임의 결정) */
 export const SEX_LABEL: Record<Animal["sex"], string> = {
   female: "암컷",
@@ -120,7 +130,7 @@ export function sexAgeText(animal: Pick<Animal, "sex" | "ageText">): string {
  */
 export function animalSummaryText(animal: Animal, now: Date): string {
   const variant = getStatusVariant(animal, now);
-  const status = statusBadgeText(variant, variant === "ended" ? null : getDDay(animal, now));
+  const status = statusBadgeText(variant, getDDay(animal, now));
   const specialMark = animal.specialMarkText?.replace(/\s+/g, " ").trim() || null;
   return [sexAgeText(animal), status, specialMark].filter(Boolean).join(" · ");
 }
