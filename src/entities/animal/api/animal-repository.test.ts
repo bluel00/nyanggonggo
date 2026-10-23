@@ -27,6 +27,38 @@ function setup(body: unknown, status = 200) {
 
 describe("createAnimalRepository", () => {
   describe("getAnimals", () => {
+    // CDN 캐시 키(요청 URL 그대로, 쿼리스트링 순서 포함)를 고정한다(이슈 #28). 기대값은 계약을 읽지 않고 글자로 적는다
+    describe("CDN 캐시 키가 값 조합마다 그대로다", () => {
+      const combos = ["cat", "dog", "other"].flatMap((species) =>
+        ["protected", "ended", "all"].flatMap((status) =>
+          ["all", "female", "male"].flatMap((sex) => ["latest", "endingSoon"].map((sort) => ({ species, status, sex, sort }))),
+        ),
+      ) as { species: "cat"; status: "protected"; sex: "all"; sort: "latest" }[];
+
+      it.each(combos)("$species $status $sex $sort", async (filter) => {
+        const { fetch, repository } = setup({ items: [], nextCursor: null });
+        await repository.getAnimals(filter);
+        const sex = filter.sex === "all" ? "" : `&sex=${filter.sex}`;
+        expect(fetch.mock.calls[0][0]).toBe(`/api/animals?species=${filter.species}&status=${filter.status}&sort=${filter.sort}${sex}`);
+      });
+
+      it("지역·시군구·성별·커서가 모두 있을 때의 순서", async () => {
+        const { fetch, repository } = setup({ items: [], nextCursor: null });
+        await repository.getAnimals({
+          species: "dog",
+          region: "6110000",
+          district: "3000000",
+          status: "ended",
+          sex: "female",
+          sort: "endingSoon",
+          cursor: "MjA",
+        });
+        expect(fetch.mock.calls[0][0]).toBe(
+          "/api/animals?species=dog&status=ended&sort=endingSoon&region=6110000&district=3000000&sex=female&cursor=MjA",
+        );
+      });
+    });
+
     it("sex는 전체면 보내지 않고, 고르면 sex=로 보낸다(이슈 #20)", async () => {
       const all = setup({ items: [], nextCursor: null });
       await all.repository.getAnimals({ species: "cat", status: "protected", sex: "all", sort: "latest" });
