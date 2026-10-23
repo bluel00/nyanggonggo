@@ -1,9 +1,9 @@
 "use client";
 
 import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
-import { AnimalPhoto, PHOTO_SIZES } from "@/entities/animal";
+import { AnimalPhoto, PHOTO_SIZES, photoTransition } from "@/entities/animal";
 import { cn } from "@/shared/lib/utils";
-import { photoTransition, ViewTransition } from "@/shared/ui/view-transition";
+import { ViewTransition } from "@/shared/ui/view-transition";
 
 /**
  * 상세 메인 사진. 칸은 부모가 좌우 24px 안쪽으로 두고, 여기서 radius-card로 자르고 칸 바깥 둘레에 shadow-photo를 둔다
