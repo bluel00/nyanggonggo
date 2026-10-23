@@ -27,7 +27,7 @@ export function ScreenHeader({ start, end, sticky = false }: { start: ReactNode;
   return (
     <header
       className={cn(
-        "flex min-h-[calc(var(--header-h)+env(safe-area-inset-top,0px))] items-center justify-between gap-2 px-page pt-[calc(var(--space-3)+env(safe-area-inset-top,0px))] pb-3",
+        "flex min-h-[calc(var(--header-h)+env(safe-area-inset-top,0px))] items-center justify-between gap-2 px-page pt-(--screen-top) pb-3",
         sticky && "sticky top-0 z-10 bg-bg",
       )}
     >

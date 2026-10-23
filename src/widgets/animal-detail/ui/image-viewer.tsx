@@ -77,7 +77,7 @@ export function ImageViewer({
           </div>
         ))}
       </div>
-      <div className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-center px-page pt-[calc(var(--space-3)+env(safe-area-inset-top,0px))]">
+      <div className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-center px-page pt-(--screen-top)">
         {images.length > 1 && (
           <p data-slot="viewer-page" aria-live="polite" className="text-caption text-viewer-fg">
             {index + 1}/{images.length}
@@ -89,7 +89,7 @@ export function ImageViewer({
           size="icon-touch"
           aria-label="닫기"
           onClick={() => onClose(index)}
-          className="pointer-events-auto absolute top-[calc(var(--space-3)+env(safe-area-inset-top,0px))] right-page"
+          className="pointer-events-auto absolute top-(--screen-top) right-page"
         >
           <X aria-hidden strokeWidth={1.8} />
         </Button>
