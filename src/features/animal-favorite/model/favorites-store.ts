@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isAnimalId } from "@/contract/animals";
 
 /**
  * 찜 저장소. localStorage에 animal id 배열만 저장한다(architecture.md 8절, 스냅샷 저장 안 함).
@@ -7,7 +8,7 @@ import { z } from "zod";
  */
 export const FAVORITES_STORAGE_KEY = "nyanggonggo:favorites";
 const CHANGE_EVENT = "nyanggonggo:favorites-change";
-const IdsSchema = z.array(z.string().regex(/^\d{1,32}$/));
+const IdsSchema = z.array(z.string().refine(isAnimalId));
 const EMPTY: readonly string[] = Object.freeze([]);
 
 let cachedRaw: string | null | undefined;
