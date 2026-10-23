@@ -214,6 +214,36 @@ describe("AnimalDetail", () => {
       }
     });
 
+    // 정보 줄 고정(이슈 #30): 모든 값이 있을 때 순서·라벨·값
+    it("모든 값이 있으면 발견 장소 → 보호소 → 주소 → 전화 → 공고 기간 → 특이사항, 값은 원문 그대로", async () => {
+      fetchMock.mockResolvedValue(Response.json(contactWire({ specialMarkText: "가상 특이사항" })));
+      const { container } = renderDetail();
+      await screen.findByRole("heading");
+      expect(terms(container)).toEqual(["발견 장소", "보호소", "주소", "전화", "공고 기간", "특이사항"]);
+      expect([...container.querySelectorAll('[data-slot="detail-value"]')].map((value) => value.textContent)).toEqual([
+        "서귀포시 남원읍",
+        "제2동물보호센터",
+        ADDRESS,
+        TEL,
+        "09.21 ~ 10.01",
+        "가상 특이사항",
+      ]);
+      expect([...container.querySelectorAll('[data-slot="contact-link"]')].map((link) => link.getAttribute("aria-label"))).toEqual([
+        "지도에서 주소 보기(새 탭)",
+        "보호소에 전화",
+      ]);
+    });
+
+    it("전화에 숫자가 없으면 줄은 두고 [전화] 링크만 뺀다", async () => {
+      fetchMock.mockResolvedValue(Response.json(contactWire({ shelterTelText: "미정" })));
+      const { container } = renderDetail();
+      await screen.findByRole("heading");
+      expect(terms(container)).toEqual(["발견 장소", "보호소", "주소", "전화", "공고 기간"]);
+      expect(screen.getByText("미정")).toBeTruthy();
+      expect(screen.queryByRole("link", { name: "보호소에 전화" })).toBeNull();
+      expect(screen.getByRole("link", { name: "지도에서 주소 보기(새 탭)" })).toBeTruthy();
+    });
+
     it("종료: 주소·전화 줄을 숨기고 보호소 이름은 둔다", async () => {
       fetchMock.mockResolvedValue(Response.json(contactWire({ status: "ended" })));
       const { container } = renderDetail();

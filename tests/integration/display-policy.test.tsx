@@ -2,7 +2,7 @@
 import { cleanup, render } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { buildOgModel } from "@/app/animals/[id]/og-model";
-import { AnimalCard, animalSummaryText, type Animal } from "@/entities/animal";
+import { AnimalCard, animalSummaryText, detailDisplayText, type Animal } from "@/entities/animal";
 import { makeAnimal } from "@tests/factories/animal";
 
 /**
@@ -48,6 +48,42 @@ describe("사진 alt", () => {
   it("기타 축종: 실제 동물 이름", () => {
     const card = renderCard(makeAnimal({ species: "other", kindText: "토끼", regionText: "경기도 성남시" }));
     expect(card.querySelector('[role="img"]')?.getAttribute("aria-label")).toBe("토끼 사진, 경기도 성남시");
+  });
+});
+
+describe("상세 글꼴 예열 문자열(이슈 #30)", () => {
+  // 글꼴 예열은 글자 집합이 의미라 순서가 아니라 글자 집합으로 고정한다. 주소·전화는 지어낸 값이다
+  const ADDRESS = "가상특별시 예시구 테스트로 12 (샘플동)";
+  const TEL = "000-1234-5678";
+  const animal = (status: Animal["status"]) =>
+    makeAnimal({
+      status,
+      sex: "female",
+      ageText: "2024(년생)",
+      regionText: "제주특별자치도",
+      shelterName: "제2동물보호센터",
+      foundPlaceText: "서귀포시 남원읍",
+      shelterAddressText: ADDRESS,
+      shelterTelText: TEL,
+      noticePeriodText: "09.21 ~ 10.01",
+      specialMarkText: "가상 특이사항",
+    });
+  const glyphs = (text: string) => [...new Set(text)].sort().join("");
+  const FIXED = [
+    "제주특별자치도",
+    "보호중 임박 종료 · D-day 0123456789",
+    "암컷 · 2024(년생)",
+    "발견 장소 보호소 주소 전화 공고 기간 특이사항",
+    "지도 전화",
+    "제2동물보호센터 서귀포시 남원읍 09.21 ~ 10.01 가상 특이사항",
+  ].join(" ");
+
+  it("보호 중: 제목, 상태 글자, 성별·나이, 줄 이름, 링크 글자, 모든 줄 값", () => {
+    expect(glyphs(detailDisplayText(animal("protected")))).toBe(glyphs(`${FIXED} ${ADDRESS} ${TEL}`));
+  });
+
+  it("종료: 화면에 숨기는 주소·전화 글자도 받는다", () => {
+    expect(glyphs(detailDisplayText(animal("ended")))).toBe(glyphs(`${FIXED} ${ADDRESS} ${TEL}`));
   });
 });
 
