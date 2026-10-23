@@ -22,7 +22,7 @@ import { StatusBadge } from "./status-badge";
  * - 흰 카드(surface, radius-card) + shadow-card, 종료는 납작한 shadow-card-ended. 글자 영역 10/12/12px.
  * - 누름(README 움직임 표): scale .98 + shadow-card-pressed, 100ms. 종료 카드와 움직임 줄이기에는 누름 효과가 없다.
  *   등장 효과는 목록 위젯이 첫 화면 카드에만 붙인다(data-enter, 여기서는 하지 않는다). 움직이지 않는 카드(allowsMotion)에는
- *   data-still을 달아 목록이 등장에서 뺀다
+ *   ANIMAL_CARD_STILL_ATTR를 달아 목록이 등장에서 뺀다
  * - 사진 1:1 cover, 가운데(center). 이미지 프록시 경유 plain img(lazy). 종료 공고는 saturate(.7), 딤 없음.
  *   4:5 center 35%는 4:3 가로 사진(약 절반)에서 한쪽에 치우친 동물의 얼굴을 잘라 1:1로 바꿨다(architecture.md 12절 51)
  * - 배지: 사진 좌상단(12px), photo-pill 배경. 종료 공고는 "종료"만, 그 외는 D-day가 있을 때만 붙인다
@@ -35,6 +35,10 @@ import { StatusBadge } from "./status-badge";
  *   효과 없이 바로 바뀐다(README 원칙). 누를 때 onSelect에 사진이 로드됐으면 그 주소와 실제 가로·세로를, 아니면 null을 넘긴다
  *   (위젯이 상세 로딩 화면을 고른다)
  */
+/** 움직이지 않는 카드(allowsMotion이 false)에 붙이는 속성. 목록 위젯이 첫 화면 등장에서 뺄 카드를 이것으로 가린다(이슈 #37) */
+export const ANIMAL_CARD_STILL_ATTR = "data-still";
+export const ANIMAL_CARD_STILL_SELECTOR = `[${ANIMAL_CARD_STILL_ATTR}]`;
+
 /** 누른 카드의 사진. 로드되지 않았으면 null */
 export type CardSelection = { photoSrc: string; photoSize: CardPhotoSize } | null;
 
@@ -76,7 +80,7 @@ export function AnimalCard({
   const ended = variant === "ended";
   const alt = photoAlt(animal);
   const sub = animalSubtitle(animal);
-  // 누름·첫 화면 등장(data-still). 움직임 줄이기는 CSS(motion-safe:, globals.css no-preference)가 거르므로 false
+  // 누름·첫 화면 등장(ANIMAL_CARD_STILL_ATTR). 움직임 줄이기는 CSS(motion-safe:, globals.css no-preference)가 거르므로 false
   const motion = allowsMotion(animal, false);
   // 전환 경계는 실제로 이어질 때만 둔다: 경계가 있으면 React가 전환(0ms라도)을 열고 새 화면의 글꼴·사진을 기다린다
   const reducedMotion = usePrefersReducedMotion();
@@ -111,7 +115,7 @@ export function AnimalCard({
     ended ? "shadow-card-ended" : "shadow-card",
   );
   return (
-    <div data-slot="animal-card" data-status={variant} data-still={motion ? undefined : ""} data-animal-id={animal.id} className="relative">
+    <div data-slot="animal-card" data-status={variant} {...(motion ? {} : { [ANIMAL_CARD_STILL_ATTR]: "" })} data-animal-id={animal.id} className="relative">
       {href ? (
         <Link
           href={href}
