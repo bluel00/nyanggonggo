@@ -90,9 +90,8 @@ export function FavoriteList() {
                 animal={animal}
                 now={now}
                 href={`/animals/${animal.id}`}
-                action={
-                  <FavoriteButton animalId={animal.id} variant="overlay" still={!allowsMotion(animal)} />
-                }
+                // 하트 튐·누름은 CSS(motion-safe:, no-preference)가 움직임 줄이기를 거르므로 false
+                action={<FavoriteButton animalId={animal.id} variant="overlay" still={!allowsMotion(animal, false)} />}
               />
             ))}
           </FeedList>

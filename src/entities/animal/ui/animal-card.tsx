@@ -76,8 +76,8 @@ export function AnimalCard({
   const ended = variant === "ended";
   const alt = photoAlt(animal);
   const sub = animalSubtitle(animal);
-  // 움직임 효과(전환·누름·첫 화면 등장)를 붙이는지. 움직임 줄이기는 전환만 여기서 보고, 누름·등장은 CSS(motion-safe)가 거른다
-  const motion = allowsMotion(animal);
+  // 누름·첫 화면 등장(data-still). 움직임 줄이기는 CSS(motion-safe:, globals.css no-preference)가 거르므로 false
+  const motion = allowsMotion(animal, false);
   // 전환 경계는 실제로 이어질 때만 둔다: 경계가 있으면 React가 전환(0ms라도)을 열고 새 화면의 글꼴·사진을 기다린다
   const reducedMotion = usePrefersReducedMotion();
   const morph = transition && allowsMotion(animal, reducedMotion);

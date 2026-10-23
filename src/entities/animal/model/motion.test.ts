@@ -3,11 +3,11 @@ import { allowsMotion } from "./motion";
 
 describe("allowsMotion", () => {
   it("보호 중 공고는 움직인다", () => {
-    expect(allowsMotion({ status: "protected" })).toBe(true);
+    expect(allowsMotion({ status: "protected" }, false)).toBe(true);
   });
 
   it("종료 공고는 움직이지 않는다", () => {
-    expect(allowsMotion({ status: "ended" })).toBe(false);
+    expect(allowsMotion({ status: "ended" }, false)).toBe(false);
   });
 
   it("움직임 줄이기면 보호 중이어도 움직이지 않는다", () => {
