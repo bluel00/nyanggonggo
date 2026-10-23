@@ -65,20 +65,7 @@ export const ANIMAL_COPY = {
   /** 찜 목록 위 한 줄. 일부 공고만 오류로 받지 못했을 때(이슈 #5) */
   favoritesPartialError: "일부 공고를 불러오지 못했어요",
   detailErrorTitle: "지금은 공고를 불러오지 못했어요",
-  /** 상세 정보 줄의 이름 */
-  detailRowLabels: {
-    foundPlace: "발견 장소",
-    shelter: "보호소",
-    shelterAddress: "주소",
-    shelterTel: "전화",
-    noticePeriod: "공고 기간",
-    specialMark: "특이사항",
-  },
-  /** 주소·전화 줄 끝의 작은 글자 링크. text는 보이는 글자, label은 접근성 이름이다(이슈 #3) */
-  detailContactActions: {
-    map: { text: "지도", label: "지도에서 주소 보기(새 탭)" },
-    tel: { text: "전화", label: "보호소에 전화" },
-  },
+  /* 상세 정보 줄의 이름과 줄 끝 링크 문구는 줄 규칙과 함께 ui/detail-rows.ts에 있다(이슈 #30) */
   /** 나이를 모를 때 */
   ageUnknown: "나이 미상",
 } as const;
@@ -135,24 +122,3 @@ export function animalSummaryText(animal: Animal, now: Date): string {
   return [sexAgeText(animal), status, specialMark].filter(Boolean).join(" · ");
 }
 
-/**
- * 상세 화면에 보일 글자(제목, 상태·D-day, 성별·나이, 정보 줄 이름과 값). 카드를 누를 때 이 글자의 글꼴 조각을 미리 받는 데 쓴다
- * (architecture.md 14.2 4단계): 카드 → 상세 전환은 새 화면의 글꼴을 다 받을 때까지 커밋을 기다려, 받지 않은 글자가 있으면 그만큼 늦게 떴다.
- */
-export function detailDisplayText(animal: Animal): string {
-  return [
-    animalTitle(animal),
-    "보호중 임박 종료 · D-day 0123456789",
-    sexAgeText(animal),
-    ...Object.values(ANIMAL_COPY.detailRowLabels),
-    ...Object.values(ANIMAL_COPY.detailContactActions).map((action) => action.text),
-    animal.shelterName,
-    animal.foundPlaceText,
-    animal.shelterAddressText,
-    animal.shelterTelText,
-    animal.noticePeriodText,
-    animal.specialMarkText,
-  ]
-    .filter(Boolean)
-    .join(" ");
-}

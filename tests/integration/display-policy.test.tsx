@@ -82,8 +82,9 @@ describe("상세 글꼴 예열 문자열(이슈 #30)", () => {
     expect(glyphs(detailDisplayText(animal("protected")))).toBe(glyphs(`${FIXED} ${ADDRESS} ${TEL}`));
   });
 
-  it("종료: 화면에 숨기는 주소·전화 글자도 받는다", () => {
-    expect(glyphs(detailDisplayText(animal("ended")))).toBe(glyphs(`${FIXED} ${ADDRESS} ${TEL}`));
+  // 의도한 변경(이슈 #30): 리팩터 전에는 화면에 숨기는 주소·전화 글자까지 받았다. 이제 보이는 줄의 글자만 받는다(화면은 같다)
+  it("종료: 화면에 숨기는 주소·전화 글자는 받지 않는다", () => {
+    expect(glyphs(detailDisplayText(animal("ended")))).toBe(glyphs(FIXED));
   });
 });
 

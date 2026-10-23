@@ -1,45 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { getShelterContact, kakaoMapSearchUrl, telHref } from "./shelter-contact";
+import { kakaoMapSearchUrl, telHref } from "./shelter-contact";
 
-// 주소·전화는 지어낸 값이다
+// 주소는 지어낸 값이다. 어떤 줄에 링크를 붙이는지는 ui/detail-rows.test.ts가 본다
 const ADDRESS = "가상특별시 예시구 테스트로 12 (샘플동)";
-const TEL = "000-1234-5678";
-const animal = (overrides: Partial<Parameters<typeof getShelterContact>[0]> = {}) => ({
-  status: "protected" as const,
-  shelterAddressText: ADDRESS,
-  shelterTelText: TEL,
-  ...overrides,
-});
-
-describe("getShelterContact", () => {
-  it("보호 중: 주소와 전화가 원문 그대로이고 링크가 있다", () => {
-    expect(getShelterContact(animal())).toEqual({
-      address: { text: ADDRESS, mapUrl: kakaoMapSearchUrl(ADDRESS) },
-      tel: { text: TEL, href: "tel:00012345678" },
-    });
-  });
-
-  it("종료: 주소와 전화를 숨긴다", () => {
-    expect(getShelterContact(animal({ status: "ended" }))).toEqual({ address: null, tel: null });
-  });
-
-  it("주소 없음: 주소 줄만 뺀다", () => {
-    const contact = getShelterContact(animal({ shelterAddressText: null }));
-    expect(contact.address).toBeNull();
-    expect(contact.tel?.text).toBe(TEL);
-  });
-
-  it("전화 없음: 전화 줄만 뺀다", () => {
-    const contact = getShelterContact(animal({ shelterTelText: null }));
-    expect(contact.tel).toBeNull();
-    expect(contact.address?.text).toBe(ADDRESS);
-  });
-
-  it("전화에 숫자가 없으면 줄은 두고 링크만 뺀다", () => {
-    expect(getShelterContact(animal({ shelterTelText: "미정" })).tel).toEqual({ text: "미정", href: null });
-  });
-});
-
 describe("telHref", () => {
   it.each([
     ["000-1234-5678", "tel:00012345678"],

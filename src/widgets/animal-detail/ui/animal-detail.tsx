@@ -1,16 +1,18 @@
 "use client";
 
-import { MapPin, Phone } from "lucide-react";
-import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { MapPin, Phone, type LucideIcon } from "lucide-react";
+import { useEffect, useState, type CSSProperties } from "react";
 import {
   allowsMotion,
   ANIMAL_COPY,
   animalTitle,
   clearDetailEntry,
+  DETAIL_ROW_ACTION_COPY,
+  detailRowHref,
+  detailRows,
   dDayText,
   getDDay,
   getDetailEntry,
-  getShelterContact,
   getStatusVariant,
   photoAlt,
   setDetailEntryPhotoIndex,
@@ -18,6 +20,8 @@ import {
   StatusBadge,
   useAnimal,
   type DetailEntry,
+  type DetailRow,
+  type DetailRowAction,
 } from "@/entities/animal";
 import { FavoriteButton } from "@/features/animal-favorite";
 import { ShareButton } from "@/features/animal-share";
@@ -119,34 +123,7 @@ export function AnimalDetail({ id, firstPhotoSize = null }: { id: string; firstP
   const enterMode = entering && entry && allowsMotion(animal, false) && entry.mode !== "none" ? entry.mode : null;
   const enterStyle = { "--detail-elapsed": `${elapsedMs}ms` } as CSSProperties;
   const infoEnter = enterMode ? { "data-detail-enter": enterMode === "morph" ? "info" : "fade", style: enterStyle } : {};
-  const contact = getShelterContact(animal);
-  const { map, tel } = ANIMAL_COPY.detailContactActions;
-  const rows: DetailRow[] = [
-    { label: ANIMAL_COPY.detailRowLabels.foundPlace, value: animal.foundPlaceText },
-    { label: ANIMAL_COPY.detailRowLabels.shelter, value: animal.shelterName },
-    {
-      label: ANIMAL_COPY.detailRowLabels.shelterAddress,
-      value: contact.address?.text ?? null,
-      action: contact.address && (
-        <ContactLink href={contact.address.mapUrl} label={map.label} newTab>
-          <MapPin aria-hidden className="size-3.5" />
-          {map.text}
-        </ContactLink>
-      ),
-    },
-    {
-      label: ANIMAL_COPY.detailRowLabels.shelterTel,
-      value: contact.tel?.text ?? null,
-      action: contact.tel?.href && (
-        <ContactLink href={contact.tel.href} label={tel.label}>
-          <Phone aria-hidden className="size-3.5" />
-          {tel.text}
-        </ContactLink>
-      ),
-    },
-    { label: ANIMAL_COPY.detailRowLabels.noticePeriod, value: animal.noticePeriodText },
-    { label: ANIMAL_COPY.detailRowLabels.specialMark, value: animal.specialMarkText },
-  ].filter((row) => row.value !== null);
+  const rows = detailRows(animal).map((row) => ({ ...row, link: row.action ? <ContactLink row={row} /> : null }));
 
   return (
     <article data-slot="animal-detail" className="flex min-h-full flex-col">
@@ -197,7 +174,7 @@ export function AnimalDetail({ id, firstPhotoSize = null }: { id: string; firstP
         </p>
         {rows.length > 0 && (
           <dl className="mt-6 grid grid-cols-[auto_1fr] gap-x-4 gap-y-3 text-body">
-            {rows.map(({ label, value, action }) => (
+            {rows.map(({ label, value, link: action }) => (
               // 링크가 있는 줄은 위아래 6px를 더해, 이웃한 두 링크(44px)의 누르는 영역이 겹치지 않게 한다(줄 20px + 간격 12px + 6px×2 = 44px)
               <div key={label} data-slot="detail-row" className="contents">
                 <dt className={cn("text-text-2", action && "py-1.5")}>{label}</dt>
@@ -241,13 +218,21 @@ export function AnimalDetail({ id, firstPhotoSize = null }: { id: string; firstP
   );
 }
 
-type DetailRow = { label: string; value: string | null; action?: ReactNode };
+/** 정보 줄 동작 종류별 아이콘과 새 탭 여부. 글자와 접근성 이름은 DETAIL_ROW_ACTION_COPY, 주소는 detailRowHref가 정한다 */
+const CONTACT_LINK: Record<DetailRowAction, { icon: LucideIcon; newTab: boolean }> = {
+  map: { icon: MapPin, newTab: true },
+  call: { icon: Phone, newTab: false },
+};
 
 /**
  * 주소·전화 줄 끝의 작은 글자 링크(이슈 #3). 채운 버튼이 아니라 보조 글자색 + 작은 아이콘이다.
  * 누르는 영역은 44×44px이고, 위아래 음수 여백으로 줄 높이(20px)는 그대로 둔다.
  */
-function ContactLink({ href, label, newTab = false, children }: { href: string; label: string; newTab?: boolean; children: ReactNode }) {
+function ContactLink({ row }: { row: DetailRow }) {
+  const href = detailRowHref(row);
+  if (row.action === null || href === null) return null;
+  const { icon: Icon, newTab } = CONTACT_LINK[row.action];
+  const { text, label } = DETAIL_ROW_ACTION_COPY[row.action];
   return (
     <a
       href={href}
@@ -256,7 +241,8 @@ function ContactLink({ href, label, newTab = false, children }: { href: string; 
       {...(newTab ? { target: "_blank", rel: "noopener" } : {})}
       className="-my-3 inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-0.5 rounded-sm text-caption text-text-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
     >
-      {children}
+      <Icon aria-hidden className="size-3.5" />
+      {text}
     </a>
   );
 }
