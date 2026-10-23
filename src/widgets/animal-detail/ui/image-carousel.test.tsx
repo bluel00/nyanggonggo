@@ -105,4 +105,13 @@ describe("ImageCarousel", () => {
     rerender(<ImageCarousel images={[img(1), img(2), img(3)]} boxRatio={1} alt="a" ended={false} index={2} onIndexChange={() => {}} onOpen={() => {}} />);
     expect(track.scrollTo).toHaveBeenCalledWith({ left: 780 });
   });
+
+  it("같은 URL의 사진이 두 장이어도 key 경고 없이 두 장 모두 그린다(이슈 #12)", () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const { container } = render(<Harness images={[img(1), img(1)]} />);
+    expect(screen.getAllByRole("button", { name: /^사진 크게 보기 \(\d\/2\)$/ })).toHaveLength(2);
+    expect(container.querySelectorAll('[data-slot="image-carousel"] img')).toHaveLength(2);
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
 });
