@@ -50,8 +50,8 @@ test("보호 중 상세: 주소·전화 줄과 [지도]·[전화] 링크, 누르
 
 test("종료 상세: 주소·전화 줄과 링크가 없고 보호소 이름은 있다", async ({ page }) => {
   const detail = await openDetail(page, ENDED_ID);
-  await expect(detail.locator('[data-slot="status-badge"]')).toHaveText("종료");
-  expect(await terms(detail)).toEqual(["발견 장소", "보호소", "공고 기간", "특이사항"]);
+  await expect(detail.locator('[data-slot="status-badge"]')).toHaveText("종료 · 입양");
+  expect(await terms(detail)).toEqual(["발견 장소", "보호소", "공고 기간", "종료 사유", "특이사항"]);
   await expect(detail.getByText("E2E 보호소", { exact: true })).toBeVisible();
   await expect(detail).not.toContainText(CARE.careAddr);
   await expect(detail).not.toContainText(CARE.careTel);

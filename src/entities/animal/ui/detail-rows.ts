@@ -1,6 +1,7 @@
 import type { Animal } from "../model/animal";
 import { mapSearchUrl, telHref } from "../model/shelter-contact";
 import { animalTitle, sexAgeText } from "./labels";
+import { statusDisplayGlyphs } from "./status-badge";
 
 /** 정보 줄 끝 링크의 동작 종류(역할 이름). 링크 주소는 `detailRowHref`가 이 종류에서 만든다 */
 export type DetailRowAction = "map" | "call";
@@ -12,6 +13,7 @@ export const DETAIL_ROW_LABELS = {
   shelterAddress: "주소",
   shelterTel: "전화",
   noticePeriod: "공고 기간",
+  endReason: "종료 사유",
   specialMark: "특이사항",
 } as const;
 
@@ -25,10 +27,11 @@ export const DETAIL_ROW_ACTION_COPY: Record<DetailRowAction, { text: string; lab
 export type DetailRow = { label: string; value: string; action: DetailRowAction | null };
 
 /**
- * 상세 정보 줄(명세 4.3, 이슈 #3·#30): 발견 장소 → 보호소 → 주소 → 전화 → 공고 기간 → 특이사항. 값이 없는 줄은 뺀다.
+ * 상세 정보 줄(명세 4.3, 이슈 #3·#30·#41): 발견 장소 → 보호소 → 주소 → 전화 → 공고 기간 → 종료 사유 → 특이사항. 값이 없는 줄은 뺀다.
  * 줄을 더하거나 순서·이름을 바꿀 때는 이 파일만 고친다(상세 화면과 글꼴 예열이 모두 이 결과를 쓴다).
  * - 주소·전화: 종료 공고는 둘 다 숨긴다(보호소 이름은 그대로). 주소 줄 끝에는 지도, 전화 줄 끝에는 전화 링크.
  *   전화에 숫자가 없으면 줄은 두고 링크만 뺀다.
+ * - 종료 사유: 원문 그대로. 특이사항과 같은 문구면 서버 Mapper가 특이사항을 비워 종료 사유 줄 하나로 보인다.
  */
 export function detailRows(animal: Animal): DetailRow[] {
   const contact = animal.status !== "ended";
@@ -40,6 +43,7 @@ export function detailRows(animal: Animal): DetailRow[] {
     { label: labels.shelterAddress, value: contact ? animal.shelterAddressText : null, action: "map" },
     { label: labels.shelterTel, value: tel, action: tel !== null && telHref(tel) !== null ? "call" : null },
     { label: labels.noticePeriod, value: animal.noticePeriodText, action: null },
+    { label: labels.endReason, value: animal.endReasonText, action: null },
     { label: labels.specialMark, value: animal.specialMarkText, action: null },
   ];
   return rows.filter((row): row is DetailRow => row.value !== null && row.value !== "");
@@ -65,7 +69,7 @@ export function detailRowHref(row: DetailRow): string | null {
 export function detailDisplayText(animal: Animal): string {
   return [
     animalTitle(animal),
-    "보호중 임박 종료 · D-day 0123456789",
+    statusDisplayGlyphs(animal),
     sexAgeText(animal),
     ...Object.values(DETAIL_ROW_LABELS),
     ...Object.values(DETAIL_ROW_ACTION_COPY).map((action) => action.text),

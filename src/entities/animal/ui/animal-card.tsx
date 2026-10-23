@@ -8,7 +8,6 @@ import { cn } from "@/shared/lib/utils";
 import { ViewTransition } from "@/shared/ui/view-transition";
 import type { Animal } from "../model/animal";
 import type { CardPhotoSize } from "../model/detail-entry";
-import { getDDay } from "../model/dDay";
 import { allowsMotion } from "../model/motion";
 import { getPrimaryImage, getStatusVariant } from "../model/status";
 import { AnimalPhoto, PHOTO_SIZES } from "./animal-photo";
@@ -25,7 +24,7 @@ import { StatusBadge } from "./status-badge";
  *   ANIMAL_CARD_STILL_ATTR를 달아 목록이 등장에서 뺀다
  * - 사진 1:1 cover, 가운데(center). 이미지 프록시 경유 plain img(lazy). 종료 공고는 saturate(.7), 딤 없음.
  *   4:5 center 35%는 4:3 가로 사진(약 절반)에서 한쪽에 치우친 동물의 얼굴을 잘라 1:1로 바꿨다(architecture.md 12절 51)
- * - 배지: 사진 좌상단(12px), photo-pill 배경. 종료 공고는 "종료"만, 그 외는 D-day가 있을 때만 붙인다
+ * - 배지: 사진 좌상단(12px), photo-pill 배경. 문구는 상태 표기(statusBadgeText) 그대로다(종료 공고는 "종료 · <결과>"이고 D-day가 없다)
  * - 텍스트: Domain에 이름이 없어 1줄은 지역(regionText), 2줄은 보호소(없으면 발견 장소). 명세의 "지역 · 보호소"를
  *   그대로 쓰면 1줄과 지역이 겹쳐서 2줄에는 보호소만 둔다
  * - href가 있으면 링크, 없으면 정적 article. 링크를 누르면 onSelect로 알린다(목록이 상세 캐시를 채우고 진입 정보를 남긴다)
@@ -98,7 +97,7 @@ export function AnimalCard({
         <DepartingPhoto id={animal.id} href={href} src={departing.photoSrc} onArrived={() => setDeparting(null)} />
       )}
       <div className="absolute top-3 left-3">
-        <StatusBadge variant={variant} dDay={getDDay(animal, now)} onPhoto />
+        <StatusBadge animal={animal} now={now} onPhoto />
       </div>
     </div>
   );

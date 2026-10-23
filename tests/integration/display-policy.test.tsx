@@ -19,6 +19,14 @@ const CASES: { name: string; animal: Partial<Animal>; card: string; ogBadge: str
   { name: "임박 D-2", animal: { noticeEndAt: kst("2026-09-23T00:00:00") }, card: "임박 · D-2", ogBadge: "임박", ogDDay: "D-2" },
   { name: "당일", animal: { noticeEndAt: kst("2026-09-21T00:00:00") }, card: "임박 · D-day", ogBadge: "임박", ogDDay: "D-day" },
   { name: "종료", animal: { status: "ended", noticeEndAt: kst("2026-10-01T00:00:00") }, card: "종료", ogBadge: "종료", ogDDay: null },
+  // 이슈 #41: 종료 결과(processState 괄호 안 원문)를 붙인다. 처음 보는 값도 그대로다
+  ...(["입양", "임시보호연계"] as const).map((endResultText) => ({
+    name: `종료 · ${endResultText}`,
+    animal: { status: "ended", endResultText, noticeEndAt: kst("2026-10-01T00:00:00") } as const,
+    card: `종료 · ${endResultText}`,
+    ogBadge: `종료 · ${endResultText}`,
+    ogDDay: null,
+  })),
   { name: "만료된 보호 중", animal: { noticeEndAt: kst("2026-09-20T00:00:00") }, card: "보호중", ogBadge: "보호중", ogDDay: null },
 ];
 
@@ -27,7 +35,7 @@ function renderCard(animal: Animal) {
   return container.querySelector('[data-slot="animal-card"]')!;
 }
 
-describe("D-day 표기: 카드 배지, OG, 공유 요약이 상태마다 같다", () => {
+describe("상태·D-day 표기: 카드 배지, OG, 공유 요약이 상태마다 같다", () => {
   it.each(CASES)("$name", ({ animal: overrides, card, ogBadge, ogDDay }) => {
     const animal = makeAnimal(overrides);
     expect(renderCard(animal).querySelector('[data-slot="status-badge"]')?.textContent).toBe(card);
@@ -73,7 +81,7 @@ describe("상세 글꼴 예열 문자열(이슈 #30)", () => {
     "제주특별자치도",
     "보호중 임박 종료 · D-day 0123456789",
     "암컷 · 2024(년생)",
-    "발견 장소 보호소 주소 전화 공고 기간 특이사항",
+    "발견 장소 보호소 주소 전화 공고 기간 종료 사유 특이사항",
     "지도 전화",
     "제2동물보호센터 서귀포시 남원읍 09.21 ~ 10.01 가상 특이사항",
   ].join(" ");
@@ -85,6 +93,11 @@ describe("상세 글꼴 예열 문자열(이슈 #30)", () => {
   // 의도한 변경(이슈 #30): 리팩터 전에는 화면에 숨기는 주소·전화 글자까지 받았다. 이제 보이는 줄의 글자만 받는다(화면은 같다)
   it("종료: 화면에 숨기는 주소·전화 글자는 받지 않는다", () => {
     expect(glyphs(detailDisplayText(animal("ended")))).toBe(glyphs(FIXED));
+  });
+
+  it("종료: 결과(상태 글자)와 종료 사유 줄 값도 받는다(이슈 #41)", () => {
+    const ended = { ...animal("ended"), endResultText: "반환", endReasonText: "보호자 확인 후 귀가" };
+    expect(glyphs(detailDisplayText(ended))).toBe(glyphs(`${FIXED} 반환 보호자 확인 후 귀가`));
   });
 });
 

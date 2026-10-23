@@ -52,7 +52,7 @@ for (const [ENDED_ID, photos] of Object.entries(ENDED_CASES)) {
 
     const detail = page.locator('[data-slot="animal-detail"]');
     await expect(detail).toBeVisible({ timeout: DETAIL_DELAY_MS + 10_000 });
-    await expect(detail.locator('[data-slot="status-badge"]')).toHaveText("종료");
+    await expect(detail.locator('[data-slot="status-badge"]')).toHaveText("종료 · 입양");
     // 사진 1장이면 도트는 없고 자리만 있다
     await expect(detail.locator('[data-slot="carousel-dots"] span')).toHaveCount(photos > 1 ? photos : 0);
     const after = await titleBox(detail);
