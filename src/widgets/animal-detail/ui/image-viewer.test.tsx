@@ -67,4 +67,13 @@ describe("ImageViewer", () => {
     render(<ImageViewer images={[images[0]]} alt="a" initialIndex={0} onClose={() => {}} />);
     expect(screen.queryByText("1/1")).toBeNull();
   });
+
+  it("같은 URL의 사진이 두 장이어도 key 경고 없이 두 장 모두 그린다(이슈 #12)", () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    render(<ImageViewer images={[images[0]!, images[0]!]} alt="고양이 사진" initialIndex={0} onClose={() => {}} />);
+    const dialog = screen.getByRole("dialog", { name: "사진 크게 보기" });
+    expect(dialog.querySelectorAll("img")).toHaveLength(2);
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
 });

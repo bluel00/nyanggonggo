@@ -93,7 +93,7 @@ export function ImageCarousel({
       >
         {images.map((src, i) => (
           <button
-            key={src}
+            key={`${i}-${src}`}
             type="button"
             onClick={() => onOpen(i)}
             aria-label={images.length > 1 ? `사진 크게 보기 (${i + 1}/${images.length})` : "사진 크게 보기"}

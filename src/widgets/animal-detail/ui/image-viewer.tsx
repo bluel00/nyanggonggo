@@ -72,7 +72,7 @@ export function ImageViewer({
         className="flex h-full snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {images.map((src, i) => (
-          <div key={src} className="h-full w-full shrink-0 snap-center">
+          <div key={`${i}-${src}`} className="h-full w-full shrink-0 snap-center">
             <AnimalPhoto src={src} alt={`${alt} ${i + 1}`} fit="contain" priority={i === initialIndex} />
           </div>
         ))}

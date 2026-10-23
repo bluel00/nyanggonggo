@@ -7,9 +7,9 @@ import { openedDetail, watchConsoleErrors } from "./helpers";
  */
 /** e2e/upstream-stub.mjs의 CARE와 같다 */
 const CARE = { careAddr: "E2E시 가상구 테스트로 1 (예시동)", careTel: "000-0000-0000", careOwnerNm: "E2E 담당자" };
-/** 고양이·서울 보호중 공고(SEOUL_CAT_ITEMS 0번째)와 종료 공고(ENDED_CASES의 사진 1장. 2장짜리는 두 사진 주소가 같아 캐러셀 key 경고가 난다) */
+/** 고양이·서울 보호중 공고(SEOUL_CAT_ITEMS 0번째)와 종료 공고(ENDED_CASES의 사진 2장짜리. 두 사진 주소가 같다, 이슈 #12) */
 const PROTECTED_ID = "990000202602000";
-const ENDED_ID = "990000202600012";
+const ENDED_ID = "990000202600011";
 
 const consoleWatch = watchConsoleErrors();
 test.beforeEach(({ page }) => consoleWatch.attach(page));
