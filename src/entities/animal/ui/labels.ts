@@ -1,5 +1,5 @@
 import type { Animal } from "../model/animal";
-import { statusBadgeText } from "./status-badge";
+import { statusBadgeText } from "./status-text";
 
 /** 축종 표기. 필터 옵션, 사진 alt, 공유 제목이 함께 쓴다. */
 export const SPECIES_LABEL: Record<Animal["species"], string> = {

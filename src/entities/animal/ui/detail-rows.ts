@@ -1,7 +1,7 @@
 import type { Animal } from "../model/animal";
 import { mapSearchUrl, telHref } from "../model/shelter-contact";
 import { animalTitle, sexAgeText } from "./labels";
-import { statusDisplayGlyphs } from "./status-badge";
+import { statusDisplayGlyphs } from "./status-text";
 
 /** 정보 줄 끝 링크의 동작 종류(역할 이름). 링크 주소는 `detailRowHref`가 이 종류에서 만든다 */
 export type DetailRowAction = "map" | "call";
