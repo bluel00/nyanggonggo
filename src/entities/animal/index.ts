@@ -49,7 +49,8 @@ export {
 export { AnimalPhoto, PHOTO_SIZES } from "./ui/animal-photo";
 export { photoTransition } from "./ui/photo-transition";
 export { CHARACTER_SRC, SpeciesCharacter, type CharacterHandle, type CharacterSpecies } from "./ui/species-character";
-export { dDayText, StatusBadge, statusBadgeText } from "./ui/status-badge";
+export { StatusBadge } from "./ui/status-badge";
+export { dDayText, statusBadgeText } from "./ui/status-text";
 export {
   ANIMAL_COPY,
   animalSubtitle,
