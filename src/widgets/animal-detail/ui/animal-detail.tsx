@@ -24,6 +24,7 @@ import { BackButton, useGoBack } from "@/shared/ui/back-button";
 import { Button } from "@/shared/ui/button";
 import { photoBoxRatio, type PhotoSize } from "../model/photo-box";
 import { AnimalDetailSkeleton } from "./animal-detail-skeleton";
+import { BottomCtaBar, DetailPhotoArea } from "./detail-frame";
 import { ImageCarousel } from "./image-carousel";
 import { ImageViewer } from "./image-viewer";
 
@@ -93,7 +94,7 @@ export function AnimalDetail({ id, firstPhotoSize = null }: { id: string; firstP
   if (query.isError) {
     return (
       <div className="flex min-h-full flex-col">
-        <div className="px-page pt-[calc(var(--space-3)+env(safe-area-inset-top,0px))]">
+        <div className="px-page pt-(--screen-top)">
           <BackButton onClick={goBack} className="bg-bg" />
         </div>
         <div role="status" className="flex flex-col items-center gap-4 px-page py-20 text-center">
@@ -147,7 +148,7 @@ export function AnimalDetail({ id, firstPhotoSize = null }: { id: string; firstP
   return (
     <article data-slot="animal-detail" className="flex min-h-full flex-col">
       {/* 사진 칸: safe area 아래에서 시작해 좌우 24px 안쪽(방향 A, handoff 화면 3~4). 뒤로가기는 칸 왼쪽 위 */}
-      <div className="relative px-6 pt-[calc(var(--space-3)+env(safe-area-inset-top,0px))]">
+      <DetailPhotoArea back={<BackButton onClick={goBack} />}>
         <ImageCarousel
           images={animal.images}
           boxRatio={boxRatio}
@@ -160,10 +161,7 @@ export function AnimalDetail({ id, firstPhotoSize = null }: { id: string; firstP
           firstPhotoSrc={entry?.photoSrc}
           enter={enterMode === "fade" ? { "data-detail-enter": "fade", style: enterStyle } : undefined}
         />
-        <div className="absolute top-[calc(var(--space-3)+var(--space-2)+env(safe-area-inset-top,0px))] left-8">
-          <BackButton onClick={goBack} />
-        </div>
-      </div>
+      </DetailPhotoArea>
 
       <div {...infoEnter} className="flex-1 px-page pt-4 pb-6">
         {/* 상태 줄은 D-day(title, 28px) 유무와 상관없이 28px이다. 뼈대(AnimalDetailSkeleton)와 같아 내용이 채워질 때 아래가 움직이지 않는다 */}
@@ -219,14 +217,10 @@ export function AnimalDetail({ id, firstPhotoSize = null }: { id: string; firstP
         )}
       </div>
 
-      <div
-        {...infoEnter}
-        data-slot="bottom-cta"
-        className="sticky bottom-0 z-10 flex gap-2 bg-bg px-page shadow-bar pt-3 pb-[calc(var(--space-3)+env(safe-area-inset-bottom,0px))]"
-      >
+      <BottomCtaBar {...infoEnter} data-slot="bottom-cta">
         <FavoriteButton animalId={animal.id} ended={ended} />
         <ShareButton animal={animal} />
-      </div>
+      </BottomCtaBar>
 
       {viewerIndex !== null && (
         <ImageViewer

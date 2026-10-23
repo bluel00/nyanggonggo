@@ -2,6 +2,7 @@
 
 import { BackButton, useGoBack } from "@/shared/ui/back-button";
 import { PHOTO_BOX_RATIO } from "../model/photo-box";
+import { BottomCtaBar, DetailPhotoArea } from "./detail-frame";
 
 /**
  * 상세 뼈대(명세 7.1, 스켈레톤은 SkeletonCard와 같은 status-ended-bg 면, 움직임 없음).
@@ -24,15 +25,12 @@ export function AnimalDetailSkeleton({ photoRatio = PHOTO_BOX_RATIO.unknown }: {
 
   return (
     <div data-slot="detail-skeleton" aria-busy="true" className="flex min-h-full flex-col">
-      <div className="relative px-6 pt-[calc(var(--space-3)+env(safe-area-inset-top,0px))]">
+      <DetailPhotoArea back={<BackButton onClick={goBack} href="/" />}>
         <div aria-hidden data-slot="detail-skeleton-photo" className="rounded-card bg-status-ended-bg" style={{ aspectRatio: photoRatio }} />
         <div aria-hidden className="pt-3">
           <div className="h-1.5" />
         </div>
-        <div className="absolute top-[calc(var(--space-3)+var(--space-2)+env(safe-area-inset-top,0px))] left-8">
-          <BackButton onClick={goBack} href="/" />
-        </div>
-      </div>
+      </DetailPhotoArea>
 
       <div aria-hidden className="flex-1 px-page pt-4 pb-6">
         <div className="flex h-7 items-center">
@@ -47,13 +45,10 @@ export function AnimalDetailSkeleton({ photoRatio = PHOTO_BOX_RATIO.unknown }: {
         </div>
       </div>
 
-      <div
-        aria-hidden
-        className="sticky bottom-0 z-10 flex gap-2 bg-bg px-page shadow-bar pt-3 pb-[calc(var(--space-3)+env(safe-area-inset-bottom,0px))]"
-      >
+      <BottomCtaBar aria-hidden>
         <div className="size-touch flex-none rounded-pill bg-status-ended-bg" />
         <div className="min-h-touch flex-1 rounded-pill bg-status-ended-bg" />
-      </div>
+      </BottomCtaBar>
     </div>
   );
 }

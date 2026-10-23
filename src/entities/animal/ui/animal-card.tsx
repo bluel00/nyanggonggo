@@ -5,12 +5,13 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { usePrefersReducedMotion } from "@/shared/lib/use-reduced-motion";
 import { cn } from "@/shared/lib/utils";
-import { CARD_TO_DETAIL, photoTransition, ViewTransition } from "@/shared/ui/view-transition";
+import { ViewTransition } from "@/shared/ui/view-transition";
 import type { Animal } from "../model/animal";
 import type { CardPhotoSize } from "../model/detail-entry";
 import { getDDay } from "../model/dDay";
 import { getPrimaryImage, getStatusVariant } from "../model/status";
 import { AnimalPhoto, PHOTO_SIZES } from "./animal-photo";
+import { CARD_TO_DETAIL, photoTransition } from "./photo-transition";
 import { animalTitle, speciesText } from "./labels";
 import { StatusBadge } from "./status-badge";
 
