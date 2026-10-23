@@ -48,6 +48,10 @@ function SheetOverlay({
   )
 }
 
+/**
+ * 아래 시트(side="bottom")의 높이 상한은 컬럼(100dvh) 높이의 85%와, 툴바가 다 펼쳐진 가장 작은 보이는 영역(85svh) 중 작은 쪽이다.
+ * svh를 모르는 브라우저는 컬럼의 85%만 쓴다(이슈 #23). 아래쪽은 컬럼 바닥(bottom-0)에 붙는다.
+ */
 function SheetContent({
   className,
   children,
@@ -65,7 +69,7 @@ function SheetContent({
         data-slot="sheet-content"
         data-side={side}
         className={cn(
-          "absolute z-50 flex flex-col bg-popover bg-clip-padding text-popover-foreground transition duration-sheet ease-out data-[side=bottom]:inset-x-0 data-[side=bottom]:bottom-0 data-[side=bottom]:h-auto data-[side=bottom]:max-h-[85%] data-[side=bottom]:rounded-t-card data-[side=left]:inset-y-0 data-[side=left]:left-0 data-[side=left]:h-full data-[side=left]:w-3/4 data-[side=left]:border-r data-[side=right]:inset-y-0 data-[side=right]:right-0 data-[side=right]:h-full data-[side=right]:w-3/4 data-[side=right]:border-l data-[side=top]:inset-x-0 data-[side=top]:top-0 data-[side=top]:h-auto data-[side=top]:border-b data-[side=left]:sm:max-w-sm data-[side=right]:sm:max-w-sm data-open:animate-in data-[side=bottom]:data-open:slide-in-from-bottom data-[side=left]:data-open:slide-in-from-left-10 data-[side=right]:data-open:slide-in-from-right-10 data-[side=top]:data-open:slide-in-from-top-10 data-closed:animate-out data-[side=bottom]:data-closed:slide-out-to-bottom data-[side=left]:data-closed:slide-out-to-left-10 data-[side=right]:data-closed:slide-out-to-right-10 data-[side=top]:data-closed:slide-out-to-top-10",
+          "absolute z-50 flex flex-col bg-popover bg-clip-padding text-popover-foreground transition duration-sheet ease-out data-[side=bottom]:inset-x-0 data-[side=bottom]:bottom-0 data-[side=bottom]:h-auto data-[side=bottom]:max-h-[85%] data-[side=bottom]:supports-[height:1svh]:max-h-[min(85%,85svh)] data-[side=bottom]:rounded-t-card data-[side=left]:inset-y-0 data-[side=left]:left-0 data-[side=left]:h-full data-[side=left]:w-3/4 data-[side=left]:border-r data-[side=right]:inset-y-0 data-[side=right]:right-0 data-[side=right]:h-full data-[side=right]:w-3/4 data-[side=right]:border-l data-[side=top]:inset-x-0 data-[side=top]:top-0 data-[side=top]:h-auto data-[side=top]:border-b data-[side=left]:sm:max-w-sm data-[side=right]:sm:max-w-sm data-open:animate-in data-[side=bottom]:data-open:slide-in-from-bottom data-[side=left]:data-open:slide-in-from-left-10 data-[side=right]:data-open:slide-in-from-right-10 data-[side=top]:data-open:slide-in-from-top-10 data-closed:animate-out data-[side=bottom]:data-closed:slide-out-to-bottom data-[side=left]:data-closed:slide-out-to-left-10 data-[side=right]:data-closed:slide-out-to-right-10 data-[side=top]:data-closed:slide-out-to-top-10",
           className
         )}
         {...props}
