@@ -14,7 +14,7 @@
 ## 규칙
 
 - 코드 이름은 도메인 개념을 따르고, 화면 문구는 문구 한 곳에만 둔다(`entities/animal/ui/labels.ts`, `status-text.ts`, `detail-rows.ts` 등).
-- URL·저장소 키·이벤트 이름 같은 컴파일러 밖 문자열에는 화면 문구나 브랜드를 쓰지 않는다.
+- URL·저장소 키·이벤트 이름 같은 컴파일러 밖 문자열에는 화면 문구나 브랜드를 쓰지 않는다. 이 규칙은 새로 만드는 문자열에 적용한다. 기존 쿠키·저장소 키(`nyanggonggo.*`, `nyanggonggo:*`)와 운영 주소(`nyanggonggo.vercel.app`)는 사용자 데이터와 이미 퍼진 링크를 지키려고 그대로 둔다.
 - 새 이름을 짓거나 화면 문구를 쓸 때 이 사전을 먼저 본다. 사전에 없는 용어면 사전에 먼저 추가한다.
 
 ## 1. 상태
@@ -28,8 +28,8 @@
 | 종료 사유 | 공공 API `endReason` 원문. 상세 정보 줄에만 쓴다. 특이사항과 같은 문구면 특이사항을 비운다 | `endReasonText`, `DETAIL_ROW_LABELS.endReason`(entities/animal/ui/detail-rows.ts), `specialMarkUnlessEndReason` | `endReason` | #41 | 결과 |
 | 공고 기간 | 주인이 찾아갈 수 있도록 보호소가 공고하는 기간(동물보호법 제40조, 7일 이상). 화면 표기 `MM.DD ~ MM.DD` | `noticePeriodText` | `noticeSdt` ~ `noticeEdt` | 동물보호법 제40조, detail-rows.ts | — |
 | 공고 마감(일) | 공고 기간의 마지막 날. 지나도 상태는 바뀌지 않는다(제43조: 10일이 지나면 지자체가 소유권을 취득한다). KST 달력 날짜 | `noticeEndAt`(Domain), `noticeEndDate`(Wire) | `noticeEdt`(`YYYYMMDD`) | 동물보호법 제43조, architecture.md 10절 | 종료일·공고 종료(쓰지 않는다) |
-| 마감 D-N (카드), 공고 마감 D-N (상세·공유) | 공고 마감까지 남은 날 수(KST 달력). 종료 공고, 마감일이 없는 공고, 마감이 지난 공고에는 붙이지 않는다. **코드 반영 예정**: 지금 화면은 "보호중 · D-N"/"임박 · D-N"이고 상세는 "D-N"만 따로 쓴다. 당일 표기는 정하지 않았다(지금 "D-day", #29) | `getDDay`(entities/animal/model/dDay.ts), `dDayText`(status-text.ts) | 없음 | #29, architecture.md 10절 | D-day |
-| 강조 (화면 없음, 색만) | 보호중이면서 마감 D-3 이하인 공고. 강조 색으로만 구분한다. **코드 반영 예정**: 지금 배지 문구 "임박"을 없앤다 | `isSoon`, `"soon"`(`AnimalStatusVariant`, entities/animal/model/status.ts), 토큰 `status-soon*` | 없음 | architecture.md 10절, design/README.md | 임박(쓰지 않는다) |
+| 마감 D-N (카드: "보호중 · 마감 D-N", 상세·공유 카드·링크 미리보기 이미지(OG): "공고 마감 D-N"), 오늘 마감 (마감 당일. 카드 "보호중 · 오늘 마감", 상세·공유·OG "오늘 마감") | 공고 마감까지 남은 날 수(KST 달력). 마감 당일은 숫자 대신 "오늘 마감"이다. 종료 공고, 마감일이 없는 공고, 마감이 지난 공고에는 붙이지 않는다. **코드 반영 예정**: 지금 화면은 카드 "보호중 · D-N"/"임박 · D-N", 상세·OG는 "D-N"만 따로, 당일은 "D-day"(#29) | `getDDay`(entities/animal/model/dDay.ts), `dDayText`(status-text.ts) | 링크 미리보기 이미지(OG), 공유 카드 설명 | #29, architecture.md 10절, EL 결정(#56) | D-day(쓰지 않는다), D-0 |
+| 강조 (화면 없음, 색만) | 보호중이면서 마감 D-3 이하인 공고. 강조 색으로만 구분한다. **코드 반영 예정**: 배지 문구 "임박"을 없애고, 코드 이름을 `soon` → `nearDeadline`, `isSoon` → `isNearDeadline`으로 바꾼다 | 지금 `isSoon`, `"soon"`(`AnimalStatusVariant`, entities/animal/model/status.ts), 토큰 `status-soon*` | 없음 | architecture.md 10절, design/README.md, EL 결정(#56) | 임박(쓰지 않는다), soon(옛 코드 이름) |
 
 ## 2. 공고와 동물
 
@@ -56,22 +56,22 @@
 | 전국 (화면: "전체 시/도") | 지역을 고르지 않음. 서버는 지역 코드를 보내지 않는다 | `REGION_ALL`(filter.ts) | URL `region=all` | architecture.md 7절 | 전체 |
 | 발견 장소 | `happenPlace` 원문. 보호소가 없으면 카드 2줄에도 쓴다 | `foundPlaceText`, `animalSubtitle`(labels.ts) | `happenPlace` | architecture.md 6절 | 지역(관할 지역) |
 | 보호소 | `careNm`. 동물병원일 수 있다 | `shelterName` | `careNm` | architecture.md 4절 | — |
-| 보호소 주소 (화면: 정보 줄 "주소") | `careAddr`. 종료 공고에는 보이지 않는다. 로그에 남기지 않는다 | `shelterAddressText` | `careAddr`, 카카오맵 검색 URL | #3, #30 | — |
-| 보호소 전화 (화면: 정보 줄 "전화") | `careTel` 원문. 종료 공고에는 보이지 않는다. 로그에 남기지 않는다 | `shelterTelText` | `careTel`, `tel:` 링크 | #3 | 전화 걸기(행동) |
+| 보호소 주소 (화면: 보호소 정보 시트의 주소 줄 + [지도]) | `careAddr`. 보호소 정보 시트에 복사할 수 있는 글자로 보인다. 종료 공고에는 보이지 않는다. 로그에 남기지 않는다. **코드 반영 예정**: 지금은 상세 정보 줄 "주소"에 있다 | `shelterAddressText` | `careAddr`, 카카오맵 검색 URL | #3, #30, EL 결정(#56) | — |
+| 보호소 전화 (화면: 보호소 정보 시트의 전화 줄 + [전화]) | `careTel` 원문. 보호소 정보 시트에 복사할 수 있는 글자로 보인다. 종료 공고에는 보이지 않는다. 로그에 남기지 않는다. **코드 반영 예정**: 지금은 상세 정보 줄 "전화"에 있다 | `shelterTelText` | `careTel`, `tel:` 링크 | #3, EL 결정(#56) | 전화 걸기(행동) |
 | 담당자 (화면 없음) | `careOwnerNm`. Wire·Domain·화면·로그 어디에도 내보내지 않는다 | DTO `careOwnerNm` | 없음 | CLAUDE.md 보안, architecture.md 6절 | — |
 
 ## 4. 사용자 행동
 
 | 용어(화면) | 정의 | 코드 이름 | 밖으로 나가는 값 | 근거 | 헷갈리기 쉬운 말·쓰지 않는 말 |
 |---|---|---|---|---|---|
-| 관심 | 다시 보거나 공유하려고 이 기기에 모아 둔 공고. 공고 id만 저장한다(최근 것이 앞). **코드 반영 예정**: 지금 화면 문구는 "찜"이다(바꿀 문구는 이 사전에서 정하지 않았다) | `favorite`(`useFavorite`, `FavoriteButton`, `FAVORITES_STORAGE_KEY`, `features/animal-favorite`) | localStorage 키, URL `/favorites`, `/api/animals/by-ids` | architecture.md 8절, #5, EL 합의(#51) | 찜(쓰지 않는다), architecture.md 13절의 "관심 지역"(다른 뜻) |
+| 관심 (화면: 관심 공고) | 다시 보거나 공유하려고 이 기기에 모아 둔 공고. 공고 id만 저장한다(최근 것이 앞). "관심"은 공고에만 쓴다. 화면 문구: 하트 접근성 이름 "관심 공고에 담기" / "관심 공고에서 빼기", 토스트 "관심 공고에 담았어요" / "관심 공고에서 뺐어요". **코드 반영 예정**: 지금 화면 문구는 "찜하기"/"찜 해제", "찜에 저장했어요"/"찜을 해제했어요"다. 코드 이름 `favorite`, URL `/favorites`, 저장소 키는 바꾸지 않는다 | `favorite`(`useFavorite`, `FavoriteButton`, `FAVORITES_STORAGE_KEY`, `features/animal-favorite`) | localStorage 키, URL `/favorites`, `/api/animals/by-ids` | architecture.md 8절, #5, EL 합의(#51), EL 결정(#56) | 찜(쓰지 않는다). architecture.md 13절의 "관심 지역"(지역 즐겨찾기 아이디어)은 다른 뜻이라, 그 기능을 만들 때 "관심"이 아닌 다른 이름을 짓는다 |
 | 카카오톡 공유 | 카카오 피드 카드로 공고를 보낸다(버튼 "공고 보기"). 카카오를 쓸 수 없으면 링크 복사로 대신한다 | `shareAnimal`, `ShareButton`, `SHARE_BUTTON_LABEL`, `buildShareContent`(features/animal-share) | 카카오 템플릿, `NEXT_PUBLIC_KAKAO_JS_KEY`, `NEXT_PUBLIC_SITE_URL` | #2, 기능명세서 4.3 | — |
 | 링크 복사 (화면: 토스트 "링크가 복사됐어요") | 카카오톡 공유를 쓸 수 없을 때 자동으로 하는 동작. 따로 버튼은 없다 | `SHARE_MESSAGES`(features/animal-share/model/share.ts) | 클립보드 | share.ts | — |
 | 필터 (화면: 버튼·시트 제목 "필터", "적용하기") | 목록 조건(축종, 지역, 상태, 성별, 정렬). URL이 단일 진실 소스이고, 적용 전 고른 값은 반영하지 않는다 | `AnimalListFilter`, `FILTER_KEYS`, `useApplyAnimalFilter`, `AnimalFilterSheet` | URL `species`·`region`·`district`·`status`·`sex`·`sort` | architecture.md 7절, #28 | — |
-| 정렬 (화면: "최신순" / "공고 마감 빠른순") | 최신순: 공고 시작일이 늦은 순. 공고 마감 빠른순: 마감이 오늘 이후인 공고를 빠른 순으로 먼저, 지난 공고를 그 뒤에. **코드 반영 예정**: 지금 화면은 "종료임박순" | `ANIMAL_LIST_SORTS` `latest` / `endingSoon`, `compareEndingSoon`(server/animals/service.ts) | URL `sort=` | architecture.md 5절, EL 합의(#51) | 종료임박순·임박순(쓰지 않는다) |
+| 정렬 (화면: "최신순" / "공고 마감 빠른순") | 최신순: 공고 시작일이 늦은 순. 공고 마감 빠른순: 마감이 오늘 이후인 공고를 빠른 순으로 먼저, 지난 공고를 그 뒤에. **코드 반영 예정**: 지금 화면은 "종료임박순"이고, 정렬 값 `endingSoon`을 `deadline`으로 바꾼다. 정렬 값은 URL에도 실려 함께 바뀐다. 옛 링크(`sort=endingSoon`)는 모르는 값이라 기본 정렬(최신순)로 열린다 | 지금 `ANIMAL_LIST_SORTS` `latest` / `endingSoon`, `compareEndingSoon`(server/animals/service.ts) | URL `sort=latest\|endingSoon`(예정 `sort=latest\|deadline`) | architecture.md 5절, EL 합의(#51), EL 결정(#56) | 종료임박순·임박순(쓰지 않는다), endingSoon(옛 코드 이름) |
 | 기억 (화면: "한 번 고르면 기억해둘게요.") | 마지막으로 고른 축종과 지역을 쿠키에 1년 둔다. 사용자가 직접 고를 때만 저장하고, 공유 링크로 들어온 값은 저장하지 않는다 | `rememberSpecies`, `rememberRegion`, `writeFilterCookie`, `FILTER_COOKIE_MAX_AGE` | 쿠키 두 개 | architecture.md 7절, PRD-v1.1 4절, PRD-v1.4 R2 | 관심(localStorage, 다른 저장) |
-| 지도 보기 (화면: "지도") | 보호소 주소를 카카오맵 검색으로 새 탭에서 연다 | `mapSearchUrl`, `DetailRowAction` `"map"` | 카카오맵 URL | #3 | — |
-| 전화 걸기 (화면: "전화") | 보호소 전화로 `tel:` 링크를 연다. 숫자가 없으면 링크가 없다 | `telHref`, `"call"` | `tel:` | #3 | 정보 줄 이름 "전화" |
+| 지도 보기 (화면: "지도") | 보호소 주소를 카카오맵 검색으로 새 탭에서 연다. 보호소 정보 시트의 주소 줄 끝에 둔다(**코드 반영 예정**: 지금은 정보 줄 "주소" 끝) | `mapSearchUrl`, `DetailRowAction` `"map"` | 카카오맵 URL | #3 | — |
+| 전화 걸기 (화면: "전화") | 보호소 전화로 `tel:` 링크를 연다. 숫자가 없으면 링크가 없다. 보호소 정보 시트의 전화 줄 끝에 둔다(**코드 반영 예정**: 지금은 정보 줄 "전화" 끝) | `telHref`, `"call"` | `tel:` | #3 | 정보 줄 이름 "전화" |
 | 뒤로가기 | 이 탭에서 목록을 거쳐 왔으면 방문 기록을 되돌리고, 아니면 목록(`/`)으로 간다 | `useGoBack`, `BackButton`(shared/ui/back-button.tsx), `markListVisited` | sessionStorage 키 | PRD-v1.4 R1·R2, PRD-v1.5 | — |
 
 ## 5. 화면 요소
@@ -80,11 +80,12 @@
 |---|---|---|---|---|---|
 | 홈(축종 선택) (화면: "오늘은 누구를 보러 왔어요?") | 축종을 고르는 첫 화면. 축종 기억이 없으면 `/`가 여기로 보낸다 | `SpeciesPickerView`, `SpeciesChoice`, `HOME_PATH`, `homeHref`, `resolveAnimalListEntry` | URL `/home` | PRD-v1.1 3절, architecture.md 7절 | species-picker / species-choice |
 | 목록 (화면: "고양이 공고" 등) | 한 축종의 공고 카드 피드(무한 스크롤) | `AnimalListView`, `AnimalList`, `useAnimalsInfinite` | URL `/` | architecture.md 7절 | "목록 화면"(목록 + 관심 목록)과 구분한다 |
-| 관심 목록 (화면: 지금 "찜한 공고") | 관심 공고만 모은 목록. 축종이 섞인다. **코드 반영 예정**: 화면 문구 | `FavoritesView`, `FavoriteList`, `ANIMAL_COPY.favoritesTitle` | URL `/favorites` | architecture.md 8절 | 찜 목록(쓰지 않는다) |
+| 관심 목록 (화면: 목록 이름·헤더 링크 "관심 공고", 빈 상태 "아직 관심 공고가 없어요", 오류 "지금은 관심 공고를 불러오지 못했어요") | 관심 공고만 모은 목록. 축종이 섞인다. **코드 반영 예정**: 지금 화면은 "찜한 공고", 링크 이름 "찜 목록", "아직 찜한 공고가 없어요", "지금은 찜한 공고를 불러오지 못했어요"다. 일부 실패 안내 "일부 공고를 불러오지 못했어요"는 그대로다 | `FavoritesView`, `FavoriteList`, `FavoritesLink`, `ANIMAL_COPY.favoritesTitle`·`favoritesEmptyTitle`·`favoritesErrorTitle` | URL `/favorites` | architecture.md 8절, EL 결정(#56) | 찜 목록(쓰지 않는다) |
 | 카드 (화면 없음) | 목록의 공고 한 칸. 사진 1:1, 상태 배지, 관심 버튼, 1줄 지역(관할 지역), 2줄 보호소(없으면 발견 장소) | `AnimalCard`, `ANIMAL_CARD_SLOT`(entities/animal/ui/animal-card.tsx) | 없음 | handoff 화면 1~2 | — |
 | 상세 (화면: 층 이름 "공고 상세") | 공고 하나의 화면. 목록·관심 목록에서 열면 목록 위에 얹힌 층이고, 링크로 바로 들어오면 새 문서다 | `AnimalDetail`, `StackLayer`(shared/ui/stack-layer.tsx), `app/@modal/(.)animals/[id]` | URL `/animals/{id}` | PRD-v1.5, architecture.md 7절 | 모달 |
-| 정보 줄 (화면 없음) | 상세의 이름-값 줄: 발견 장소 → 보호소 → 주소 → 전화 → 공고 기간 → 종료 사유 → 특이사항. 값이 없으면 줄을 뺀다 | `detailRows`, `DETAIL_ROW_LABELS`, `DetailRow`(detail-rows.ts) | 없음 | #3, #30, #41 | — |
-| 시트 (화면: "필터") | 모달 바텀시트. 화면 안의 상호작용이다. 화면을 떠나는 동작(쓸어넘기기·뒤로 가기)은 시트가 열려 있어도 화면을 닫는다. 방문 기록에 넣지 않는다 | `Sheet`(shared/ui/sheet.tsx), `AnimalFilterSheet` | 없음 | 기능명세서 4.2, EL 합의(#51) | 팝업(쓰지 않는다) |
+| 정보 줄 (화면 없음) | 상세의 이름-값 줄: 발견 장소 → 보호소 → 공고 기간 → 종료 사유 → 특이사항. 값이 없으면 줄을 뺀다. 보호소 주소·전화는 보호소 정보 시트에 둔다. **코드 반영 예정**: 지금은 보호소 뒤에 주소 → 전화 줄이 있다 | `detailRows`, `DETAIL_ROW_LABELS`, `DetailRow`(detail-rows.ts) | 없음 | #3, #30, #41, EL 결정(#56) | — |
+| 시트 (화면: "필터", 보호소 정보 시트) | 모달 바텀시트. 화면 안의 상호작용이다. 화면을 떠나는 동작(쓸어넘기기·뒤로 가기)은 시트가 열려 있어도 화면을 닫는다. 방문 기록에 넣지 않는다 | `Sheet`(shared/ui/sheet.tsx), `AnimalFilterSheet` | 없음 | 기능명세서 4.2, EL 합의(#51) | 팝업(쓰지 않는다) |
+| 보호소 정보 시트 (화면: 보호소 줄 끝 작은 글자 버튼 "보호소 정보", 접근성 이름 "보호소 정보 보기". 시트 제목은 보호소 이름) | 상세 보호소 줄 끝의 [보호소 정보]로 여는 시트. 내용은 주소 + [지도], 전화 + [전화]이고 값이 없는 줄은 뺀다. 종료 공고이거나 주소·전화가 모두 없으면 버튼이 없다. 시트 정책을 따른다(상세가 닫히면 함께 사라진다). **코드 반영 예정**: 지금은 없다(주소·전화가 정보 줄에 있다) | 아직 없음. 기존 `Sheet`를 쓴다 | 없음 | EL 결정(#56) | 팝업(쓰지 않는다) |
 | 사진 크게 보기 | 컬럼 전체를 덮는 검은 사진 뷰어. 보던 사진 위치를 지킨다 | `ImageViewer`(widgets/animal-detail) | 없음 | 기능명세서 4.4, architecture.md 9절 | 풀스크린 뷰어 |
 | 토스트 | 짧은 안내. 컬럼 안에 두고, 같은 문구는 하나로 갱신한다 | `showToast`(shared/ui/toast.ts), `Toaster`(shared/ui/sonner.tsx) | 없음 | architecture.md 9절 | — |
 | 상태 배지 | 사진 위의 상태 표기. 문구는 `statusBadgeText` 하나에서 만든다. 결과에 따라 색이나 모양을 바꾸지 않는다 | `StatusBadge`(entities/animal/ui/status-badge.tsx), `statusBadgeText` | 없음 | #29, #41 | — |
@@ -107,6 +108,29 @@
 | 하트 튐 (화면 없음) | 관심을 켤 때 하트가 튀는 효과 | `FavoriteButton` | 없음 | architecture.md 14.4 | — |
 | 캐릭터 움직임 (화면 없음) | 홈의 고양이·강아지 캐릭터. 정지 그림으로 시작해 클라이언트에서 Rive 애니메이션으로 바뀐다 | `SpeciesCharacter`(entities/animal/ui/species-character.tsx) | `/characters/*.riv`, `/rive/*.wasm` | PRD-v1.2, architecture.md 9절 | — |
 
+## 7. 브랜드
+
+| 용어(화면) | 정의 | 코드 이름 | 밖으로 나가는 값 | 근거 | 헷갈리기 쉬운 말·쓰지 않는 말 |
+|---|---|---|---|---|---|
+| 서비스 이름 (화면: "멍냥공고") | 이 서비스의 이름. 화면, 문서 제목, og:title, OG 이미지, 문서에 쓴다. 코드에서는 상수 한 곳에서만 정의한다. **코드 반영 예정**: 지금 값은 "냥공고"다 | `SERVICE_NAME`(shared/config/service.ts) | 문서 제목, og:title, OG 이미지, 카카오 개발자 콘솔의 앱 이름(공유 카드 아래 이름, 코드 밖) | EL 결정(#56) | 냥공고(옛 이름, 쓰지 않는다) |
+| 한 줄 소개 (화면: "보호 중인 아이들의 공고가 / 더 많은 사람에게 닿도록.") | 서비스를 한 줄로 소개하는 문구. "/"는 줄바꿈 자리다. **코드 반영 예정**: 지금은 없다 | 아직 없음 | 없음 | EL 결정(#56) | — |
+| 운영 주소·저장 키 (화면 없음) | 옛 이름이 들어간 주소와 키. 사용자 데이터와 이미 퍼진 링크를 지키려고 이름을 바꿔도 그대로 둔다(규칙의 예외) | 쿠키 `nyanggonggo.species`·`nyanggonggo.region`, 저장소 키 `nyanggonggo:favorites`·`nyanggonggo:visited-list`, 이벤트 `nyanggonggo:favorites-change` | `nyanggonggo.vercel.app`, 위 쿠키·저장소 키 | EL 결정(#56) | — |
+
+## 코드 반영 예정 목록
+
+위 표에서 "코드 반영 예정"으로 표시한 것과 그 일을 하는 이슈다. 반영하면 표의 표시와 이 줄을 함께 지운다.
+
+| 용어 | 바뀔 것 | 이슈 |
+|---|---|---|
+| 마감 D-N, 오늘 마감 | 카드 "보호중 · 마감 D-N", 상세·공유·OG "공고 마감 D-N", 당일 "오늘 마감" | #57 |
+| 강조 | "임박" 문구 없앰, `soon` → `nearDeadline`, `isSoon` → `isNearDeadline` | #57 |
+| 정렬 | "공고 마감 빠른순", `endingSoon` → `deadline`(URL 정렬 값 포함) | #57 |
+| 관심, 관심 목록 | 화면 문구 "찜" → 관심 문구 | #58 |
+| 공고 번호 | `noticeNo`를 계약·도메인·상세·카드에 | #59 |
+| 나이 | "2026년생 · 60일 미만" 형식 정리 | #60 |
+| 정보 줄, 보호소 주소, 보호소 전화, 지도 보기, 전화 걸기, 보호소 정보 시트 | 주소·전화를 정보 줄에서 보호소 정보 시트로 | #62 |
+| 서비스 이름, 한 줄 소개 | "냥공고" → "멍냥공고", 홈에 한 줄 소개 | #64 |
+
 ## 받지 않는 공공 API 필드
 
 용어가 아니라 데이터 목록이다. DTO는 받지만(optional) Mapper가 읽지 않아 Wire·Domain·화면에 없다.
@@ -124,14 +148,14 @@
 
 ## 코드 이름 정리 후보
 
-이 문서에서 바꾸지 않는다. 바꿀 때는 따로 이슈를 연다.
+이 문서에서 바꾸지 않는다. 남은 후보는 #63에서 하고, 카드 `data-status`는 #61에서 한다.
 
 - **`regionText`와 `region`**: 관할 지역 이름(`orgNm`)과 필터의 시·도 코드가 같은 낱말이다.
 - **`status`의 세 뜻**: `Animal.status`(값 2개), 목록 쿼리 status(값 3개, `all` 포함), 카드 `data-status`(아래 항목).
 - **카드 `data-status`에 variant 값**: `data-status`(animal-card.tsx)는 status가 아니라 배지 종류(`soon` 포함)를 담는다.
-- **강조·정렬 쪽 이름**: `soon`·`isSoon`·`status-soon*`, `endingSoon`. 화면에서 "임박"과 "종료"를 쓰지 않기로 한 뒤에 맞출 이름이 정해지지 않았다.
+- **강조·정렬 쪽 이름**: 정했다(#56). `soon` → `nearDeadline`, `isSoon` → `isNearDeadline`, `endingSoon` → `deadline`(URL 정렬 값 포함). #57에서 바꾼다. 토큰 `status-soon*`과 `compareEndingSoon`처럼 따라오는 이름은 바꿀 때 같이 맞춘다.
 - **enter·fade/info·press의 겹침**: `data-enter`(첫 화면 등장)와 `data-detail-enter`·`DetailEntry`(진입 효과). 진입 모드 `fade`와 morph 중 정보 페이드 값 `"info"`. 카드 누름 효과와 캐릭터 트리거 `press`.
 - **"목록"과 dialog의 여러 뜻**: "목록"은 목록 화면, 목록 화면들(목록 + 관심 목록, `shared/lib/app-navigation.ts`), 관심 목록을 가리킨다. 상세 층·시트·사진 크게 보기가 모두 `role="dialog"`다.
 - **공고 ↔ `Animal`**: 화면과 문서는 공고, 코드는 `Animal`·`entities/animal`이다.
 - **`nyang-` 캐릭터 이름**: `nyang-cat`·`nyang-dog`(SVG, Rive 아트보드, `rive/nyang-characters`)가 브랜드에서 온 이름인지 캐릭터 이름인지 정하지 않았다.
-- **브랜드가 들어간 컴파일러 밖 문자열**: 쿠키 `nyanggonggo.species`·`nyanggonggo.region`, 저장소 키 `nyanggonggo:favorites`·`nyanggonggo:visited-list`, 이벤트 `nyanggonggo:favorites-change`. 위 규칙과 다르다. 바꾸면 저장된 값을 잃으므로 옮기는 코드가 필요하다.
+- ~~브랜드가 들어간 컴파일러 밖 문자열~~: 정리하지 않기로 했다(#56). 규칙의 예외로 그대로 둔다(7. 브랜드의 "운영 주소·저장 키").
