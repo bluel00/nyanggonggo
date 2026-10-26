@@ -10,8 +10,8 @@ export const OG_SIZE = { width: 1200, height: 630 };
  * OG 이미지를 그린다. model이 없으면(조회 실패, 잘못된 id) 서비스명만 있는 기본 이미지.
  * fonts가 비면 satori 기본 폰트로 그린다(한글이 빈 칸일 수 있다).
  */
-export function renderOgImage(model: OgModel | null, photo: string | null, fonts: OgFont[], headers?: HeadersInit) {
-  return new ImageResponse(model ? <AnimalCard model={model} photo={photo} /> : <Fallback />, {
+export function renderOgImage(model: OgModel | null, photo: string | null, fonts: OgFont[], logo: string | null, headers?: HeadersInit) {
+  return new ImageResponse(model ? <AnimalCard model={model} photo={photo} logo={logo} /> : <Fallback />, {
     ...OG_SIZE,
     fonts: fonts.length ? fonts : undefined,
     headers,
@@ -20,28 +20,20 @@ export function renderOgImage(model: OgModel | null, photo: string | null, fonts
 
 const FONT = "Pretendard";
 
-function ServicePill() {
+/** 좌상단 알약: 로고 상징(tile) 48px만, 이름 글자 없음(#66). 높이는 글자 알약 때와 같은 48(논리 24). 로고를 읽지 못하면 그리지 않는다 */
+const LOGO_SIZE = 48;
+
+function LogoPill({ logo }: { logo: string | null }) {
+  if (!logo) return null;
   return (
-    <div
-      style={{
-        position: "absolute",
-        top: 48,
-        left: 48,
-        display: "flex",
-        padding: "10px 24px",
-        borderRadius: 999,
-        background: OG_COLORS.photoPill,
-        color: OG_COLORS.text,
-        fontSize: 24,
-        fontWeight: 700,
-      }}
-    >
-      {SERVICE_NAME}
+    <div style={{ position: "absolute", top: 48, left: 48, display: "flex", height: LOGO_SIZE, borderRadius: 999, background: OG_COLORS.photoPill }}>
+      {/* eslint-disable-next-line @next/next/no-img-element -- satori 전용 img */}
+      <img src={logo} alt="" width={LOGO_SIZE} height={LOGO_SIZE} />
     </div>
   );
 }
 
-function AnimalCard({ model, photo }: { model: OgModel; photo: string | null }) {
+function AnimalCard({ model, photo, logo }: { model: OgModel; photo: string | null; logo: string | null }) {
   const status = OG_COLORS.status[model.variant];
   return (
     <div style={{ display: "flex", position: "relative", width: "100%", height: "100%", background: OG_COLORS.canvas, fontFamily: FONT }}>
@@ -55,7 +47,7 @@ function AnimalCard({ model, photo }: { model: OgModel; photo: string | null }) 
           style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 35%" }}
         />
       )}
-      <ServicePill />
+      <LogoPill logo={logo} />
       <div
         style={{
           position: "absolute",

@@ -40,3 +40,17 @@ for (const viewport of VIEWPORTS) {
     expect(Math.abs(offset), detail).toBeLessThanOrEqual(2);
   });
 }
+
+test("홈 위쪽: 이름이 멍냥공고인 로고(가로 조합)가 처음부터 보이고, 그림이 실제로 그려진다(#66)", async ({ page }) => {
+  await page.goto("/home");
+  const logo = page.getByRole("img", { name: "멍냥공고" });
+  await expect(logo).toBeVisible();
+  await expect(logo).toHaveAttribute("data-combo", "lockup");
+  await expect(logo).toHaveAttribute("data-variant", "line");
+  // 그림 파일이 읽혀 크기가 있다(깨진 이미지가 아니다)
+  const loaded = await logo.locator("img").evaluateAll((imgs) => imgs.map((img) => (img as HTMLImageElement).naturalWidth > 0));
+  expect(loaded).toEqual([true]);
+  const box = (await logo.boundingBox())!;
+  expect(Math.round(box.height)).toBe(56);
+  await expect(page.getByText("보호 중인 아이들의 공고가")).toBeVisible();
+});

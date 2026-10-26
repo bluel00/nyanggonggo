@@ -51,6 +51,26 @@ export async function loadOgFonts(
   }
 }
 
+/**
+ * 알약 안 로고 상징(tile, #66). 원본 SVG(shared/assets/logo)를 폰트처럼 런타임에 읽어 data URL로 넘긴다(satori는 img의 SVG data URL을 그린다).
+ * 배포 번들에 들어가도록 next.config.ts의 outputFileTracingIncludes에 같은 경로를 넣었다. 읽기에 실패하면 null(알약 없이 그린다).
+ */
+export const OG_LOGO_FILE = "src/shared/assets/logo/myeongnyang-tile.svg";
+
+export async function loadOgLogo(
+  readFile: (path: string) => Promise<Uint8Array> = fsReadFile,
+  logger: Logger = noopLogger,
+): Promise<string | null> {
+  try {
+    // 경로는 고정 문자열로 적는다(readFontFiles 주석과 같은 이유)
+    const bytes = await readFile(join(process.cwd(), "src/shared/assets/logo/myeongnyang-tile.svg"));
+    return `data:image/svg+xml;base64,${Buffer.from(bytes).toString("base64")}`;
+  } catch (error) {
+    logger.warn("og logo load failed, drawing without logo", { name: error instanceof Error ? error.name : typeof error });
+    return null;
+  }
+}
+
 /** OG 원본 이미지 최대 크기. 넘으면 사진 없이 그린다 */
 export const OG_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 

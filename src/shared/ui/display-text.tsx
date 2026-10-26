@@ -5,7 +5,6 @@ import { displayFont } from "./display-font";
 const SIZE = {
   home: "text-display-home",
   title: "text-display-title",
-  logo: "text-display-logo",
 } as const;
 
 /**
