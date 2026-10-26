@@ -17,6 +17,8 @@ const nextConfig: NextConfig = {
     "/animals/**": [
       "./node_modules/pretendard/dist/public/static/Pretendard-Regular.otf",
       "./node_modules/pretendard/dist/public/static/Pretendard-Bold.otf",
+      // 알약 안 로고 상징(src/server/og/og-assets.ts loadOgLogo, #66)
+      "./src/shared/assets/logo/myeongnyang-tile.svg",
     ],
   },
 };

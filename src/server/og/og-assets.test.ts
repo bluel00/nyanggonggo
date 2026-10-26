@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { createHttpClient, type FetchLike } from "@/shared/api/http-client";
-import { fetchOgImage, loadOgFonts, OG_FONT_FILES } from "./og-assets";
+import { readFileSync } from "node:fs";
+import { fetchOgImage, loadOgFonts, loadOgLogo, OG_FONT_FILES, OG_LOGO_FILE } from "./og-assets";
 
 const SRC = "http://openapi.animal.go.kr/openapi/files/1%5B1%5D.jpg";
 
@@ -31,6 +32,31 @@ describe("loadOgFonts", () => {
     const fonts = await loadOgFonts();
     expect(fonts).toHaveLength(2);
     expect(fonts[1].data.byteLength).toBeGreaterThan(100_000);
+  });
+});
+
+describe("loadOgLogo", () => {
+  it("저장소의 로고 원본(tile SVG)을 읽어 SVG data URL로", async () => {
+    const readFile = vi.fn(async (_path: string) => new TextEncoder().encode("<svg/>"));
+    const logo = await loadOgLogo(readFile);
+    expect(logo).toBe(`data:image/svg+xml;base64,${Buffer.from("<svg/>").toString("base64")}`);
+    expect(readFile.mock.calls[0][0].replaceAll("\\", "/").endsWith(OG_LOGO_FILE)).toBe(true);
+  });
+
+  it("읽기에 실패하면 null(알약 없이 그린다)과 경고 로그", async () => {
+    const logger = { warn: vi.fn() };
+    expect(
+      await loadOgLogo(async () => {
+        throw new Error("ENOENT");
+      }, logger),
+    ).toBeNull();
+    expect(logger.warn).toHaveBeenCalledOnce();
+  });
+
+  it("실제 파일이 있고 배포 추적(next.config.ts)에 같은 경로가 들어 있다", async () => {
+    const logo = await loadOgLogo();
+    expect(Buffer.from(logo!.split(",")[1], "base64").toString("utf8")).toContain("<svg");
+    expect(readFileSync("next.config.ts", "utf8")).toContain(`"./${OG_LOGO_FILE}"`);
   });
 });
 
