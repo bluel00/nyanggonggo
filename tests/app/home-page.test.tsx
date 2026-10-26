@@ -43,7 +43,7 @@ describe("app/home: 축종 기억이 있어도 보여 준다(결정 G1)", () => 
   });
 
   it("문서 제목은 화면 제목과 같다", () => {
-    expect(metadata.title).toBe("오늘은 누구를 보러 왔어요? | 냥공고");
+    expect(metadata.title).toBe("오늘은 누구를 보러 왔어요? | 멍냥공고");
   });
 });
 
