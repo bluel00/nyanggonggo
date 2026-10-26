@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { getSocialImageMetadataBaseFallback } from "next/dist/lib/metadata/resolvers/resolve-url";
 import {
   hasRegionParam,
   HOME_PATH,
@@ -10,6 +9,7 @@ import {
   type SearchParamsInput,
 } from "@/features/animal-filter";
 import { SERVICE_NAME, SERVICE_TAGLINE } from "@/shared/config/service";
+import { siteOrigin } from "@/shared/config/site-origin";
 import { OG_SIZE } from "./animals/[id]/og-image";
 
 /*
@@ -17,16 +17,16 @@ import { OG_SIZE } from "./animals/[id]/og-image";
  * 자식 세그먼트가 openGraph를 정하면 부모 것이 통째로 대체된다. 그래서 공통 값(site_name, type, url)은 여기 한곳에서 만들고
  * 각 페이지는 이 함수만 부른다.
  *
- * 주소는 상대 경로로 넘기고, 루트 레이아웃의 metadataBase(SITE_METADATA_BASE)가 절대 주소로 푼다. 그 값은 상세 og:image를 절대 주소로
- * 만들던 Next 자신의 기준(getSocialImageMetadataBaseFallback: Vercel 운영은 운영 주소, 미리보기는 미리보기 주소, 로컬은 localhost)
- * 그대로다. Next는 metadataBase가 없으면 이미지에만 이 기준을 쓰고 og:url은 상대 경로로 두기 때문에 같은 값을 명시한다.
+ * 주소는 상대 경로로 넘기고, 루트 레이아웃의 metadataBase(SITE_METADATA_BASE)가 절대 주소로 푼다. 그 값은 shared/config/site-origin.ts가
+ * Vercel 공개 시스템 환경변수로 만든다(Vercel 운영은 운영 주소, 미리보기는 미리보기 주소, 로컬은 localhost, #71). 상세 og:image가 쓰던
+ * Next 기본 기준과 같은 순서다. Next는 metadataBase가 없으면 이미지에만 그 기준을 쓰고 og:url은 상대 경로로 두기 때문에 명시한다.
  * twitter는 정하지 않는다: Next가 openGraph(제목·설명·이미지)를 이어받고 이미지가 있으면 summary_large_image로 만든다(상세와 같다).
  * 사이트 og:image는 루트 opengraph-image.tsx(상세의 대체 이미지 재사용)다. 페이지가 openGraph를 정하면 루트의 파일 이미지가
  * 이어지지 않아 주소를 직접 넣는다.
  */
 
-/** 링크 미리보기 절대 주소의 기준(루트 레이아웃 metadataBase). 상세 og:image가 쓰던 Next 기본 기준과 같은 값이다 */
-export const SITE_METADATA_BASE = getSocialImageMetadataBaseFallback(null);
+/** 링크 미리보기 절대 주소의 기준(루트 레이아웃 metadataBase) */
+export const SITE_METADATA_BASE = siteOrigin();
 
 /** 사이트 og:image(루트 opengraph-image.tsx가 그린다) */
 export const SITE_OG_IMAGE = {
