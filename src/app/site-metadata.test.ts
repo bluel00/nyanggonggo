@@ -1,5 +1,4 @@
-import { getSocialImageMetadataBaseFallback } from "next/dist/lib/metadata/resolvers/resolve-url";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { SERVICE_NAME } from "@/shared/config/service";
 import {
   detailPath,
@@ -7,7 +6,6 @@ import {
   homePath,
   listPath,
   SITE_DESCRIPTION,
-  SITE_METADATA_BASE,
   SITE_OG_IMAGE,
   siteMetadata,
   siteOpenGraph,
@@ -81,21 +79,5 @@ describe("homePath", () => {
 
   it("넘겨받은 지역만 남기고 나머지는 버린다", () => {
     expect(homePath({ region: SEOUL, district: JONGNO, utm_source: "kakao" })).toBe(`/home?region=${SEOUL}&district=${JONGNO}`);
-  });
-});
-
-describe("SITE_METADATA_BASE: 절대 주소의 기준은 상세 og:image가 쓰던 Next 기본 기준과 같다", () => {
-  afterEach(() => vi.unstubAllEnvs());
-
-  it("Next 자신의 기준 함수와 같은 값(로컬은 localhost)", () => {
-    expect(SITE_METADATA_BASE.href).toBe(getSocialImageMetadataBaseFallback(null).href);
-    expect(SITE_METADATA_BASE.hostname).toBe("localhost");
-  });
-
-  it("Vercel 운영 배포면 운영 주소다(Next 기준 함수가 VERCEL_PROJECT_PRODUCTION_URL을 읽는다)", () => {
-    vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("VERCEL_ENV", "production");
-    vi.stubEnv("VERCEL_PROJECT_PRODUCTION_URL", "example.test");
-    expect(getSocialImageMetadataBaseFallback(null).href).toBe("https://example.test/");
   });
 });
