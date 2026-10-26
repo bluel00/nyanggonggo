@@ -7,6 +7,7 @@ import {
 } from "@/contract/animals";
 import type { AnimalListFilter } from "@/entities/animal";
 import { findSido, resolveDistrict } from "@/shared/config/regions";
+import { routes } from "@/shared/config/routes";
 
 /**
  * 목록 필터 ↔ URL search params(단일 진실 소스, architecture.md 7절).
@@ -153,7 +154,7 @@ export function toFilterQuery(filter: AnimalListFilter, base: URLSearchParams = 
   return next.toString();
 }
 
-export function toFilterHref(pathname: string, filter: AnimalListFilter, base?: URLSearchParams): string {
-  const query = toFilterQuery(filter, base);
-  return query ? `${pathname}?${query}` : pathname;
+/** 목록 주소: 경로는 routes, 쿼리 직렬화는 toFilterQuery(목록 쿼리를 직렬화하는 곳은 여기 한 곳이다, #73) */
+export function toListHref(filter: AnimalListFilter, base?: URLSearchParams): string {
+  return routes.list(toFilterQuery(filter, base));
 }

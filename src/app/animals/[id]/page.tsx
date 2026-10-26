@@ -7,7 +7,8 @@ import { createQueryClient } from "@/shared/api/query-client";
 import { SERVICE_NAME } from "@/shared/config/service";
 import { AnimalDetailView } from "@/views/animal-detail";
 import { getAnimalForRequest, getDetailPerf, getPhotoSizeForRequest } from "./animal-data";
-import { detailPath, siteOpenGraph } from "../../site-metadata";
+import { routes } from "@/shared/config/routes";
+import { siteOpenGraph } from "../../site-metadata";
 import { buildOgModel, buildOgText } from "./og-model";
 
 /**
@@ -22,10 +23,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     return {
       title: text.title,
       description: text.description,
-      openGraph: { ...siteOpenGraph(detailPath(id)), title: text.title, description: text.description },
+      openGraph: { ...siteOpenGraph(routes.detail(id)), title: text.title, description: text.description },
     };
   } catch {
-    return { openGraph: siteOpenGraph(detailPath(id)) };
+    return { openGraph: siteOpenGraph(routes.detail(id)) };
   }
 }
 

@@ -7,7 +7,7 @@ export {
   parseAnimalArea,
   parseAnimalFilter,
   readSpeciesParam,
-  toFilterHref,
+  toListHref,
   toFilterQuery,
   toSearchParams,
   type AnimalArea,
@@ -15,7 +15,6 @@ export {
   type SearchParamsInput,
 } from "./model/filter";
 export {
-  HOME_PATH,
   homeHref,
   resolveAnimalListEntry,
   resolveHomeArea,

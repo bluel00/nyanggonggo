@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import {
   hasRegionParam,
-  HOME_PATH,
   homeHref,
   parseAnimalArea,
   parseAnimalFilter,
-  toFilterHref,
+  toListHref,
   type SearchParamsInput,
 } from "@/features/animal-filter";
 import { SERVICE_NAME, SERVICE_TAGLINE } from "@/shared/config/service";
+import { routes } from "@/shared/config/routes";
 import { siteOrigin } from "@/shared/config/site-origin";
 import { OG_SIZE } from "./animals/[id]/og-image";
 
@@ -30,7 +30,7 @@ export const SITE_METADATA_BASE = siteOrigin();
 
 /** 사이트 og:image(루트 opengraph-image.tsx가 그린다) */
 export const SITE_OG_IMAGE = {
-  url: "/opengraph-image",
+  url: routes.ogImage(),
   ...OG_SIZE,
   type: "image/png",
   alt: `${SERVICE_NAME} 유기동물 공고`,
@@ -54,16 +54,10 @@ export function siteMetadata(path: string): Pick<Metadata, "openGraph"> {
  * 목록은 주소에 축종·지역이 있을 때만 그려지므로(없으면 리다이렉트) 기억 쿠키를 보지 않는다.
  */
 export function listPath(params: SearchParamsInput): string {
-  return toFilterHref("/", parseAnimalFilter(params));
+  return toListHref(parseAnimalFilter(params));
 }
 
 /** 홈 주소: 목록에서 넘겨받은 지역이 주소에 있으면 그 지역만 남기고, 없으면 `/home` */
 export function homePath(params: SearchParamsInput): string {
-  return hasRegionParam(params) ? homeHref(parseAnimalArea(params)) : HOME_PATH;
-}
-
-export const FAVORITES_PATH = "/favorites";
-
-export function detailPath(id: string): string {
-  return `/animals/${id}`;
+  return hasRegionParam(params) ? homeHref(parseAnimalArea(params)) : routes.home();
 }

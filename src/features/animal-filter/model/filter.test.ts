@@ -4,7 +4,7 @@ import {
   DEFAULT_ANIMAL_FILTER,
   DEFAULT_REGION,
   parseAnimalFilter,
-  toFilterHref,
+  toListHref,
   toFilterQuery,
 } from "./filter";
 
@@ -75,10 +75,10 @@ describe("parseAnimalFilter", () => {
   });
 });
 
-describe("toFilterQuery / toFilterHref", () => {
+describe("toFilterQuery / toListHref", () => {
   it("status/sort의 기본값은 URL에 넣지 않는다", () => {
     expect(toFilterQuery(DEFAULT_ANIMAL_FILTER)).toBe(`species=cat&region=${SEOUL}`);
-    expect(toFilterHref("/", DEFAULT_ANIMAL_FILTER)).toBe(`/?species=cat&region=${SEOUL}`);
+    expect(toListHref(DEFAULT_ANIMAL_FILTER)).toBe(`/?species=cat&region=${SEOUL}`);
   });
 
   it("전국은 region=all로 남긴다(생략하면 기본 지역이 되므로)", () => {
@@ -103,7 +103,7 @@ describe("toFilterQuery / toFilterHref", () => {
 
   it("필터와 무관한 파라미터는 보존하고, 이전 필터 값과 page/cursor는 지운다", () => {
     const base = qs(`utm_source=kakao&species=dog&region=${BUSAN}&district=${BUSAN_JUNG}&page=3&cursor=MjA`);
-    expect(toFilterHref("/", { ...DEFAULT_ANIMAL_FILTER, status: "ended" }, base)).toBe(
+    expect(toListHref({ ...DEFAULT_ANIMAL_FILTER, status: "ended" }, base)).toBe(
       `/?utm_source=kakao&species=cat&region=${SEOUL}&status=ended`,
     );
   });

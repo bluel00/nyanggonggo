@@ -28,6 +28,7 @@ import { ShareButton } from "@/features/animal-share";
 import { cn } from "@/shared/lib/utils";
 import { BackButton, useGoBack } from "@/shared/ui/back-button";
 import { Button } from "@/shared/ui/button";
+import { routes } from "@/shared/config/routes";
 import { photoBoxRatio, type PhotoSize } from "../model/photo-box";
 import { AnimalDetailSkeleton } from "./animal-detail-skeleton";
 import { BottomCtaBar, DetailPhotoArea } from "./detail-frame";
@@ -92,7 +93,7 @@ export function AnimalDetail({ id, firstPhotoSize = null }: { id: string; firstP
   // 열린 뷰어의 시작 위치. null이면 닫힘
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   // 목록을 거쳐 왔으면 router.back(), 공유 링크로 바로 들어왔으면 `/`(내 평소 화면: 홈 또는 기억된 목록, PRD-v1.4 R2)
-  const goBack = useGoBack("/");
+  const goBack = useGoBack(routes.entry());
 
   // 라우트 로딩 경계(loading.tsx)와 같은 뼈대라 둘 사이에서 화면이 바뀌지 않는다
   if (query.isPending) return <AnimalDetailSkeleton photoRatio={boxRatio} />;

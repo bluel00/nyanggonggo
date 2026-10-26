@@ -27,6 +27,7 @@ import { markListVisited } from "@/shared/lib/app-navigation";
 import { appScrollViewport, scrollAppToTop } from "@/shared/ui/app-column";
 import { Button } from "@/shared/ui/button";
 import { SKELETON_CARD_SELECTOR, SkeletonCard } from "@/shared/ui/skeleton-card";
+import { routes } from "@/shared/config/routes";
 
 /** 다음 페이지를 미리 부를 거리(sentinel이 화면 아래 이만큼 앞에 오면) */
 const PREFETCH_MARGIN = "600px 0px";
@@ -116,7 +117,7 @@ export function AnimalList({ filter }: { filter: AnimalListFilter }) {
           priority={index < EAGER_CARDS}
           // 첫 카드 사진만 다른 요청보다 먼저 받는다(fetchpriority high는 화면당 한 장)
           highPriority={index === 0}
-          href={`/animals/${animal.id}`}
+          href={routes.detail(animal.id)}
           onSelect={(selection) => select(animal, selection)}
           onPress={() => warmDetail(animal)}
           transition

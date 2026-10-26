@@ -1,8 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { SERVICE_NAME } from "@/shared/config/service";
 import {
-  detailPath,
-  FAVORITES_PATH,
   homePath,
   listPath,
   SITE_DESCRIPTION,
@@ -10,6 +8,7 @@ import {
   siteMetadata,
   siteOpenGraph,
 } from "./site-metadata";
+import { routes } from "@/shared/config/routes";
 
 const SEOUL = "6110000";
 const JONGNO = "3000000";
@@ -18,8 +17,8 @@ describe("siteOpenGraph: 모든 페이지의 site_name·type·url", () => {
   it.each([
     ["홈", "/home"],
     ["목록", `/?species=cat&region=${SEOUL}`],
-    ["관심", FAVORITES_PATH],
-    ["상세", detailPath("990000000000001")],
+    ["관심", routes.favorites()],
+    ["상세", routes.detail("990000000000001")],
   ])("%s: site_name은 서비스 이름, type은 website, url은 그 페이지 주소", (_, path) => {
     expect(siteOpenGraph(path)).toEqual({ siteName: SERVICE_NAME, type: "website", url: path });
   });

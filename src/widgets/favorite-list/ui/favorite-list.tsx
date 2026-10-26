@@ -10,6 +10,7 @@ import { BackButton, useGoBack } from "@/shared/ui/back-button";
 import { Button } from "@/shared/ui/button";
 import { ScreenHeader } from "@/shared/ui/screen-shell";
 import { SkeletonCard } from "@/shared/ui/skeleton-card";
+import { routes } from "@/shared/config/routes";
 
 const subscribeNothing = () => () => {};
 
@@ -89,7 +90,7 @@ export function FavoriteList() {
                 key={animal.id}
                 animal={animal}
                 now={now}
-                href={`/animals/${animal.id}`}
+                href={routes.detail(animal.id)}
                 // 하트 튐·누름은 CSS(motion-safe:, no-preference)가 움직임 줄이기를 거르므로 false
                 action={<FavoriteButton animalId={animal.id} variant="overlay" still={!allowsMotion(animal, false)} />}
               />

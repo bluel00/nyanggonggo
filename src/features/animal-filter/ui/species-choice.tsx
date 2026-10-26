@@ -9,7 +9,7 @@ import {
   type CharacterHandle,
   type CharacterSpecies,
 } from "@/entities/animal";
-import { DEFAULT_ANIMAL_FILTER, toFilterHref, type AnimalArea, type AnimalSpecies } from "../model/filter";
+import { DEFAULT_ANIMAL_FILTER, toListHref, type AnimalArea, type AnimalSpecies } from "../model/filter";
 import { animationsFinished, enterOrder } from "@/shared/lib/motion";
 import { DisplayText } from "@/shared/ui/display-text";
 import { rememberSpecies } from "../model/species-cookie";
@@ -52,7 +52,7 @@ export function SpeciesChoice({ area, enterFrom }: { area: AnimalArea; enterFrom
   }, []);
   // 지역은 넘겨받은 값 그대로다(전국 `{}`이면 region이 undefined여야 하므로 `...area`가 아니라 두 값을 직접 넣는다)
   const listHref = (species: AnimalSpecies) =>
-    toFilterHref("/", { ...DEFAULT_ANIMAL_FILTER, species, region: area.region, district: area.district });
+    toListHref({ ...DEFAULT_ANIMAL_FILTER, species, region: area.region, district: area.district });
 
   return (
     <div className="flex flex-col gap-6">

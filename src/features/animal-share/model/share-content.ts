@@ -1,6 +1,7 @@
 import { toImageProxyUrl } from "@/contract/images";
 import { animalSummaryText, getPrimaryImage, speciesText, type Animal } from "@/entities/animal";
 import { SITE_URL } from "@/shared/config/public-env";
+import { routes } from "@/shared/config/routes";
 import type { ShareContent } from "./share";
 
 /**
@@ -17,13 +18,13 @@ export function resolveShareOrigin(locationOrigin: string, siteUrl: string = SIT
  * 썸네일은 대표 사진의 이미지 프록시 절대 URL(https 페이지에서 http 원본을 쓰지 않도록), 사진이 없으면 OG 이미지.
  */
 export function buildShareContent(animal: Animal, origin: string, now: Date): ShareContent {
-  const url = `${origin}/animals/${animal.id}`;
+  const url = `${origin}${routes.detail(animal.id)}`;
   const primary = getPrimaryImage(animal);
   const proxied = primary ? toImageProxyUrl(primary) : null;
   return {
     url,
     title: `${animal.regionText} ${speciesText(animal)}`,
     description: animalSummaryText(animal, now),
-    imageUrl: proxied ? `${origin}${proxied}` : `${url}/opengraph-image`,
+    imageUrl: proxied ? `${origin}${proxied}` : `${origin}${routes.detailOgImage(animal.id)}`,
   };
 }

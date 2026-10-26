@@ -80,6 +80,7 @@
 |---|---|---|---|---|---|
 | 홈(축종 선택) (화면: "오늘은 누구를 보러 왔어요?") | 축종을 고르는 첫 화면. 축종 기억이 없으면 `/`가 여기로 보낸다 | `SpeciesPickerView`, `SpeciesChoice`, `HOME_PATH`, `homeHref`, `resolveAnimalListEntry` | URL `/home` | PRD-v1.1 3절, architecture.md 7절 | species-picker / species-choice |
 | 목록 (화면: "고양이 공고" 등) | 한 축종의 공고 카드 피드(무한 스크롤) | `AnimalListView`, `AnimalList`, `useAnimalsInfinite` | URL `/` | architecture.md 7절 | "목록 화면"(목록 + 관심 목록)과 구분한다 |
+| 진입 경로 (화면 없음) | 쿼리 없는 `/`. 기억한 목록(축종·지역)이 있으면 그 목록으로, 없으면 홈으로 보낸다. 뒤로가기로 갈 곳이 없을 때(공유 링크로 바로 들어온 상세 등) 가는 곳이다. 목록 주소와 값은 같지만 다른 개념이다 | `entry`(shared/config/routes.ts), `resolveAnimalListEntry`(features/animal-filter/model/entry.ts) | URL `/` | PRD-v1.4 R2, #73 | 목록(`/` + 쿼리), 홈(`/home`) |
 | 관심 목록 (화면: 목록 이름·헤더 링크 "관심 공고", 빈 상태 "아직 관심 공고가 없어요", 오류 "지금은 관심 공고를 불러오지 못했어요") | 관심 공고만 모은 목록. 축종이 섞인다. **코드 반영 예정**: 지금 화면은 "찜한 공고", 링크 이름 "찜 목록", "아직 찜한 공고가 없어요", "지금은 찜한 공고를 불러오지 못했어요"다. 일부 실패 안내 "일부 공고를 불러오지 못했어요"는 그대로다 | `FavoritesView`, `FavoriteList`, `FavoritesLink`, `ANIMAL_COPY.favoritesTitle`·`favoritesEmptyTitle`·`favoritesErrorTitle` | URL `/favorites` | architecture.md 8절, EL 결정(#56) | 찜 목록(쓰지 않는다) |
 | 카드 (화면 없음) | 목록의 공고 한 칸. 사진 1:1, 상태 배지, 관심 버튼, 1줄 지역(관할 지역), 2줄 보호소(없으면 발견 장소) | `AnimalCard`, `ANIMAL_CARD_SLOT`(entities/animal/ui/animal-card.tsx) | 없음 | handoff 화면 1~2 | — |
 | 상세 (화면: 층 이름 "공고 상세") | 공고 하나의 화면. 목록·관심 목록에서 열면 목록 위에 얹힌 층이고, 링크로 바로 들어오면 새 문서다 | `AnimalDetail`, `StackLayer`(shared/ui/stack-layer.tsx), `app/@modal/(.)animals/[id]` | URL `/animals/{id}` | PRD-v1.5, architecture.md 7절 | 모달 |
