@@ -24,6 +24,7 @@
 ## 문서와 일하는 방식
 
 - [`docs/architecture.md`](docs/architecture.md): 현재 설계. 문서끼리 충돌하면 이것이 가장 앞선다.
+- [`docs/glossary.md`](docs/glossary.md): 도메인 용어 사전. 화면, 코드, 공공 API, URL·저장소에서 같은 개념을 무엇이라 부르는지와 정해진 정의
 - [`docs/PRD.md`](docs/PRD.md)와 변경 문서 [`PRD-v1.1`](docs/PRD-v1.1.md) · [`v1.2`](docs/PRD-v1.2.md) · [`v1.3`](docs/PRD-v1.3.md) · [`v1.4`](docs/PRD-v1.4.md) · [`v1.5`](docs/PRD-v1.5.md): 각 변경 문서는 앞 버전에서 바뀌는 부분만 적은 그 시점의 기록이다. 무엇이 무엇을 대체했는지는 `docs/PRD.md` 맨 앞 색인에 있다.
 - [`docs/기능명세서.md`](docs/기능명세서.md), [`docs/design/`](docs/design/): 기능 명세와 디자인 토큰·핸드오프
 - [`CLAUDE.md`](CLAUDE.md): 작업 규칙(문서 우선순위, 보안, 커밋 규칙)
