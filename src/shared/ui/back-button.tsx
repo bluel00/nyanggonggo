@@ -3,16 +3,17 @@
 import { ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
+import { routes } from "../config/routes";
 import { hasVisitedList } from "../lib/app-navigation";
 import { Button } from "./button";
 
 /**
  * 뒤로가기. 앱 안에서 목록을 거쳐 왔으면 이전 화면으로(스크롤 위치와 필터가 그대로 살아난다),
- * 공유 링크나 북마크로 상세를 바로 열었으면 fallback(기본 목록)으로 간다.
+ * 공유 링크나 북마크로 상세를 바로 열었으면 fallback(기본은 진입 경로: 기억한 목록, 없으면 홈)으로 간다.
  * 카카오톡 인앱 브라우저처럼 히스토리가 이미 쌓여 있는 경우 `history.length`로는 가릴 수 없어
  * 목록 화면을 거쳤는지를 따로 기록해 쓴다(architecture.md 12절 32).
  */
-export function useGoBack(fallback = "/") {
+export function useGoBack(fallback = routes.entry()) {
   const router = useRouter();
   return useCallback(() => {
     if (canGoBackInApp()) router.back();

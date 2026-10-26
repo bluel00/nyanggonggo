@@ -1,5 +1,6 @@
 import { Heart } from "lucide-react";
 import Link from "next/link";
+import { routes } from "@/shared/config/routes";
 
 /**
  * 목록 헤더의 찜 목록 버튼(handoff: 44x44, 중립색, 개수 배지 없음). /favorites의 유일한 진입 경로다.
@@ -7,7 +8,7 @@ import Link from "next/link";
 export function FavoritesLink() {
   return (
     <Link
-      href="/favorites"
+      href={routes.favorites()}
       aria-label="찜 목록"
       // 목록의 스크롤 위치 저장값이 덮이지 않게 한다(찜 목록은 직접 맨 위로 올린다)
       scroll={false}

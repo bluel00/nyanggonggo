@@ -8,16 +8,14 @@ import {
   parseAnimalFilter,
   readSpeciesParam,
   REGION_ALL,
-  toFilterHref,
+  toListHref,
   toSearchParams,
   type AnimalArea,
   type SearchParamsInput,
 } from "./filter";
+import { routes } from "@/shared/config/routes";
 import { parseRegionCookie } from "./region-cookie";
 import { parseSpeciesCookie } from "./species-cookie";
-
-/** 홈(축종 선택) 화면의 경로 */
-export const HOME_PATH = "/home";
 
 /** `/`로 들어왔을 때 할 일: 이 필터로 목록을 그리거나, 이 주소로 리다이렉트한다 */
 export type AnimalListEntry =
@@ -57,7 +55,7 @@ export function resolveAnimalListEntry(
 
   // 보여 주는 목록은 주소만으로 다시 열 수 있어야 한다. 축종이나 지역이 빠져 있거나 옛 시군구 코드면 고쳐서 한 번에 보낸다
   if (urlSpecies === null || !hasRegionParam(params) || hasAliasedDistrict(params)) {
-    return { kind: "redirect", href: toFilterHref("/", filter, base) };
+    return { kind: "redirect", href: toListHref(filter, base) };
   }
   return { kind: "render", filter };
 }
@@ -66,8 +64,7 @@ export function resolveAnimalListEntry(
 function toHomePath(base: URLSearchParams): string {
   const next = new URLSearchParams(base);
   for (const key of ["species", ...FORBIDDEN_KEYS]) next.delete(key);
-  const query = next.toString();
-  return query ? `${HOME_PATH}?${query}` : HOME_PATH;
+  return routes.home(next);
 }
 
 /**
@@ -77,7 +74,7 @@ function toHomePath(base: URLSearchParams): string {
 export function homeHref(area: AnimalArea): string {
   const params = new URLSearchParams({ region: area.region ?? REGION_ALL });
   if (area.district) params.set("district", area.district);
-  return `${HOME_PATH}?${params.toString()}`;
+  return routes.home(params);
 }
 
 /**

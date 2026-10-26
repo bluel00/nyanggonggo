@@ -1,9 +1,9 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 import type { AnimalListFilter } from "@/entities/animal";
-import { toFilterHref } from "./filter";
+import { toListHref } from "./filter";
 import { rememberRegion } from "./region-cookie";
 import { rememberSpecies } from "./species-cookie";
 
@@ -18,15 +18,14 @@ import { rememberSpecies } from "./species-cookie";
  */
 export function useApplyAnimalFilter() {
   const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
 
   return useCallback(
     (filter: AnimalListFilter) => {
       rememberRegion({ region: filter.region, district: filter.district });
       rememberSpecies(filter.species);
-      router.replace(toFilterHref(pathname, filter, new URLSearchParams(searchParams.toString())), { scroll: false });
+      router.replace(toListHref(filter, new URLSearchParams(searchParams.toString())), { scroll: false });
     },
-    [router, pathname, searchParams],
+    [router, searchParams],
   );
 }
