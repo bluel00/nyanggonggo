@@ -18,18 +18,24 @@ const wire = makeWire({ sex: "female", regionText: "제주특별자치도", shel
 const meta = (id: string) => generateMetadata({ params: Promise.resolve({ id }) });
 
 describe("상세 generateMetadata", () => {
-  it("지역 기반 제목과 공고 한 줄 요약 설명(og 포함, 보호소 이름 없음)", async () => {
+  it("지역 기반 제목과 공고 한 줄 요약 설명(og 포함, 보호소 이름 없음), og의 site_name·type·url(#69)", async () => {
     getById.mockResolvedValue(wire);
     expect(await meta("1")).toEqual({
       title: "제주특별자치도 고양이 공고 | 멍냥공고",
       description: "암컷 · 나이 미상 · 보호중 · D-10",
-      openGraph: { title: "제주특별자치도 고양이 공고 | 멍냥공고", description: "암컷 · 나이 미상 · 보호중 · D-10" },
+      openGraph: {
+        siteName: "멍냥공고",
+        type: "website",
+        url: "/animals/1",
+        title: "제주특별자치도 고양이 공고 | 멍냥공고",
+        description: "암컷 · 나이 미상 · 보호중 · D-10",
+      },
     });
   });
 
-  it("조회 실패나 잘못된 id면 기본 메타데이터", async () => {
+  it("조회에 실패하면 og의 site_name·type·url만, 잘못된 id면 기본 메타데이터", async () => {
     getById.mockRejectedValue(new Error("upstream"));
-    expect(await meta("1")).toEqual({});
+    expect(await meta("1")).toEqual({ openGraph: { siteName: "멍냥공고", type: "website", url: "/animals/1" } });
     expect(await meta("abc")).toEqual({});
     expect(getById).toHaveBeenCalledTimes(1);
   });

@@ -7,20 +7,25 @@ import { createQueryClient } from "@/shared/api/query-client";
 import { SERVICE_NAME } from "@/shared/config/service";
 import { AnimalDetailView } from "@/views/animal-detail";
 import { getAnimalForRequest, getDetailPerf, getPhotoSizeForRequest } from "./animal-data";
+import { detailPath, siteOpenGraph } from "../../site-metadata";
 import { buildOgModel, buildOgText } from "./og-model";
 
 /**
  * 링크 미리보기용 제목/설명(og 이미지는 같은 폴더의 opengraph-image.tsx가 붙인다).
- * 페이지와 같은 요청 단위 캐시(getAnimalForRequest)를 쓴다. 실패하면 기본 메타데이터.
+ * 페이지와 같은 요청 단위 캐시(getAnimalForRequest)를 쓴다. 실패하면 기본 메타데이터. site_name·type·url은 빌더(app/site-metadata.ts, #69).
  */
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   if (!isAnimalId(id)) return {};
   try {
     const text = buildOgText(buildOgModel(await getAnimalForRequest(id), new Date()), SERVICE_NAME);
-    return { title: text.title, description: text.description, openGraph: { title: text.title, description: text.description } };
+    return {
+      title: text.title,
+      description: text.description,
+      openGraph: { ...siteOpenGraph(detailPath(id)), title: text.title, description: text.description },
+    };
   } catch {
-    return {};
+    return { openGraph: siteOpenGraph(detailPath(id)) };
   }
 }
 

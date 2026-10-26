@@ -4,8 +4,12 @@ import { ANIMAL_COPY } from "@/entities/animal";
 import { REGION_COOKIE, resolveHomeArea, type SearchParamsInput } from "@/features/animal-filter";
 import { SERVICE_NAME } from "@/shared/config/service";
 import { SpeciesPickerView } from "@/views/species-picker";
+import { homePath, siteMetadata } from "../site-metadata";
 
-export const metadata: Metadata = { title: `${ANIMAL_COPY.homeTitle} | ${SERVICE_NAME}` };
+/** 문서 제목은 화면 제목과 같다. 링크 미리보기는 사이트 OG(#69) */
+export async function generateMetadata({ searchParams }: { searchParams: Promise<SearchParamsInput> }): Promise<Metadata> {
+  return { title: `${ANIMAL_COPY.homeTitle} | ${SERVICE_NAME}`, ...siteMetadata(homePath(await searchParams)) };
+}
 
 /**
  * 홈(축종 선택) 화면. `/`로 들어온 사람 중 축종 기억이 없는 사람이 여기로 온다(`app/page.tsx`).

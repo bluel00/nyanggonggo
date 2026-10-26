@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import {
@@ -7,6 +8,12 @@ import {
   type SearchParamsInput,
 } from "@/features/animal-filter";
 import { AnimalListView } from "@/views/animal-list";
+import { listPath, siteMetadata } from "./site-metadata";
+
+/** 링크 미리보기는 사이트 OG(#69). og:url은 계약으로 해석한 필터 값만으로 만든 목록 주소다. `<title>`은 레이아웃 그대로 */
+export async function generateMetadata({ searchParams }: { searchParams: Promise<SearchParamsInput> }): Promise<Metadata> {
+  return siteMetadata(listPath(await searchParams));
+}
 
 /**
  * 목록 화면. URL search params(단일 진실 소스)를 서버에서 파싱해 views에 넘긴다.
