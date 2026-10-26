@@ -5,15 +5,16 @@
 ## 진실의 원천 (충돌 시 우선순위)
 
 1. `docs/architecture.md`
-2. `docs/PRD-v1.5.md` (PRD v1.4의 변경분: 상세를 목록 위에 얹기)
-3. `docs/PRD-v1.4.md` (PRD v1.3의 변경분: 상세에서 뒤로가기)
-4. `docs/PRD-v1.3.md` (PRD v1.2의 변경분: 상세 사진 비율)
-5. `docs/PRD-v1.2.md` (PRD v1.1의 변경분: 캐릭터 모션)
-6. `docs/PRD-v1.1.md` (PRD v1.0의 변경분: 기타 축종, 홈 화면, 축종 기억)
-7. `docs/기능명세서.md`, `docs/PRD.md`
-8. `docs/design/handoff.md`, `docs/design/README.md`, `docs/design/tokens.*`
+2. `docs/glossary.md` (도메인 용어 사전: 층마다 쓰는 말과 그 대응)
+3. `docs/PRD-v1.5.md` (PRD v1.4의 변경분: 상세를 목록 위에 얹기)
+4. `docs/PRD-v1.4.md` (PRD v1.3의 변경분: 상세에서 뒤로가기)
+5. `docs/PRD-v1.3.md` (PRD v1.2의 변경분: 상세 사진 비율)
+6. `docs/PRD-v1.2.md` (PRD v1.1의 변경분: 캐릭터 모션)
+7. `docs/PRD-v1.1.md` (PRD v1.0의 변경분: 기타 축종, 홈 화면, 축종 기억)
+8. `docs/기능명세서.md`, `docs/PRD.md`
+9. `docs/design/handoff.md`, `docs/design/README.md`, `docs/design/tokens.*`
 
-즉 `architecture.md` > `PRD-v1.5.md` > `PRD-v1.4.md` > `PRD-v1.3.md` > `PRD-v1.2.md` > `PRD-v1.1.md` > `PRD.md`·`기능명세서.md`다. `PRD-v1.1.md`는 v1.0에서, `PRD-v1.2.md`는 v1.1에서, `PRD-v1.3.md`는 v1.2에서, `PRD-v1.4.md`는 v1.3에서, `PRD-v1.5.md`는 v1.4에서 **바뀌는 부분만** 적은 문서다.
+즉 `architecture.md` > `glossary.md` > `PRD-v1.5.md` > `PRD-v1.4.md` > `PRD-v1.3.md` > `PRD-v1.2.md` > `PRD-v1.1.md` > `PRD.md`·`기능명세서.md`다. `PRD-v1.1.md`는 v1.0에서, `PRD-v1.2.md`는 v1.1에서, `PRD-v1.3.md`는 v1.2에서, `PRD-v1.4.md`는 v1.3에서, `PRD-v1.5.md`는 v1.4에서 **바뀌는 부분만** 적은 문서다.
 
 문서별로 무엇이 무엇을 대체했는지는 `docs/PRD.md` 맨 앞 색인과 대체된 문서 0절의 "대체된 곳"에 있다.
 
@@ -66,6 +67,7 @@
 - 라벨: 상태 `정의 필요` / `준비됨` / `백로그`, 종류 `기능` / `버그` / `문서` / `리팩터`.
 - `정의 필요` 이슈는 구현하지 않는다. 정할 것이 정해지고 `준비됨`이 되면 시작한다.
 - 브랜치: `<종류>/<이슈번호>-<짧은-이름>` (예: `docs/1-workflow`). 종류는 커밋 prefix와 같다(`feat`, `fix`, `docs`, `refactor`, `test`, `chore`).
+- 새 이름을 짓거나 화면 문구를 쓸 때 용어 사전(`docs/glossary.md`)을 먼저 본다. 사전에 없는 용어면 사전에 먼저 추가한다.
 - 같은 규칙이나 값을 세 번째로 복사하게 되면, 먼저 한 곳으로 모은 뒤 진행한다(복사본은 바뀔 때 함께 고쳐야 할 곳이 되어 늘어난다. 목록 쿼리 값이 6곳이 됐다).
 - 구현 전에 고칠 파일 목록을 이슈 댓글로 적는다. 이유 하나에 소스 파일 3곳 이상이면 왜 그런지 함께 적는다(변경 범위가 예상보다 넓은 것을 구현 전에 보려고).
 - PR 본문: 무엇을 / 왜 / 검사 결과 / 이유와 관계없이 따라 바뀐 파일 수 / `closes #번호`(따라 바뀐 파일 수는 #10에서 16개로 늦게 드러났다. PR마다 세어 구조 문제를 일찍 본다).
