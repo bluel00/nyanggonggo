@@ -43,8 +43,8 @@ describe("buildOgModel", () => {
       speciesLabel: "기타 동물",
       title: "기타 동물 · 제주특별자치도",
     });
-    const text = buildOgText(buildOgModel(animal({ species: "other", kindText: "토끼" }), NOW), "냥공고");
-    expect(text.title).toBe("제주특별자치도 토끼 공고 | 냥공고");
+    const text = buildOgText(buildOgModel(animal({ species: "other", kindText: "토끼" }), NOW), "멍냥공고");
+    expect(text.title).toBe("제주특별자치도 토끼 공고 | 멍냥공고");
   });
 
   it("임박 당일은 D-day, 종료는 D-day 없음, 만료된 보호중도 D-day 없음", () => {
@@ -61,8 +61,8 @@ describe("buildOgModel", () => {
 describe("buildOgText", () => {
   it("제목은 그대로, 설명은 공고 한 줄 요약(성별 · 나이 · 상태 · 특이사항, 보호소 이름 없음)", () => {
     // 특이사항은 지어낸 문장이다
-    expect(buildOgText(buildOgModel(animal({ ageText: "2024(년생)", specialMarkText: "검은 코,\n조용한 편" }), NOW), "냥공고")).toEqual({
-      title: "제주특별자치도 고양이 공고 | 냥공고",
+    expect(buildOgText(buildOgModel(animal({ ageText: "2024(년생)", specialMarkText: "검은 코,\n조용한 편" }), NOW), "멍냥공고")).toEqual({
+      title: "제주특별자치도 고양이 공고 | 멍냥공고",
       description: "암컷 · 2024(년생) · 보호중 · D-10 · 검은 코, 조용한 편",
     });
   });
@@ -74,7 +74,7 @@ describe("buildOgText", () => {
       animal({ ageText: "2026(60일미만)(년생)", specialMarkText: "   " }),
     ];
     for (const a of cases) {
-      expect(buildOgText(buildOgModel(a, NOW), "냥공고").description).toBe(buildShareContent(a, "https://nyang.test", NOW).description);
+      expect(buildOgText(buildOgModel(a, NOW), "멍냥공고").description).toBe(buildShareContent(a, "https://nyang.test", NOW).description);
     }
   });
 });

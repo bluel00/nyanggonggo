@@ -67,7 +67,7 @@ function AnimalCard({ model, photo }: { model: OgModel; photo: string | null }) 
           maxWidth: 760,
           padding: "28px 32px",
           borderRadius: 32,
-          background: OG_COLORS.bg,
+          background: OG_COLORS.surface,
           color: OG_COLORS.text,
         }}
       >

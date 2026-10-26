@@ -60,12 +60,15 @@ export function buildOgText(model: OgModel, serviceName: string) {
   };
 }
 
-/** satori는 CSS 변수를 지원하지 않아 토큰 값(docs/design/tokens.css)을 hex로 옮겨 쓴다 */
+/**
+ * satori는 CSS 변수를 지원하지 않아 토큰 값(docs/design/tokens.css)을 hex로 옮겨 쓴다. 키는 토큰 이름이다.
+ * 사진 위 흰 카드는 앱의 카드 정보 칸과 같은 surface다(bg는 화면 바탕이라 사진 위 카드에 쓰지 않는다, #64)
+ */
 export const OG_COLORS = {
-  bg: "#FFFFFF",
+  surface: "#FFFFFF",
   canvas: "#F5F5F5",
-  text: "#111111",
-  text2: "#666666",
+  text: "#2B211B",
+  text2: "#6B5A4C",
   photoPill: "rgba(255,255,255,0.9)",
   status: {
     protected: { dot: "#2E9F6B", bg: "#E6F6EE", text: "#1F7A50" },

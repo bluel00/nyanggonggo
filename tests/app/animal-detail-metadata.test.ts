@@ -21,9 +21,9 @@ describe("상세 generateMetadata", () => {
   it("지역 기반 제목과 공고 한 줄 요약 설명(og 포함, 보호소 이름 없음)", async () => {
     getById.mockResolvedValue(wire);
     expect(await meta("1")).toEqual({
-      title: "제주특별자치도 고양이 공고 | 냥공고",
+      title: "제주특별자치도 고양이 공고 | 멍냥공고",
       description: "암컷 · 나이 미상 · 보호중 · D-10",
-      openGraph: { title: "제주특별자치도 고양이 공고 | 냥공고", description: "암컷 · 나이 미상 · 보호중 · D-10" },
+      openGraph: { title: "제주특별자치도 고양이 공고 | 멍냥공고", description: "암컷 · 나이 미상 · 보호중 · D-10" },
     });
   });
 

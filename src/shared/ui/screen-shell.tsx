@@ -4,14 +4,24 @@ import { cn } from "@/shared/lib/utils";
 /**
  * 화면 틀: 헤더 줄 + 본문(`main`). 안전 영역 위쪽은 헤더 줄이 맡는다(sticky 헤더가 노치 영역까지 바탕을 칠한다).
  *
- * center: 본문을 남은 영역이 아니라 **화면 전체**의 세로 가운데에 둔다(홈). 본문 아래에 헤더 높이(--header-h)를 비워 위아래를
- * 맞추고, 아래 안전 영역도 비운다. 목록·찜은 아래 안전 영역을 비우지 않는다(handoff: 하단 34px은 시트·CTA 바만).
+ * center: 본문을 남은 영역이 아니라 **화면 전체**의 세로 가운데에 둔다(홈). 세 줄 격자(1fr / 본문 / 1fr)의 첫 줄에 헤더를 두어
+ * 위아래 빈 줄이 같은 높이가 되게 한다. 헤더 높이를 따로 적지 않으므로 헤더 내용(서비스 이름·한 줄 소개·로고)이 바뀌어도 맞는다.
+ * 헤더가 남은 높이의 절반보다 크면 첫 줄이 헤더만큼 늘어 본문이 아래로 밀린다(겹치지 않는다). 아래 안전 영역도 비운다.
+ * 목록·찜은 아래 안전 영역을 비우지 않는다(handoff: 하단 34px은 시트·CTA 바만).
  */
 export function ScreenShell({ header, children, center = false }: { header: ReactNode; children: ReactNode; center?: boolean }) {
+  if (center) {
+    return (
+      <div className="grid min-h-full grid-rows-[1fr_auto_1fr] pb-[env(safe-area-inset-bottom,0px)]">
+        <div className="self-start">{header}</div>
+        <main className="flex flex-col">{children}</main>
+      </div>
+    );
+  }
   return (
-    <div className={cn("flex min-h-full flex-col", center && "pb-[env(safe-area-inset-bottom,0px)]")}>
+    <div className="flex min-h-full flex-col">
       {header}
-      <main className={cn(center && "flex flex-1 flex-col justify-center pb-(--header-h)")}>{children}</main>
+      <main>{children}</main>
     </div>
   );
 }
