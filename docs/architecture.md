@@ -53,6 +53,11 @@ src/
 - 같은 계층의 다른 slice는 import하지 않는다(`views`·`widgets`·`features`·`entities`, 테스트 파일 포함).
 - 다른 slice는 공개 API(slice의 `index.ts`)로만 import한다. `app` 계층도 같다. 테스트 파일은 예외다(slice 내부를 직접 시험한다). `shared`에는 slice가 없어 파일 하나가 공개 API이고 barrel(index)을 두지 않는다: 제목 글꼴 미리 불러오기가 그 모듈을 가져오는 화면(홈, 목록)에만 붙어야 한다.
 - 화면 틀(2026-10-20): `shared/ui/screen-shell.tsx`의 `ScreenShell`(헤더 + 본문, `center`면 본문이 화면 전체의 세로 가운데. 2026-10-26부터 세 줄 격자 1fr / 본문 / 1fr로 맞춰 헤더 높이를 따로 적지 않는다, #64)과 `ScreenHeader`(높이 `--header-h` 이상, 위 안전 영역, 왼쪽·오른쪽 자리, `sticky`는 옵션). 헤더 내용은 위젯(목록 `AnimalListHeader`, 찜 `FavoriteListHeader`)과 뷰(홈 서비스 이름·한 줄 소개)가 채우고, 화면 틀에 놓는 것은 뷰다. 제목 글꼴(Jua)은 `shared/ui/display-text.tsx`의 `DisplayText`로만 쓴다. 등장 순서는 뷰가 정하고 `SpeciesChoice`는 시작 번호(`enterFrom`)만 받는다. 정리 전후 화면이 같음을 홈·목록(위·스크롤)·찜(빈 상태·카드·스크롤)·상세(얹은 층·직접 진입) 16장 픽셀 비교(움직임 줄이기, Rive 캔버스 가림, 안전 영역 0과 CDP로 흉내 낸 47/34)로 확인했고, LCP(7회 중앙값, 14.2 0단계 방법)는 홈 788 → 788, 목록 1,460 → 1,496, 상세 588 → 576ms, CLS는 전후 0이다(2026-10-21). 비교 스크립트는 저장소 밖 `nyanggonggo-review/perf-ui/shell-pixels`.
+- 페이지 경로(2026-10-26, [#73](https://github.com/bluel00/nyanggonggo/issues/73)): `shared/config/routes.ts`의 `routes` 한 곳에서 만든다. src에서 페이지 경로 문자열을 만드는 코드는 모두 이것을 쓴다(테스트·E2E의 기대 주소는 바깥에서 보이는 주소라 문자열로 둔다).
+  - 맡는 것: 페이지의 상대 경로(진입 경로, 목록, 홈, 관심 목록, 상세, OG 이미지)와 이미 직렬화된 쿼리를 붙이는 일. 절대 주소는 `siteOrigin()`(`shared/config/site-origin.ts`) + 이 경로다.
+  - 맡지 않는 것: 쿼리 직렬화(목록 쿼리는 `features/animal-filter`의 `toFilterQuery` 한 곳), 권한, 상태별 이동, 공유 정책. 실제 라우트는 app 디렉터리가 정하고 맞는지는 E2E(`e2e/routes.spec.ts`)가 본다.
+  - 목록(`/` + 쿼리), 홈(`/home`), 진입 경로(쿼리 없는 `/`: 기억한 목록이 있으면 그 목록, 없으면 홈, PRD-v1.4 R2)는 값이 겹쳐도 이름으로 구분한다. 뒤로가기의 기본값은 진입 경로다.
+  - 경로는 동물 도메인의 규칙이 아니라 앱의 주소 체계라 entities가 아니라 shared에 둔다. "shared는 도메인을 모른다"의 해석: shared가 주소의 이름을 아는 것은 허용하고, 도메인 규칙(무엇을 보여 줄지, 어디로 보낼지)을 아는 것은 허용하지 않는다.
 - UI는 Domain(`Animal`)만 소비한다. WireDto나 UpstreamDto를 컴포넌트에서 쓰지 않는다.
 
 ## 4. 공공 API 계약
