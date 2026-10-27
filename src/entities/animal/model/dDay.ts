@@ -21,7 +21,7 @@ export function getDDay(
   return days < 0 ? null : days;
 }
 
-/** D-day가 있고 3 이하일 때만 임박. */
+/** D-day가 있고 3 이하일 때만 마감이 가까운 공고다(색으로만 구분). */
 export function isNearDeadline(animal: Pick<Animal, "status" | "noticeEndAt">, now: Date): boolean {
   const dDay = getDDay(animal, now);
   return dDay !== null && dDay <= NEAR_DEADLINE_DAYS;

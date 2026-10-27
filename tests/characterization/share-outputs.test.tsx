@@ -85,13 +85,13 @@ describe("OG 메타(상세)", () => {
   it("보호중 고양이(사진 있음)", async () => {
     expect(await driveDetailMetadata(WIRES.cat)).toEqual({
       title: "가상시 예시구 고양이 공고 | 멍냥공고",
-      description: "암컷 · 2025(년생) · 보호중 · D-5 · 줄무늬 꼬리",
+      description: "암컷 · 2025(년생) · 보호중 · 공고 마감 10월 31일(토) · 줄무늬 꼬리",
       openGraph: {
         siteName: "멍냥공고",
         type: "website",
         url: "/animals/990000000000101",
         title: "가상시 예시구 고양이 공고 | 멍냥공고",
-        description: "암컷 · 2025(년생) · 보호중 · D-5 · 줄무늬 꼬리",
+        description: "암컷 · 2025(년생) · 보호중 · 공고 마감 10월 31일(토) · 줄무늬 꼬리",
       },
     });
   });
@@ -99,13 +99,13 @@ describe("OG 메타(상세)", () => {
   it("기타 동물(사진 없음, 마감 하루 전)", async () => {
     expect(await driveDetailMetadata(WIRES.rabbit)).toEqual({
       title: "가상도 예시시 토끼 공고 | 멍냥공고",
-      description: "수컷 · 나이 미상 · 임박 · D-1",
+      description: "수컷 · 나이 미상 · 보호중 · 공고 마감 10월 27일(화)",
       openGraph: {
         siteName: "멍냥공고",
         type: "website",
         url: "/animals/990000000000102",
         title: "가상도 예시시 토끼 공고 | 멍냥공고",
-        description: "수컷 · 나이 미상 · 임박 · D-1",
+        description: "수컷 · 나이 미상 · 보호중 · 공고 마감 10월 27일(화)",
       },
     });
   });
@@ -154,7 +154,7 @@ describe("OG 이미지 모델", () => {
       sub: "예시 보호소",
       variant: "protected",
       badgeText: "보호중",
-      dDayText: "D-5",
+      deadlineText: "공고 마감 10월 31일(토)",
       imageSrc: PHOTO,
     });
   });
@@ -164,8 +164,8 @@ describe("OG 이미지 모델", () => {
       title: "토끼 · 가상도 예시시",
       sub: "예시 공원 입구",
       variant: "nearDeadline",
-      badgeText: "임박",
-      dDayText: "D-1",
+      badgeText: "보호중",
+      deadlineText: "공고 마감 10월 27일(화)",
       imageSrc: null,
     });
   });
@@ -176,7 +176,7 @@ describe("OG 이미지 모델", () => {
       sub: "다른 보호소",
       variant: "ended",
       badgeText: "종료 · 입양",
-      dDayText: null,
+      deadlineText: null,
       imageSrc: PHOTO,
     });
   });
@@ -189,7 +189,7 @@ describe("카카오 템플릿 인자", () => {
     const link = { mobileWebUrl: `${ORIGIN}/animals/990000000000101`, webUrl: `${ORIGIN}/animals/990000000000101` };
     expect(await driveKakao(WIRES.cat)).toEqual({
       objectType: "feed",
-      content: { title: "가상시 예시구 고양이", description: "암컷 · 2025(년생) · 보호중 · D-5 · 줄무늬 꼬리", imageUrl: proxied, link },
+      content: { title: "가상시 예시구 고양이", description: "암컷 · 2025(년생) · 보호중 · 공고 마감 10월 31일(토) · 줄무늬 꼬리", imageUrl: proxied, link },
       buttons: [{ title: "공고 보기", link }],
     });
   });
@@ -200,7 +200,7 @@ describe("카카오 템플릿 인자", () => {
       objectType: "feed",
       content: {
         title: "가상도 예시시 토끼",
-        description: "수컷 · 나이 미상 · 임박 · D-1",
+        description: "수컷 · 나이 미상 · 보호중 · 공고 마감 10월 27일(화)",
         imageUrl: `${ORIGIN}/animals/990000000000102/opengraph-image`,
         link,
       },
@@ -232,8 +232,8 @@ async function driveDetailMetadata(wire: AnimalWireDto) {
 }
 
 function driveOgModel(wire: AnimalWireDto) {
-  const { title, sub, variant, badgeText, dDayText, imageSrc } = buildOgModel(toAnimal(wire), NOW);
-  return { title, sub, variant, badgeText, dDayText, imageSrc };
+  const { title, sub, variant, badgeText, deadlineText, imageSrc } = buildOgModel(toAnimal(wire), NOW);
+  return { title, sub, variant, badgeText, deadlineText, imageSrc };
 }
 
 function shareButton(animal: Animal, kakaoKey?: string) {

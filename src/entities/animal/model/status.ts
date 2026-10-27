@@ -1,7 +1,7 @@
 import type { Animal } from "./animal";
 import { isNearDeadline } from "./dDay";
 
-/** 상태 배지 종류. 임박은 보호중이면서 D-day 3 이하(isNearDeadline)일 때만. */
+/** 상태 배지 종류. 마감이 가까운 공고(nearDeadline)는 보호중이면서 D-day 3 이하(isNearDeadline)일 때만. */
 export type AnimalStatusVariant = "protected" | "nearDeadline" | "ended";
 
 export function getStatusVariant(animal: Pick<Animal, "status" | "noticeEndAt">, now: Date): AnimalStatusVariant {

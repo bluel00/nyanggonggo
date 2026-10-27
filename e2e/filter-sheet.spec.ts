@@ -43,7 +43,7 @@ test.describe("작은 화면(375×667)", () => {
     await page.locator(BODY).evaluate((el) => el.scrollTo(0, el.scrollHeight));
     await expect.poll(() => page.locator(BODY).evaluate((el) => Math.ceil(el.scrollTop + el.clientHeight) >= el.scrollHeight)).toBe(true);
     expect(await apply.boundingBox()).toEqual(before);
-    await expect(page.getByRole("radio", { name: "종료임박순" })).toBeInViewport();
+    await expect(page.getByRole("radio", { name: "공고 마감 빠른순" })).toBeInViewport();
 
     // 내용은 아래 영역 뒤로 들어가지 않는다(내용 영역이 아래 영역 위에서 끝난다)
     const body = await box(page, BODY);

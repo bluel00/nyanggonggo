@@ -81,7 +81,7 @@ function AnimalCard({ model, photo, logo }: { model: OgModel; photo: string | nu
             <div style={{ width: 12, height: 12, borderRadius: 999, background: status.dot }} />
             {model.badgeText}
           </div>
-          {model.dDayText && <div style={{ fontSize: 40, fontWeight: 700, color: status.text }}>{model.dDayText}</div>}
+          {model.deadlineText && <div style={{ fontSize: 40, fontWeight: 700, color: status.text }}>{model.deadlineText}</div>}
         </div>
         <div style={{ fontSize: 40, fontWeight: 700 }}>{model.title}</div>
         {model.sub && <div style={{ fontSize: 28, fontWeight: 400, color: OG_COLORS.text2 }}>{model.sub}</div>}

@@ -57,10 +57,10 @@ describe("AnimalCard", () => {
     });
   });
 
-  it("보호중(D-10): 초록 배지 + D-day, 사진은 프록시 경유 첫 사진", () => {
+  it("보호중(D-10): 초록 배지 + 마감 D-N, 사진은 프록시 경유 첫 사진", () => {
     const { card, badge } = renderCard(animal());
     expect(card.getAttribute("data-status")).toBe("protected");
-    expect(badge.textContent).toBe("보호중 · D-10");
+    expect(badge.textContent).toBe("보호중 · 마감 D-10");
     expect(badge.className).toContain("text-status-protected-text");
     // 글자 크기 토큰이 색 토큰과 병합되며 사라지지 않는다(cn 테마 설정)
     expect(badge.className).toContain("text-badge");
@@ -84,14 +84,14 @@ describe("AnimalCard", () => {
     expect(img.className).not.toContain("object-[");
   });
 
-  it("임박(D-3 이하): 주황 배지", () => {
+  it("마감이 가까운 공고(D-3 이하): 주황 배지, 문구는 '보호중'(색으로만 구분)", () => {
     const { card, badge } = renderCard(animal({ noticeEndAt: kst("2026-09-23T00:00:00") }));
     expect(card.getAttribute("data-status")).toBe("nearDeadline");
-    expect(badge.textContent).toBe("임박 · D-2");
+    expect(badge.textContent).toBe("보호중 · 마감 D-2");
     expect(badge.className).toContain("text-status-soon-text");
   });
 
-  it("종료: 회색 배지 '종료'만(D-day 없음), 사진 saturate(.7)", () => {
+  it("종료: 회색 배지 '종료'만(마감 표기 없음), 사진 saturate(.7)", () => {
     const { card, badge } = renderCard(animal({ status: "ended", noticeEndAt: kst("2026-09-30T00:00:00") }));
     expect(card.getAttribute("data-status")).toBe("ended");
     expect(badge.textContent).toBe("종료");
@@ -99,7 +99,7 @@ describe("AnimalCard", () => {
     expect(screen.getByRole("img").className).toContain("saturate-70");
   });
 
-  it("종료일이 지난 보호중은 '보호중'만(D-day 없음)", () => {
+  it("종료일이 지난 보호중은 '보호중'만(마감 표기 없음)", () => {
     const { badge } = renderCard(animal({ noticeEndAt: kst("2026-09-20T00:00:00") }));
     expect(badge.textContent).toBe("보호중");
   });

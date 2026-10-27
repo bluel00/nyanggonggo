@@ -10,7 +10,7 @@ import {
   DETAIL_ROW_ACTION_COPY,
   detailRowHref,
   detailRows,
-  dDayText,
+  detailDeadlineText,
   getDDay,
   getDetailEntry,
   getStatusVariant,
@@ -160,11 +160,11 @@ export function AnimalDetail({
           <StatusBadge animal={animal} now={now} dDay={false} />
           {dDay !== null && (
             <span data-slot="d-day" className={cn("text-title", STATUS_TEXT[variant])}>
-              {dDayText(dDay)}
+              {detailDeadlineText(dDay)}
             </span>
           )}
         </div>
-        {/* 보호중·종료 임박은 display-detail(Pretendard 24/32/700), 종료는 차분하게 title 크기(20/700)다(architecture.md 14.1).
+        {/* 보호중(마감이 가까운 공고 포함)은 display-detail(Pretendard 24/32/700), 종료는 차분하게 title 크기(20/700)다(architecture.md 14.1).
             줄 높이는 상태와 상관없이 32px이라 뼈대(AnimalDetailSkeleton)에서 바뀔 때 제목 아래가 움직이지 않는다 */}
         {/* 상세 층(PRD-v1.5)의 이름이고, 층이 열리면 초점을 받는다(shared/ui/stack-layer.tsx). Tab 순서에는 넣지 않는다(-1).
             초점 테두리는 키보드로 연 층에서 :focus-visible일 때만 그린다(터치·클릭으로 열면 WebKit도 그리지 않게 기본 테두리는 끈다) */}

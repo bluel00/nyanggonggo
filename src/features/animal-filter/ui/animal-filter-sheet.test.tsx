@@ -90,7 +90,7 @@ describe("AnimalFilterSheet", () => {
     open();
     fireEvent.click(screen.getByRole("radio", { name: "강아지" }));
     fireEvent.click(chipIn("보호 상태", "전체"));
-    fireEvent.click(screen.getByRole("radio", { name: "종료임박순" }));
+    fireEvent.click(screen.getByRole("radio", { name: "공고 마감 빠른순" }));
     fireEvent.change(select("시/도"), { target: { value: "6260000" } });
     fireEvent.change(select("시/군/구"), { target: { value: "3250000" } });
     expect(replace).not.toHaveBeenCalled();
@@ -127,7 +127,7 @@ describe("AnimalFilterSheet", () => {
     open();
     expect(screen.getByRole("radio", { name: "강아지" }).getAttribute("aria-checked")).toBe("true");
     expect(screen.getByRole("button", { name: "종료" }).getAttribute("aria-pressed")).toBe("true");
-    expect(screen.getByRole("radio", { name: "종료임박순" }).getAttribute("aria-checked")).toBe("true");
+    expect(screen.getByRole("radio", { name: "공고 마감 빠른순" }).getAttribute("aria-checked")).toBe("true");
     expect(select("시/도").value).toBe("6110000");
     expect(select("시/군/구").value).toBe("");
   });

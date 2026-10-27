@@ -37,7 +37,7 @@ describe("Upstream → Wire → Animal", () => {
     }
   });
 
-  it("종료(안락사) → ended, 임박 아님, 결과와 종료 사유가 Domain까지 온다(이슈 #41)", () => {
+  it("종료(안락사) → ended, 마감이 가깝지 않음, 결과와 종료 사유가 Domain까지 온다(이슈 #41)", () => {
     const ended = byId("427346202600847");
     expect(ended.status).toBe("ended");
     expect(ended.endResultText).toBe("안락사");
@@ -53,7 +53,7 @@ describe("Upstream → Wire → Animal", () => {
     expect(byId("448537202601421").images.every((u) => u.includes("%5B1%5D"))).toBe(true);
   });
 
-  it("기준일 2026-09-21, noticeEdt=20261001 → dDay 10, 임박 아님", () => {
+  it("기준일 2026-09-21, noticeEdt=20261001 → dDay 10, 마감이 가깝지 않음", () => {
     const animal = byId("450650202602282");
     expect(getDDay(animal, NOW)).toBe(10);
     expect(isNearDeadline(animal, NOW)).toBe(false);

@@ -66,7 +66,7 @@ test("브라우저 뒤로가기: 목록으로 돌아오면 열었던 카드가 �
 test("기본값이 아닌 필터에서도 열었던 카드가 보인다", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "필터" }).click();
-  await page.getByRole("radio", { name: "종료임박순" }).click();
+  await page.getByRole("radio", { name: "공고 마감 빠른순" }).click();
   await page.getByRole("button", { name: "적용하기" }).click();
   await expect(page).toHaveURL(/sort=deadline/);
 

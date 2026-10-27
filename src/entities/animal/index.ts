@@ -50,7 +50,13 @@ export { AnimalPhoto, PHOTO_SIZES } from "./ui/animal-photo";
 export { photoTransition } from "./ui/photo-transition";
 export { CHARACTER_SRC, SpeciesCharacter, type CharacterHandle, type CharacterSpecies } from "./ui/species-character";
 export { StatusBadge } from "./ui/status-badge";
-export { dDayText, statusBadgeText } from "./ui/status-text";
+export {
+  cardDeadlineText,
+  deadlineDateText,
+  detailDeadlineText,
+  statusBadgeText,
+  statusShareText,
+} from "./ui/status-text";
 export {
   ANIMAL_COPY,
   animalSubtitle,

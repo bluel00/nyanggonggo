@@ -6,28 +6,29 @@ import { AnimalCard, animalSummaryText, detailDisplayText, type Animal } from "@
 import { makeAnimal } from "@tests/factories/animal";
 
 /**
- * 표시 정책 고정(이슈 #29). 같은 규칙을 쓰는 화면(카드, OG 이미지, 공유·링크 미리보기 요약)이 상태마다 같은 글자를 내는지
- * 리팩터 전에 고정한다. 기대값은 코드를 읽지 않고 글자로 적는다. 상세 화면은 animal-detail.test.tsx가 같은 경우를 본다.
+ * 표시 정책 고정(이슈 #29, #57). 같은 규칙을 쓰는 곳(카드, OG 이미지, 공유·링크 미리보기 요약)이 상태마다 내는 글자를 고정한다.
+ * 마감 표기는 앱 안(카드)은 상대 표기, 밖으로 나가는 것(OG 이미지, 공유 요약)은 날짜다(#57). 기대값은 코드를 읽지 않고 글자로 적는다. 상세 화면은 animal-detail.test.tsx가 같은 경우를 본다.
  */
 afterEach(cleanup);
 
 const kst = (iso: string) => new Date(`${iso}+09:00`);
 const NOW = kst("2026-09-21T09:00:00");
 
-const CASES: { name: string; animal: Partial<Animal>; card: string; ogBadge: string; ogDDay: string | null }[] = [
-  { name: "보호 중 D-10", animal: { noticeEndAt: kst("2026-10-01T00:00:00") }, card: "보호중 · D-10", ogBadge: "보호중", ogDDay: "D-10" },
-  { name: "임박 D-2", animal: { noticeEndAt: kst("2026-09-23T00:00:00") }, card: "임박 · D-2", ogBadge: "임박", ogDDay: "D-2" },
-  { name: "당일", animal: { noticeEndAt: kst("2026-09-21T00:00:00") }, card: "임박 · D-day", ogBadge: "임박", ogDDay: "D-day" },
-  { name: "종료", animal: { status: "ended", noticeEndAt: kst("2026-10-01T00:00:00") }, card: "종료", ogBadge: "종료", ogDDay: null },
+const CASES: { name: string; animal: Partial<Animal>; card: string; ogBadge: string; ogDeadline: string | null; share: string }[] = [
+  { name: "보호 중 D-10", animal: { noticeEndAt: kst("2026-10-01T00:00:00") }, card: "보호중 · 마감 D-10", ogBadge: "보호중", ogDeadline: "공고 마감 10월 1일(목)", share: "보호중 · 공고 마감 10월 1일(목)" },
+  { name: "마감이 가까운 D-2(색으로만 구분)", animal: { noticeEndAt: kst("2026-09-23T00:00:00") }, card: "보호중 · 마감 D-2", ogBadge: "보호중", ogDeadline: "공고 마감 9월 23일(수)", share: "보호중 · 공고 마감 9월 23일(수)" },
+  { name: "당일", animal: { noticeEndAt: kst("2026-09-21T00:00:00") }, card: "보호중 · 오늘 마감", ogBadge: "보호중", ogDeadline: "공고 마감 9월 21일(월)", share: "보호중 · 공고 마감 9월 21일(월)" },
+  { name: "종료", animal: { status: "ended", noticeEndAt: kst("2026-10-01T00:00:00") }, card: "종료", ogBadge: "종료", ogDeadline: null, share: "종료" },
   // 이슈 #41: 종료 결과(processState 괄호 안 원문)를 붙인다. 처음 보는 값도 그대로다
   ...(["입양", "임시보호연계"] as const).map((endResultText) => ({
     name: `종료 · ${endResultText}`,
     animal: { status: "ended", endResultText, noticeEndAt: kst("2026-10-01T00:00:00") } as const,
     card: `종료 · ${endResultText}`,
     ogBadge: `종료 · ${endResultText}`,
-    ogDDay: null,
+    ogDeadline: null,
+    share: `종료 · ${endResultText}`,
   })),
-  { name: "만료된 보호 중", animal: { noticeEndAt: kst("2026-09-20T00:00:00") }, card: "보호중", ogBadge: "보호중", ogDDay: null },
+  { name: "만료된 보호 중", animal: { noticeEndAt: kst("2026-09-20T00:00:00") }, card: "보호중", ogBadge: "보호중", ogDeadline: null, share: "보호중" },
 ];
 
 function renderCard(animal: Animal) {
@@ -35,15 +36,15 @@ function renderCard(animal: Animal) {
   return container.querySelector('[data-slot="animal-card"]')!;
 }
 
-describe("상태·D-day 표기: 카드 배지, OG, 공유 요약이 상태마다 같다", () => {
-  it.each(CASES)("$name", ({ animal: overrides, card, ogBadge, ogDDay }) => {
+describe("상태·마감 표기: 카드 배지(상대), OG 이미지·공유 요약(날짜)", () => {
+  it.each(CASES)("$name", ({ animal: overrides, card, ogBadge, ogDeadline, share }) => {
     const animal = makeAnimal(overrides);
     expect(renderCard(animal).querySelector('[data-slot="status-badge"]')?.textContent).toBe(card);
     const og = buildOgModel(animal, NOW);
     expect(og.badgeText).toBe(ogBadge);
-    expect(og.dDayText).toBe(ogDDay);
-    // 요약의 상태 부분은 카드 배지와 같은 글자다
-    expect(animalSummaryText(animal, NOW)).toBe(`성별 미상 · 나이 미상 · ${card}`);
+    expect(og.deadlineText).toBe(ogDeadline);
+    // 공유 요약의 상태 부분은 밖으로 나가는 표기(날짜)다
+    expect(animalSummaryText(animal, NOW)).toBe(`성별 미상 · 나이 미상 · ${share}`);
   });
 });
 
@@ -79,7 +80,7 @@ describe("상세 글꼴 예열 문자열(이슈 #30)", () => {
   const glyphs = (text: string) => [...new Set(text)].sort().join("");
   const FIXED = [
     "제주특별자치도",
-    "보호중 임박 종료 · D-day 0123456789",
+    "보호중 종료 · 오늘 마감 공고 마감 D-1 0123456789",
     "암컷 · 2024(년생)",
     "발견 장소 보호소 주소 전화 공고 기간 종료 사유 특이사항",
     "지도 전화",
