@@ -66,6 +66,8 @@
 |---|---|---|---|---|---|
 | 관심 (화면: 관심 공고) | 다시 보거나 공유하려고 이 기기에 모아 둔 공고. 공고 id만 저장한다(최근 것이 앞). "관심"은 공고에만 쓴다. 화면 문구: 하트 접근성 이름 "관심 공고에 담기" / "관심 공고에서 빼기", 토스트 "관심 공고에 담았어요" / "관심 공고에서 뺐어요". **코드 반영 예정**: 지금 화면 문구는 "찜하기"/"찜 해제", "찜에 저장했어요"/"찜을 해제했어요"다. 코드 이름 `favorite`, URL `/favorites`, 저장소 키는 바꾸지 않는다 | `favorite`(`useFavorite`, `FavoriteButton`, `FAVORITES_STORAGE_KEY`, `features/animal-favorite`) | localStorage 키, URL `/favorites`, `/api/animals/by-ids` | architecture.md 8절, #5, EL 합의(#51), EL 결정(#56) | 찜(쓰지 않는다). architecture.md 13절의 "관심 지역"(지역 즐겨찾기 아이디어)은 다른 뜻이라, 그 기능을 만들 때 "관심"이 아닌 다른 이름을 짓는다 |
 | 카카오톡 공유 | 카카오 피드 카드로 공고를 보낸다(버튼 "공고 보기"). 카카오를 쓸 수 없으면 링크 복사로 대신한다 | `shareAnimal`, `ShareButton`, `SHARE_BUTTON_LABEL`, `buildShareContent`(features/animal-share) | 카카오 템플릿, `NEXT_PUBLIC_KAKAO_JS_KEY`, `NEXT_PUBLIC_SITE_URL` | #2, 기능명세서 4.3 | — |
+| 공유 내용 (화면 없음) | 공고를 밖으로 내보낼 때 쓰는 제목(바탕), 공유 요약, 사진, 주소의 묶음. 플랫폼을 모르는 계약이고, 링크 미리보기(OG 메타·OG 이미지)와 공유 카드·링크 복사가 이것을 쓴다. 각 출력에만 필요한 것(OG 제목의 " 공고 | 멍냥공고", OG 이미지의 상태 칩, 카카오 버튼)은 출력 쪽이 덧붙인다 | `buildShareContent`(features/animal-share/model/share-content.ts) | 카카오 템플릿, og:title·og:description·og:url, OG 이미지 | #73 | 공유 카드(카카오 메시지 하나) |
+| 공유 요약 (화면 없음) | 공고 한 줄 요약: 성별 · 나이 · 상태(· D-N) · 특이사항. 공유 카드 설명과 링크 미리보기 설명이 같은 문자열을 쓴다 | `animalSummaryText`(entities/animal/ui/labels.ts) | 카카오 카드 설명, og:description, twitter:description | #2, #73 | 특이사항(요약의 한 부분) |
 | 링크 복사 (화면: 토스트 "링크가 복사됐어요") | 카카오톡 공유를 쓸 수 없을 때 자동으로 하는 동작. 따로 버튼은 없다 | `SHARE_MESSAGES`(features/animal-share/model/share.ts) | 클립보드 | share.ts | — |
 | 필터 (화면: 버튼·시트 제목 "필터", "적용하기") | 목록 조건(축종, 지역, 상태, 성별, 정렬). URL이 단일 진실 소스이고, 적용 전 고른 값은 반영하지 않는다 | `AnimalListFilter`, `FILTER_KEYS`, `useApplyAnimalFilter`, `AnimalFilterSheet` | URL `species`·`region`·`district`·`status`·`sex`·`sort` | architecture.md 7절, #28 | — |
 | 정렬 (화면: "최신순" / "공고 마감 빠른순") | 최신순: 공고 시작일이 늦은 순. 공고 마감 빠른순: 마감이 오늘 이후인 공고를 빠른 순으로 먼저, 지난 공고를 그 뒤에. **코드 반영 예정**: 지금 화면은 "종료임박순"이고, 정렬 값 `endingSoon`을 `deadline`으로 바꾼다. 정렬 값은 URL에도 실려 함께 바뀐다. 옛 링크(`sort=endingSoon`)는 모르는 값이라 기본 정렬(최신순)로 열린다 | 지금 `ANIMAL_LIST_SORTS` `latest` / `endingSoon`, `compareEndingSoon`(server/animals/service.ts) | URL `sort=latest\|endingSoon`(예정 `sort=latest\|deadline`) | architecture.md 5절, EL 합의(#51), EL 결정(#56) | 종료임박순·임박순(쓰지 않는다), endingSoon(옛 코드 이름) |
@@ -89,6 +91,9 @@
 | 보호소 정보 시트 (화면: 보호소 줄 끝 작은 글자 버튼 "보호소 정보", 접근성 이름 "보호소 정보 보기". 시트 제목은 보호소 이름) | 상세 보호소 줄 끝의 [보호소 정보]로 여는 시트. 내용은 주소 + [지도], 전화 + [전화]이고 값이 없는 줄은 뺀다. 종료 공고이거나 주소·전화가 모두 없으면 버튼이 없다. 시트 정책을 따른다(상세가 닫히면 함께 사라진다). **코드 반영 예정**: 지금은 없다(주소·전화가 정보 줄에 있다) | 아직 없음. 기존 `Sheet`를 쓴다 | 없음 | EL 결정(#56) | 팝업(쓰지 않는다) |
 | 사진 크게 보기 | 컬럼 전체를 덮는 검은 사진 뷰어. 보던 사진 위치를 지킨다 | `ImageViewer`(widgets/animal-detail) | 없음 | 기능명세서 4.4, architecture.md 9절 | 풀스크린 뷰어 |
 | 토스트 | 짧은 안내. 컬럼 안에 두고, 같은 문구는 하나로 갱신한다 | `showToast`(shared/ui/toast.ts), `Toaster`(shared/ui/sonner.tsx) | 없음 | architecture.md 9절 | — |
+| 링크 미리보기 (화면 없음) | 주소를 붙여 넣었을 때 메신저가 OG 메타(og:title·description·image·url)로 그리는 카드. 우리가 그리지 않고 메신저가 수집해 그린다(카카오는 수집 결과를 캐시한다) | `generateMetadata`(app/animals/[id]/page.tsx), `siteMetadata`(app/site-metadata.ts) | og:* 메타 | #69, #73 | 공유 카드 |
+| 공유 카드 (화면 없음) | 카카오톡 공유로 보낸 메시지 카드(피드 템플릿, 버튼 "공고 보기"). 보낸 시점의 내용으로 굳는다 | `shareAnimal`(features/animal-share/model/share.ts) | 카카오 템플릿 | #2, #73 | 링크 미리보기 |
+| OG 이미지 (화면 없음) | 링크 미리보기에 쓰려고 서버가 그린 이미지(1200×630). 상세는 사진 위 상태 칩·제목, 사이트는 서비스 이름. 공유 카드의 사진은 OG 이미지가 아니라 공고 사진이다(사진이 없을 때만 OG 이미지) | `renderOgImage`(app/animals/[id]/og-image.tsx), `buildOgModel`(og-model.ts), `app/opengraph-image.tsx` | og:image, `/opengraph-image`, `/animals/{id}/opengraph-image` | #69, #73 | 공고 사진 |
 | 상태 배지 | 사진 위의 상태 표기. 문구는 `statusBadgeText` 하나에서 만든다. 결과에 따라 색이나 모양을 바꾸지 않는다 | `StatusBadge`(entities/animal/ui/status-badge.tsx), `statusBadgeText` | 없음 | #29, #41 | — |
 | 헤더 | 화면 맨 위 줄. 목록·관심 목록에서는 위에 붙고, 홈에서는 붙지 않는다 | `ScreenHeader`(shared/ui/screen-shell.tsx), `AnimalListHeader` | 없음 | handoff 화면 1~2 | `SheetHeader`와 다르다 |
 | 하단 CTA | 상세 아래의 관심·공유 버튼 줄. 컬럼 안에서 sticky. 토스트는 그 위에 뜬다 | `data-slot="bottom-cta"` | 없음 | CLAUDE.md 디자인 적용 | — |
@@ -158,5 +163,6 @@
 - **enter·fade/info·press의 겹침**: `data-enter`(첫 화면 등장)와 `data-detail-enter`·`DetailEntry`(진입 효과). 진입 모드 `fade`와 morph 중 정보 페이드 값 `"info"`. 카드 누름 효과와 캐릭터 트리거 `press`.
 - **"목록"과 dialog의 여러 뜻**: "목록"은 목록 화면, 목록 화면들(목록 + 관심 목록, `shared/lib/app-navigation.ts`), 관심 목록을 가리킨다. 상세 층·시트·사진 크게 보기가 모두 `role="dialog"`다.
 - **공고 ↔ `Animal`**: 화면과 문서는 공고, 코드는 `Animal`·`entities/animal`이다.
+- **공유 쪽 이름**: 공유 요약 ↔ `animalSummaryText`(이름이 "요약 문구"만 말하고 공유를 말하지 않는다, labels.ts에 있다), 링크 미리보기 ↔ `og-model`·`buildOgText`·`OgModel`(OG 이미지 모델과 OG 메타 문구가 한 파일에 있다). #73에서 바꾸지 않는다(#63).
 - **`nyang-` 캐릭터 이름**: `nyang-cat`·`nyang-dog`(SVG, Rive 아트보드, `rive/nyang-characters`)가 브랜드에서 온 이름인지 캐릭터 이름인지 정하지 않았다.
 - ~~브랜드가 들어간 컴파일러 밖 문자열~~: 정리하지 않기로 했다(#56). 규칙의 예외로 그대로 둔다(7. 브랜드의 "운영 주소·저장 키").
