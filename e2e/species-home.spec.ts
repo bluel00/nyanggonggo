@@ -162,11 +162,19 @@ test("홈의 선택지는 캐릭터(장식) + 텍스트 라벨의 링크이고, 
     // 내려받아 그려졌다(깨진 이미지는 naturalWidth가 0이다)
     await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth)).toBe(120);
   }
-  // 기타는 캐릭터 없는 텍스트 링크다
-  await expect(page.getByRole("link", { name: "다른 동물들도 있어요" }).locator("img")).toHaveCount(0);
-  await expect(page.locator("main img")).toHaveCount(2);
+  // 기타 동물 카드는 새·토끼·거북이 셋(장식, 44px)이다(#86)
+  const other = page.getByRole("link", { name: "기타 동물", exact: true }).locator("img");
+  await expect(other).toHaveCount(3);
+  await expect.poll(() => other.evaluateAll((imgs) => imgs.map((img) => (img as HTMLImageElement).complete && (img as HTMLImageElement).naturalWidth))).toEqual([120, 120, 120]);
+  await expect(page.locator("main img")).toHaveCount(5);
 
-  expect(characterResponses.sort()).toEqual(["200 /characters/nyang-cat.svg", "200 /characters/nyang-dog.svg"]);
+  expect(characterResponses.sort()).toEqual([
+    "200 /characters/nyang-bird.svg",
+    "200 /characters/nyang-cat.svg",
+    "200 /characters/nyang-dog.svg",
+    "200 /characters/nyang-rabbit.svg",
+    "200 /characters/nyang-turtle.svg",
+  ]);
 });
 
 test("목록 헤더 진입점은 접근 가능한 이름에 '다른 동물 고르기'가 들어간다", async ({ page, context }) => {

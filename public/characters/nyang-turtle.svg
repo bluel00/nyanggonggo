@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120"><g id="turtle" transform="translate(60 112) scale(1.1)">
+<g id="shell" transform="translate(0 -6)">
+<path d="M-42 -2C-42 -30 -24 -48 0 -48C24 -48 42 -30 42 -2C42 1 40 2 37 2H-37C-40 2 -42 1 -42 -2Z" fill="#A9AD84" stroke="#3A2A20" stroke-width="1.636" stroke-linejoin="round"></path>
+<path d="M-11 -42L11 -42L17 -30L11 -19L-11 -19L-17 -30ZM-11 -42L-20 -45M11 -42L20 -45M-17 -30L-33 -28M17 -30L33 -28M-11 -19L-17 -6M11 -19L17 -6" fill="none" stroke="#7F8660" stroke-width="1.636" stroke-linecap="round" stroke-linejoin="round"></path>
+<path d="M-41 -6H41" fill="none" stroke="#7F8660" stroke-width="1.636" stroke-linecap="round"></path>
+</g>
+<g id="leg-front-left" transform="translate(-29 -6)"><path d="M-7 6C-8 0 -6 -4 0 -4C6 -4 8 0 7 6Z" fill="#D3CDA2" stroke="#3A2A20" stroke-width="1.636" stroke-linejoin="round"></path></g>
+<g id="leg-front-right" transform="translate(29 -6)"><path d="M-7 6C-8 0 -6 -4 0 -4C6 -4 8 0 7 6Z" fill="#D3CDA2" stroke="#3A2A20" stroke-width="1.636" stroke-linejoin="round"></path></g>
+<g id="head" transform="translate(0 -6)">
+<path d="M-19 -15C-19 -27 -10 -33 0 -33C10 -33 19 -27 19 -15C19 -5 10 0 0 0C-10 0 -19 -5 -19 -15Z" fill="#D3CDA2" stroke="#3A2A20" stroke-width="1.636" stroke-linejoin="round"></path>
+<path d="M-17 -9a3.2 2.1 0 1 0 6.4 0a3.2 2.1 0 1 0 -6.4 0ZM10.6 -9a3.2 2.1 0 1 0 6.4 0a3.2 2.1 0 1 0 -6.4 0Z" fill="#E3C4A6"></path>
+<g transform="translate(0 -17) scale(0.9091) translate(0 17)"><g id="eyes-open" transform="translate(0 -17)"><path d="M-12.6 0a2.6 3.2 0 1 0 5.2 0a2.6 3.2 0 1 0 -5.2 0ZM7.4 0a2.6 3.2 0 1 0 5.2 0a2.6 3.2 0 1 0 -5.2 0Z" fill="#111111"></path></g>
+<g id="eyes-closed" transform="translate(0 -17)" opacity="0"><path d="M-13 -0.5Q-10 2.5 -7 -0.5M7 -0.5Q10 2.5 13 -0.5" fill="none" stroke="#3A2A20" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></g>
+<g id="eyes-happy" transform="translate(0 -17)" opacity="0"><path d="M-13 1Q-10 -2.5 -7 1M7 1Q10 -2.5 13 1" fill="none" stroke="#3A2A20" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></g></g>
+<path d="M-1.8 -11.6h0.2M1.6 -11.6h0.2" fill="none" stroke="#3A2A20" stroke-width="1.636" stroke-linecap="round" stroke-linejoin="round"></path>
+<path d="M-5 -7.4Q0 -4 5 -7.4" fill="none" stroke="#3A2A20" stroke-width="1.636" stroke-linecap="round" stroke-linejoin="round"></path>
+</g></g></svg>

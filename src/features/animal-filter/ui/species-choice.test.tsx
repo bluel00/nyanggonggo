@@ -18,7 +18,7 @@ describe("SpeciesChoice", () => {
     render(<SpeciesChoice area={{ region: SEOUL, district: JONGNO }} enterFrom={1} />);
     expect(hrefOf("고양이")).toBe(`/?species=cat&region=${SEOUL}&district=${JONGNO}`);
     expect(hrefOf("강아지")).toBe(`/?species=dog&region=${SEOUL}&district=${JONGNO}`);
-    expect(hrefOf("다른 동물들도 있어요")).toBe(`/?species=other&region=${SEOUL}&district=${JONGNO}`);
+    expect(hrefOf("기타 동물")).toBe(`/?species=other&region=${SEOUL}&district=${JONGNO}`);
   });
 
   it("전국은 region=all로 넘긴다(기억된 지역이 끼어들지 않게)", () => {
@@ -43,14 +43,34 @@ describe("SpeciesChoice", () => {
       expect(images[0].getAttribute("alt")).toBe("");
       expect(images[0].getAttribute("src")).toBe(src);
     }
-    // 기타 캐릭터는 없다
-    expect(screen.getByRole("link", { name: "다른 동물들도 있어요" }).querySelector("img")).toBeNull();
   });
 
-  it("기타는 큰 선택지가 아니라 작은 텍스트 링크다", () => {
+  it("기타는 큰 카드 아래 낮은 가로 카드이고, 이름은 \"기타 동물\"이다. 새·토끼·거북이와 chevron은 장식이다(#86)", () => {
     render(<SpeciesChoice area={{ region: SEOUL }} enterFrom={1} />);
-    // 기타 링크에는 "기타 동물" 라벨을 쓰지 않는다(고양이·강아지와 같은 무게로 보이지 않게)
-    expect(screen.queryByRole("link", { name: "기타 동물" })).toBeNull();
-    expect(screen.getByRole("link", { name: "다른 동물들도 있어요" })).toBeTruthy();
+    const card = screen.getByRole("link", { name: "기타 동물" });
+    expect(card.className).toContain("h-[72px]");
+    const images = [...card.querySelectorAll("img")];
+    expect(images.map((img) => img.getAttribute("src"))).toEqual([
+      "/characters/nyang-bird.svg",
+      "/characters/nyang-rabbit.svg",
+      "/characters/nyang-turtle.svg",
+    ]);
+    expect(images.every((img) => img.getAttribute("alt") === "")).toBe(true);
+    expect(images[0].parentElement!.getAttribute("aria-hidden")).toBe("true");
+    const chevron = card.querySelector("svg")!;
+    expect(chevron.getAttribute("aria-hidden")).toBe("true");
+    expect(chevron.getAttribute("class")).toContain("lucide-chevron-right");
+  });
+
+  it("기타 동물 카드는 등장 순서에서 강아지 다음이다(링크 자리를 받는다)", () => {
+    render(<SpeciesChoice area={{ region: SEOUL }} enterFrom={1} />);
+    const order = (name: string) => screen.getByRole("link", { name }).style.getPropertyValue("--enter-i");
+    expect([order("고양이"), order("강아지"), order("기타 동물")]).toEqual(["1", "2", "3"]);
+  });
+
+  it("기타 동물 카드를 고르면 기타 축종을 기억한다", () => {
+    render(<SpeciesChoice area={{ region: SEOUL }} enterFrom={1} />);
+    fireEvent.click(screen.getByRole("link", { name: "기타 동물" }));
+    expect(document.cookie).toContain(`${SPECIES_COOKIE}=other`);
   });
 });

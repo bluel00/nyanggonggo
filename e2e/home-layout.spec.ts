@@ -4,7 +4,7 @@ import { watchConsoleErrors } from "./helpers";
 /**
  * 홈의 세로 가운데 정렬(시안 Main 390 / Home-PC 480, architecture.md 12절 44).
  *
- * 묶음(제목 ~ "다른 동물들도 있어요" 링크)이 남은 영역이 아니라 **화면 전체**의 세로 가운데에 와야 한다.
+ * 묶음(제목 ~ 기타 동물 카드)이 남은 영역이 아니라 **화면 전체**의 세로 가운데에 와야 한다.
  * 위의 서비스명 줄(space-3 + touch + space-3)과 같은 높이를 본문 아래에 비워 맞추므로 기대값은 0이다.
  * 반올림 여유로 |오프셋| ≤ 2px만 허용한다(서비스명 줄이 48로 그려지던 버그는 −10px이었다).
  */
@@ -26,7 +26,7 @@ for (const viewport of VIEWPORTS) {
     await page.goto("/home");
 
     const title = page.getByRole("heading", { level: 1 });
-    const other = page.getByRole("link", { name: "다른 동물들도 있어요" });
+    const other = page.getByRole("link", { name: "기타 동물", exact: true });
     await expect(title).toBeVisible();
     await expect(other).toBeVisible();
 

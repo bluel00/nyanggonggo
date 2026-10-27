@@ -49,8 +49,6 @@ export const ANIMAL_COPY = {
   homeTitle: "오늘은 누구를 보러 왔어요?",
   /** 시안의 줄바꿈을 지킨다. 화면은 `whitespace-pre-line`으로 그린다 */
   homeDescription: "한 번 고르면 기억해둘게요.\n목록에서 언제든 바꿀 수 있어요.",
-  /** 기타 축종으로 가는 작은 텍스트 링크(고양이·강아지와 같은 무게로 두지 않는다) */
-  homeOtherLink: "다른 동물들도 있어요",
   /** 목록 헤더의 홈 진입점 링크 이름(aria-label). 타이틀 뒤에 붙여 "고양이 공고, 다른 동물 고르기"로 읽힌다(시안 Header-A) */
   homeEntryLabel: (listTitle: string) => `${listTitle}, 다른 동물 고르기`,
   favoritesTitle: "관심 공고",

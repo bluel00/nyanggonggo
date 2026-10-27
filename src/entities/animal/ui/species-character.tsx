@@ -8,7 +8,10 @@ import { CHARACTER_PRESS_TRIGGER, CHARACTER_STATE_MACHINE } from "../lib/charact
 import { loadCharacterAnimation, type CharacterAnimationKit } from "../lib/character-animation";
 import type { Animal } from "../model/animal";
 
-/** 캐릭터가 있는 축종. 기타는 종이 분산되어 하나로 대표할 수 없어 캐릭터를 만들지 않는다(docs/design/characters.md) */
+/**
+ * 한 마리 캐릭터가 있는 축종. 기타는 종이 분산되어 한 마리로 대표하지 않고, 새·토끼·거북이 셋을 묶은 정지 그림(OtherCharacters)을 쓴다
+ * (docs/design/characters.md)
+ */
 export type CharacterSpecies = Exclude<Animal["species"], "other">;
 
 /**

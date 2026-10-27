@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120"><g id="bird" transform="translate(60 112) scale(1.18)">
+<g id="tail" transform="translate(14 -6)"><path d="M-2 0C6 0 14 -2 18 -8C14 -10 7 -9 0 -6Z" fill="#D9B862" stroke="#3A2A20" stroke-width="1.525" stroke-linejoin="round"></path></g>
+<g id="leg-left" transform="translate(-7 -4)"><path d="M0 -2V4M-3.5 4H3.5" fill="none" stroke="#3A2A20" stroke-width="1.525" stroke-linecap="round" stroke-linejoin="round"></path></g>
+<g id="leg-right" transform="translate(7 -4)"><path d="M0 -2V4M-3.5 4H3.5" fill="none" stroke="#3A2A20" stroke-width="1.525" stroke-linecap="round" stroke-linejoin="round"></path></g>
+<g id="body"><path d="M-23 -10C-23 -26 -13 -38 0 -38C13 -38 23 -26 23 -10C23 -3 17 0 0 0C-17 0 -23 -3 -23 -10Z" fill="#F2D98C" stroke="#3A2A20" stroke-width="1.525" stroke-linejoin="round"></path>
+<path d="M-12 -14C-12 -23 -6 -27 0 -27C6 -27 12 -23 12 -14C12 -7 6 -3.5 0 -3.5C-6 -3.5 -12 -7 -12 -14Z" fill="#FBF1D2"></path></g>
+<g id="wing-left" transform="translate(-20 -26)"><path d="M3 -3C-5 -2 -9 8 -6 17C-4 22 1 21 3 16C5 10 5 3 3 -3Z" fill="#D9B862" stroke="#3A2A20" stroke-width="1.525" stroke-linejoin="round"></path></g>
+<g id="wing-right" transform="translate(20 -26)"><path d="M-3 -3C5 -2 9 8 6 17C4 22 -1 21 -3 16C-5 10 -5 3 -3 -3Z" fill="#D9B862" stroke="#3A2A20" stroke-width="1.525" stroke-linejoin="round"></path></g>
+<g id="head" transform="translate(0 -34)">
+<g id="crest" transform="translate(0 -33)"><path d="M-3 2C-5 -4 -3 -9 1 -11C0 -7 1 -4 4 -1Z" fill="#D9B862" stroke="#3A2A20" stroke-width="1.525" stroke-linejoin="round"></path></g>
+<path d="M-21 -17C-21 -29 -12 -36 0 -36C12 -36 21 -29 21 -17C21 -6 12 0 0 0C-12 0 -21 -6 -21 -17Z" fill="#F2D98C" stroke="#3A2A20" stroke-width="1.525" stroke-linejoin="round"></path>
+<path d="M-19 -11a3.5 2.4 0 1 0 7 0a3.5 2.4 0 1 0 -7 0ZM12 -11a3.5 2.4 0 1 0 7 0a3.5 2.4 0 1 0 -7 0Z" fill="#EDB89C"></path>
+<g transform="translate(0 -19) scale(0.8475) translate(0 19)"><g id="eyes-open" transform="translate(0 -19)"><path d="M-12.6 0a2.6 3.2 0 1 0 5.2 0a2.6 3.2 0 1 0 -5.2 0ZM7.4 0a2.6 3.2 0 1 0 5.2 0a2.6 3.2 0 1 0 -5.2 0Z" fill="#111111"></path></g>
+<g id="eyes-closed" transform="translate(0 -19)" opacity="0"><path d="M-13 -0.5Q-10 2.5 -7 -0.5M7 -0.5Q10 2.5 13 -0.5" fill="none" stroke="#3A2A20" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></g>
+<g id="eyes-happy" transform="translate(0 -19)" opacity="0"><path d="M-13 1Q-10 -2.5 -7 1M7 1Q10 -2.5 13 1" fill="none" stroke="#3A2A20" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></g></g>
+<g id="beak" transform="translate(0 -12)"><path d="M-4 -1.5L0 -4.5L4 -1.5L0 4Z" fill="#D9924E" stroke="#3A2A20" stroke-width="1.525" stroke-linejoin="round"></path></g>
+</g></g></svg>
