@@ -1,0 +1,17 @@
+<!-- @dsCard group="Brand" height=520 subtitle="line · tile · tile-small by size, mark and lockup, on bg and on a dark ground" -->
+<div id="r" class="cn-root" style="padding:16px;background:var(--bg)"></div>
+<script>
+var N=window.CatNotice,h=React.createElement;
+var S=function(t,dark){return h('div',{style:{font:'12px var(--font-sans)',color:dark?'#D9D3CC':'var(--text-2)',margin:'6px 0 0',textAlign:'center'}},t)};
+var Cell=function(el,t,dark){return h('div',{style:{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'flex-end'}},el,S(t,dark))};
+function Row(p){var dark=p.dark;return h('div',{style:{display:'flex',gap:20,alignItems:'flex-end',flexWrap:'wrap',padding:16,borderRadius:16,background:dark?'var(--viewer-bg)':'linear-gradient(180deg,var(--bg),var(--bg-end))',marginBottom:12}},
+ Cell(h(N.Logo,{size:16}),'16 tile-small',dark),Cell(h(N.Logo,{size:24}),'24 tile-small',dark),
+ Cell(h(N.Logo,{size:32}),'32 tile',dark),Cell(h(N.Logo,{size:48}),'48 tile',dark),
+ Cell(h(N.Logo,{size:56}),dark?'56 line (어두운 바탕 비권장)':'56 line',dark),Cell(h(N.Logo,{size:96}),dark?'96 line (비권장)':'96 line',dark),
+ Cell(h(N.Logo,{size:32,variant:'line'}),'line 32 → tile',dark))}
+function App(){return h('div',null,
+ h(Row,{}),h(Row,{dark:true}),
+ h('div',{style:{display:'flex',gap:24,alignItems:'center',flexWrap:'wrap',padding:16,borderRadius:16,background:'linear-gradient(180deg,var(--bg),var(--bg-end))'}},
+  Cell(h(N.Logo,{size:56,lockup:true}),'lockup · line 56'),Cell(h(N.Logo,{size:32,lockup:true}),'lockup · tile 32')))}
+ReactDOM.createRoot(document.getElementById('r')).render(h(App));
+</script>

@@ -87,7 +87,7 @@ describe("AnimalDetail", () => {
     await screen.findByRole("heading");
     const dDay = container.querySelector('[data-slot="d-day"]')!;
     expect(dDay.textContent).toBe("공고 마감 D-2");
-    expect(dDay.className).toContain("text-status-soon-text");
+    expect(dDay.className).toContain("text-status-near-deadline-text");
   });
 
   it("당일은 '오늘 마감'(주황), 배지는 '보호중'", async () => {
@@ -96,7 +96,7 @@ describe("AnimalDetail", () => {
     await screen.findByRole("heading");
     const dDay = container.querySelector('[data-slot="d-day"]')!;
     expect(dDay.textContent).toBe("오늘 마감");
-    expect(dDay.className).toContain("text-status-soon-text");
+    expect(dDay.className).toContain("text-status-near-deadline-text");
     expect(container.querySelector('[data-slot="status-badge"]')?.textContent).toBe("보호중");
   });
 

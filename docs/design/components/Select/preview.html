@@ -1,0 +1,9 @@
+<!-- @dsCard group="Filters" height=170 subtitle="region select (native)" -->
+<div id="r" class="cn-root" style="padding:16px;background:var(--canvas)"></div>
+<script>
+var N=window.CatNotice,h=React.createElement,S=function(t){return h('div',{style:{font:'12px var(--font-sans)',color:'var(--text-2)',margin:'0 0 6px'}},t)};
+var Row=function(p){return h('div',{style:{display:'flex',gap:12,alignItems:'center',flexWrap:'wrap',marginBottom:16}},p.children)};
+var Col=function(t,c,w){return h('div',{style:{width:w||'auto'}},S(t),c)};
+var o=[{value:"all",label:"전체 지역"},{value:"11",label:"서울"},{value:"26",label:"부산"}];function App(){return h(Row,null,Col("default",h(N.Select,{options:o,value:"all",label:"지역"}),240),Col("disabled",h(N.Select,{options:o,value:"all",label:"지역",disabled:true}),240))}
+ReactDOM.createRoot(document.getElementById('r')).render(h(App));
+</script>

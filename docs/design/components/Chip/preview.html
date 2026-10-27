@@ -1,0 +1,11 @@
+<!-- @dsCard group="Filters" height=200 subtitle="default · selected · pressed · disabled · 보호 상태 and 성별 groups" -->
+<div id="r" class="cn-root" style="padding:16px;background:var(--surface)"></div>
+<script>
+var N=window.CatNotice,h=React.createElement,S=function(t){return h('div',{style:{font:'12px var(--font-sans)',color:'var(--text-2)',margin:'0 0 6px'}},t)};
+var Row=function(p){return h('div',{style:{display:'flex',gap:12,alignItems:'center',flexWrap:'wrap',marginBottom:16}},p.children)};
+var Col=function(t,c,w){return h('div',{style:{width:w||'auto'}},S(t),c)};
+var G=function(t,o,sel){return Col(t,h('div',{className:'cn-sheet__chips'},o.map(function(x){return h(N.Chip,{key:x,selected:x===sel},x)})))};
+function App(){return h('div',null,h(Row,null,Col("default",h(N.Chip,null,"종료")),Col("selected",h(N.Chip,{selected:true},"보호중")),Col("pressed",h(N.Chip,{className:"cn-pressed"},"전체")),Col("disabled",h(N.Chip,{disabled:true},"전체"))),
+ h(Row,null,G('보호 상태',['보호중','종료','전체'],'보호중'),G('성별 (default 전체)',['전체','암컷','수컷'],'전체')))}
+ReactDOM.createRoot(document.getElementById('r')).render(h(App));
+</script>

@@ -88,7 +88,7 @@ describe("AnimalCard", () => {
     const { card, badge } = renderCard(animal({ noticeEndAt: kst("2026-09-23T00:00:00") }));
     expect(card.getAttribute("data-status-variant")).toBe("nearDeadline");
     expect(badge.textContent).toBe("보호중 · 마감 D-2");
-    expect(badge.className).toContain("text-status-soon-text");
+    expect(badge.className).toContain("text-status-near-deadline-text");
   });
 
   it("종료: 회색 배지 '종료'만(마감 표기 없음), 사진 saturate(.7)", () => {

@@ -1,0 +1,19 @@
+<!-- @dsCard group="Entities" height=1000 subtitle="detail: status line, sex · age, rows 발견 장소 → 보호소 [보호소 정보] → 공고 번호 → 공고 기간 → 종료 사유 → 특이사항" -->
+<div id="r" class="cn-root" style="padding:16px;background:var(--bg)"></div>
+<script>
+var N=window.CatNotice,h=React.createElement,A=N.MOCK_ANIMALS;
+var S=function(t){return h('div',{style:{font:'12px var(--font-sans)',color:'var(--text-2)',margin:'16px 0 8px'}},t)};
+function Block(p){var a=p.a,v=N.badgeVariant(a);
+ return h('div',{style:{width:358,display:'flex',flexDirection:'column',gap:8}},
+  h('div',{style:{display:'flex',alignItems:'center',gap:8}},h(N.StatusBadge,{variant:v,dDay:a.dDay,result:a.result,context:'detail'}),h(N.DeadlineText,{variant:v,dDay:a.dDay})),
+  h('div',{className:a.status==='ended'?'title':'display-detail',style:{lineHeight:'32px'}},a.region),
+  h('div',{className:'body',style:{color:'var(--text-2)',marginBottom:8}},N.sexAgeText(a)),
+  h(N.DetailInfo,{animal:a,onShelterInfo:function(){}}))}
+var wrap={id:'w',status:'protected',dDay:6,region:'가나시 다라구',foundPlace:'가나시 다라구 다라동 아주 긴 이름의 아파트 단지 앞 놀이터 옆 화단',shelterName:'가나시 동물보호센터',address:'가나시 다라구 마바로 1',noticeNo:'가나-가나-2026-00001',noticePeriod:'10.23 ~ 11.03',notes:'띄어쓰기없이아주길게이어진특이사항문장이한줄을넘어가는경우',sex:'female',ageText:'2026년생 · 60일 미만'};
+function App(){return h('div',null,
+ S('protected: [보호소 정보] on the 보호소 row'),h(Block,{a:A[0]}),
+ S('D-3 or less, sex · age "2026년생 · 60일 미만"'),h(Block,{a:A[1]}),
+ S('ended: no deadline text, no [보호소 정보], 종료 사유 after 공고 기간'),h(Block,{a:A[5]}),
+ S('wrapping'),h(Block,{a:wrap}))}
+ReactDOM.createRoot(document.getElementById('r')).render(h(App));
+</script>

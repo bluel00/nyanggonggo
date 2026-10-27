@@ -1,0 +1,1 @@
+`ShareButton` is the Kakao Yellow share action, the only non-status accent. Consumer provides `onClick`; the label defaults to "카카오톡 공유". Sits right of `FavoriteButton` in the fixed detail CTA bar and takes the remaining width. On Kakao SDK failure or no support, the caller copies the link and shows `Toast` "링크가 복사됐어요". Do not use it for any other action.

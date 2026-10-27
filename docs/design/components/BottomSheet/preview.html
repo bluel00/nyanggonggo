@@ -1,0 +1,25 @@
+<!-- @dsCard group="Overlays" height=720 subtitle="filter sheet at 375×667: head, scrolling body, fixed footer with shadow-bar (scroll the body)" -->
+<div id="r" class="cn-root" style="padding:16px;background:var(--bg)"></div>
+<script>
+var N=window.CatNotice,h=React.createElement;
+var SIDO=[{value:'11',label:'서울특별시'},{value:'26',label:'부산광역시'},{value:'36',label:'세종특별자치시'},{value:'all',label:'전체 시/도'}];
+var GU={'11':[{value:'all',label:'전체 시/군/구'},{value:'110',label:'종로구'},{value:'680',label:'강남구'}],'26':[{value:'all',label:'전체 시/군/구'},{value:'350',label:'해운대구'}]};
+function App(){
+ var s=React.useState({sp:'cat',st:'protected',sex:'all',so:'latest',rg:'11',gu:'all',open:true}),v=s[0],set=s[1];
+ var u=function(k,x){var n=Object.assign({},v);n[k]=x;if(k==='rg')n.gu='all';set(n)};
+ var L=function(t){return h('label',{className:'cn-field-label body'},t)};
+ var chips=function(k,opts){return h('div',{className:'cn-sheet__chips'},opts.map(function(o){return h(N.Chip,{key:o[0],selected:v[k]===o[0],onClick:function(){u(k,o[0])}},o[1])}))};
+ var gu=GU[v.rg];
+ return h('div',{className:'cn-column',style:{width:375,height:667,borderRadius:16}},
+   h('div',{style:{padding:16,display:'flex',justifyContent:'flex-end'}},h(N.FilterButton,{sexLabel:v.sex==='all'?null:(v.sex==='female'?'암컷':'수컷'),onClick:function(){u('open',true)}})),
+   h(N.BottomSheet,{open:v.open,title:'필터',onClose:function(){u('open',false)},
+    footer:h(N.Button,{variant:'apply',block:true,onClick:function(){u('open',false)}},'적용하기')},
+    h('div',{className:'cn-sheet__section'},L('축종'),h(N.Segmented,{label:'축종',options:[{value:'cat',label:'고양이'},{value:'dog',label:'강아지'},{value:'etc',label:'기타 동물'}],value:v.sp,onChange:function(x){u('sp',x)}})),
+    h('div',{className:'cn-sheet__section'},L('지역'),h(N.Select,{label:'시/도',value:v.rg,onChange:function(x){u('rg',x)},options:SIDO}),h('div',{style:{height:8}}),
+      h(N.Select,{label:'시/군/구',value:v.gu,disabled:!gu,onChange:function(x){u('gu',x)},options:gu||[{value:'all',label:'전체 시/군/구'}]})),
+    h('div',{className:'cn-sheet__section'},L('보호 상태'),chips('st',[['protected','보호중'],['ended','종료'],['all','전체']])),
+    h('div',{className:'cn-sheet__section'},L('성별'),chips('sex',[['all','전체'],['female','암컷'],['male','수컷']])),
+    h('div',{className:'cn-sheet__section',role:'radiogroup','aria-label':'정렬'},L('정렬'),[['latest','최신순'],['endingSoon','공고 마감 빠른순']].map(function(o){return h(N.Radio,{key:o[0],checked:v.so===o[0],onChange:function(){u('so',o[0])}},o[1])}))));
+}
+ReactDOM.createRoot(document.getElementById('r')).render(h(App));
+</script>

@@ -4,15 +4,15 @@
 @import "shadcn/tailwind.css";
 
 /* ── 디자인 토큰: docs/design/tokens.css 그대로(수정하지 않는다) ── */
-:root,[data-theme="light"]{--bg:#FFF8EE;--bg-end:#F9EBD9;--surface:#FFFFFF;--canvas:#F5F5F5;--text:#2B211B;--text-2:#6B5A4C;--border:#EADCCB;--control-border:#8A8A8A;--on-text:#FFF8EE;--logo:#A84B3A;--apply-from:#FFD3B6;--apply-to:#F59A86;--on-apply:#3A1F1A;--choice-halo:#FFE3C8;--choice-halo-end:#FFF3E6;--status-protected:#2E9F6B;--status-protected-bg:#E6F6EE;--status-protected-text:#1F7A50;--status-soon:#F08A24;--status-soon-bg:#FDF0E1;--status-soon-text:#A85508;--status-ended:#8A8A8A;--status-ended-bg:#EFEFEF;--status-ended-text:#666666;--photo-pill:rgba(255,255,255,0.9);--kakao:#FEE500;--on-kakao:#191919;--viewer-bg:#000000;--on-viewer:#FFFFFF;--text-disabled:#A3A3A3;--disabled-bg:#EEEEEE;--focus-ring:#111111;}
-:root{--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-6:24px;--touch:44px;--frame-w:390px;--column-max:480px;--safe-top:47px;--safe-bottom:34px;--radius-card:22px;--radius-choice:24px;--radius-control:12px;--radius-pill:999px;--press-duration:100ms;--sheet-duration:250ms;--ease-out:cubic-bezier(0, 0, 0.2, 1);--ease-emphasized:cubic-bezier(0.2, 0, 0, 1);--ease-heart:cubic-bezier(0.3, 1.4, 0.5, 1);--enter-duration:320ms;--enter-stagger:60ms;--enter-distance:12px;--list-enter-duration:240ms;--list-enter-stagger:40ms;--list-enter-distance:8px;--heart-duration:280ms;--heart-off-duration:120ms;--detail-duration:300ms;--detail-info-delay:100ms;--detail-info-duration:200ms;--press-scale:0.98;--heart-scale:1.2;--char-press-x:1.03;--char-press-y:0.96;--shadow-card:0 2px 6px rgba(140,90,50,0.06), 0 10px 24px rgba(140,90,50,0.10);--shadow-card-pressed:0 1px 3px rgba(140,90,50,0.08), 0 4px 10px rgba(140,90,50,0.08);--shadow-card-ended:0 1px 3px rgba(0,0,0,0.06);--shadow-control:0 2px 8px rgba(140,90,50,0.16);--shadow-chip:0 1px 3px rgba(140,90,50,0.12);--shadow-apply:0 8px 20px rgba(245,154,134,0.35);--shadow-photo:0 2px 6px rgba(140,90,50,0.08), 0 14px 32px rgba(140,90,50,0.16);--shadow-bar:0 -6px 20px rgba(140,90,50,0.08);--font-sans:"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;--font-display:"Jua", "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;}
+:root,[data-theme="light"]{--bg:#FFF8EE;--bg-end:#F9EBD9;--surface:#FFFFFF;--canvas:#F5F5F5;--text:#2B211B;--text-2:#6B5A4C;--border:#EADCCB;--control-border:#8A8A8A;--on-text:#FFF8EE;--primary-pressed:#1E1712;--apply-from:#FFD3B6;--apply-to:#F59A86;--on-apply:#3A1F1A;--choice-halo:#FFE3C8;--choice-halo-end:#FFF3E6;--status-protected:#2E9F6B;--status-protected-bg:#E6F6EE;--status-protected-text:#1F7A50;--status-near-deadline:#F08A24;--status-near-deadline-bg:#FDF0E1;--status-near-deadline-text:#A85508;--status-ended:#8A8A8A;--status-ended-bg:#EFEFEF;--status-ended-text:#666666;--photo-pill:rgba(255,255,255,0.9);--kakao:#FEE500;--on-kakao:#191919;--viewer-bg:#000000;--on-viewer:#FFFFFF;--text-disabled:#A3A3A3;--disabled-bg:#EEEEEE;--focus-ring:#111111;}
+:root{--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-6:24px;--touch:44px;--frame-w:390px;--column-max:480px;--header-h:68px;--screen-top:12px;--bottom-cta-h:68px;--toast-offset:80px;--safe-top:47px;--safe-bottom:34px;--radius-card:22px;--radius-choice:24px;--radius-control:12px;--radius-pill:999px;--press-duration:100ms;--sheet-duration:250ms;--ease-out:cubic-bezier(0, 0, 0.2, 1);--ease-emphasized:cubic-bezier(0.2, 0, 0, 1);--ease-heart:cubic-bezier(0.3, 1.4, 0.5, 1);--enter-duration:320ms;--enter-stagger:60ms;--enter-distance:12px;--list-enter-duration:240ms;--list-enter-stagger:40ms;--list-enter-distance:8px;--heart-duration:280ms;--heart-off-duration:120ms;--detail-duration:300ms;--detail-info-delay:100ms;--detail-info-duration:200ms;--press-scale:0.98;--heart-scale:1.2;--char-press-x:1.03;--char-press-y:0.96;--shadow-card:0 2px 6px rgba(140,90,50,0.06), 0 10px 24px rgba(140,90,50,0.10);--shadow-card-pressed:0 1px 3px rgba(140,90,50,0.08), 0 4px 10px rgba(140,90,50,0.08);--shadow-card-ended:0 1px 3px rgba(0,0,0,0.06);--shadow-control:0 2px 8px rgba(140,90,50,0.16);--shadow-chip:0 1px 3px rgba(140,90,50,0.12);--shadow-apply:0 8px 20px rgba(245,154,134,0.35);--shadow-photo:0 2px 6px rgba(140,90,50,0.08), 0 14px 32px rgba(140,90,50,0.16);--shadow-bar:0 -6px 20px rgba(140,90,50,0.08);--font-sans:"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;--font-display:"Jua", "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;}
 .title{font-family:var(--font-sans);font-size:20px;line-height:28px;font-weight:700;}
 .card-title{font-family:var(--font-sans);font-size:16px;line-height:24px;font-weight:600;}
 .body{font-family:var(--font-sans);font-size:14px;line-height:20px;font-weight:400;}
 .caption{font-family:var(--font-sans);font-size:12px;line-height:16px;font-weight:400;}
 .badge{font-family:var(--font-sans);font-size:12px;line-height:16px;font-weight:600;}
+.display-detail{font-family:var(--font-sans);font-size:24px;line-height:32px;font-weight:700;}
 .display-home{font-family:var(--font-display);font-size:28px;line-height:36px;font-weight:400;}
-.display-detail{font-family:var(--font-display);font-size:24px;line-height:32px;font-weight:400;}
 .display-title{font-family:var(--font-display);font-size:22px;line-height:28px;font-weight:400;}
 .display-logo{font-family:var(--font-display);font-size:20px;line-height:28px;font-weight:400;}
 /* ── 토큰 끝 ── */
@@ -38,6 +38,12 @@
   --bottom-cta-h: calc(var(--touch) + var(--space-3) * 2);
 }
 
+/* 토스트 아래 여백 기본값(space-6). 토큰 --toast-offset(80px)은 하단 CTA가 있는 상세의 값이라 기본값으로 덮는다.
+   상세 값은 아래 [data-slot="app-column"]:has([data-slot="bottom-cta"])에서 준다 */
+:root {
+  --toast-offset: var(--space-6);
+}
+
 /*
  * Tailwind v4 매핑(docs/design/handoff.md (a) 표를 CSS-first @theme으로 옮김). 값은 모두 토큰 var()를 참조한다.
  * 괄호 안의 shadcn 별칭(background, foreground, primary, …)도 같은 토큰을 가리킨다.
@@ -54,6 +60,7 @@
   --color-text: var(--text);
   --color-foreground: var(--text);
   --color-primary: var(--text);
+  --color-primary-pressed: var(--primary-pressed);
   --color-on-text: var(--on-text);
   --color-primary-foreground: var(--on-text);
   --color-text-2: var(--text-2);
@@ -80,16 +87,15 @@
   --color-status-protected: var(--status-protected);
   --color-status-protected-bg: var(--status-protected-bg);
   --color-status-protected-text: var(--status-protected-text);
-  --color-status-soon: var(--status-soon);
-  --color-status-soon-bg: var(--status-soon-bg);
-  --color-status-soon-text: var(--status-soon-text);
+  --color-status-near-deadline: var(--status-near-deadline);
+  --color-status-near-deadline-bg: var(--status-near-deadline-bg);
+  --color-status-near-deadline-text: var(--status-near-deadline-text);
   --color-status-ended: var(--status-ended);
   --color-status-ended-bg: var(--status-ended-bg);
   --color-status-ended-text: var(--status-ended-text);
 
   --color-photo-pill: var(--photo-pill);
-  /* 방향 A의 상태색 밖 예외(README): 로고 글자, 적용하기 그라데이션, 홈 선택 카드 후광 */
-  --color-logo: var(--logo);
+  /* 방향 A의 상태색 밖 예외(README): 적용하기 그라데이션, 홈 선택 카드 후광 */
   --color-apply-from: var(--apply-from);
   --color-apply-to: var(--apply-to);
   --color-on-apply: var(--on-apply);
@@ -152,7 +158,7 @@
   --text-badge--line-height: 16px;
   --text-badge--font-weight: 600;
   /* 제목(tokens.css의 .display-*와 같은 크기). 글꼴은 Jua 셋은 displayFont.className(src/shared/ui/display-font.ts)으로 따로 준다.
-     display-detail은 Pretendard 700이다(토큰 .display-detail의 Jua 400이 아니라 architecture.md 14.1) */
+     display-detail은 Pretendard 700이다(토큰 .display-detail과 같다, architecture.md 14.1) */
   --text-display-home: 28px;
   --text-display-home--line-height: 36px;
   --text-display-home--font-weight: 400;

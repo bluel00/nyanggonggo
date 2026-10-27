@@ -1,0 +1,1 @@
+`Radio` is a 44px-tall row with a 20px circle for 정렬 (최신순, 공고 마감 빠른순). Consumer provides `checked`, `onChange`, `children`. The circle border uses `control-border` for 3:1. Use inside a group with role radiogroup; value comes from the `sort` search param.

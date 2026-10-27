@@ -1,0 +1,14 @@
+<!-- @dsCard group="Status" height=240 subtitle="card: 보호중 · 마감 D-N · 오늘 마감 · near deadline (colour only) · ended; detail: state + deadline text" -->
+<div id="r" class="cn-root" style="padding:16px;background:var(--canvas)"></div>
+<script>
+var N=window.CatNotice,h=React.createElement,S=function(t){return h('div',{style:{font:'12px var(--font-sans)',color:'var(--text-2)',margin:'0 0 6px'}},t)};
+var Row=function(p){return h('div',{style:{display:'flex',gap:12,alignItems:'center',flexWrap:'wrap',marginBottom:16}},p.children)};
+var Col=function(t,c,w){return h('div',{style:{width:w||'auto'}},S(t),c)};
+var Line=function(v,d,r){return h('div',{style:{display:'flex',alignItems:'center',gap:8}},h(N.StatusBadge,{variant:v,dDay:d,result:r,context:'detail'}),h(N.DeadlineText,{variant:v,dDay:d}))};
+var ph=N.mockPhoto(0,400,300);
+function App(){return h("div",null,
+ h(Row,null,Col("card · protected",h(N.StatusBadge,{variant:"protected",dDay:9})),Col("card · D-3 or less (colour only)",h(N.StatusBadge,{variant:"nearDeadline",dDay:2})),Col("card · last day",h(N.StatusBadge,{variant:"nearDeadline",dDay:0})),Col("ended + result",h(N.StatusBadge,{variant:"ended",result:"입양"})),Col("ended, no result",h(N.StatusBadge,{variant:"ended"}))),
+ h(Row,null,Col("detail · protected",Line("protected",9)),Col("detail · D-3 or less",Line("nearDeadline",2)),Col("detail · last day",Line("nearDeadline",0)),Col("detail · ended",Line("ended",0,"반환"))),
+ h("div",{style:{position:"relative",height:64,borderRadius:16,overflow:"hidden",backgroundImage:"url('"+ph+"')",backgroundSize:"cover",display:"flex",gap:8,padding:12,alignItems:"flex-start",flexWrap:"wrap"}},h(N.StatusBadge,{variant:"protected",dDay:9,onPhoto:true}),h(N.StatusBadge,{variant:"nearDeadline",dDay:2,onPhoto:true}),h(N.StatusBadge,{variant:"ended",result:"반환",onPhoto:true})))}
+ReactDOM.createRoot(document.getElementById('r')).render(h(App));
+</script>

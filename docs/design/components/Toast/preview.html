@@ -1,0 +1,7 @@
+<!-- @dsCard group="Feedback" height=200 subtitle="bottom of the column, 250ms fade · 관심 공고에 담았어요" -->
+<div id="r" class="cn-root" style="padding:16px;background:var(--canvas)"></div>
+<script>
+var N=window.CatNotice,h=React.createElement;
+function App(){return h('div',{className:'cn-column',style:{width:390,height:150,borderRadius:16}},h(N.Toast,{visible:true,message:'관심 공고에 담았어요'}))}
+ReactDOM.createRoot(document.getElementById('r')).render(h(App));
+</script>
