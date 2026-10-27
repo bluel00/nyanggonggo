@@ -188,6 +188,10 @@
 @utility scale-press {
   scale: var(--press-scale);
 }
+/* 캐릭터 누름 납작(characters.md 모션 절). 기준점은 쓰는 쪽이 바닥 가운데(origin-bottom)로 둔다. 붙이는 곳: features/animal-filter/ui/species-choice.tsx */
+@utility scale-char-press {
+  scale: var(--char-press-x) var(--char-press-y);
+}
 
 /*
  * 움직임(README 움직임 표, architecture.md 14.2 3단계). CSS만 쓰고 transform 계열(translate·scale)과 opacity만 움직인다.

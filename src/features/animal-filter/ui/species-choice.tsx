@@ -1,9 +1,10 @@
 "use client";
 
+import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import {
-  ANIMAL_COPY,
+  OtherCharacters,
   SPECIES_LABEL,
   SpeciesCharacter,
   type CharacterHandle,
@@ -17,15 +18,15 @@ import { rememberSpecies } from "../model/species-cookie";
 /**
  * 홈에서 축종을 고른다(PRD-v1.1 3절 7)·8), 시안 "냥공고 홈 · 축종 선택"의 Main).
  *
- * 고양이·강아지는 캐릭터 + 라벨의 테두리 카드 두 개, 기타는 그 아래 작은 텍스트 링크다(기타는 전체 공고의 2%대라
- * 같은 무게로 두면 빈 목록에 가깝다, 12.A P12). 시안은 button이지만 고르면 목록으로 **이동**하므로 링크다.
+ * 고양이·강아지는 캐릭터 + 라벨의 큰 카드 두 개, 기타는 그 아래 12px의 낮은 가로 카드다(기타는 전체 공고의 2%대라
+ * 같은 무게로 두지 않는다, 12.A P12. 글자 링크는 버튼으로 보이지 않아 카드로 바꿨다, #86). 시안은 button이지만 고르면 목록으로 **이동**하므로 링크다.
  * 고른 축종은 쿠키에 기억해 다음 `/` 진입에서 홈을 건너뛴다.
  * 지역은 목록에서 넘겨받은 값을 그대로 다음 목록에 실어 보내고, 기억하지는 않는다(결정 G2).
  *
  * 누름 피드백은 카드 누름(100ms, scale .98)이고 reduced-motion이면 줄어들지 않는다(`motion-safe:`). 누르면 바로 목록으로 간다.
- * 등장(README 움직임 표): 고양이 → 강아지 → 링크가 차례로 올라오며 나타난다(globals.css [data-enter]). 순서는 화면이 정한
+ * 등장(README 움직임 표): 고양이 → 강아지 → 기타 동물 카드가 차례로 올라오며 나타난다(globals.css [data-enter]). 순서는 화면이 정한
  * 시작 번호(enterFrom)부터 이어 붙인다(홈은 제목이 0이라 1부터).
- * 캐릭터 greet은 마지막 등장(링크)이 끝난 뒤 시작한다(Rive는 미리 받아 두고 인스턴스만 그때 만든다).
+ * 캐릭터 greet은 마지막 등장(기타 동물 카드)이 끝난 뒤 시작한다(Rive는 미리 받아 두고 인스턴스만 그때 만든다).
  *
  * 캐릭터는 Rive로 움직인다(greet → idle, 정지 SVG에서 교체). 카드를 누르는 순간(pointerdown, 키보드 Enter) 그 캐릭터에
  * press 신호를 보낸다. 이동은 늦추지 않는다(반응이 다 보이기 전에 화면이 바뀌어도 된다, characters.md 모션 절).
@@ -55,7 +56,7 @@ export function SpeciesChoice({ area, enterFrom }: { area: AnimalArea; enterFrom
     toListHref({ ...DEFAULT_ANIMAL_FILTER, species, region: area.region, district: area.district });
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-3">
       <div className="grid grid-cols-2 gap-3">
         {BIG_CHOICES.map((species, index) => (
           <Link
@@ -85,6 +86,9 @@ export function SpeciesChoice({ area, enterFrom }: { area: AnimalArea; enterFrom
           </Link>
         ))}
       </div>
+      {/* 기타 동물: 큰 카드 아래 낮은 가로 카드(handoff (g) "홈 기타 동물 선택지"). 이름은 이름표 "기타 동물"이고 그림·chevron은 장식이다.
+          누름은 카드 .98 + shadow-card-pressed, 캐릭터 셋 납작(바닥 가운데 기준). 눈(eyes-happy)은 바꾸지 않는다: 정지 SVG <img>라
+          SVG 안의 그룹을 바꿀 수 없다(EL 결정, #86). 움직임 줄이기면 누름 반응이 없다(motion-safe:) */}
       <Link
         ref={lastEnterRef}
         // app/globals.css의 [data-enter="home"]이 읽는다
@@ -92,9 +96,13 @@ export function SpeciesChoice({ area, enterFrom }: { area: AnimalArea; enterFrom
         style={enterOrder(enterFrom + BIG_CHOICES.length)}
         href={listHref("other")}
         onClick={() => rememberSpecies("other")}
-        className="flex min-h-touch items-center self-center px-2 text-body text-text-2 underline underline-offset-[3px] hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        className="group flex h-[72px] items-center gap-3 rounded-choice bg-surface pr-4 pl-[14px] shadow-card text-text transition-[scale,box-shadow] duration-press ease-out motion-safe:active:scale-press motion-safe:active:shadow-card-pressed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
       >
-        {ANIMAL_COPY.homeOtherLink}
+        <OtherCharacters characterClassName="origin-bottom transition-[scale] duration-press ease-out motion-safe:group-active:scale-char-press" />
+        <DisplayText size="title" className="min-w-0 flex-1">
+          {SPECIES_LABEL.other}
+        </DisplayText>
+        <ChevronRight aria-hidden className="size-5 shrink-0 text-text-2" />
       </Link>
     </div>
   );

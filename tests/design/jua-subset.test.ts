@@ -1,5 +1,5 @@
 /**
- * 제목 글꼴 Jua 부분 글꼴(architecture.md 14.1 "제목 글꼴", 14.3 "Jua 파일"): 고정 문구 6개의 글자가 모두 파일에 있는지,
+ * 제목 글꼴 Jua 부분 글꼴(architecture.md 14.1 "제목 글꼴", 14.3 "Jua 파일"): 고정 문구 7개의 글자가 모두 파일에 있는지,
  * 크기가 20KB 이하인지, 글자 목록·대체 글꼴 CSS가 화면 문구와 맞는지 본다. 파일은 scripts/jua-subset.mjs가 만든다.
  *
  * woff2는 새 의존성 없이 읽는다: 표들은 brotli 한 덩어리로 압축되어 있고(Node 내장 zlib), cmap은 변환 없이 들어 있다(woff2 명세 5절).
@@ -13,7 +13,7 @@ import { ANIMAL_COPY, SPECIES_COPY, SPECIES_LABEL } from "@/entities/animal";
 const FONT_DIR = join(process.cwd(), "src/shared/assets/fonts");
 const FONT_FILE = join(FONT_DIR, "jua-subset.woff2");
 
-/** Jua로 그리는 고정 문구 6개(화면이 쓰는 상수 그대로) */
+/** Jua로 그리는 고정 문구 7개(화면이 쓰는 상수 그대로) */
 const DISPLAY_TEXTS = [
   ANIMAL_COPY.homeTitle,
   SPECIES_LABEL.cat,
@@ -21,6 +21,7 @@ const DISPLAY_TEXTS = [
   SPECIES_COPY.cat.listTitle,
   SPECIES_COPY.dog.listTitle,
   SPECIES_COPY.other.listTitle,
+  SPECIES_LABEL.other,
 ];
 
 const codePointsOf = (texts: string[]) => [...new Set(texts.join(""))].map((c) => c.codePointAt(0)!).sort((a, b) => a - b);
@@ -118,7 +119,7 @@ describe("Jua 부분 글꼴", () => {
   const font = readFileSync(FONT_FILE);
   const cmap = cmapCodePoints(woff2Table(font, "cmap"));
 
-  it("고정 문구 6개의 모든 글자(공백·물음표 포함)가 cmap에 있다", () => {
+  it("고정 문구 7개의 모든 글자(공백·물음표 포함)가 cmap에 있다", () => {
     const missing = codePointsOf(DISPLAY_TEXTS).filter((c) => !cmap.has(c));
     expect(missing.map((c) => String.fromCodePoint(c))).toEqual([]);
   });
@@ -131,7 +132,7 @@ describe("Jua 부분 글꼴", () => {
     expect(statSync(FONT_FILE).size).toBeLessThanOrEqual(20 * 1024);
   });
 
-  it("글자 목록 파일은 고정 문구 6개 그대로다(다시 만들 때의 입력)", () => {
+  it("글자 목록 파일은 고정 문구 7개 그대로다(다시 만들 때의 입력)", () => {
     const lines = readFileSync(join(FONT_DIR, "jua-subset.txt"), "utf8").split(/\r?\n/).filter(Boolean);
     expect(lines).toEqual(DISPLAY_TEXTS);
   });

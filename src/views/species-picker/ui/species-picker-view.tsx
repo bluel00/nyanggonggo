@@ -11,7 +11,8 @@ import { ScreenHeader, ScreenShell } from "@/shared/ui/screen-shell";
  * 사진이 없는 화면이다(시안 "냥공고 홈 · 축종 선택"의 Main 390 / Home-PC 480).
  *
  * 위에 로고(가로 조합 56, 이름은 그림이라 Jua를 쓰지 않는다)와 한 줄 소개(목록 헤더와 같은 헤더 줄 틀, 등장 효과 없음), 그 아래 제목·선택지가 화면 전체의 세로 가운데에 온다(ScreenShell center).
- * 등장 순서는 여기서 정한다: 제목(부제 포함) 0 → 고양이 1 → 강아지 2 → 링크 3(SpeciesChoice가 1부터 이어 붙인다).
+ * 등장 순서는 여기서 정한다: 제목(부제 포함) 0 → 고양이 1 → 강아지 2 → 기타 동물 카드 3(SpeciesChoice가 1부터 이어 붙인다).
+ * 제목과 선택지 사이는 28px다(handoff (g) 홈 배치: 로고 아래 소개 두 줄이 들어갈 높이를 위해 32에서 줄임).
  */
 export function SpeciesPickerView({ area }: { area: AnimalArea }) {
   return (
@@ -28,7 +29,7 @@ export function SpeciesPickerView({ area }: { area: AnimalArea }) {
         />
       }
     >
-      <div className="flex flex-col gap-6 px-page">
+      <div className="flex flex-col gap-7 px-page">
         <HomeIntro />
         <SpeciesChoice area={area} enterFrom={1} />
       </div>
