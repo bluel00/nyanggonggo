@@ -1,14 +1,11 @@
 "use client";
 
-import { MapPin, Phone, type LucideIcon } from "lucide-react";
 import { useEffect, useState, type CSSProperties } from "react";
 import {
   allowsMotion,
   ANIMAL_COPY,
   animalTitle,
   clearDetailEntry,
-  DETAIL_ROW_ACTION_COPY,
-  detailRowHref,
   detailRows,
   detailDeadlineText,
   getDDay,
@@ -20,11 +17,10 @@ import {
   StatusBadge,
   useAnimal,
   type DetailEntry,
-  type DetailRow,
-  type DetailRowAction,
 } from "@/entities/animal";
 import { FavoriteButton } from "@/features/animal-favorite";
 import { ShareButton } from "@/features/animal-share";
+import { ShelterInfoSheet } from "@/features/shelter-info";
 import { cn } from "@/shared/lib/utils";
 import { BackButton, useGoBack } from "@/shared/ui/back-button";
 import { Button } from "@/shared/ui/button";
@@ -134,7 +130,8 @@ export function AnimalDetail({
   const enterStyle = { "--detail-elapsed": `${elapsedMs}ms` } as CSSProperties;
   // data-detail-enter는 app/globals.css의 [data-detail-enter="info"|"fade"]가 읽는다
   const infoEnter = enterMode ? { "data-detail-enter": enterMode === "morph" ? "info" : "fade", style: enterStyle } : {};
-  const rows = detailRows(animal).map((row) => ({ ...row, link: row.action ? <ContactLink row={row} /> : null }));
+  // 줄 끝 동작: 보호소 줄의 [보호소 정보](보호소 정보 시트, #62). 동작 종류는 detailRows가 정한다
+  const rows = detailRows(animal).map((row) => ({ ...row, link: row.action === "shelterInfo" ? <ShelterInfoSheet animal={animal} /> : null }));
 
   return (
     <article data-slot="animal-detail" className="flex min-h-full flex-col">
@@ -187,12 +184,12 @@ export function AnimalDetail({
         {rows.length > 0 && (
           <dl className="mt-6 grid grid-cols-[auto_1fr] gap-x-4 gap-y-3 text-body">
             {rows.map(({ label, value, link: action }) => (
-              // 링크가 있는 줄은 위아래 6px를 더해, 이웃한 두 링크(44px)의 누르는 영역이 겹치지 않게 한다(줄 20px + 간격 12px + 6px×2 = 44px)
+              // 줄 끝 동작은 보호소 줄 하나라 이웃한 누르는 영역이 겹치지 않는다. 줄 간격은 다른 줄과 같다(#7의 "주소·전화 줄만 간격이 넓음"을 없앰)
               <div key={label} data-slot="detail-row" className="contents">
-                <dt className={cn("text-text-2", action && "py-1.5")}>{label}</dt>
+                <dt className="text-text-2">{label}</dt>
                 {action ? (
-                  // 값은 그냥 글자(선택·복사 가능)이고, 길면 줄바꿈한다. 링크는 첫 줄 끝에 둔다(items-start)
-                  <dd className="flex items-start gap-2 py-1.5">
+                  // 값은 그냥 글자(선택·복사 가능)이고, 길면 줄바꿈한다. 버튼은 첫 줄 끝에 둔다(items-start)
+                  <dd className="flex items-start gap-2">
                     <span data-slot="detail-value" className={cn("min-w-0 flex-1", DETAIL_VALUE_WRAP)}>
                       {value}
                     </span>
@@ -228,35 +225,6 @@ export function AnimalDetail({
         />
       )}
     </article>
-  );
-}
-
-/** 정보 줄 동작 종류별 아이콘과 새 탭 여부. 글자와 접근성 이름은 DETAIL_ROW_ACTION_COPY, 주소는 detailRowHref가 정한다 */
-const CONTACT_LINK: Record<DetailRowAction, { icon: LucideIcon; newTab: boolean }> = {
-  map: { icon: MapPin, newTab: true },
-  call: { icon: Phone, newTab: false },
-};
-
-/**
- * 주소·전화 줄 끝의 작은 글자 링크(이슈 #3). 채운 버튼이 아니라 보조 글자색 + 작은 아이콘이다.
- * 누르는 영역은 44×44px이고, 위아래 음수 여백으로 줄 높이(20px)는 그대로 둔다.
- */
-function ContactLink({ row }: { row: DetailRow }) {
-  const href = detailRowHref(row);
-  if (row.action === null || href === null) return null;
-  const { icon: Icon, newTab } = CONTACT_LINK[row.action];
-  const { text, label } = DETAIL_ROW_ACTION_COPY[row.action];
-  return (
-    <a
-      href={href}
-      aria-label={label}
-      data-slot="contact-link"
-      {...(newTab ? { target: "_blank", rel: "noopener" } : {})}
-      className="-my-3 inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-0.5 rounded-sm text-caption text-text-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-    >
-      <Icon aria-hidden className="size-3.5" />
-      {text}
-    </a>
   );
 }
 
