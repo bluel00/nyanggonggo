@@ -1,4 +1,4 @@
-/** FE Domain. UI는 이 타입만 소비한다(architecture.md 6절). 담당자 이름은 넣지 않는다. */
+/** FE Domain. UI는 이 타입만 소비한다(architecture.md 6절). 담당자 이름은 쓰는 곳이 없어 넣지 않는다(#90). */
 export type Animal = {
   id: string;
   species: "cat" | "dog" | "other";

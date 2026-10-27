@@ -154,7 +154,7 @@ type Animal = {
 }
 ```
 
-- 담당자 이름(`careOwnerNm`)은 WireDto와 Domain 어디에도 넣지 않는다. 연락처 값(주소·전화·담당자 이름)은 로그에 남기지 않는다. 종료 사유(`endReason`)는 2026-10-23부터 내보낸다(10절, 이슈 [#41](https://github.com/bluel00/nyanggonggo/issues/41)).
+- 담당자 이름(`careOwnerNm`)은 쓰는 곳이 없어 WireDto와 Domain에 넣지 않는다. 공개 데이터이고, 감출 이유가 있어서가 아니다. 필요해지면 이슈로 정한다(2026-10-27 EL 결정, 이슈 [#90](https://github.com/bluel00/nyanggonggo/issues/90). 출처: 첫 커밋 a86c828의 연락처 숨김 규칙이 #3 뒤에 담당자 이름만 남은 것). 연락처 값(주소·전화·담당자 이름)은 로그에 남기지 않는다. 종료 사유(`endReason`)는 2026-10-23부터 내보낸다(10절, 이슈 [#41](https://github.com/bluel00/nyanggonggo/issues/41)).
 - 보호소 주소(`careAddr`)·전화(`careTel`)는 상세의 보호소 정보 시트에 보인다(2026-10-27, 이슈 [#62](https://github.com/bluel00/nyanggonggo/issues/62). 그전에는 상세 정보 줄, 이슈 [#3](https://github.com/bluel00/nyanggonggo/issues/3). PRD 비범위 "보호소 직접 연락"을 대체). 서버 Mapper가 앞뒤 공백만 지워 `shelterAddressText`·`shelterTelText`로 내려준다.
   - 정보 줄 순서: 발견 장소 → 보호소 → 공고 번호 → 공고 기간 → 종료 사유 → 특이사항(종료 사유는 이슈 #41, 공고 번호는 #59. 공고 번호는 목록 카드에도 2줄 아래 작은 보조 글자로 보이고, 카드 표시는 운영에서 보고 다시 판단한다). 값은 그냥 글자(선택·복사 가능)이고, 값이 없는 줄은 뺀다. 줄 규칙은 `entities/animal/ui/detail-rows.ts`의 `detailRows`가 정한다(이슈 [#30](https://github.com/bluel00/nyanggonggo/issues/30)).
   - 보호소 줄 끝의 작은 글자 버튼 [보호소 정보](보조 글자색 + 작은 아이콘, 누르는 영역 44×44px, 접근성 이름 "보호소 정보 보기")가 보호소 정보 시트를 연다. 종료 공고이거나 주소·전화가 모두 없으면 버튼이 없다(`detailRows`의 줄 끝 동작 `shelterInfo`).
