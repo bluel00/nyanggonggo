@@ -19,6 +19,8 @@ afterEach(() => {
 });
 
 const animal = makeAnimal({ noticeEndAt: null });
+/** 공유 주소 기준(서버 siteOrigin을 상세 페이지가 넘긴 값, #73) */
+const ORIGIN = "https://nyang.example";
 
 describe("카카오 SDK 상수", () => {
   it("Full SDK(minified) 2.8.3과 sha384 integrity를 함께 둔다", () => {
@@ -28,16 +30,16 @@ describe("카카오 SDK 상수", () => {
 });
 
 describe("ShareButton", () => {
-  it("키가 없으면(기본값 NEXT_PUBLIC_KAKAO_JS_KEY 미설정) SDK를 불러오지 않고 링크를 복사한다", async () => {
-    render(<ShareButton animal={animal} />);
+  it("키가 없으면(기본값 NEXT_PUBLIC_KAKAO_JS_KEY 미설정) SDK를 불러오지 않고 받은 주소 기준으로 링크를 복사한다", async () => {
+    render(<ShareButton animal={animal} origin={ORIGIN} />);
     expect(document.querySelector("script#kakao-sdk")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "카카오톡 공유" }));
     await waitFor(() => expect(showToast).toHaveBeenCalledWith("링크가 복사됐어요"));
-    expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/animals/1`);
+    expect(writeText).toHaveBeenCalledWith("https://nyang.example/animals/1");
   });
 
   it("키가 있으면 SDK 스크립트를 넣는다(고정 버전 + integrity)", () => {
-    render(<ShareButton animal={animal} kakaoKey="test-kakao-key" />);
+    render(<ShareButton animal={animal} origin={ORIGIN} kakaoKey="test-kakao-key" />);
     const script = document.querySelector<HTMLScriptElement>("script#kakao-sdk")!;
     expect(script).toBeTruthy();
     // jsdom은 integrity IDL 속성을 구현하지 않아 속성값으로 확인한다
@@ -47,7 +49,7 @@ describe("ShareButton", () => {
   });
 
   it("키가 있어도 SDK가 로드되지 않았으면 링크 복사로 폴백한다", async () => {
-    render(<ShareButton animal={animal} kakaoKey="test-kakao-key" />);
+    render(<ShareButton animal={animal} origin={ORIGIN} kakaoKey="test-kakao-key" />);
     fireEvent.click(screen.getByRole("button", { name: "카카오톡 공유" }));
     await waitFor(() => expect(showToast).toHaveBeenCalledWith("링크가 복사됐어요"));
   });
@@ -55,7 +57,7 @@ describe("ShareButton", () => {
   it("SDK가 있으면 카카오톡 공유를 호출하고 토스트는 띄우지 않는다(링크는 공유 가능한 도메인)", async () => {
     const sendDefault = vi.fn();
     (window as unknown as { Kakao: unknown }).Kakao = { isInitialized: () => true, init: vi.fn(), Share: { sendDefault } };
-    render(<ShareButton animal={animal} kakaoKey="test-kakao-key" siteUrl="https://nyang.example" />);
+    render(<ShareButton animal={animal} kakaoKey="test-kakao-key" origin={ORIGIN} />);
     fireEvent.click(screen.getByRole("button", { name: "카카오톡 공유" }));
     await waitFor(() => expect(sendDefault).toHaveBeenCalledOnce());
     expect(showToast).not.toHaveBeenCalled();
@@ -73,10 +75,10 @@ describe("ShareButton", () => {
     expect(payload.buttons[0].link.webUrl).toBe("https://nyang.example/animals/1");
   });
 
-  it("기준 주소가 로컬이면(배포 도메인 미설정) 카카오 공유 대신 링크 복사로 간다", async () => {
+  it("기준 주소가 로컬이면(로컬 서버의 siteOrigin) 카카오 공유 대신 링크 복사로 간다", async () => {
     const sendDefault = vi.fn();
     (window as unknown as { Kakao: unknown }).Kakao = { isInitialized: () => true, init: vi.fn(), Share: { sendDefault } };
-    render(<ShareButton animal={animal} kakaoKey="test-kakao-key" />);
+    render(<ShareButton animal={animal} kakaoKey="test-kakao-key" origin="http://localhost:3000" />);
     fireEvent.click(screen.getByRole("button", { name: "카카오톡 공유" }));
     await waitFor(() => expect(showToast).toHaveBeenCalledWith("링크가 복사됐어요"));
     expect(sendDefault).not.toHaveBeenCalled();

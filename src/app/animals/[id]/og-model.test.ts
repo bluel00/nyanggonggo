@@ -17,31 +17,28 @@ const animal = (overrides: Partial<Animal> = {}): Animal =>
   });
 
 describe("buildOgModel", () => {
-  it("보호중 D-10: 배지는 상태만, D-day 따로, 제목은 지역, 보조는 보호소, 대표 사진", () => {
-    expect(buildOgModel(animal(), NOW)).toEqual({
+  it("보호중 D-10: 배지는 상태만, D-day 따로, 제목은 지역, 보조는 보호소, 대표 사진. 공유 내용을 함께 담는다", () => {
+    expect(buildOgModel(animal(), NOW, "https://nyang.test")).toEqual({
       title: "제주특별자치도",
-      region: "제주특별자치도",
       sub: "제2동물보호센터",
-      speciesLabel: "고양이",
       variant: "protected",
       badgeText: "보호중",
       dDayText: "D-10",
       imageSrc: "http://openapi.animal.go.kr/openapi/files/1.jpg",
       ended: false,
-      description: "암컷 · 나이 미상 · 보호중 · D-10",
+      share: buildShareContent(animal(), { origin: "https://nyang.test", now: NOW }),
     });
   });
 
-  it("기타 공고는 speciesLabel이 실제 동물 이름이고, 이미지 제목에도 동물이 들어간다", () => {
+  it("기타 공고는 이미지 제목에 동물이 들어가고, 링크 미리보기 제목 바탕(공유 내용)에도 실제 동물 이름이 들어간다", () => {
+    // 이미지 제목은 카드 1줄과 같다. 링크 미리보기 제목은 공유 내용의 제목 바탕("<지역> <동물>") + " 공고 | 서비스 이름"
     expect(buildOgModel(animal({ species: "other", kindText: "토끼" }), NOW)).toMatchObject({
-      speciesLabel: "토끼",
-      // 이미지 제목은 카드 1줄과 같다. 링크 미리보기 제목은 "<지역> <동물> 공고"라 region을 따로 쓴다
       title: "토끼 · 제주특별자치도",
-      region: "제주특별자치도",
+      share: { title: "제주특별자치도 토끼" },
     });
     expect(buildOgModel(animal({ species: "other", kindText: null }), NOW)).toMatchObject({
-      speciesLabel: "기타 동물",
       title: "기타 동물 · 제주특별자치도",
+      share: { title: "제주특별자치도 기타 동물" },
     });
     const text = buildOgText(buildOgModel(animal({ species: "other", kindText: "토끼" }), NOW), "멍냥공고");
     expect(text.title).toBe("제주특별자치도 토끼 공고 | 멍냥공고");
@@ -67,14 +64,14 @@ describe("buildOgText", () => {
     });
   });
 
-  it("링크 미리보기 설명은 카카오 공유 카드 설명과 같은 문자열이다", () => {
+  it("링크 미리보기 설명은 공유 카드 설명과 같은 공유 요약이다", () => {
     const cases = [
       animal({ specialMarkText: "꼬리가 짧고\n  잘 웃는 얼굴" }),
       animal({ status: "ended", sex: "unknown" }),
       animal({ ageText: "2026(60일미만)(년생)", specialMarkText: "   " }),
     ];
     for (const a of cases) {
-      expect(buildOgText(buildOgModel(a, NOW), "멍냥공고").description).toBe(buildShareContent(a, "https://nyang.test", NOW).description);
+      expect(buildOgText(buildOgModel(a, NOW), "멍냥공고").description).toBe(buildShareContent(a, { origin: "https://nyang.test", now: NOW }).summary);
     }
   });
 });

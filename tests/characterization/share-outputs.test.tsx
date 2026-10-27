@@ -237,7 +237,7 @@ function driveOgModel(wire: AnimalWireDto) {
 }
 
 function shareButton(animal: Animal, kakaoKey?: string) {
-  return <ShareButton animal={animal} kakaoKey={kakaoKey} siteUrl={ORIGIN} />;
+  return <ShareButton animal={animal} kakaoKey={kakaoKey} origin={ORIGIN} />;
 }
 
 async function driveKakao(wire: AnimalWireDto) {

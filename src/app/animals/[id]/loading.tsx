@@ -1,3 +1,4 @@
+import { siteOrigin } from "@/shared/config/site-origin";
 import { AnimalDetailLoadingView } from "@/views/animal-detail";
 
 /**
@@ -6,7 +7,8 @@ import { AnimalDetailLoadingView } from "@/views/animal-detail";
  *
  * 경계가 생기면 `next/link`의 자동 prefetch가 이 경계까지만 받는다(페이지 본문과 공고 조회는 누를 때).
  * 측정과 영향은 architecture.md 7절.
+ * 목록 카드에서 들어오면 이 화면이 실제 상세(공유 버튼 포함)를 그리므로 공유 주소 기준(서버 siteOrigin)을 넘긴다(#73).
  */
 export default function Loading() {
-  return <AnimalDetailLoadingView />;
+  return <AnimalDetailLoadingView origin={siteOrigin().origin} />;
 }

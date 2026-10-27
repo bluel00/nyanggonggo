@@ -41,7 +41,7 @@ afterEach(() => {
 
 function renderLoading() {
   const wrapper = ({ children }: { children: ReactNode }) => <QueryClientProvider client={client}>{children}</QueryClientProvider>;
-  return render(<AnimalDetailLoading />, { wrapper });
+  return render(<AnimalDetailLoading origin="https://nyang.test" />, { wrapper });
 }
 
 describe("AnimalDetailLoading", () => {

@@ -47,7 +47,7 @@ function renderDetail() {
   const client = createQueryClient();
   client.setDefaultOptions({ queries: { ...client.getDefaultOptions().queries, retry: false } });
   const wrapper = ({ children }: { children: ReactNode }) => <QueryClientProvider client={client}>{children}</QueryClientProvider>;
-  return render(<AnimalDetail id="450650202602282" />, { wrapper });
+  return render(<AnimalDetail id="450650202602282" origin="https://nyang.test" />, { wrapper });
 }
 
 describe("AnimalDetail", () => {

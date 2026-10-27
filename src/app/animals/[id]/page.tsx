@@ -8,6 +8,7 @@ import { SERVICE_NAME } from "@/shared/config/service";
 import { AnimalDetailView } from "@/views/animal-detail";
 import { getAnimalForRequest, getDetailPerf, getPhotoSizeForRequest } from "./animal-data";
 import { routes } from "@/shared/config/routes";
+import { siteOrigin } from "@/shared/config/site-origin";
 import { siteOpenGraph } from "../../site-metadata";
 import { buildOgModel, buildOgText } from "./og-model";
 
@@ -19,11 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const { id } = await params;
   if (!isAnimalId(id)) return {};
   try {
-    const text = buildOgText(buildOgModel(await getAnimalForRequest(id), new Date()), SERVICE_NAME);
+    const model = buildOgModel(await getAnimalForRequest(id), new Date());
+    const text = buildOgText(model, SERVICE_NAME);
     return {
       title: text.title,
       description: text.description,
-      openGraph: { ...siteOpenGraph(routes.detail(id)), title: text.title, description: text.description },
+      // og:url은 공유 내용의 상세 경로(metadataBase가 절대 주소로 푼다)
+      openGraph: { ...siteOpenGraph(model.share.path), title: text.title, description: text.description },
     };
   } catch {
     return { openGraph: siteOpenGraph(routes.detail(id)) };
@@ -55,7 +58,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   perf.finish({ ok: animal !== undefined });
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <AnimalDetailView id={id} firstPhotoSize={firstPhotoSize} />
+      <AnimalDetailView id={id} origin={siteOrigin().origin} firstPhotoSize={firstPhotoSize} />
     </HydrationBoundary>
   );
 }

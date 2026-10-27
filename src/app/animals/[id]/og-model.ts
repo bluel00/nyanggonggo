@@ -1,62 +1,59 @@
 import {
   animalSubtitle,
-  animalSummaryText,
   animalTitle,
   dDayText,
   getDDay,
-  getPrimaryImage,
   getStatusVariant,
-  speciesText,
   statusBadgeText,
   type Animal,
   type AnimalStatusVariant,
 } from "@/entities/animal";
+import { buildShareContent, type ShareContent } from "@/features/animal-share";
+import { siteOrigin } from "@/shared/config/site-origin";
 
 /**
- * OG 이미지와 상세 메타데이터에 쓰는 표시값. Domain 파생값(상태, D-day)을 쓰므로 서버가 아니라 app 계층에 둔다.
- * 문구 규칙은 카드/상세와 같다: 제목은 `animalTitle`(지역, 기타 축종만 "<동물> · <지역>"), 보조는 보호소(없으면 발견 장소),
- * 배지는 상태만, D-day는 종료가 아니고 있을 때만. 링크 미리보기 제목(`buildOgText`)은 "<지역> <동물> 공고" 형식이라 `region`을 따로 둔다.
- * 링크 미리보기 설명은 카카오 공유 카드 설명과 같은 공고 한 줄 요약(`animalSummaryText`)이다.
+ * 링크 미리보기(OG 메타·OG 이미지)의 어댑터(#73). Domain 파생값(상태, D-day)을 쓰므로 서버가 아니라 app 계층에 둔다.
+ * 제목 바탕·공유 요약·사진·주소는 공유 내용 계약(`buildShareContent`)에서 받는다. 여기서 덧붙이는 것은 링크 미리보기에만 필요한 것이다:
+ * OG 메타 제목의 " 공고 | 서비스 이름"(`buildOgText`), OG 이미지의 제목(`animalTitle`: 지역, 기타 축종만 "<동물> · <지역>"),
+ * 보조 줄(보호소, 없으면 발견 장소), 상태 칩(상태만)과 D-N(종료가 아니고 있을 때만).
  */
 export type OgModel = {
   /** OG 이미지에 그리는 제목(카드 1줄과 같은 규칙) */
   title: string;
-  /** 링크 미리보기 제목이 쓰는 지역. 이미지에는 쓰지 않는다 */
-  region: string;
   sub: string | null;
-  speciesLabel: string;
   variant: AnimalStatusVariant;
   badgeText: string;
   dDayText: string | null;
+  /** OG 이미지 바탕 사진(공유 내용의 사진) */
   imageSrc: string | null;
   ended: boolean;
-  /** 링크 미리보기 설명(og·twitter). 공유 카드 설명과 같다 */
-  description: string;
+  /** 공유 내용. OG 메타의 제목 바탕·설명(공유 요약)·주소가 여기서 온다 */
+  share: ShareContent;
 };
 
-export function buildOgModel(animal: Animal, now: Date): OgModel {
+/** now는 서버가 요청을 받은 시각이다(공유 카드는 기기 시각, #57). origin은 공유 내용의 절대 주소 기준(서버 siteOrigin) */
+export function buildOgModel(animal: Animal, now: Date, origin: string = siteOrigin().origin): OgModel {
   const variant = getStatusVariant(animal, now);
   const ended = variant === "ended";
   const dDay = getDDay(animal, now);
+  const share = buildShareContent(animal, { origin, now });
   return {
     title: animalTitle(animal),
-    region: animal.regionText,
     sub: animalSubtitle(animal),
-    speciesLabel: speciesText(animal),
     variant,
     badgeText: statusBadgeText(animal, now, { dDay: false }),
     dDayText: dDay === null ? null : dDayText(dDay),
-    imageSrc: getPrimaryImage(animal),
+    imageSrc: share.photoSrc,
     ended,
-    description: animalSummaryText(animal, now),
+    share,
   };
 }
 
-/** 메타데이터 제목/설명(카카오·SNS 링크 미리보기) */
+/** OG 메타 제목/설명(링크 미리보기). 제목은 공유 내용의 제목 바탕 + " 공고 | 서비스 이름", 설명은 공유 요약 */
 export function buildOgText(model: OgModel, serviceName: string) {
   return {
-    title: `${model.region} ${model.speciesLabel} 공고 | ${serviceName}`,
-    description: model.description,
+    title: `${model.share.title} 공고 | ${serviceName}`,
+    description: model.share.summary,
   };
 }
 

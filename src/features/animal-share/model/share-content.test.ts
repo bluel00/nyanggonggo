@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Animal } from "@/entities/animal";
-import { buildShareContent, resolveShareOrigin } from "./share-content";
+import { buildShareContent } from "./share-content";
 import { makeAnimal } from "@tests/factories/animal";
 
 const kst = (iso: string) => new Date(`${iso}+09:00`);
@@ -8,42 +8,37 @@ const IMG = "http://openapi.animal.go.kr/openapi/files/1%5B1%5D.jpg";
 const animal = (overrides: Partial<Animal> = {}): Animal =>
   makeAnimal({ id: "450650202602282", images: [IMG], sex: "female", regionText: "제주특별자치도", shelterName: "제2동물보호센터", ...overrides });
 const NOW = kst("2026-09-21T09:00:00");
+const at = { origin: "https://nyang.test", now: NOW };
 
-describe("buildShareContent", () => {
-  it("상세 링크, 지역 기반 제목, 공고 한 줄 요약 설명(보호소 이름 없음), 대표 사진의 프록시 절대 URL", () => {
-    expect(buildShareContent(animal(), "https://nyang.test", NOW)).toEqual({
-      url: "https://nyang.test/animals/450650202602282",
+describe("buildShareContent: 공유 내용 계약", () => {
+  it("제목 바탕(지역 + 동물), 공유 요약(보호소 이름 없음), 대표 사진 원본, 상세 경로와 절대 주소", () => {
+    expect(buildShareContent(animal(), at)).toEqual({
       title: "제주특별자치도 고양이",
-      description: "암컷 · 나이 미상 · 보호중 · D-10",
-      imageUrl: `https://nyang.test/api/image-proxy?src=${encodeURIComponent(IMG)}`,
+      summary: "암컷 · 나이 미상 · 보호중 · D-10",
+      photoSrc: IMG,
+      path: "/animals/450650202602282",
+      url: "https://nyang.test/animals/450650202602282",
     });
   });
 
-  it("종료 공고는 상태 자리에 '종료'", () => {
-    const content = buildShareContent(animal({ status: "ended", shelterName: null, species: "dog" }), "https://nyang.test", NOW);
+  it("종료 공고는 요약의 상태 자리에 '종료'", () => {
+    const content = buildShareContent(animal({ status: "ended", shelterName: null, species: "dog" }), at);
     expect(content.title).toBe("제주특별자치도 강아지");
-    expect(content.description).toBe("암컷 · 나이 미상 · 종료");
+    expect(content.summary).toBe("암컷 · 나이 미상 · 종료");
   });
 
-  it("기타 공고는 제목에 실제 동물 이름을 쓴다", () => {
+  it("기타 공고는 제목 바탕에 실제 동물 이름을 쓴다", () => {
     const rabbit = animal({ species: "other", kindText: "토끼", regionText: "경기도 성남시" });
-    expect(buildShareContent(rabbit, "https://nyang.test", NOW).title).toBe("경기도 성남시 토끼");
+    expect(buildShareContent(rabbit, at).title).toBe("경기도 성남시 토끼");
     const unknown = animal({ species: "other", kindText: null, regionText: "경기도 성남시" });
-    expect(buildShareContent(unknown, "https://nyang.test", NOW).title).toBe("경기도 성남시 기타 동물");
+    expect(buildShareContent(unknown, at).title).toBe("경기도 성남시 기타 동물");
   });
 
-  it("사진이 없으면 OG 이미지를 썸네일로", () => {
-    expect(buildShareContent(animal({ images: [] }), "https://nyang.test", NOW).imageUrl).toBe(
-      "https://nyang.test/animals/450650202602282/opengraph-image",
-    );
+  it("사진이 없으면 photoSrc는 null(대신 쓸 이미지는 출력 쪽이 정한다)", () => {
+    expect(buildShareContent(animal({ images: [] }), at).photoSrc).toBeNull();
   });
-});
 
-describe("resolveShareOrigin", () => {
-  it("NEXT_PUBLIC_SITE_URL이 있으면 그 값(끝 슬래시 제거), 없으면 현재 주소", () => {
-    expect(resolveShareOrigin("http://localhost:3000", "https://nyang.example")).toBe("https://nyang.example");
-    expect(resolveShareOrigin("http://localhost:3000", "https://nyang.example/")).toBe("https://nyang.example");
-    expect(resolveShareOrigin("https://nyang.example", "")).toBe("https://nyang.example");
-    expect(resolveShareOrigin("https://nyang.example", "   ")).toBe("https://nyang.example");
+  it("요약의 D-N은 넣은 기준 시각을 따른다(출력마다 자기 시각을 넣는다)", () => {
+    expect(buildShareContent(animal(), { ...at, now: kst("2026-09-30T23:59:00") }).summary).toBe("암컷 · 나이 미상 · 임박 · D-1");
   });
 });
