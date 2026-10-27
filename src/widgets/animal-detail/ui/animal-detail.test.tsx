@@ -59,7 +59,7 @@ describe("AnimalDetail", () => {
     expect(screen.getByRole("link", { name: "뒤로가기" })).toBeTruthy();
 
     expect(await screen.findByRole("heading", { name: "제주특별자치도" })).toBeTruthy();
-    expect(screen.getByText("암컷 · 2024(년생)")).toBeTruthy();
+    expect(screen.getByText("암컷 · 2024년생")).toBeTruthy();
     expect(container.querySelector('[data-slot="status-badge"]')?.textContent).toBe("보호중");
     expect(container.querySelector('[data-slot="d-day"]')?.textContent).toBe("공고 마감 D-10");
     for (const text of ["보호소", "제2동물보호센터", "발견 장소", "서귀포시 남원읍", "공고 기간", "09.21 ~ 10.01"]) {
