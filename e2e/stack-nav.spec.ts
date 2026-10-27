@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openedDetail } from "./helpers";
+import { FAVORITES_STORAGE_KEY, openedDetail } from "./helpers";
 import {
   BELOW_SCROLL,
   belowScrollTop,
@@ -19,7 +19,6 @@ import {
 const LIST_URL = "/?species=dog&region=5690000";
 const listItemId = (index: number) => String(990000202601000 + index);
 const CARDS = "[data-animal-id]";
-const FAVORITES_STORAGE_KEY = "nyanggonggo:favorites";
 
 const scrollOf = (page: Page, selector: string) =>
   page.evaluate((s) => document.querySelector<HTMLElement>(s)!.scrollTop, selector);

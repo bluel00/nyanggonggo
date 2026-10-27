@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { REGION_COOKIE } from "../model/region-cookie";
+import { SPECIES_COOKIE } from "../model/species-cookie";
 import { AnimalFilterSheet } from "./animal-filter-sheet";
 
 const replace = vi.fn();
@@ -68,8 +70,8 @@ describe("AnimalFilterSheet", () => {
       open();
       fireEvent.click(chipIn("성별", "수컷"));
       fireEvent.click(screen.getByRole("button", { name: "적용하기" }));
-      expect(document.cookie).toContain("nyanggonggo.species=cat");
-      expect(document.cookie).toContain("nyanggonggo.region=");
+      expect(document.cookie).toContain(`${SPECIES_COOKIE}=cat`);
+      expect(document.cookie).toContain(`${REGION_COOKIE}=`);
       expect(document.cookie).not.toMatch(/sex|male/);
     });
 

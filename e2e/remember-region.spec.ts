@@ -5,6 +5,7 @@ import {
   loadStubItems,
   mockList,
   openedDetail,
+  REGION_COOKIE,
   rememberSpeciesCookie,
   requestedRegions,
   scrollTop,
@@ -19,7 +20,6 @@ import {
 
 const SEOUL = "6110000";
 const BUSAN = "6260000";
-const REGION_COOKIE = "nyanggonggo.region";
 
 let seoulItems: ListItem[];
 test.beforeAll(async ({ request }) => {

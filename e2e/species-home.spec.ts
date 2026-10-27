@@ -4,6 +4,7 @@ import {
   loadStubItems,
   mockList,
   openedDetail,
+  REGION_COOKIE,
   rememberSpeciesCookie,
   requestedRegions,
   requestedSpecies,
@@ -21,7 +22,6 @@ import {
 
 const SEOUL = "6110000";
 const BUSAN = "6260000";
-const REGION_COOKIE = "nyanggonggo.region";
 const HOME_TITLE = "오늘은 누구를 보러 왔어요?";
 
 /**
