@@ -3,13 +3,14 @@
 import Script from "next/script";
 import { useCallback, useState } from "react";
 import type { Animal } from "@/entities/animal";
-import { KAKAO_JS_KEY, SITE_URL } from "@/shared/config/public-env";
+import { KAKAO_JS_KEY } from "@/shared/config/public-env";
+import { routes } from "@/shared/config/routes";
 import { copyText } from "@/shared/lib/clipboard";
 import { describeError, fingerprint, infoClientDev, warnClient } from "@/shared/lib/client-log";
 import { cn } from "@/shared/lib/utils";
 import { showToast } from "@/shared/ui/toast";
-import { initKakao, shareAnimal, type KakaoSdk } from "../model/share";
-import { buildShareContent, resolveShareOrigin } from "../model/share-content";
+import { initKakao, shareAnimal, toShareCard, type KakaoSdk } from "../model/share";
+import { buildShareContent } from "../model/share-content";
 
 /**
  * 카카오 JavaScript SDK(Full SDK, minified). 2.8.3으로 고정한다.
@@ -32,16 +33,19 @@ export const SHARE_BUTTON_LABEL = "카카오톡 공유";
  * 예전에는 공유를 누를 때만 init해서 새로고침 직후 `Kakao.isInitialized()`가 계속 false였다.
  * 로드 전략도 lazyOnload(아주 늦게 로드)에서 afterInteractive로 바꿔, 버튼을 일찍 눌러도 SDK가 준비되게 한다.
  * 실패는 조용히 넘어가지 않고 콘솔 경고로 남긴다.
+ *
+ * 공유 카드와 링크 복사의 주소 기준(origin)은 서버의 siteOrigin()을 상세 페이지가 받아 넘긴 값이다(링크 미리보기 og:url과 같은 기준, #73).
+ * 배포 도메인은 카카오 개발자 콘솔 [플랫폼 > Web 사이트 도메인]에도 등록되어 있어야 카드의 링크가 동작한다.
  */
 export function ShareButton({
   animal,
+  origin,
   kakaoKey = KAKAO_JS_KEY,
-  siteUrl = SITE_URL,
 }: {
   animal: Animal;
+  /** 공유 주소 기준(서버 siteOrigin의 origin, 끝 슬래시 없음) */
+  origin: string;
   kakaoKey?: string;
-  /** 공유 링크의 기준 주소. 비면 현재 접속한 주소 */
-  siteUrl?: string;
 }) {
   const [busy, setBusy] = useState(false);
 
@@ -58,9 +62,11 @@ export function ShareButton({
   async function handleClick() {
     setBusy(true);
     try {
-      const content = buildShareContent(animal, resolveShareOrigin(window.location.origin, siteUrl), new Date());
-      infoClientDev("share", "공유 링크", { url: content.url, imageUrl: content.imageUrl });
-      await shareAnimal(content, { kakaoKey, getKakao, copy: copyText, notify: showToast, onIssue });
+      // 공유 요약의 기준 시각은 버튼을 누른 기기의 시각이다(링크 미리보기는 서버 시각, #57)
+      const content = buildShareContent(animal, { origin, now: new Date() });
+      const card = toShareCard(content, { origin, fallbackImagePath: routes.detailOgImage(animal.id) });
+      infoClientDev("share", "공유 링크", { url: card.url, imageUrl: card.imageUrl });
+      await shareAnimal(card, { kakaoKey, getKakao, copy: copyText, notify: showToast, onIssue });
     } finally {
       setBusy(false);
     }

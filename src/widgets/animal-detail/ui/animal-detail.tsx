@@ -69,7 +69,16 @@ const STATUS_TEXT = {
  * 사진 칸은 카드 사진의 실제 비율(서버 값과 비율이 같으면 그대로), 첫 사진은 카드가 받아 둔 주소, 보던 사진 위치, 스크롤은
  * 처음 한 번만 맨 위로, 정보 페이드는 누른 시각 기준으로 이어 간다. 데이터는 서버 데이터를 따른다(캐시가 덮인다).
  */
-export function AnimalDetail({ id, firstPhotoSize = null }: { id: string; firstPhotoSize?: PhotoSize | null }) {
+export function AnimalDetail({
+  id,
+  origin,
+  firstPhotoSize = null,
+}: {
+  id: string;
+  /** 공유 주소 기준(서버 siteOrigin, 페이지가 넘긴다, #73) */
+  origin: string;
+  firstPhotoSize?: PhotoSize | null;
+}) {
   const query = useAnimal(id);
   const entry = useDetailEntry(id);
   const boxRatio = photoBoxRatio(entry && (!firstPhotoSize || sameRatio(entry.photoSize, firstPhotoSize)) ? entry.photoSize : firstPhotoSize);
@@ -204,7 +213,7 @@ export function AnimalDetail({ id, firstPhotoSize = null }: { id: string; firstP
       <BottomCtaBar {...infoEnter} data-slot="bottom-cta">
         {/* 하트 튐·누름은 CSS(motion-safe:, no-preference)가 움직임 줄이기를 거르므로 false */}
         <FavoriteButton animalId={animal.id} still={!allowsMotion(animal, false)} />
-        <ShareButton animal={animal} />
+        <ShareButton animal={animal} origin={origin} />
       </BottomCtaBar>
 
       {viewerIndex !== null && (

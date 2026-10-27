@@ -46,7 +46,6 @@ pnpm dev                      # 개발 서버
 |---|---|
 | `DATA_GO_KR_SERVICE_KEY` | 공공데이터포털 서비스키. 서버 전용 |
 | `NEXT_PUBLIC_KAKAO_JS_KEY` | 카카오 JavaScript 키. 비우면 공유가 링크 복사로 동작한다 |
-| `NEXT_PUBLIC_SITE_URL` | 공유 링크의 기준 주소. 비우면 접속한 주소 |
 
 검사와 빌드:
 

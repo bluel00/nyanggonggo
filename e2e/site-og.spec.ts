@@ -67,3 +67,46 @@ test("상세: 기존 og:title·description·image는 그대로이고 og:url·sit
   expect(tags["og:image"]).toMatch(new RegExp(`^${baseURL}/animals/${DETAIL_ID}/opengraph-image(\\?|$)`));
   expect(tags["twitter:card"]).toBe("summary_large_image");
 });
+
+/**
+ * 공유 버튼이 넘기는 주소 = 링크 미리보기 og:url(#73). 공유 버튼의 주소 기준은 서버 siteOrigin을 상세 페이지가 넘긴 값이다.
+ * 카카오 SDK는 막아(바깥 요청 없음) 링크 복사로 가게 하고, 복사한 주소를 기록한다.
+ */
+test.describe("공유 버튼 주소 = og:url", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.route(/kakaocdn\.net/, (route) => route.abort());
+    await page.addInitScript(() => {
+      const copied: string[] = [];
+      (window as unknown as { __copied: string[] }).__copied = copied;
+      Object.defineProperty(navigator, "clipboard", {
+        configurable: true,
+        value: { writeText: async (text: string) => void copied.push(text) },
+      });
+    });
+  });
+
+  const copiedUrl = async (page: import("@playwright/test").Page, scope: import("@playwright/test").Locator) => {
+    await scope.getByRole("button", { name: "카카오톡 공유" }).click();
+    await expect.poll(() => page.evaluate(() => (window as unknown as { __copied: string[] }).__copied.length)).toBe(1);
+    return page.evaluate(() => (window as unknown as { __copied: string[] }).__copied[0]);
+  };
+
+  test("직접 들어온 상세", async ({ page, request }) => {
+    const { tags } = await ogTags(request, `/animals/${DETAIL_ID}`);
+    await page.goto(`/animals/${DETAIL_ID}`);
+    const detail = page.locator('[data-slot="animal-detail"]');
+    await expect(detail).toBeVisible();
+    expect(await copiedUrl(page, detail)).toBe(tags["og:url"]);
+  });
+
+  test("목록 위에 얹은 상세(가로챈 라우트)", async ({ page, request }) => {
+    const id = "990000202601007";
+    const { tags } = await ogTags(request, `/animals/${id}`);
+    await page.goto("/?species=dog&region=5690000");
+    await page.locator(`[data-animal-id="${id}"] a`).click();
+    await expect(page).toHaveURL(new RegExp(`/animals/${id}$`));
+    const layer = page.locator('[data-slot="stack-layer"]');
+    await expect(layer.locator('[data-slot="animal-detail"]')).toBeVisible();
+    expect(await copiedUrl(page, layer)).toBe(tags["og:url"]);
+  });
+});

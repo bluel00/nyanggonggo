@@ -15,7 +15,7 @@ import { AnimalDetailSkeleton } from "./animal-detail-skeleton";
  * 진입 정보로 같은 화면을 이어 그린다(AnimalDetail).
  * 그 밖(공유 링크 직접 진입, 새로고침, 사진이 아직 로드되지 않은 카드)은 지금처럼 뼈대다.
  */
-export function AnimalDetailLoading() {
+export function AnimalDetailLoading({ origin }: { origin: string }) {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
   const [fromCard] = useState(
@@ -25,7 +25,7 @@ export function AnimalDetailLoading() {
   // 표시용 감싸개(테스트가 로딩 화면과 서버 페이지를 가른다). display: contents라 레이아웃은 서버 페이지와 같다
   return (
     <div data-slot="detail-preview" className="contents">
-      <AnimalDetail id={id} />
+      <AnimalDetail id={id} origin={origin} />
     </div>
   );
 }

@@ -1,4 +1,6 @@
+import { toImageProxyUrl } from "@/contract/images";
 import { describeError, fingerprint } from "@/shared/lib/client-log";
+import type { ShareContent } from "./share-content";
 
 /**
  * 공유(명세 UC-05). 카카오톡 공유를 먼저 시도하고, 할 수 없거나 실패하면 링크를 복사한다.
@@ -7,14 +9,30 @@ import { describeError, fingerprint } from "@/shared/lib/client-log";
  * SDK, 클립보드, 토스트는 인자로 받아 테스트에서 가짜로 바꾼다.
  * 조용히 폴백하지 않도록 실패 경로마다 onIssue로 이유를 남긴다(화면에서는 콘솔 경고).
  */
-export type ShareContent = {
-  /** 상세 페이지 절대 URL */
+/** 공유 카드(카카오 피드 템플릿)에 넣는 값. 공유 내용(share-content.ts)에서 toShareCard로 만든다. 링크 복사도 이 url을 쓴다 */
+export type ShareCard = {
+  /** 상세 페이지 절대 URL(공유 내용의 url) */
   url: string;
+  /** 공유 내용의 제목 바탕 그대로 */
   title: string;
+  /** 공유 요약 */
   description: string;
   /** 썸네일 절대 URL(https) */
   imageUrl: string;
 };
+
+/**
+ * 공유 내용 → 공유 카드(카카오 어댑터). 썸네일은 대표 사진의 이미지 프록시 절대 주소(https 페이지에서 http 원본을 쓰지 않도록),
+ * 사진이 없으면 상세 OG 이미지(fallbackImagePath). 둘 다 공유 내용과 같은 주소 기준(origin)이다.
+ */
+export function toShareCard(content: ShareContent, { origin, fallbackImagePath }: { origin: string; fallbackImagePath: string }): ShareCard {
+  return {
+    url: content.url,
+    title: content.title,
+    description: content.summary,
+    imageUrl: `${origin}${content.photoSrc ? toImageProxyUrl(content.photoSrc) : fallbackImagePath}`,
+  };
+}
 
 /** 카카오 JavaScript SDK 중 쓰는 부분만 */
 export type KakaoSdk = {
@@ -88,7 +106,7 @@ export function initKakao(kakaoKey: string, kakao: KakaoSdk | undefined, onIssue
   return true;
 }
 
-export async function shareAnimal(content: ShareContent, deps: ShareDeps): Promise<ShareResult> {
+export async function shareAnimal(content: ShareCard, deps: ShareDeps): Promise<ShareResult> {
   if (tryKakao(content, deps)) return "kakao";
   try {
     await deps.copy(content.url);
@@ -101,7 +119,7 @@ export async function shareAnimal(content: ShareContent, deps: ShareDeps): Promi
   }
 }
 
-function tryKakao(content: ShareContent, deps: ShareDeps): boolean {
+function tryKakao(content: ShareCard, deps: ShareDeps): boolean {
   const onIssue = deps.onIssue ?? (() => {});
   // 키가 없으면 SDK를 보지도 않는다(스크립트를 아예 불러오지 않는 경우)
   if (!deps.kakaoKey) {
