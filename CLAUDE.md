@@ -42,7 +42,7 @@
 
 - 서비스키는 서버 환경변수 `DATA_GO_KR_SERVICE_KEY`에만 둔다. `NEXT_PUBLIC_` 금지. 코드, 로그, 테스트, 픽스처, 커밋에 넣지 않는다.
 - `.env*`는 커밋하지 않는다(`.env.example`만 커밋).
-- 담당자 이름(`careOwnerNm`)은 WireDto, Domain, UI 어디에도 내보내지 않는다. 연락처 값(`careTel`, `careAddr`, `careOwnerNm`)은 로그에 남기지 않는다. 보호소 주소·전화는 상세 정보 줄에만 쓴다(이슈 #3).
+- 담당자 이름(`careOwnerNm`)은 WireDto, Domain, UI 어디에도 내보내지 않는다. 연락처 값(`careTel`, `careAddr`, `careOwnerNm`)은 로그에 남기지 않는다. 보호소 주소·전화는 상세의 보호소 정보 시트에만 쓴다(이슈 #3, #62).
 
 ## 디자인 적용
 
