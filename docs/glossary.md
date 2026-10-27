@@ -37,7 +37,7 @@
 |---|---|---|---|---|---|
 | 공고 (화면: "고양이 공고", "공고 상세", "공고 보기") | 보호소가 올린 유기동물 공고 한 건. 공고 한 건이 동물 한 마리다 | `Animal`(entities/animal/model/animal.ts) | `/animals/{id}` | architecture.md 6절 | 동물 |
 | 동물 (화면: "기타 동물", "유기동물 공고") | 공고의 대상. 코드는 공고를 `Animal`로 부른다 | `Animal` | — | — | 공고 ↔ `Animal`(정리 후보 참고) |
-| 공고 번호 | 공공 API `noticeNo`. 공고의 식별 정보. 상세와 목록 카드에 표시한다(카드는 시험 후 판단). **코드 반영 예정**: 지금은 DTO에서만 받고 Wire·Domain·화면에 없다 | DTO `noticeNo`(server/upstream/dto.ts) | `noticeNo` | EL 합의(#51) | 구조 번호 |
+| 공고 번호 (화면: 상세 정보 줄 "공고 번호", 카드 3줄 "공고 번호 <번호>") | 공공 API `noticeNo`. 공고의 식별 정보로 보호소에 문의하거나 공고를 찾을 때 쓴다. 원문 그대로 보인다(복사할 수 있는 글자). 상세 정보 줄은 공고 기간 바로 앞, 카드는 2줄 아래 작은 보조 글자 한 줄(카드 표시는 운영에서 보고 다시 판단한다). 값이 없거나 공백이면 줄을 뺀다 | `noticeNoText`(Wire·Domain), DTO `noticeNo`(server/upstream/dto.ts), `DETAIL_ROW_LABELS.noticeNo`(detail-rows.ts) | `noticeNo` | EL 합의(#51), #59 | 구조 번호 |
 | 구조 번호 (화면 없음) | 공공 API `desertionNo`. 우리 id다. 화면에 표시하지 않는다. 숫자 1~32자리 | `id`, `isAnimalId`(contract/animals.ts) | 상세 URL, 공유 링크, 관심 저장값, `/api/animals/by-ids?ids=` | #31, architecture.md 4절 | 공고 번호 |
 | 축종 (화면: 고양이 / 강아지 / 기타 동물) | 공고 동물의 종류 셋 | `cat` / `dog` / `other`, `ANIMAL_SPECIES`, `SPECIES_LABEL`(entities/animal/ui/labels.ts), `toSpecies`, `UPKIND_BY_SPECIES`(server/upstream/client.ts) | 공공 API `upKindNm` 고양이 / 개 / 기타, `upkind`, URL `species=`, 쿠키(축종 기억) | PRD-v1.1, architecture.md 4·6절 | 개(공공 API만), "다른 동물"(홈 링크 문구일 뿐 축종 이름이 아니다) |
 | 품종 (화면 없음. 기타 동물은 실제 동물 이름으로 제목·사진 설명·공유에 쓴다) | `kindFullNm`의 `[축종]` 뒤. "기타"·"기타축종"이면 없음 | `kindText`, `speciesText`(labels.ts) | `kindFullNm` | architecture.md 12.A P12 | 기타 동물에서는 품종이 아니라 동물 종류다 |
@@ -129,7 +129,6 @@
 
 | 용어 | 바뀔 것 | 이슈 |
 |---|---|---|
-| 공고 번호 | `noticeNo`를 계약·도메인·상세·카드에 | #59 |
 | 정보 줄, 보호소 주소, 보호소 전화, 지도 보기, 전화 걸기, 보호소 정보 시트 | 주소·전화를 정보 줄에서 보호소 정보 시트로 | #62 |
 
 ## 받지 않는 공공 API 필드

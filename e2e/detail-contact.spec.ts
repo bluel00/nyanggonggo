@@ -25,7 +25,9 @@ const terms = (detail: Locator) => detail.locator("dt").allTextContents();
 
 test("보호 중 상세: 주소·전화 줄과 [지도]·[전화] 링크, 누르는 영역 44px 이상", async ({ page }) => {
   const detail = await openDetail(page, PROTECTED_ID);
-  expect(await terms(detail)).toEqual(["발견 장소", "보호소", "주소", "전화", "공고 기간", "특이사항"]);
+  // 공고 번호(#59)는 전화 뒤, 공고 기간 앞. 스텁의 공고 번호는 지어낸 값(E2E-<id 끝 4자리>)이다
+  expect(await terms(detail)).toEqual(["발견 장소", "보호소", "주소", "전화", "공고 번호", "공고 기간", "특이사항"]);
+  await expect(detail.getByText(`E2E-${PROTECTED_ID.slice(-4)}`, { exact: true })).toBeVisible();
   await expect(detail.getByText(CARE.careAddr, { exact: true })).toBeVisible();
   await expect(detail.getByText(CARE.careTel, { exact: true })).toBeVisible();
   await expect(detail).not.toContainText(CARE.careOwnerNm);
@@ -51,7 +53,7 @@ test("보호 중 상세: 주소·전화 줄과 [지도]·[전화] 링크, 누르
 test("종료 상세: 주소·전화 줄과 링크가 없고 보호소 이름은 있다", async ({ page }) => {
   const detail = await openDetail(page, ENDED_ID);
   await expect(detail.locator('[data-slot="status-badge"]')).toHaveText("종료 · 입양");
-  expect(await terms(detail)).toEqual(["발견 장소", "보호소", "공고 기간", "종료 사유", "특이사항"]);
+  expect(await terms(detail)).toEqual(["발견 장소", "보호소", "공고 번호", "공고 기간", "종료 사유", "특이사항"]);
   await expect(detail.getByText("E2E 보호소", { exact: true })).toBeVisible();
   await expect(detail).not.toContainText(CARE.careAddr);
   await expect(detail).not.toContainText(CARE.careTel);

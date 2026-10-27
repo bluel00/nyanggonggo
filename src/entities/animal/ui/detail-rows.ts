@@ -12,6 +12,7 @@ export const DETAIL_ROW_LABELS = {
   shelter: "보호소",
   shelterAddress: "주소",
   shelterTel: "전화",
+  noticeNo: "공고 번호",
   noticePeriod: "공고 기간",
   endReason: "종료 사유",
   specialMark: "특이사항",
@@ -27,7 +28,7 @@ export const DETAIL_ROW_ACTION_COPY: Record<DetailRowAction, { text: string; lab
 export type DetailRow = { label: string; value: string; action: DetailRowAction | null };
 
 /**
- * 상세 정보 줄(명세 4.3, 이슈 #3·#30·#41): 발견 장소 → 보호소 → 주소 → 전화 → 공고 기간 → 종료 사유 → 특이사항. 값이 없는 줄은 뺀다.
+ * 상세 정보 줄(명세 4.3, 이슈 #3·#30·#41·#59): 발견 장소 → 보호소 → 주소 → 전화 → 공고 번호 → 공고 기간 → 종료 사유 → 특이사항. 값이 없는 줄은 뺀다.
  * 줄을 더하거나 순서·이름을 바꿀 때는 이 파일만 고친다(상세 화면과 글꼴 예열이 모두 이 결과를 쓴다).
  * - 주소·전화: 종료 공고는 둘 다 숨긴다(보호소 이름은 그대로). 주소 줄 끝에는 지도, 전화 줄 끝에는 전화 링크.
  *   전화에 숫자가 없으면 줄은 두고 링크만 뺀다.
@@ -42,6 +43,8 @@ export function detailRows(animal: Animal): DetailRow[] {
     { label: labels.shelter, value: animal.shelterName, action: null },
     { label: labels.shelterAddress, value: contact ? animal.shelterAddressText : null, action: "map" },
     { label: labels.shelterTel, value: tel, action: tel !== null && telHref(tel) !== null ? "call" : null },
+    // 공고 번호: 원문 그대로, 복사할 수 있는 보통 글자(구조 번호 id는 보이지 않는다, #59)
+    { label: labels.noticeNo, value: animal.noticeNoText, action: null },
     { label: labels.noticePeriod, value: animal.noticePeriodText, action: null },
     { label: labels.endReason, value: animal.endReasonText, action: null },
     { label: labels.specialMark, value: animal.specialMarkText, action: null },

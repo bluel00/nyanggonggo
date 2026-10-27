@@ -146,6 +146,7 @@ type Animal = {
   foundPlaceText: string | null      // happenPlace
   shelterAddressText: string | null  // careAddr. 상세 정보 줄(종료 공고는 숨김, 이슈 #3)
   shelterTelText: string | null      // careTel 원문. 상세 정보 줄(종료 공고는 숨김, 이슈 #3)
+  noticeNoText: string | null        // noticeNo(공고 번호) 원문. 상세 정보 줄과 카드 3줄(이슈 #59). 구조 번호(id)와 다르다
   noticePeriodText: string | null    // "MM.DD ~ MM.DD"
   specialMarkText: string | null     // specialMark(특이사항). 상세에서만 노출
   endReasonText: string | null       // endReason(종료 사유) 원문. 상세 정보 줄(이슈 #41)
@@ -155,7 +156,7 @@ type Animal = {
 
 - 담당자 이름(`careOwnerNm`)은 WireDto와 Domain 어디에도 넣지 않는다. 연락처 값(주소·전화·담당자 이름)은 로그에 남기지 않는다. 종료 사유(`endReason`)는 2026-10-23부터 내보낸다(10절, 이슈 [#41](https://github.com/bluel00/nyanggonggo/issues/41)).
 - 보호소 주소(`careAddr`)·전화(`careTel`)는 상세의 정보 줄에 보인다(2026-10-22, 이슈 [#3](https://github.com/bluel00/nyanggonggo/issues/3). PRD 비범위 "보호소 직접 연락"을 대체). 서버 Mapper가 앞뒤 공백만 지워 `shelterAddressText`·`shelterTelText`로 내려준다. 화면 규칙(줄 순서, 종료 공고는 주소·전화 숨김, 지도·전화 링크)은 `entities/animal/ui/detail-rows.ts`의 `detailRows`가 정한다(이슈 [#30](https://github.com/bluel00/nyanggonggo/issues/30)). 링크 주소는 `entities/animal/model/shelter-contact.ts`의 `mapSearchUrl`·`telHref`가 만든다.
-  - 정보 줄 순서: 발견 장소 → 보호소 → 주소 → 전화 → 공고 기간 → 종료 사유 → 특이사항(종료 사유는 이슈 #41). 값은 그냥 글자(선택·복사 가능)이고, 값이 없으면 그 줄을 뺀다. 종료 공고는 주소·전화 줄을 숨긴다(보호소 이름은 그대로).
+  - 정보 줄 순서: 발견 장소 → 보호소 → 주소 → 전화 → 공고 번호 → 공고 기간 → 종료 사유 → 특이사항(종료 사유는 이슈 #41, 공고 번호는 #59. 공고 번호는 목록 카드에도 2줄 아래 작은 보조 글자로 보이고, 카드 표시는 운영에서 보고 다시 판단한다). 값은 그냥 글자(선택·복사 가능)이고, 값이 없으면 그 줄을 뺀다. 종료 공고는 주소·전화 줄을 숨긴다(보호소 이름은 그대로).
   - 줄 끝의 작은 글자 링크(보조 글자색 + 작은 아이콘, 누르는 영역 44×44px): 주소 [지도]는 카카오맵 검색결과 바로가기 `https://map.kakao.com/link/search/<encodeURIComponent(주소)>`를 새 탭(`rel="noopener"`)으로 연다(카카오 지도 Web API 가이드 "지도 URL" → "지도 검색결과 바로가기". 키·SDK 없음). 전화 [전화]는 숫자만 남긴 `tel:` 링크다(숫자가 없으면 링크 없이 값만). 주소가 길면 줄바꿈하고 링크는 첫 줄 끝에 둔다. 링크가 있는 줄은 위아래 6px를 더해 이웃한 두 링크의 누르는 영역이 겹치지 않는다.
 - 파생값은 domain 서비스에서 계산한다: `dDay`(KST 기준, 기준 시각을 주입 가능하게), `isNearDeadline`(D-day 3 이하). 종료 판정은 `processState`가 한다. `dDay`는 `number | null`이며 규칙은 10절을 따른다.
 - `species`: `cat | dog | other`. 업스트림 `upKindNm`의 `고양이`/`개`/`기타`를 서버 Mapper가 옮기고, 그 외 값은 항목을 건너뛴다(로그).

@@ -26,6 +26,12 @@ describe("detailRows", () => {
     ]);
   });
 
+  it("공고 번호는 전화 뒤, 공고 기간 바로 앞에 원문 그대로 둔다(#59, 지어낸 값)", () => {
+    const rows = detailRows({ ...full, noticeNoText: "가상-예시-2026-00001" });
+    expect(rows.map((row) => row.label)).toEqual(["발견 장소", "보호소", "주소", "전화", "공고 번호", "공고 기간", "특이사항"]);
+    expect(rows[4]).toEqual({ label: "공고 번호", value: "가상-예시-2026-00001", action: null });
+  });
+
   it("값이 없는 줄은 뺀다", () => {
     expect(detailRows(makeAnimal({ shelterName: "제2동물보호센터" })).map((row) => row.label)).toEqual(["보호소"]);
   });
