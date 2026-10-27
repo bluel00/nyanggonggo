@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { FAVORITES_STORAGE_KEY } from "../model/favorites-store";
 import { FavoriteButton } from "./favorite-button";
 
 const showToast = vi.fn();
@@ -74,7 +75,7 @@ describe("FavoriteButton", () => {
     });
 
     it("이미 찜한 공고를 열면 튀지 않는다", () => {
-      localStorage.setItem("nyanggonggo:favorites", JSON.stringify(["1"]));
+      localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(["1"]));
       render(<FavoriteButton animalId="1" />);
       expect(screen.getByRole("button", { name: "관심 공고에서 빼기" })).toBeTruthy();
       expect(heart().hasAttribute("data-heart-pop")).toBe(false);

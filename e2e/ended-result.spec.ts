@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openedDetail, watchConsoleErrors } from "./helpers";
+import { FAVORITES_STORAGE_KEY, openedDetail, watchConsoleErrors } from "./helpers";
 
 /**
  * 종료 공고의 결과와 종료 사유(이슈 #41). 스텁(e2e/upstream-stub.mjs)의 종료 공고는 processState가 "종료(입양)"이고,
@@ -9,7 +9,6 @@ import { openedDetail, watchConsoleErrors } from "./helpers";
 const WITH_REASON = "990000202600011";
 const WITHOUT_REASON = "990000202600012";
 const REASON = "E2E 입양 완료";
-const FAVORITES_STORAGE_KEY = "nyanggonggo:favorites";
 
 const consoleWatch = watchConsoleErrors();
 test.beforeEach(({ page }) => consoleWatch.attach(page));

@@ -1,7 +1,13 @@
 import { expect, type APIRequestContext, type BrowserContext, type Page } from "@playwright/test";
+import { SPECIES_COOKIE } from "../src/features/animal-filter/model/species-cookie";
 
-/** 축종 기억 쿠키 이름(`features/animal-filter/model/species-cookie.ts`) */
-export const SPECIES_COOKIE = "nyanggonggo.species";
+/**
+ * 앱의 쿠키·저장소 키. 값을 테스트에 복사하지 않고 앱 상수를 쓴다(#61). spec은 이 파일에서 가져온다.
+ * 슬라이스 공개 API(index.ts)는 컴포넌트까지 함께 끌어오므로 상수가 있는 모델 파일을 직접 가져온다.
+ */
+export { FAVORITES_STORAGE_KEY } from "../src/features/animal-favorite/model/favorites-store";
+export { REGION_COOKIE } from "../src/features/animal-filter/model/region-cookie";
+export { SPECIES_COOKIE };
 
 /**
  * 축종 기억을 심는다. `/`로 들어가는 테스트는 축종 기억이 있어야 홈(`/home`)을 건너뛰고 목록으로 간다

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openedDetail, rememberSpeciesCookie, watchConsoleErrors } from "./helpers";
+import { openedDetail, REGION_COOKIE, rememberSpeciesCookie, SPECIES_COOKIE, watchConsoleErrors } from "./helpers";
 
 /**
  * 목록의 성별 필터(이슈 #20). 목록은 고정하지 않고 스텁 서버(e2e/upstream-stub.mjs)가 거른 결과를 그대로 본다.
@@ -63,7 +63,7 @@ test("새로 들어오면(쿼리 없이) 전체로 시작한다: 성별은 기�
   // 지역·축종은 기억되고 성별 쿠키는 없다
   const cookies = await context.cookies();
   const ours = cookies.filter((c) => c.name.startsWith("nyanggonggo"));
-  expect(ours.map((c) => c.name).sort()).toEqual(["nyanggonggo.region", "nyanggonggo.species"]);
+  expect(ours.map((c) => c.name).sort()).toEqual([REGION_COOKIE, SPECIES_COOKIE].sort());
   expect(cookies.map((c) => `${c.name}=${c.value}`).join(" ")).not.toMatch(/female|sex/);
 
   const next = await context.newPage();

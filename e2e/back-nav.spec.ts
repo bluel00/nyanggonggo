@@ -1,5 +1,5 @@
 import { expect, test, type BrowserContext, type Page } from "@playwright/test";
-import { isCardInView, loadNextListPage, openedDetail, SPECIES_COOKIE } from "./helpers";
+import { isCardInView, loadNextListPage, openedDetail, REGION_COOKIE, SPECIES_COOKIE } from "./helpers";
 import { belowScrollTop, LAYER, recordStackFrames, rememberCards, sameCards, stackFrames, stackFramesDone } from "./stack";
 
 /**
@@ -14,7 +14,6 @@ const LIST_URL = "/?species=dog&region=5690000";
 const PAGE_SIZE = 20;
 const listItemId = (index: number) => String(990000202601000 + index);
 
-const REGION_COOKIE = "nyanggonggo.region";
 const CARDS = "[data-animal-id]";
 
 /** 목록 API 요청을 센다(상세·RSC 요청은 세지 않는다) */

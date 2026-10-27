@@ -1,4 +1,5 @@
 import { expect, test, type Locator } from "@playwright/test";
+import { FAVORITES_STORAGE_KEY } from "./helpers";
 
 /**
  * 상세 제목 줄은 상태와 상관없이 32px이다(architecture.md 14.1·14.4 2단계). 종료 공고 제목은 title 크기(20px)지만 줄 높이를
@@ -10,7 +11,6 @@ import { expect, test, type Locator } from "@playwright/test";
  */
 /** 종료 공고 id → 사진 장수(e2e/upstream-stub.mjs의 ENDED_CASES와 같다) */
 const ENDED_CASES = { "990000202600011": 2, "990000202600012": 1 };
-const FAVORITES_STORAGE_KEY = "nyanggonggo:favorites";
 const DETAIL_DELAY_MS = 1500;
 
 /** 제목 상자와 바로 아래 요소의 위쪽 위치(페이지 좌표) */

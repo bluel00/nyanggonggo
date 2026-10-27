@@ -4,6 +4,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-libra
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AnimalListFilter } from "@/entities/animal";
+import { FAVORITES_STORAGE_KEY } from "@/features/animal-favorite";
 import { createQueryClient } from "@/shared/api/query-client";
 import { AnimalList } from "./animal-list";
 import { makeWire } from "@tests/factories/animal";
@@ -176,7 +177,7 @@ describe("AnimalList 찜 하트", () => {
     expect(buttons).toHaveLength(2);
     fireEvent.click(buttons[0]);
     expect(screen.getAllByRole("button", { name: "관심 공고에서 빼기" })).toHaveLength(1);
-    expect(JSON.parse(localStorage.getItem("nyanggonggo:favorites")!)).toEqual(["1"]);
+    expect(JSON.parse(localStorage.getItem(FAVORITES_STORAGE_KEY)!)).toEqual(["1"]);
   });
 });
 
