@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Animal } from "../model/animal";
-import { ANIMAL_COPY, animalSummaryText, animalTitle, SEX_LABEL, sexAgeText, SPECIES_COPY, SPECIES_LABEL, speciesText } from "./labels";
+import { ageDisplayText, ANIMAL_COPY, animalSummaryText, animalTitle, SEX_LABEL, sexAgeText, SPECIES_COPY, SPECIES_LABEL, speciesText } from "./labels";
 import { makeAnimal } from "@tests/factories/animal";
 
 const SPECIES: Animal["species"][] = ["cat", "dog", "other"];
@@ -66,9 +66,34 @@ describe("animalTitle", () => {
   });
 });
 
+describe("ageDisplayText (나이 표기, #60): 원문 모양별(지어낸 값)", () => {
+  it.each([
+    ["YYYY(년생)", "2024(년생)", "2024년생"],
+    ["YYYY(N일미만)(년생)", "2026(60일미만)(년생)", "2026년생 · 60일 미만"],
+    ["N이 다른 값도 같은 모양이면 정리", "2026(30일미만)(년생)", "2026년생 · 30일 미만"],
+    ["앞뒤 공백", " 2023(년생) ", "2023년생"],
+  ])("%s: %s → %s", (_, raw, expected) => {
+    expect(ageDisplayText(raw)).toBe(expected);
+  });
+
+  it.each([
+    ["이미 정리된 모양", "2024년생"],
+    ["괄호가 하나 빠짐", "2026(60일미만)"],
+    ["두 자리 연도", "24(년생)"],
+    ["개월 표기", "3개월"],
+    ["빈 괄호", "(년생)"],
+  ])("처음 보는 형식은 원문 그대로: %s", (_, raw) => {
+    expect(ageDisplayText(raw)).toBe(raw);
+  });
+
+  it("값이 없으면 '나이 미상'", () => {
+    expect(ageDisplayText(null)).toBe("나이 미상");
+  });
+});
+
 describe("sexAgeText (상세 제목 아래 줄)", () => {
-  it("성별 · 나이, 모르면 '성별 미상' · '나이 미상'", () => {
-    expect(sexAgeText({ sex: "female", ageText: "2026(60일미만)(년생)" })).toBe("암컷 · 2026(60일미만)(년생)");
+  it("성별 · 나이(정리한 표기), 모르면 '성별 미상' · '나이 미상'", () => {
+    expect(sexAgeText({ sex: "female", ageText: "2026(60일미만)(년생)" })).toBe("암컷 · 2026년생 · 60일 미만");
     expect(sexAgeText({ sex: "unknown", ageText: null })).toBe("성별 미상 · 나이 미상");
   });
 });
@@ -89,11 +114,11 @@ describe("animalSummaryText (공유 카드·링크 미리보기 설명)", () => 
     });
 
   it("보호 중: 성별 · 나이 · 상태 · 공고 마감 날짜 · 특이사항, 보호소 이름은 없다", () => {
-    expect(animalSummaryText(animal(), NOW)).toBe("암컷 · 2026(60일미만)(년생) · 보호중 · 공고 마감 9월 29일(화) · 줄무늬 꼬리, 사람을 잘 따름");
+    expect(animalSummaryText(animal(), NOW)).toBe("암컷 · 2026년생 · 60일 미만 · 보호중 · 공고 마감 9월 29일(화) · 줄무늬 꼬리, 사람을 잘 따름");
   });
 
   it("종료: 상태 자리에 '종료', D-N 없음", () => {
-    expect(animalSummaryText(animal({ status: "ended" }), NOW)).toBe("암컷 · 2026(60일미만)(년생) · 종료 · 줄무늬 꼬리, 사람을 잘 따름");
+    expect(animalSummaryText(animal({ status: "ended" }), NOW)).toBe("암컷 · 2026년생 · 60일 미만 · 종료 · 줄무늬 꼬리, 사람을 잘 따름");
   });
 
   it("성별 미상·나이 미상은 상세와 같은 표기", () => {
@@ -102,15 +127,15 @@ describe("animalSummaryText (공유 카드·링크 미리보기 설명)", () => 
   });
 
   it("특이사항이 비어 있으면(없음·공백뿐) 그 항목을 뺀다", () => {
-    expect(animalSummaryText(animal({ specialMarkText: null }), NOW)).toBe("암컷 · 2026(60일미만)(년생) · 보호중 · 공고 마감 9월 29일(화)");
-    expect(animalSummaryText(animal({ specialMarkText: "  \n " }), NOW)).toBe("암컷 · 2026(60일미만)(년생) · 보호중 · 공고 마감 9월 29일(화)");
+    expect(animalSummaryText(animal({ specialMarkText: null }), NOW)).toBe("암컷 · 2026년생 · 60일 미만 · 보호중 · 공고 마감 9월 29일(화)");
+    expect(animalSummaryText(animal({ specialMarkText: "  \n " }), NOW)).toBe("암컷 · 2026년생 · 60일 미만 · 보호중 · 공고 마감 9월 29일(화)");
   });
 
   it("특이사항의 줄바꿈과 연속 공백은 공백 하나로, 내용은 그대로(자르지 않는다)", () => {
     const long = "앞발에 흰 양말 무늬.\n\n  겁이 조금 있지만   간식을 주면 다가옴.\r\n".repeat(5);
     const text = animalSummaryText(animal({ specialMarkText: long }), NOW);
     const oneLine = "앞발에 흰 양말 무늬. 겁이 조금 있지만 간식을 주면 다가옴.";
-    expect(text).toBe(`암컷 · 2026(60일미만)(년생) · 보호중 · 공고 마감 9월 29일(화) · ${Array(5).fill(oneLine).join(" ")}`);
+    expect(text).toBe(`암컷 · 2026년생 · 60일 미만 · 보호중 · 공고 마감 9월 29일(화) · ${Array(5).fill(oneLine).join(" ")}`);
     expect(text).not.toMatch(/[\r\n]| {2}/);
   });
 });

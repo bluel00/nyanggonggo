@@ -58,6 +58,7 @@ export {
   statusShareText,
 } from "./ui/status-text";
 export {
+  ageDisplayText,
   ANIMAL_COPY,
   animalSubtitle,
   animalSummaryText,

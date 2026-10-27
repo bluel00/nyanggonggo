@@ -103,9 +103,21 @@ export const SEX_LABEL: Record<Animal["sex"], string> = {
   unknown: "성별 미상",
 };
 
-/** 성별 · 나이. 상세 제목 아래 줄과 공유 설명이 같은 표기를 쓴다(모르면 "성별 미상", "나이 미상") */
+/**
+ * 나이 표기(용어 사전 "나이", #60). 공공 API 원문의 정해진 형식만 정리한다: "YYYY(년생)" → "YYYY년생",
+ * "YYYY(N일미만)(년생)" → "YYYY년생 · N일 미만". 처음 보는 형식은 원문 그대로, 값이 없으면 "나이 미상". 개월·살로 계산하지 않는다.
+ */
+export function ageDisplayText(ageText: string | null): string {
+  if (ageText === null) return ANIMAL_COPY.ageUnknown;
+  const match = /^(\d{4})(?:\((\d+)일미만\))?\(년생\)$/.exec(ageText.trim());
+  if (!match) return ageText;
+  const [, year, days] = match;
+  return days ? `${year}년생 · ${days}일 미만` : `${year}년생`;
+}
+
+/** 성별 · 나이. 상세 제목 아래 줄과 공유 요약이 같은 표기를 쓴다(모르면 "성별 미상", "나이 미상") */
 export function sexAgeText(animal: Pick<Animal, "sex" | "ageText">): string {
-  return `${SEX_LABEL[animal.sex]} · ${animal.ageText ?? ANIMAL_COPY.ageUnknown}`;
+  return `${SEX_LABEL[animal.sex]} · ${ageDisplayText(animal.ageText)}`;
 }
 
 /**

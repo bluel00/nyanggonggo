@@ -85,13 +85,13 @@ describe("OG 메타(상세)", () => {
   it("보호중 고양이(사진 있음)", async () => {
     expect(await driveDetailMetadata(WIRES.cat)).toEqual({
       title: "가상시 예시구 고양이 공고 | 멍냥공고",
-      description: "암컷 · 2025(년생) · 보호중 · 공고 마감 10월 31일(토) · 줄무늬 꼬리",
+      description: "암컷 · 2025년생 · 보호중 · 공고 마감 10월 31일(토) · 줄무늬 꼬리",
       openGraph: {
         siteName: "멍냥공고",
         type: "website",
         url: "/animals/990000000000101",
         title: "가상시 예시구 고양이 공고 | 멍냥공고",
-        description: "암컷 · 2025(년생) · 보호중 · 공고 마감 10월 31일(토) · 줄무늬 꼬리",
+        description: "암컷 · 2025년생 · 보호중 · 공고 마감 10월 31일(토) · 줄무늬 꼬리",
       },
     });
   });
@@ -189,7 +189,7 @@ describe("카카오 템플릿 인자", () => {
     const link = { mobileWebUrl: `${ORIGIN}/animals/990000000000101`, webUrl: `${ORIGIN}/animals/990000000000101` };
     expect(await driveKakao(WIRES.cat)).toEqual({
       objectType: "feed",
-      content: { title: "가상시 예시구 고양이", description: "암컷 · 2025(년생) · 보호중 · 공고 마감 10월 31일(토) · 줄무늬 꼬리", imageUrl: proxied, link },
+      content: { title: "가상시 예시구 고양이", description: "암컷 · 2025년생 · 보호중 · 공고 마감 10월 31일(토) · 줄무늬 꼬리", imageUrl: proxied, link },
       buttons: [{ title: "공고 보기", link }],
     });
   });

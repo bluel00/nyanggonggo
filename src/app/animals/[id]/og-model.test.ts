@@ -60,7 +60,7 @@ describe("buildOgText", () => {
     // 특이사항은 지어낸 문장이다
     expect(buildOgText(buildOgModel(animal({ ageText: "2024(년생)", specialMarkText: "검은 코,\n조용한 편" }), NOW), "멍냥공고")).toEqual({
       title: "제주특별자치도 고양이 공고 | 멍냥공고",
-      description: "암컷 · 2024(년생) · 보호중 · 공고 마감 10월 1일(목) · 검은 코, 조용한 편",
+      description: "암컷 · 2024년생 · 보호중 · 공고 마감 10월 1일(목) · 검은 코, 조용한 편",
     });
   });
 

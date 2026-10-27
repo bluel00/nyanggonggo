@@ -63,7 +63,7 @@ test("상세: 기존 og:title·description·image는 그대로이고 og:url·sit
   expect(tags["og:site_name"]).toBe(SITE.siteName);
   expect(tags["og:type"]).toBe("website");
   expect(tags["og:title"]).toBe("서울특별시 종로구 고양이 공고 | 멍냥공고");
-  expect(tags["og:description"]).toMatch(/^암컷 · 2025\(년생\) · 보호중 · 공고 마감 \d{1,2}월 \d{1,2}일\([일월화수목금토]\) · E2E 고정 공고$/);
+  expect(tags["og:description"]).toMatch(/^암컷 · 2025년생 · 보호중 · 공고 마감 \d{1,2}월 \d{1,2}일\([일월화수목금토]\) · E2E 고정 공고$/);
   expect(tags["og:image"]).toMatch(new RegExp(`^${baseURL}/animals/${DETAIL_ID}/opengraph-image(\\?|$)`));
   expect(tags["twitter:card"]).toBe("summary_large_image");
 });

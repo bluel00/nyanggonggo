@@ -42,7 +42,7 @@
 | 축종 (화면: 고양이 / 강아지 / 기타 동물) | 공고 동물의 종류 셋 | `cat` / `dog` / `other`, `ANIMAL_SPECIES`, `SPECIES_LABEL`(entities/animal/ui/labels.ts), `toSpecies`, `UPKIND_BY_SPECIES`(server/upstream/client.ts) | 공공 API `upKindNm` 고양이 / 개 / 기타, `upkind`, URL `species=`, 쿠키(축종 기억) | PRD-v1.1, architecture.md 4·6절 | 개(공공 API만), "다른 동물"(홈 링크 문구일 뿐 축종 이름이 아니다) |
 | 품종 (화면 없음. 기타 동물은 실제 동물 이름으로 제목·사진 설명·공유에 쓴다) | `kindFullNm`의 `[축종]` 뒤. "기타"·"기타축종"이면 없음 | `kindText`, `speciesText`(labels.ts) | `kindFullNm` | architecture.md 12.A P12 | 기타 동물에서는 품종이 아니라 동물 종류다 |
 | 성별 (화면: 암컷 / 수컷 / 성별 미상) | `sexCd` M·F·그 외. 필터는 전체 / 암컷 / 수컷이고, 성별 미상은 전체에서만 보인다 | `sex`, `SEX_LABEL`(labels.ts), `ANIMAL_LIST_SEXES`, `toSex` | `sexCd`, URL `sex=` | #20 | — |
-| 나이 (화면: 지금 원문, 모르면 "나이 미상") | 추정 출생 연도. 정해진 형식이면 "2026년생 · 60일 미만"처럼 정리하고, 아니면 원문. **코드 반영 예정**: 지금은 원문 그대로("2026(60일미만)(년생)") | `ageText`, `sexAgeText`(labels.ts), `ANIMAL_COPY.ageUnknown` | `age` | EL 합의(#51), architecture.md 12절 | 추정 나이(기능명세서) |
+| 나이 (화면: "2026년생", "2026년생 · 60일 미만", 모르면 "나이 미상") | 추정 출생 연도. 공공 API 원문의 정해진 형식은 정리한다: `YYYY(년생)` → "YYYY년생", `YYYY(N일미만)(년생)` → "YYYY년생 · N일 미만". 처음 보는 형식은 원문 그대로, 값이 없으면 "나이 미상". 상세(성별 · 나이 줄)와 공유 요약(공유 카드·링크 미리보기 설명)이 같은 표기를 쓴다. 카드와 OG 이미지에는 나오지 않는다. 개월·살로 계산하지 않는다 | `ageText`(원문, 계약 그대로), `ageDisplayText`·`sexAgeText`(labels.ts), `ANIMAL_COPY.ageUnknown` | `age` | EL 합의(#51), architecture.md 12절, #60 | 추정 나이(기능명세서) |
 | 특이사항 | `specialMark` 원문. 상세 정보 줄과 공유·링크 미리보기 요약에 쓴다 | `specialMarkText`, `DETAIL_ROW_LABELS.specialMark`, `animalSummaryText` | `specialMark`, 카카오 카드 설명, og:description | #2, #41 | 성격·건강(받지 않는 필드) |
 | 사진 | `popfile1..N` 중 값이 있는 것을 번호순으로. 대표 사진은 첫 번째 | `images`, `getPrimaryImage`, `photoAlt`, `AnimalPhoto` | `popfileN`, `/api/image-proxy?src=`, 카카오 썸네일 | architecture.md 4·9절 | — |
 
@@ -130,7 +130,6 @@
 | 용어 | 바뀔 것 | 이슈 |
 |---|---|---|
 | 공고 번호 | `noticeNo`를 계약·도메인·상세·카드에 | #59 |
-| 나이 | "2026년생 · 60일 미만" 형식 정리 | #60 |
 | 정보 줄, 보호소 주소, 보호소 전화, 지도 보기, 전화 걸기, 보호소 정보 시트 | 주소·전화를 정보 줄에서 보호소 정보 시트로 | #62 |
 
 ## 받지 않는 공공 API 필드
