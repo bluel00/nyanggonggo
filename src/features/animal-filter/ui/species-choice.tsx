@@ -23,7 +23,7 @@ import { rememberSpecies } from "../model/species-cookie";
  * 고른 축종은 쿠키에 기억해 다음 `/` 진입에서 홈을 건너뛴다.
  * 지역은 목록에서 넘겨받은 값을 그대로 다음 목록에 실어 보내고, 기억하지는 않는다(결정 G2).
  *
- * 누름 피드백은 카드 누름(100ms, scale .98)이고 reduced-motion이면 줄어들지 않는다(`motion-safe:`). 누르면 바로 목록으로 간다.
+ * 누름 피드백은 카드 누름(100ms, scale .98 + shadow-card-pressed, 기타 동물 카드와 같다)이고 reduced-motion이면 반응이 없다(`motion-safe:`). 누르면 바로 목록으로 간다.
  * 등장(README 움직임 표): 고양이 → 강아지 → 기타 동물 카드가 차례로 올라오며 나타난다(globals.css [data-enter]). 순서는 화면이 정한
  * 시작 번호(enterFrom)부터 이어 붙인다(홈은 제목이 0이라 1부터).
  * 캐릭터 greet은 마지막 등장(기타 동물 카드)이 끝난 뒤 시작한다(Rive는 미리 받아 두고 인스턴스만 그때 만든다).
@@ -70,7 +70,7 @@ export function SpeciesChoice({ area, enterFrom }: { area: AnimalArea; enterFrom
             onKeyDown={(event) => {
               if (event.key === "Enter") press(species);
             }}
-            className="flex flex-col items-center gap-3 rounded-choice bg-surface pt-6 pb-4 shadow-card text-text transition-transform duration-press ease-out motion-safe:active:scale-press focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            className="flex flex-col items-center gap-3 rounded-choice bg-surface pt-6 pb-4 shadow-card text-text transition-[scale,box-shadow] duration-press ease-out motion-safe:active:scale-press motion-safe:active:shadow-card-pressed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
             {/* 캐릭터 뒤 104px 원형 후광(choice-halo → choice-halo-end 72%, README). 장식이라 사진 뒤에는 쓰지 않는다 */}
             <span className="relative grid place-items-center">
