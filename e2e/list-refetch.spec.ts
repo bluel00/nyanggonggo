@@ -102,12 +102,23 @@ test("필터를 바꾸면 그 필터로 새로 받는다", async ({ page }) => {
   await page.getByRole("button", { name: "필터" }).click();
   await page.getByRole("radio", { name: "종료임박순" }).click();
   await page.getByRole("button", { name: "적용하기" }).click();
-  await expect(page).toHaveURL(/sort=endingSoon/);
+  await expect(page).toHaveURL(/sort=deadline/);
   await expect(page.locator("[data-animal-id]")).toHaveCount(LIST_PAGE_SIZE);
 
   const after = requests.slice(mark);
   expect(after.length, "새 필터로 요청이 나간다").toBeGreaterThan(0);
-  expect(after.every((url) => url.searchParams.get("sort") === "endingSoon")).toBe(true);
+  expect(after.every((url) => url.searchParams.get("sort") === "deadline")).toBe(true);
+});
+
+test("옛 정렬 링크(sort=endingSoon, #57에서 deadline으로 바뀜)는 기본 정렬(최신순)로 열린다", async ({ page }) => {
+  const requests = await mockList(page, items);
+  await page.goto("/?species=cat&region=6110000&sort=endingSoon");
+  await expect(page.locator("[data-animal-id]")).toHaveCount(LIST_PAGE_SIZE);
+  // 목록 요청은 기본 정렬이다(모르는 값은 기본값으로 읽는다. 별칭 해석 없음)
+  expect(requests.length).toBeGreaterThan(0);
+  expect(requests.every((url) => url.searchParams.get("sort") === "latest")).toBe(true);
+  await page.getByRole("button", { name: "필터" }).click();
+  await expect(page.getByRole("radio", { name: "최신순" })).toBeChecked();
 });
 
 test("새로고침하면 다시 받는다", async ({ page }) => {

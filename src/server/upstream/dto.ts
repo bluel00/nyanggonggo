@@ -11,7 +11,7 @@ import { z } from "zod";
  * 그 외 알 수 없는 키도 파싱을 깨뜨리지 않으며, Mapper는 선언된 필드와 `popfileN`만 읽는다.
  */
 export const UpstreamAnimalItemSchema = z.looseObject({
-  // 필수: id, status, species, 공고 종료일(D-day, endingSoon 정렬), regionText(non-null)
+  // 필수: id, status, species, 공고 종료일(D-day, deadline 정렬), regionText(non-null)
   desertionNo: z.string().min(1),
   processState: z.string(),
   upKindNm: z.string(),

@@ -2,7 +2,7 @@ import type { Animal } from "./animal";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
-const SOON_THRESHOLD_DAYS = 3;
+const NEAR_DEADLINE_DAYS = 3;
 
 /** KST 달력 기준 일 번호 */
 const kstDayNumber = (date: Date) =>
@@ -22,7 +22,7 @@ export function getDDay(
 }
 
 /** D-day가 있고 3 이하일 때만 임박. */
-export function isSoon(animal: Pick<Animal, "status" | "noticeEndAt">, now: Date): boolean {
+export function isNearDeadline(animal: Pick<Animal, "status" | "noticeEndAt">, now: Date): boolean {
   const dDay = getDDay(animal, now);
-  return dDay !== null && dDay <= SOON_THRESHOLD_DAYS;
+  return dDay !== null && dDay <= NEAR_DEADLINE_DAYS;
 }

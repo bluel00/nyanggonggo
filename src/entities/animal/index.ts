@@ -1,7 +1,7 @@
 export type { Animal, AnimalPage, AnimalsByIds } from "./model/animal";
 export type { AnimalListParams, AnimalRepository, AnimalRequestOptions } from "./model/repository";
 export { toAnimal } from "./model/mapper";
-export { getDDay, isSoon } from "./model/dDay";
+export { getDDay, isNearDeadline } from "./model/dDay";
 export { getPrimaryImage, getStatusVariant, type AnimalStatusVariant } from "./model/status";
 export { allowsMotion } from "./model/motion";
 export { mapSearchUrl, telHref } from "./model/shelter-contact";

@@ -34,7 +34,7 @@ export type AnimalListParams = {
 export type AnimalServiceOptions = {
   pageSize: number;
   byIdsConcurrency: number;
-  /** 기준 시각. endingSoon 정렬의 "오늘(KST)" 판정에 쓴다. */
+  /** 기준 시각. deadline 정렬의 "오늘(KST)" 판정에 쓴다. */
   now: () => Date;
   /** by-ids 일부 실패를 남긴다. 기본은 남기지 않는다 */
   logger?: Logger;
@@ -121,7 +121,7 @@ const compareLatest: Comparator = (a, b) =>
  * 지난 공고를 그 뒤에 noticeEdt 내림차순으로, 날짜 형식이 아닌 것은 맨 뒤에 둔다.
  * 동률은 id 오름차순(architecture.md 5절).
  */
-function compareEndingSoon(today: string): Comparator {
+function compareDeadline(today: string): Comparator {
   const group = (edt: string) => (!/^\d{8}$/.test(edt) ? 2 : edt < today ? 1 : 0);
   return (a, b) => {
     const ga = group(a.sortKeys.noticeEdt);
@@ -138,7 +138,7 @@ function compareEndingSoon(today: string): Comparator {
 /** 정렬 값 → 비교기(today: 기준 시각의 KST 날짜 `YYYYMMDD`). 계약에 정렬을 더하면 여기에 비교기가 없어 타입 오류가 난다 */
 const COMPARATORS: Record<AnimalListSort, (today: string) => Comparator> = {
   latest: () => compareLatest,
-  endingSoon: compareEndingSoon,
+  deadline: compareDeadline,
 };
 
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;

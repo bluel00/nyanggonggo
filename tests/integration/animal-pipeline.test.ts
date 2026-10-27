@@ -4,7 +4,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { AnimalListResponseSchema } from "@/contract/animals";
-import { getDDay, isSoon, toAnimal, type Animal } from "@/entities/animal";
+import { getDDay, isNearDeadline, toAnimal, type Animal } from "@/entities/animal";
 import { mapUpstreamItem } from "@/server/mapper";
 import { UpstreamAnimalItemSchema } from "@/server/upstream/dto";
 import fixture from "../../docs/fixtures/upstream-items.json";
@@ -43,7 +43,7 @@ describe("Upstream → Wire → Animal", () => {
     expect(ended.endResultText).toBe("안락사");
     expect(ended.endReasonText).toBe("교통사고 전신 마비");
     expect(getDDay(ended, NOW)).toBeNull();
-    expect(isSoon(ended, NOW)).toBe(false);
+    expect(isNearDeadline(ended, NOW)).toBe(false);
   });
 
   it("species, sex, 이미지 인코딩이 유지된다", () => {
@@ -56,7 +56,7 @@ describe("Upstream → Wire → Animal", () => {
   it("기준일 2026-09-21, noticeEdt=20261001 → dDay 10, 임박 아님", () => {
     const animal = byId("450650202602282");
     expect(getDDay(animal, NOW)).toBe(10);
-    expect(isSoon(animal, NOW)).toBe(false);
+    expect(isNearDeadline(animal, NOW)).toBe(false);
   });
 
   it("noticeEdt=20260928 → dDay 7", () => {

@@ -44,7 +44,7 @@ const STATUS_OPTIONS = options<AnimalListStatus>(ANIMAL_LIST_STATUSES, { protect
 /** 성별(이슈 #20). 성별 미상은 전체에서만 보인다. 보호 상태와 같은 칩 묶음 */
 const SEX_OPTIONS = options<AnimalListSex>(ANIMAL_LIST_SEXES, { all: "전체", female: SEX_LABEL.female, male: SEX_LABEL.male });
 
-const SORT_OPTIONS = options<AnimalListSort>(ANIMAL_LIST_SORTS, { latest: "최신순", endingSoon: "종료임박순" });
+const SORT_OPTIONS = options<AnimalListSort>(ANIMAL_LIST_SORTS, { latest: "최신순", deadline: "종료임박순" });
 
 function Section({ label, children }: { label: string; children: ReactNode }) {
   return (

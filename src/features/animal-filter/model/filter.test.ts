@@ -56,12 +56,17 @@ describe("parseAnimalFilter", () => {
 
   it("URL 값을 읽는다(Next searchParams 객체, 배열이면 첫 값)", () => {
     expect(
-      parseAnimalFilter({ species: "dog", region: [SEOUL, "x"], district: GANGNAM, status: "all", sex: "all", sort: "endingSoon" }),
-    ).toEqual({ species: "dog", region: SEOUL, district: GANGNAM, status: "all", sex: "all", sort: "endingSoon" });
+      parseAnimalFilter({ species: "dog", region: [SEOUL, "x"], district: GANGNAM, status: "all", sex: "all", sort: "deadline" }),
+    ).toEqual({ species: "dog", region: SEOUL, district: GANGNAM, status: "all", sex: "all", sort: "deadline" });
   });
 
   it("잘못된 species/status/sort는 기본값", () => {
     expect(parseAnimalFilter(qs("species=bird&status=notice&sort=old"))).toEqual(DEFAULT_ANIMAL_FILTER);
+  });
+
+  it("옛 정렬 값 endingSoon(#57에서 deadline으로 바뀜)은 모르는 값이라 기본 정렬(latest)이다. 별칭 해석 없음", () => {
+    expect(parseAnimalFilter(qs(`species=cat&region=${SEOUL}&sort=endingSoon`)).sort).toBe("latest");
+    expect(parseAnimalFilter(qs(`species=cat&region=${SEOUL}&sort=deadline`)).sort).toBe("deadline");
   });
 
   it("species=other(기타 축종)를 읽는다", () => {
@@ -110,7 +115,7 @@ describe("toFilterQuery / toListHref", () => {
 
   it.each([
     DEFAULT_ANIMAL_FILTER,
-    { species: "dog", status: "all", sex: "all", sort: "endingSoon" },
+    { species: "dog", status: "all", sex: "all", sort: "deadline" },
     { species: "cat", region: BUSAN, status: "protected", sex: "all", sort: "latest" },
     { species: "cat", region: BUSAN, district: BUSAN_JUNG, status: "ended", sex: "all", sort: "latest" },
   ] as const)("parse ∘ toFilterQuery 왕복 %#", (filter) => {

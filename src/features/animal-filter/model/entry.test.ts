@@ -51,17 +51,17 @@ describe("resolveAnimalListEntry: 축종을 먼저 판정한다(결정 B)", () =
   });
 
   it("축종과 지역이 다 있으면 리다이렉트 없이 그린다", () => {
-    expect(entry(`species=dog&region=${BUSAN}&status=ended&sort=endingSoon`, { species: "cat", region: SEOUL })).toEqual({
+    expect(entry(`species=dog&region=${BUSAN}&status=ended&sort=deadline`, { species: "cat", region: SEOUL })).toEqual({
       kind: "render",
-      filter: { species: "dog", region: BUSAN, status: "ended", sex: "all", sort: "endingSoon" },
+      filter: { species: "dog", region: BUSAN, status: "ended", sex: "all", sort: "deadline" },
     });
   });
 
   it("sort도 URL 값을 그대로 쓴다", () => {
-    const result = resolveAnimalListEntry(qs(`species=cat&region=all&sort=endingSoon`));
+    const result = resolveAnimalListEntry(qs(`species=cat&region=all&sort=deadline`));
     expect(result).toEqual({
       kind: "render",
-      filter: { species: "cat", status: "protected", sex: "all", sort: "endingSoon" },
+      filter: { species: "cat", status: "protected", sex: "all", sort: "deadline" },
     });
   });
 

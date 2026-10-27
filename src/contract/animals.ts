@@ -59,7 +59,7 @@ export type AnimalWireDto = z.infer<typeof AnimalWireDtoSchema>;
 export const ANIMAL_LIST_STATUSES = [...ANIMAL_STATUSES, "all"] as const;
 /** 성별 미상(unknown)은 all에서만 나온다(이슈 #20) */
 export const ANIMAL_LIST_SEXES = ["all", "female", "male"] as const;
-export const ANIMAL_LIST_SORTS = ["latest", "endingSoon"] as const;
+export const ANIMAL_LIST_SORTS = ["latest", "deadline"] as const;
 
 export const AnimalListSpeciesSchema = z.enum(ANIMAL_SPECIES);
 export const AnimalListStatusSchema = z.enum(ANIMAL_LIST_STATUSES);

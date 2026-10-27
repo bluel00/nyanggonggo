@@ -53,7 +53,7 @@ const DETAIL_VALUE_WRAP = "break-keep wrap-anywhere";
 
 const STATUS_TEXT = {
   protected: "text-status-protected-text",
-  soon: "text-status-soon-text",
+  nearDeadline: "text-status-soon-text",
   ended: "text-status-ended-text",
 } as const;
 

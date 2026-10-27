@@ -98,7 +98,7 @@ describe("AnimalFilterSheet", () => {
     fireEvent.click(screen.getByRole("button", { name: "적용하기" }));
     expect(replace).toHaveBeenCalledOnce();
     expect(replace).toHaveBeenCalledWith(
-      "/?utm_source=kakao&species=dog&region=6260000&district=3250000&status=all&sort=endingSoon",
+      "/?utm_source=kakao&species=dog&region=6260000&district=3250000&status=all&sort=deadline",
       { scroll: false },
     );
     expect(screen.queryByRole("dialog")).toBeNull();
@@ -123,7 +123,7 @@ describe("AnimalFilterSheet", () => {
   });
 
   it("열면 현재 필터가 선택되어 있다", () => {
-    render(<AnimalFilterSheet filter={{ species: "dog", region: "6110000", status: "ended", sex: "all", sort: "endingSoon" }} />);
+    render(<AnimalFilterSheet filter={{ species: "dog", region: "6110000", status: "ended", sex: "all", sort: "deadline" }} />);
     open();
     expect(screen.getByRole("radio", { name: "강아지" }).getAttribute("aria-checked")).toBe("true");
     expect(screen.getByRole("button", { name: "종료" }).getAttribute("aria-pressed")).toBe("true");

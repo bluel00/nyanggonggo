@@ -31,7 +31,7 @@ describe("createAnimalRepository", () => {
     describe("CDN 캐시 키가 값 조합마다 그대로다", () => {
       const combos = ["cat", "dog", "other"].flatMap((species) =>
         ["protected", "ended", "all"].flatMap((status) =>
-          ["all", "female", "male"].flatMap((sex) => ["latest", "endingSoon"].map((sort) => ({ species, status, sex, sort }))),
+          ["all", "female", "male"].flatMap((sex) => ["latest", "deadline"].map((sort) => ({ species, status, sex, sort }))),
         ),
       ) as { species: "cat"; status: "protected"; sex: "all"; sort: "latest" }[];
 
@@ -50,11 +50,11 @@ describe("createAnimalRepository", () => {
           district: "3000000",
           status: "ended",
           sex: "female",
-          sort: "endingSoon",
+          sort: "deadline",
           cursor: "MjA",
         });
         expect(fetch.mock.calls[0][0]).toBe(
-          "/api/animals?species=dog&status=ended&sort=endingSoon&region=6110000&district=3000000&sex=female&cursor=MjA",
+          "/api/animals?species=dog&status=ended&sort=deadline&region=6110000&district=3000000&sex=female&cursor=MjA",
         );
       });
     });
@@ -70,14 +70,14 @@ describe("createAnimalRepository", () => {
 
     it("쿼리를 만들고 응답을 Domain으로 바꾼다(날짜 → KST 00:00 Date)", async () => {
       const { repository, requested } = setup({ items: [wire(), wire({ id: "2", status: "ended" })], nextCursor: "MjA" });
-      const page = await repository.getAnimals({ species: "cat", region: "6260000", status: "all", sex: "all", sort: "endingSoon", cursor: "MjA" });
+      const page = await repository.getAnimals({ species: "cat", region: "6260000", status: "all", sex: "all", sort: "deadline", cursor: "MjA" });
 
       const url = requested();
       expect(url.pathname).toBe("/api/animals");
       expect(Object.fromEntries(url.searchParams)).toEqual({
         species: "cat",
         status: "all",
-        sort: "endingSoon",
+        sort: "deadline",
         region: "6260000",
         cursor: "MjA",
       });

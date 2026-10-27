@@ -68,11 +68,11 @@ test("기본값이 아닌 필터에서도 열었던 카드가 보인다", async 
   await page.getByRole("button", { name: "필터" }).click();
   await page.getByRole("radio", { name: "종료임박순" }).click();
   await page.getByRole("button", { name: "적용하기" }).click();
-  await expect(page).toHaveURL(/sort=endingSoon/);
+  await expect(page).toHaveURL(/sort=deadline/);
 
   const animalId = await openCardOnSecondPage(page);
   await page.getByRole("button", { name: "뒤로가기" }).click();
-  await expect(page).toHaveURL(/sort=endingSoon/);
+  await expect(page).toHaveURL(/sort=deadline/);
   await expect(page.locator(`[data-animal-id="${animalId}"]`)).toBeVisible();
   expect(await isCardInView(page, animalId)).toBe(true);
 });

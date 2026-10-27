@@ -13,8 +13,8 @@ describe("getStatusVariant", () => {
   it.each([
     ["종료 공고", at("ended", "2026-09-22"), "ended"],
     ["D-10 보호중", at("protected", "2026-10-01"), "protected"],
-    ["D-3 보호중은 임박", at("protected", "2026-09-24"), "soon"],
-    ["당일(D-day)은 임박", at("protected", "2026-09-21"), "soon"],
+    ["D-3 보호중은 임박", at("protected", "2026-09-24"), "nearDeadline"],
+    ["당일(D-day)은 임박", at("protected", "2026-09-21"), "nearDeadline"],
     ["종료일이 지난 보호중은 보호중(dDay null)", at("protected", "2026-09-20"), "protected"],
     ["종료일 없는 보호중", at("protected", null), "protected"],
   ] as const)("%s → %s", (_label, animal, expected) => {

@@ -19,12 +19,12 @@ describe("parseListQuery", () => {
   });
 
   it("모든 값을 읽는다", () => {
-    expect(parseListQuery(qs("species=dog&region=6260000&status=ended&sort=endingSoon&cursor=MjA"))).toEqual({
+    expect(parseListQuery(qs("species=dog&region=6260000&status=ended&sort=deadline&cursor=MjA"))).toEqual({
       species: "dog",
       region: "6260000",
       status: "ended",
       sex: "all",
-      sort: "endingSoon",
+      sort: "deadline",
       cursor: "MjA",
     });
   });
