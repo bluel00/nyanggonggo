@@ -1,7 +1,7 @@
 import {
   animalSubtitle,
   animalTitle,
-  dDayText,
+  deadlineDateText,
   getDDay,
   getStatusVariant,
   statusBadgeText,
@@ -15,7 +15,7 @@ import { siteOrigin } from "@/shared/config/site-origin";
  * 링크 미리보기(OG 메타·OG 이미지)의 어댑터(#73). Domain 파생값(상태, D-day)을 쓰므로 서버가 아니라 app 계층에 둔다.
  * 제목 바탕·공유 요약·사진·주소는 공유 내용 계약(`buildShareContent`)에서 받는다. 여기서 덧붙이는 것은 링크 미리보기에만 필요한 것이다:
  * OG 메타 제목의 " 공고 | 서비스 이름"(`buildOgText`), OG 이미지의 제목(`animalTitle`: 지역, 기타 축종만 "<동물> · <지역>"),
- * 보조 줄(보호소, 없으면 발견 장소), 상태 칩(상태만)과 D-N(종료가 아니고 있을 때만).
+ * 보조 줄(보호소, 없으면 발견 장소), 상태 칩(상태만)과 마감 날짜("공고 마감 M월 D일(요)", 마감 전 보호중일 때만. 밖으로 나가는 것이라 날짜다, #57).
  */
 export type OgModel = {
   /** OG 이미지에 그리는 제목(카드 1줄과 같은 규칙) */
@@ -23,7 +23,8 @@ export type OgModel = {
   sub: string | null;
   variant: AnimalStatusVariant;
   badgeText: string;
-  dDayText: string | null;
+  /** 마감 표기: 밖으로 나가는 것이라 날짜("공고 마감 M월 D일(요)"). 종료·마감일 없음·마감이 지난 공고는 null */
+  deadlineText: string | null;
   /** OG 이미지 바탕 사진(공유 내용의 사진) */
   imageSrc: string | null;
   ended: boolean;
@@ -42,7 +43,7 @@ export function buildOgModel(animal: Animal, now: Date, origin: string = siteOri
     sub: animalSubtitle(animal),
     variant,
     badgeText: statusBadgeText(animal, now, { dDay: false }),
-    dDayText: dDay === null ? null : dDayText(dDay),
+    deadlineText: dDay === null || animal.noticeEndAt === null ? null : deadlineDateText(animal.noticeEndAt),
     imageSrc: share.photoSrc,
     ended,
     share,

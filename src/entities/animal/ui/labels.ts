@@ -1,5 +1,5 @@
 import type { Animal } from "../model/animal";
-import { statusBadgeText } from "./status-text";
+import { statusShareText } from "./status-text";
 
 /** 축종 표기. 필터 옵션, 사진 alt, 공유 제목이 함께 쓴다. */
 export const SPECIES_LABEL: Record<Animal["species"], string> = {
@@ -109,12 +109,12 @@ export function sexAgeText(animal: Pick<Animal, "sex" | "ageText">): string {
 }
 
 /**
- * 공고 한 줄 요약: 성별 · 나이 · 상태(· D-N) · 특이사항. 카카오 공유 카드 설명과 링크 미리보기(og·twitter) 설명이 같은 문자열을 쓴다(이슈 #2).
- * 상태는 배지와 같은 문구다(종료는 "종료 · <결과>" 또는 "종료").특이사항은 원문 그대로이고 줄바꿈·연속 공백만 공백 하나로 바꾼다. 비어 있으면 뺀다.
+ * 공유 요약(공고 한 줄 요약): 성별 · 나이 · 상태(· 공고 마감 M월 D일(요)) · 특이사항. 밖으로 나가는 것이라 마감은 날짜다(#57). 앱 안에서는 쓰지 않는다. 카카오 공유 카드 설명과 링크 미리보기(og·twitter) 설명이 같은 문자열을 쓴다(이슈 #2).
+ * 상태는 statusShareText(종료는 "종료 · <결과>" 또는 "종료", 마감이 지났거나 마감일이 없으면 "보호중"). 특이사항은 원문 그대로이고 줄바꿈·연속 공백만 공백 하나로 바꾼다. 비어 있으면 뺀다.
  * 길이는 자르지 않는다: 카카오 피드 템플릿은 설명에 글자 수 제한이 없고 2줄을 넘으면 줄임표로 보인다(카카오 개발자 문서 메시지 템플릿 공통).
  */
 export function animalSummaryText(animal: Animal, now: Date): string {
-  const status = statusBadgeText(animal, now);
+  const status = statusShareText(animal, now);
   const specialMark = animal.specialMarkText?.replace(/\s+/g, " ").trim() || null;
   return [sexAgeText(animal), status, specialMark].filter(Boolean).join(" · ");
 }

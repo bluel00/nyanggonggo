@@ -22,13 +22,13 @@ describe("상세 generateMetadata", () => {
     getById.mockResolvedValue(wire);
     expect(await meta("1")).toEqual({
       title: "제주특별자치도 고양이 공고 | 멍냥공고",
-      description: "암컷 · 나이 미상 · 보호중 · D-10",
+      description: "암컷 · 나이 미상 · 보호중 · 공고 마감 10월 1일(목)",
       openGraph: {
         siteName: "멍냥공고",
         type: "website",
         url: "/animals/1",
         title: "제주특별자치도 고양이 공고 | 멍냥공고",
-        description: "암컷 · 나이 미상 · 보호중 · D-10",
+        description: "암컷 · 나이 미상 · 보호중 · 공고 마감 10월 1일(목)",
       },
     });
   });

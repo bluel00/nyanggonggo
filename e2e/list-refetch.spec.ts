@@ -100,7 +100,7 @@ test("필터를 바꾸면 그 필터로 새로 받는다", async ({ page }) => {
   const mark = requests.length;
 
   await page.getByRole("button", { name: "필터" }).click();
-  await page.getByRole("radio", { name: "종료임박순" }).click();
+  await page.getByRole("radio", { name: "공고 마감 빠른순" }).click();
   await page.getByRole("button", { name: "적용하기" }).click();
   await expect(page).toHaveURL(/sort=deadline/);
   await expect(page.locator("[data-animal-id]")).toHaveCount(LIST_PAGE_SIZE);

@@ -61,7 +61,7 @@ describe("AnimalDetail", () => {
     expect(await screen.findByRole("heading", { name: "제주특별자치도" })).toBeTruthy();
     expect(screen.getByText("암컷 · 2024(년생)")).toBeTruthy();
     expect(container.querySelector('[data-slot="status-badge"]')?.textContent).toBe("보호중");
-    expect(container.querySelector('[data-slot="d-day"]')?.textContent).toBe("D-10");
+    expect(container.querySelector('[data-slot="d-day"]')?.textContent).toBe("공고 마감 D-10");
     for (const text of ["보호소", "제2동물보호센터", "발견 장소", "서귀포시 남원읍", "공고 기간", "09.21 ~ 10.01"]) {
       expect(screen.getByText(text)).toBeTruthy();
     }
@@ -81,23 +81,23 @@ describe("AnimalDetail", () => {
     expect(screen.getAllByRole("img")[0].getAttribute("alt")).toContain("토끼 사진, 경기도 성남시");
   });
 
-  it("임박(D-3 이하)은 주황 D-day", async () => {
+  it("마감이 가까운 공고(D-3 이하)는 주황 마감 표기", async () => {
     fetchMock.mockResolvedValue(Response.json(wire({ noticeEndDate: "2026-09-23" })));
     const { container } = renderDetail();
     await screen.findByRole("heading");
     const dDay = container.querySelector('[data-slot="d-day"]')!;
-    expect(dDay.textContent).toBe("D-2");
+    expect(dDay.textContent).toBe("공고 마감 D-2");
     expect(dDay.className).toContain("text-status-soon-text");
   });
 
-  it("당일은 'D-day'(임박 주황)", async () => {
+  it("당일은 '오늘 마감'(주황), 배지는 '보호중'", async () => {
     fetchMock.mockResolvedValue(Response.json(wire({ noticeEndDate: "2026-09-21" })));
     const { container } = renderDetail();
     await screen.findByRole("heading");
     const dDay = container.querySelector('[data-slot="d-day"]')!;
-    expect(dDay.textContent).toBe("D-day");
+    expect(dDay.textContent).toBe("오늘 마감");
     expect(dDay.className).toContain("text-status-soon-text");
-    expect(container.querySelector('[data-slot="status-badge"]')?.textContent).toBe("임박");
+    expect(container.querySelector('[data-slot="status-badge"]')?.textContent).toBe("보호중");
   });
 
   it("사진 alt는 카드와 같은 '<축종> 사진, <지역>' 뒤에 사진 번호", async () => {
@@ -107,7 +107,7 @@ describe("AnimalDetail", () => {
     expect(screen.getAllByRole("img")[0].getAttribute("alt")).toBe("고양이 사진, 제주특별자치도 1");
   });
 
-  it("만료된 보호중(dDay null)은 D-day를 보이지 않는다", async () => {
+  it("만료된 보호중(dDay null)은 마감 표기를 보이지 않는다", async () => {
     fetchMock.mockResolvedValue(Response.json(wire({ noticeEndDate: "2026-09-20" })));
     const { container } = renderDetail();
     await screen.findByRole("heading");
@@ -115,7 +115,7 @@ describe("AnimalDetail", () => {
     expect(container.querySelector('[data-slot="status-badge"]')?.textContent).toBe("보호중");
   });
 
-  it("종료 공고는 '종료' 배지만, D-day 없음, 사진 saturate(.7)", async () => {
+  it("종료 공고는 '종료' 배지만, 마감 표기 없음, 사진 saturate(.7)", async () => {
     fetchMock.mockResolvedValue(Response.json(wire({ status: "ended" })));
     const { container } = renderDetail();
     await screen.findByRole("heading");

@@ -14,7 +14,7 @@ describe("buildShareContent: 공유 내용 계약", () => {
   it("제목 바탕(지역 + 동물), 공유 요약(보호소 이름 없음), 대표 사진 원본, 상세 경로와 절대 주소", () => {
     expect(buildShareContent(animal(), at)).toEqual({
       title: "제주특별자치도 고양이",
-      summary: "암컷 · 나이 미상 · 보호중 · D-10",
+      summary: "암컷 · 나이 미상 · 보호중 · 공고 마감 10월 1일(목)",
       photoSrc: IMG,
       path: "/animals/450650202602282",
       url: "https://nyang.test/animals/450650202602282",
@@ -38,7 +38,8 @@ describe("buildShareContent: 공유 내용 계약", () => {
     expect(buildShareContent(animal({ images: [] }), at).photoSrc).toBeNull();
   });
 
-  it("요약의 D-N은 넣은 기준 시각을 따른다(출력마다 자기 시각을 넣는다)", () => {
-    expect(buildShareContent(animal(), { ...at, now: kst("2026-09-30T23:59:00") }).summary).toBe("암컷 · 나이 미상 · 임박 · D-1");
+  it("요약의 마감은 날짜다. 기준 시각으로 마감이 지났는지만 본다(지났으면 날짜를 붙이지 않는다)", () => {
+    expect(buildShareContent(animal(), { ...at, now: kst("2026-09-30T23:59:00") }).summary).toBe("암컷 · 나이 미상 · 보호중 · 공고 마감 10월 1일(목)");
+    expect(buildShareContent(animal(), { ...at, now: kst("2026-10-02T00:00:00") }).summary).toBe("암컷 · 나이 미상 · 보호중");
   });
 });

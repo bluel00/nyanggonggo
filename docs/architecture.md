@@ -306,6 +306,7 @@ interface AnimalRepository {
 
 - 종료 공고(안락사, 자연사 포함)는 status 필터(`ended`, `all`)로 표시한다. 기본은 `protected`.
 - D-day 정책(확정): 종료(`ended`) 공고, `noticeEndAt`이 없는 공고, `noticeEndAt`이 오늘(KST)보다 과거인 보호중 공고는 `dDay = null`, 당일은 0. `isNearDeadline`은 `dDay !== null && dDay <= 3`. 종료일이 지난 보호중 공고는 서버에서 제외하지 않고, 배지는 "보호중"만 표시한다(D-day 없음).
+- 마감 표기(2026-10-27, [#57](https://github.com/bluel00/nyanggonggo/issues/57)): 앱 안은 상대 표기, 밖으로 나가는 것은 날짜다(용어 사전 "마감 표기"). 카드 배지 "보호중 · 마감 D-N"(당일 "보호중 · 오늘 마감"), 상세 "공고 마감 D-N"(당일 "오늘 마감"). 공유 카드 설명·링크 미리보기 설명(공유 요약)과 OG 이미지는 "공고 마감 M월 D일(요)"(KST 고정 +9시간, 형식은 `entities/animal/ui/status-text.ts` `deadlineDateText`가 직접 만든다). 마감 전 보호중 공고에만 붙인다. "임박" 문구는 없애고 마감이 가까운 공고(`nearDeadline`)는 색으로만 구분한다. 이유: 공유 카드와 링크 미리보기는 보낸·수집된 시점의 내용으로 굳고 카카오는 수집 결과를 캐시해 상대 표기가 틀린 정보가 된다. 상태("보호중")는 바꿔 쓸 절대 표기가 없어 그대로 둔다.
 - 종료 결과와 종료 사유를 보여 준다(2026-10-23, 이슈 [#41](https://github.com/bluel00/nyanggonggo/issues/41). 이전 결정 "종료 사유 비노출"을 대체한다).
   - 결과: 서버 Mapper가 `processState`의 "종료(…)" 괄호 안 낱말을 원문 그대로 `endResultText`로 보낸다(자유 문자열, 값 목록을 enum으로 고정하지 않는다). 종료가 아니거나 괄호가 없거나 비면 `null`.
   - 상태 표기: 종료 공고는 "종료 · <결과>", 결과가 없으면 "종료". 카드 배지, 상세 배지, 공유 카드·링크 미리보기 요약, OG 이미지 배지가 모두 `entities/animal/ui/status-badge.tsx`의 `statusBadgeText` 하나를 쓴다. 결과에 따라 색·모양을 바꾸지 않는다.
