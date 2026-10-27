@@ -28,8 +28,8 @@ function darkFills(svg: string): string[] {
 }
 
 describe("캐릭터 SVG 원본의 색", () => {
-  it("17개 파일 모두 선에 #111111이 남지 않고, 선 색은 #3A2A20이다", () => {
-    expect(svgs).toHaveLength(17);
+  it("20개 파일(고양이·강아지 17, 기타 동물 셋) 모두 선에 #111111이 남지 않고, 선 색은 #3A2A20이다", () => {
+    expect(svgs).toHaveLength(20);
     for (const { name, text } of svgs) {
       expect(text, name).not.toMatch(/stroke="#111111"/i);
       expect(text, name).toMatch(/stroke="#3A2A20"/);

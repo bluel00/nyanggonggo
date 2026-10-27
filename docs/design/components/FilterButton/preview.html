@@ -1,0 +1,9 @@
+<!-- @dsCard group="Filters" height=130 subtitle="list header filter button: default (shadow-control) · sex chosen (filled, name 필터, 암컷)" -->
+<div id="r" class="cn-root" style="padding:16px;background:var(--bg)"></div>
+<script>
+var N=window.CatNotice,h=React.createElement,S=function(t){return h('div',{style:{font:'12px var(--font-sans)',color:'var(--text-2)',margin:'0 0 6px'}},t)};
+var Row=function(p){return h('div',{style:{display:'flex',gap:12,alignItems:'center',flexWrap:'wrap',marginBottom:16}},p.children)};
+var Col=function(t,c,w){return h('div',{style:{width:w||'auto'}},S(t),c)};
+function App(){return h(Row,null,Col("default",h(N.FilterButton)),Col("sex = 암컷 (aria-label 필터, 암컷)",h(N.FilterButton,{sexLabel:'암컷'})),Col("pressed",h(N.FilterButton,{className:'cn-pressed'})))}
+ReactDOM.createRoot(document.getElementById('r')).render(h(App));
+</script>

@@ -1,0 +1,19 @@
+<!-- @dsCard group="Brand" height=730 subtitle="link-preview OG image 1200×630 at 50%: notice (protected, ended) and no notice" -->
+<div id="r" class="cn-root" style="padding:16px;background:var(--canvas)"></div>
+<script>
+var N=window.CatNotice,h=React.createElement;
+var S=function(t){return h('div',{style:{font:'12px var(--font-sans)',color:'var(--text-2)',margin:'0 0 6px'}},t)};
+var Half=function(c){return h('div',{style:{width:600,height:315,overflow:'hidden',borderRadius:8,boxShadow:'0 1px 3px rgba(0,0,0,.08)'}},h('div',{style:{width:1200,height:630,transform:'scale(.5)',transformOrigin:'0 0',position:'relative'}},c))};
+function Og(p){var ended=p.ended;
+ return Half([
+  h('img',{key:'p',src:N.mockPhoto(p.photo,1200,630),alt:'',style:{position:'absolute',inset:0,width:1200,height:630,objectFit:'cover',objectPosition:'center 35%'}}),
+  h('div',{key:'l',style:{position:'absolute',left:32,top:32,height:48,borderRadius:24,overflow:'hidden',background:'var(--photo-pill)'}},h(N.Logo,{size:48,variant:'tile'})),
+  h('div',{key:'c',style:{position:'absolute',left:32,bottom:32,width:600,boxSizing:'border-box',padding:'28px 32px',background:'var(--surface)',borderRadius:32,display:'flex',flexDirection:'column',gap:10,fontFamily:'var(--font-sans)'}},
+   h('div',null,h('span',{style:{display:'inline-flex',alignItems:'center',gap:8,height:48,padding:'0 20px 0 16px',borderRadius:999,background:ended?'var(--status-ended-bg)':'var(--status-protected-bg)',color:ended?'var(--status-ended-text)':'var(--status-protected-text)',font:'600 24px/32px var(--font-sans)'}},h('i',{style:{width:12,height:12,borderRadius:'50%',background:ended?'var(--status-ended)':'var(--status-protected)'}}),ended?'종료 · 입양':'보호중')),
+   ended?null:h('div',{style:{font:'700 40px/52px var(--font-sans)',color:'var(--status-protected-text)'}},'공고 마감 11월 3일(화)'),
+   h('div',{style:{font:'700 40px/52px var(--font-sans)',color:'var(--text)'}},'가나시 다라구'),
+   h('div',{style:{font:'400 28px/38px var(--font-sans)',color:'var(--text-2)'}},'가나시 동물보호센터'))])}
+function None(){return Half(h('div',{style:{width:1200,height:630,background:'var(--bg)',display:'flex',alignItems:'center',justifyContent:'center',font:'700 72px/1 var(--font-sans)',color:'var(--text)'}},N.SERVICE_NAME))}
+function App(){return h('div',{style:{display:'flex',gap:16,flexWrap:'wrap'}},h('div',null,S('notice · protected'),h(Og,{photo:0})),h('div',null,S('notice · ended (no date)'),h(Og,{photo:5,ended:true})),h('div',null,S('no notice (ground and weight: confirm)'),h(None)))}
+ReactDOM.createRoot(document.getElementById('r')).render(h(App));
+</script>

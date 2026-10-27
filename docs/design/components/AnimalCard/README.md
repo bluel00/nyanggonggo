@@ -1,0 +1,12 @@
+`AnimalCard` is the whole-card link to a detail page: a white `surface` card with `radius-card` (22) and `shadow-card` floating on the page gradient, a 1:1 photo (`object-fit: cover`, `object-position: center`), the status badge top-left on the photo (`photo-pill`), an optional `action` top-right on the photo, then three lines. Consumer provides a Domain `animal` ({id, region, shelterName, foundPlace, noticeNo, status, dDay, result?, images[]}), `onClick` or `href`, and `action` (ReactNode).
+
+- **Lines.**
+  1. Title: the region ("가나시 다라구"; other species "토끼 · 가나시 다라구"), `card-title`. The Domain has no name.
+  2. The shelter name, or the found place when there is none, `body` + `text-2`.
+  3. "공고 번호 가나-가나-2026-00001", `caption` + `text-2`, one line with an ellipsis (`data-slot="notice-no"`). Left out when there is no number. The card grows by this line. Whether the card keeps it is decided after watching it in use.
+- **Badge.** "보호중 · 마감 D-5", on the last day "보호중 · 오늘 마감". Deadline D-3 or less keeps the words and changes only the colour (`status-near-deadline*`). Ended: "종료 · <결과>", or "종료". See `StatusBadge`.
+- **Action slot.** The card takes only `action`; the widget (`widgets/animal-list`, `widgets/favorite-list`) passes `FavoriteButton onPhoto`, because entities do not know features. The slot is a sibling of the card link, never nested in it, so pressing the heart neither presses the card nor opens the detail. Both the list and the 관심 공고 list show the heart.
+- **Press.** `press-scale` and `shadow-card-pressed` over `press-duration`, only when the card link is pressed.
+- **Ended cards.** saturate(0.7) on the photo only, no dim, `shadow-card-ended`, and no press, entrance or transition effect; the heart only toggles its fill.
+- **Card → detail.** Only list (`/`) cards run the transition (see README motion table). 관심 공고 cards open the detail at once. If the tapped card's photo has not loaded yet, the detail opens straight to its skeleton.
+- Reduced motion: no effect. Never pass DTO fields or contact numbers to the card. Nothing else goes on the photo.

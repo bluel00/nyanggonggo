@@ -1,0 +1,12 @@
+<!-- @dsCard group="Entities" height=380 subtitle="3 lines: region · shelter (or found place) · 공고 번호; badge 마감 D-N / 오늘 마감 / ended" -->
+<div id="r" class="cn-root" style="padding:16px;background:var(--bg)"></div>
+<script>
+var N=window.CatNotice,h=React.createElement,A=N.MOCK_ANIMALS;
+var S=function(t){return h('div',{style:{font:'12px var(--font-sans)',color:'var(--text-2)',margin:'0 0 6px'}},t)};
+function Card(p){var s=React.useState(!!p.fav),on=s[0],set=s[1];var ended=p.a.status==='ended';
+ return h('div',{style:{width:186}},S(p.t),h(N.AnimalCard,{animal:p.a,className:p.cls,action:h(N.FavoriteButton,{onPhoto:true,calm:ended,active:on,onToggle:set})}))}
+function App(){return h('div',{style:{display:'flex',gap:12,flexWrap:'wrap'}},
+ h(Card,{t:'보호중 · 마감 D-9',a:A[0]}),h(Card,{t:'D-3 or less (colour only)',a:A[1],fav:true}),h(Card,{t:'no shelter → found place',a:A[3]}),
+ h(Card,{t:'오늘 마감, no notice number',a:A[4]}),h(Card,{t:'ended "종료 · 입양"',a:A[5]}),h(Card,{t:'pressed (scale .98)',a:A[2],cls:'cn-pressed'}))}
+ReactDOM.createRoot(document.getElementById('r')).render(h(App));
+</script>

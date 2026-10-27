@@ -1,0 +1,12 @@
+<!-- @dsCard group="Overlays" height=380 subtitle="shelter info sheet: handle + title (shelter name) + 주소 [지도] · 전화 [전화], no footer; phone without digits" -->
+<div id="r" class="cn-root" style="padding:16px;background:var(--bg);display:flex;gap:16px;flex-wrap:wrap"></div>
+<script>
+var N=window.CatNotice,h=React.createElement,A=N.MOCK_ANIMALS;
+function Sheet(p){var s=React.useState(true),open=s[0],set=s[1];
+ return h('div',{className:'cn-column',style:{width:375,height:340,borderRadius:16}},
+  h('div',{style:{padding:16}},h(N.Button,{variant:'small-action',icon:'info','aria-label':'보호소 정보 보기',onClick:function(){set(true)}},'보호소 정보')),
+  h(N.BottomSheet,{open:open,title:p.a.shelterName,onClose:function(){set(false)}},h(N.ShelterInfo,{animal:p.a})))}
+var noDigits={shelterName:'가나 마바 보호소',address:'가나시 마바구 사아로 5',phone:'보호소 문의'};
+function App(){return h(React.Fragment,null,h(Sheet,{a:A[0]}),h(Sheet,{a:noDigits}))}
+ReactDOM.createRoot(document.getElementById('r')).render(h(App));
+</script>

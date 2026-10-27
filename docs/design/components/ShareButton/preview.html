@@ -1,0 +1,9 @@
+<!-- @dsCard group="Actions" height=130 subtitle="Kakao Yellow, the only non-status accent" -->
+<div id="r" class="cn-root" style="padding:16px;background:var(--canvas)"></div>
+<script>
+var N=window.CatNotice,h=React.createElement,S=function(t){return h('div',{style:{font:'12px var(--font-sans)',color:'var(--text-2)',margin:'0 0 6px'}},t)};
+var Row=function(p){return h('div',{style:{display:'flex',gap:12,alignItems:'center',flexWrap:'wrap',marginBottom:16}},p.children)};
+var Col=function(t,c,w){return h('div',{style:{width:w||'auto'}},S(t),c)};
+function App(){return h(Row,null,Col("default",h("div",{style:{width:200,display:"flex"}},h(N.ShareButton))),Col("pressed",h("div",{style:{width:200,display:"flex"}},h(N.ShareButton,{className:"cn-pressed"}))),Col("disabled",h("div",{style:{width:200,display:"flex"}},h(N.ShareButton,{disabled:true}))))}
+ReactDOM.createRoot(document.getElementById('r')).render(h(App));
+</script>

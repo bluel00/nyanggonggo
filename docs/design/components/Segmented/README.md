@@ -1,0 +1,1 @@
+`Segmented` is a pill switch for 축종: 고양이 / 강아지 / 기타 동물. Consumer provides `options` [{value,label}], `value`, `onChange`. The selected segment is a white pill on `status-ended-bg`. Value is read from the `species` search param.

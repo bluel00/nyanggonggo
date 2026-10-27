@@ -1,0 +1,9 @@
+<!-- @dsCard group="Filters" height=190 subtitle="sort: 최신순 / 공고 마감 빠른순" -->
+<div id="r" class="cn-root" style="padding:16px;background:var(--canvas)"></div>
+<script>
+var N=window.CatNotice,h=React.createElement,S=function(t){return h('div',{style:{font:'12px var(--font-sans)',color:'var(--text-2)',margin:'0 0 6px'}},t)};
+var Row=function(p){return h('div',{style:{display:'flex',gap:12,alignItems:'center',flexWrap:'wrap',marginBottom:16}},p.children)};
+var Col=function(t,c,w){return h('div',{style:{width:w||'auto'}},S(t),c)};
+function App(){return h(Row,null,Col("checked",h(N.Radio,{checked:true},"최신순"),140),Col("unchecked",h(N.Radio,null,"공고 마감 빠른순"),140),Col("pressed",h(N.Radio,{className:"cn-pressed"},"공고 마감 빠른순"),140),Col("disabled",h(N.Radio,{disabled:true},"최신순"),140))}
+ReactDOM.createRoot(document.getElementById('r')).render(h(App));
+</script>
