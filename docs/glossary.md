@@ -64,7 +64,7 @@
 
 | 용어(화면) | 정의 | 코드 이름 | 밖으로 나가는 값 | 근거 | 헷갈리기 쉬운 말·쓰지 않는 말 |
 |---|---|---|---|---|---|
-| 관심 (화면: 관심 공고) | 다시 보거나 공유하려고 이 기기에 모아 둔 공고. 공고 id만 저장한다(최근 것이 앞). "관심"은 공고에만 쓴다. 화면 문구: 하트 접근성 이름 "관심 공고에 담기" / "관심 공고에서 빼기", 토스트 "관심 공고에 담았어요" / "관심 공고에서 뺐어요". **코드 반영 예정**: 지금 화면 문구는 "찜하기"/"찜 해제", "찜에 저장했어요"/"찜을 해제했어요"다. 코드 이름 `favorite`, URL `/favorites`, 저장소 키는 바꾸지 않는다 | `favorite`(`useFavorite`, `FavoriteButton`, `FAVORITES_STORAGE_KEY`, `features/animal-favorite`) | localStorage 키, URL `/favorites`, `/api/animals/by-ids` | architecture.md 8절, #5, EL 합의(#51), EL 결정(#56) | 찜(쓰지 않는다). architecture.md 13절의 "관심 지역"(지역 즐겨찾기 아이디어)은 다른 뜻이라, 그 기능을 만들 때 "관심"이 아닌 다른 이름을 짓는다 |
+| 관심 (화면: 관심 공고) | 다시 보거나 공유하려고 이 기기에 모아 둔 공고. 공고 id만 저장한다(최근 것이 앞). "관심"은 공고에만 쓴다. 화면 문구: 하트 접근성 이름 "관심 공고에 담기" / "관심 공고에서 빼기", 토스트 "관심 공고에 담았어요" / "관심 공고에서 뺐어요". 코드 이름 `favorite`, URL `/favorites`, 저장소 키, 이벤트 이름은 바꾸지 않았다(#58) | `favorite`(`useFavorite`, `FavoriteButton`, `FAVORITES_STORAGE_KEY`, `features/animal-favorite`) | localStorage 키, URL `/favorites`, `/api/animals/by-ids` | architecture.md 8절, #5, EL 합의(#51), EL 결정(#56), #58 | 찜(쓰지 않는다). architecture.md 13절의 "관심 지역"(지역 즐겨찾기 아이디어)은 다른 뜻이라, 그 기능을 만들 때 "관심"이 아닌 다른 이름을 짓는다 |
 | 카카오톡 공유 | 카카오 피드 카드로 공고를 보낸다(버튼 "공고 보기"). 카카오를 쓸 수 없으면 링크 복사로 대신한다 | `shareAnimal`, `ShareButton`, `SHARE_BUTTON_LABEL`, `buildShareContent`(features/animal-share) | 카카오 템플릿, `NEXT_PUBLIC_KAKAO_JS_KEY` | #2, 기능명세서 4.3, #73 | — |
 | 공유 내용 (화면 없음) | 공고를 밖으로 내보낼 때 쓰는 제목(바탕), 공유 요약, 사진, 주소의 묶음. 플랫폼을 모르는 계약이고, 링크 미리보기(OG 메타·OG 이미지)와 공유 카드·링크 복사가 이것을 쓴다. 각 출력에만 필요한 것(OG 제목의 " 공고 | 멍냥공고", OG 이미지의 상태 칩, 카카오 버튼)은 출력 쪽이 덧붙인다 | `buildShareContent`(features/animal-share/model/share-content.ts) | 카카오 템플릿, og:title·og:description·og:url, OG 이미지 | #73 | 공유 카드(카카오 메시지 하나) |
 | 공유 요약 (화면 없음) | 공고 한 줄 요약: 성별 · 나이 · 상태(· 공고 마감 M월 D일(요)) · 특이사항. 밖으로 나가는 것이라 마감은 날짜로 쓴다(마감 표기, #57). 공유 카드 설명과 링크 미리보기 설명이 같은 문자열을 쓴다 | `animalSummaryText`(entities/animal/ui/labels.ts) | 카카오 카드 설명, og:description, twitter:description | #2, #73 | 특이사항(요약의 한 부분) |
@@ -83,7 +83,7 @@
 | 홈(축종 선택) (화면: "오늘은 누구를 보러 왔어요?") | 축종을 고르는 첫 화면. 축종 기억이 없으면 `/`가 여기로 보낸다 | `SpeciesPickerView`, `SpeciesChoice`, `HOME_PATH`, `homeHref`, `resolveAnimalListEntry` | URL `/home` | PRD-v1.1 3절, architecture.md 7절 | species-picker / species-choice |
 | 목록 (화면: "고양이 공고" 등) | 한 축종의 공고 카드 피드(무한 스크롤) | `AnimalListView`, `AnimalList`, `useAnimalsInfinite` | URL `/` | architecture.md 7절 | "목록 화면"(목록 + 관심 목록)과 구분한다 |
 | 진입 경로 (화면 없음) | 쿼리 없는 `/`. 기억한 목록(축종·지역)이 있으면 그 목록으로, 없으면 홈으로 보낸다. 뒤로가기로 갈 곳이 없을 때(공유 링크로 바로 들어온 상세 등) 가는 곳이다. 목록 주소와 값은 같지만 다른 개념이다 | `entry`(shared/config/routes.ts), `resolveAnimalListEntry`(features/animal-filter/model/entry.ts) | URL `/` | PRD-v1.4 R2, #73 | 목록(`/` + 쿼리), 홈(`/home`) |
-| 관심 목록 (화면: 목록 이름·헤더 링크 "관심 공고", 빈 상태 "아직 관심 공고가 없어요", 오류 "지금은 관심 공고를 불러오지 못했어요") | 관심 공고만 모은 목록. 축종이 섞인다. **코드 반영 예정**: 지금 화면은 "찜한 공고", 링크 이름 "찜 목록", "아직 찜한 공고가 없어요", "지금은 찜한 공고를 불러오지 못했어요"다. 일부 실패 안내 "일부 공고를 불러오지 못했어요"는 그대로다 | `FavoritesView`, `FavoriteList`, `FavoritesLink`, `ANIMAL_COPY.favoritesTitle`·`favoritesEmptyTitle`·`favoritesErrorTitle` | URL `/favorites` | architecture.md 8절, EL 결정(#56) | 찜 목록(쓰지 않는다) |
+| 관심 목록 (화면: 목록 이름·헤더 링크 "관심 공고", 빈 상태 "아직 관심 공고가 없어요" + 설명 "하트를 눌러 관심 공고에 담아 보세요", 오류 "지금은 관심 공고를 불러오지 못했어요") | 관심 공고만 모은 목록. 축종이 섞인다. 일부 실패 안내 "일부 공고를 불러오지 못했어요"는 관심을 말하지 않아 그대로다 | `FavoritesView`, `FavoriteList`, `FavoritesLink`, `ANIMAL_COPY.favoritesTitle`·`favoritesEmptyTitle`·`favoritesEmptyDescription`·`favoritesErrorTitle` | URL `/favorites` | architecture.md 8절, EL 결정(#56), #58 | 찜 목록(쓰지 않는다) |
 | 카드 (화면 없음) | 목록의 공고 한 칸. 사진 1:1, 상태 배지, 관심 버튼, 1줄 지역(관할 지역), 2줄 보호소(없으면 발견 장소) | `AnimalCard`, `ANIMAL_CARD_SLOT`(entities/animal/ui/animal-card.tsx) | 없음 | handoff 화면 1~2 | — |
 | 상세 (화면: 층 이름 "공고 상세") | 공고 하나의 화면. 목록·관심 목록에서 열면 목록 위에 얹힌 층이고, 링크로 바로 들어오면 새 문서다 | `AnimalDetail`, `StackLayer`(shared/ui/stack-layer.tsx), `app/@modal/(.)animals/[id]` | URL `/animals/{id}` | PRD-v1.5, architecture.md 7절 | 모달 |
 | 정보 줄 (화면 없음) | 상세의 이름-값 줄: 발견 장소 → 보호소 → 공고 기간 → 종료 사유 → 특이사항. 값이 없으면 줄을 뺀다. 보호소 주소·전화는 보호소 정보 시트에 둔다. **코드 반영 예정**: 지금은 보호소 뒤에 주소 → 전화 줄이 있다 | `detailRows`, `DETAIL_ROW_LABELS`, `DetailRow`(detail-rows.ts) | 없음 | #3, #30, #41, EL 결정(#56) | — |
@@ -129,7 +129,6 @@
 
 | 용어 | 바뀔 것 | 이슈 |
 |---|---|---|
-| 관심, 관심 목록 | 화면 문구 "찜" → 관심 문구 | #58 |
 | 공고 번호 | `noticeNo`를 계약·도메인·상세·카드에 | #59 |
 | 나이 | "2026년생 · 60일 미만" 형식 정리 | #60 |
 | 정보 줄, 보호소 주소, 보호소 전화, 지도 보기, 전화 걸기, 보호소 정보 시트 | 주소·전화를 정보 줄에서 보호소 정보 시트로 | #62 |

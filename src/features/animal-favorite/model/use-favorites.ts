@@ -14,7 +14,7 @@ export function useFavorite(id: string) {
   const ids = useFavoriteIds();
   const toggle = useCallback(() => {
     const saved = toggleFavorite(id);
-    showToast(saved ? "찜에 저장했어요" : "찜을 해제했어요");
+    showToast(saved ? "관심 공고에 담았어요" : "관심 공고에서 뺐어요");
   }, [id]);
   return { isFavorite: ids.includes(id), toggle };
 }

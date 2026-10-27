@@ -46,7 +46,7 @@ export function FavoriteButton({
     <button
       type="button"
       aria-pressed={isFavorite}
-      aria-label={isFavorite ? "찜 해제" : "찜하기"}
+      aria-label={isFavorite ? "관심 공고에서 빼기" : "관심 공고에 담기"}
       data-slot="favorite-button"
       onClick={(event) => {
         // 카드 링크나 사진 탭(뷰어)으로 이벤트가 번지지 않게 한다

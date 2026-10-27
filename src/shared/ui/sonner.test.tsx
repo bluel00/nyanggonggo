@@ -18,10 +18,10 @@ describe("Toaster / showToast", () => {
   it("같은 문구는 쌓지 않는다", async () => {
     render(<Toaster />);
     act(() => {
-      showToast("찜에 저장했어요");
-      showToast("찜에 저장했어요");
+      showToast("관심 공고에 담았어요");
+      showToast("관심 공고에 담았어요");
     });
-    await screen.findByText("찜에 저장했어요");
-    expect(screen.getAllByText("찜에 저장했어요")).toHaveLength(1);
+    await screen.findByText("관심 공고에 담았어요");
+    expect(screen.getAllByText("관심 공고에 담았어요")).toHaveLength(1);
   });
 });

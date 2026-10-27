@@ -58,8 +58,8 @@ const cardTitles = (container: HTMLElement) =>
 describe("FavoriteList", () => {
   it("찜이 없으면 빈 상태 문구(요청하지 않음)", async () => {
     renderList([]);
-    expect(await screen.findByText("아직 찜한 공고가 없어요")).toBeTruthy();
-    expect(screen.getByText("마음에 드는 공고를 저장해보세요 🐾")).toBeTruthy();
+    expect(await screen.findByText("아직 관심 공고가 없어요")).toBeTruthy();
+    expect(screen.getByText("하트를 눌러 관심 공고에 담아 보세요")).toBeTruthy();
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -80,13 +80,13 @@ describe("FavoriteList", () => {
 
   it("모두 조회되지 않으면 빈 상태", async () => {
     renderList(["999"]);
-    expect(await screen.findByText("아직 찜한 공고가 없어요")).toBeTruthy();
+    expect(await screen.findByText("아직 관심 공고가 없어요")).toBeTruthy();
   });
 
   it("여기서 찜을 해제하면 카드가 바로 빠진다(스켈레톤으로 돌아가지 않음)", async () => {
     const { container } = renderList(["1", "2"]);
     await screen.findByText("지역2");
-    fireEvent.click(screen.getAllByRole("button", { name: "찜 해제" })[0]);
+    fireEvent.click(screen.getAllByRole("button", { name: "관심 공고에서 빼기" })[0]);
     expect(cardTitles(container)).toEqual(["지역2"]);
     expect(container.querySelector('[data-slot="skeleton-card"]')).toBeNull();
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
@@ -96,7 +96,7 @@ describe("FavoriteList", () => {
   it("오류면 문구와 [다시 시도]", async () => {
     fetchMock.mockResolvedValueOnce(Response.json({ error: { code: "upstream_error", message: "x" } }, { status: 502 }));
     renderList(["1"]);
-    expect(await screen.findByText("지금은 찜한 공고를 불러오지 못했어요")).toBeTruthy();
+    expect(await screen.findByText("지금은 관심 공고를 불러오지 못했어요")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "다시 시도" }));
     expect(await screen.findByText("지역1")).toBeTruthy();
   });
@@ -137,7 +137,7 @@ describe("FavoriteList", () => {
     it("전부 실패하면 지금의 오류 화면이고 저장은 그대로다", async () => {
       failing = new Set(["1", "2"]);
       renderList(["1", "2"]);
-      expect(await screen.findByText("지금은 찜한 공고를 불러오지 못했어요")).toBeTruthy();
+      expect(await screen.findByText("지금은 관심 공고를 불러오지 못했어요")).toBeTruthy();
       expect(screen.queryByText("일부 공고를 불러오지 못했어요")).toBeNull();
       expect(JSON.parse(localStorage.getItem(FAVORITES_STORAGE_KEY)!)).toEqual(["1", "2"]);
     });
