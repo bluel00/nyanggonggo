@@ -12,7 +12,7 @@ export const ANIMAL_STATUSES = ["protected", "ended"] as const;
 
 /**
  * 서버(BFF) ↔ 브라우저 계약. 원시 타입만 쓴다(날짜는 문자열).
- * 담당자 이름(careOwnerNm)은 넣지 않는다. 보호소 주소·전화는 상세 정보 줄에 쓴다(이슈 #3).
+ * 담당자 이름(careOwnerNm)은 쓰는 곳이 없어 넣지 않는다(감출 이유가 있어서가 아니다, #90). 보호소 주소·전화는 상세의 보호소 정보 시트에 쓴다(이슈 #3, #62).
  */
 export const AnimalWireDtoSchema = z.object({
   id: z.string(),
