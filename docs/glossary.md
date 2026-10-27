@@ -28,8 +28,8 @@
 | 종료 사유 | 공공 API `endReason` 원문. 상세 정보 줄에만 쓴다. 특이사항과 같은 문구면 특이사항을 비운다 | `endReasonText`, `DETAIL_ROW_LABELS.endReason`(entities/animal/ui/detail-rows.ts), `specialMarkUnlessEndReason` | `endReason` | #41 | 결과 |
 | 공고 기간 | 주인이 찾아갈 수 있도록 보호소가 공고하는 기간(동물보호법 제40조, 7일 이상). 화면 표기 `MM.DD ~ MM.DD` | `noticePeriodText` | `noticeSdt` ~ `noticeEdt` | 동물보호법 제40조, detail-rows.ts | — |
 | 공고 마감(일) | 공고 기간의 마지막 날. 지나도 상태는 바뀌지 않는다(제43조: 10일이 지나면 지자체가 소유권을 취득한다). KST 달력 날짜 | `noticeEndAt`(Domain), `noticeEndDate`(Wire) | `noticeEdt`(`YYYYMMDD`) | 동물보호법 제43조, architecture.md 10절 | 종료일·공고 종료(쓰지 않는다) |
-| 마감 D-N (카드: "보호중 · 마감 D-N", 상세·공유 카드·링크 미리보기 이미지(OG): "공고 마감 D-N"), 오늘 마감 (마감 당일. 카드 "보호중 · 오늘 마감", 상세·공유·OG "오늘 마감") | 공고 마감까지 남은 날 수(KST 달력). 마감 당일은 숫자 대신 "오늘 마감"이다. 종료 공고, 마감일이 없는 공고, 마감이 지난 공고에는 붙이지 않는다. **코드 반영 예정**: 지금 화면은 카드 "보호중 · D-N"/"임박 · D-N", 상세·OG는 "D-N"만 따로, 당일은 "D-day"(#29) | `getDDay`(entities/animal/model/dDay.ts), `dDayText`(status-text.ts) | 링크 미리보기 이미지(OG), 공유 카드 설명 | #29, architecture.md 10절, EL 결정(#56) | D-day(쓰지 않는다), D-0 |
-| 강조 (화면 없음, 색만) | 보호중이면서 마감 D-3 이하인 공고. 강조 색으로만 구분한다. **코드 반영 예정**: 배지 문구 "임박"을 없앤다 | `isNearDeadline`(entities/animal/model/dDay.ts), 기준 일수 `NEAR_DEADLINE_DAYS`(3), 배지 종류 `"nearDeadline"`(`AnimalStatusVariant`, entities/animal/model/status.ts), 토큰 `status-soon*`(이름은 디자인 시스템에서 먼저 바꾼다, #53) | 없음 | architecture.md 10절, design/README.md, EL 결정(#56), #57 | 임박(쓰지 않는다), soon·isSoon(옛 코드 이름) |
+| 마감 표기 (앱 안: 카드 "보호중 · 마감 D-N", 당일 "보호중 · 오늘 마감" / 상세 "공고 마감 D-N", 당일 "오늘 마감". 밖으로 나가는 것: 공유 카드 설명·링크 미리보기 설명·OG 이미지 "공고 마감 M월 D일(요)") | 공고 마감을 알리는 표기. **규칙: 앱 안은 상대 표기, 밖으로 나가는 것은 날짜다.** 앱 안은 열 때마다 지금 시각으로 마감까지 남은 날 수(KST 달력)를 계산한다. 공유 카드와 링크 미리보기는 보낸·수집된 시점의 내용으로 굳고 카카오는 수집 결과를 캐시해, 상대 표기는 시간이 지나면 틀린 정보가 되므로 날짜로 쓴다(EL, #57). 날짜 형식은 정확히 "M월 D일(요)": 월·일 앞에 0을 붙이지 않고, 요일은 한 글자, "일"과 "(" 사이에 공백이 없다. 날짜는 KST로 자른다(`getDDay`와 같은 고정 +9시간). 당일도 날짜로 쓴다. 종료 공고, 마감일이 없는 공고, 마감이 지난 공고에는 앱 안과 밖 모두 붙이지 않는다(날짜가 붙는 것은 마감 전 보호중 공고뿐이다) | `getDDay`(entities/animal/model/dDay.ts), `cardDeadlineText`·`detailDeadlineText`·`deadlineDateText`(entities/animal/ui/status-text.ts) | 공유 카드 설명, og:description, OG 이미지 | #29, architecture.md 10절, EL 결정(#56), #57 | D-day(쓰지 않는다), D-0, 임박(쓰지 않는다) |
+| 강조 (화면 없음, 색만) | 보호중이면서 마감 D-3 이하인 공고. 강조 색으로만 구분한다. 배지 문구는 마감이 가깝지 않은 보호중과 같다("보호중 · 마감 D-N") | `isNearDeadline`(entities/animal/model/dDay.ts), 기준 일수 `NEAR_DEADLINE_DAYS`(3), 배지 종류 `"nearDeadline"`(`AnimalStatusVariant`, entities/animal/model/status.ts), 토큰 `status-soon*`(이름은 디자인 시스템에서 먼저 바꾼다, #53) | 없음 | architecture.md 10절, design/README.md, EL 결정(#56), #57 | 임박(쓰지 않는다), soon·isSoon(옛 코드 이름) |
 
 ## 2. 공고와 동물
 
@@ -67,10 +67,10 @@
 | 관심 (화면: 관심 공고) | 다시 보거나 공유하려고 이 기기에 모아 둔 공고. 공고 id만 저장한다(최근 것이 앞). "관심"은 공고에만 쓴다. 화면 문구: 하트 접근성 이름 "관심 공고에 담기" / "관심 공고에서 빼기", 토스트 "관심 공고에 담았어요" / "관심 공고에서 뺐어요". **코드 반영 예정**: 지금 화면 문구는 "찜하기"/"찜 해제", "찜에 저장했어요"/"찜을 해제했어요"다. 코드 이름 `favorite`, URL `/favorites`, 저장소 키는 바꾸지 않는다 | `favorite`(`useFavorite`, `FavoriteButton`, `FAVORITES_STORAGE_KEY`, `features/animal-favorite`) | localStorage 키, URL `/favorites`, `/api/animals/by-ids` | architecture.md 8절, #5, EL 합의(#51), EL 결정(#56) | 찜(쓰지 않는다). architecture.md 13절의 "관심 지역"(지역 즐겨찾기 아이디어)은 다른 뜻이라, 그 기능을 만들 때 "관심"이 아닌 다른 이름을 짓는다 |
 | 카카오톡 공유 | 카카오 피드 카드로 공고를 보낸다(버튼 "공고 보기"). 카카오를 쓸 수 없으면 링크 복사로 대신한다 | `shareAnimal`, `ShareButton`, `SHARE_BUTTON_LABEL`, `buildShareContent`(features/animal-share) | 카카오 템플릿, `NEXT_PUBLIC_KAKAO_JS_KEY` | #2, 기능명세서 4.3, #73 | — |
 | 공유 내용 (화면 없음) | 공고를 밖으로 내보낼 때 쓰는 제목(바탕), 공유 요약, 사진, 주소의 묶음. 플랫폼을 모르는 계약이고, 링크 미리보기(OG 메타·OG 이미지)와 공유 카드·링크 복사가 이것을 쓴다. 각 출력에만 필요한 것(OG 제목의 " 공고 | 멍냥공고", OG 이미지의 상태 칩, 카카오 버튼)은 출력 쪽이 덧붙인다 | `buildShareContent`(features/animal-share/model/share-content.ts) | 카카오 템플릿, og:title·og:description·og:url, OG 이미지 | #73 | 공유 카드(카카오 메시지 하나) |
-| 공유 요약 (화면 없음) | 공고 한 줄 요약: 성별 · 나이 · 상태(· D-N) · 특이사항. 공유 카드 설명과 링크 미리보기 설명이 같은 문자열을 쓴다 | `animalSummaryText`(entities/animal/ui/labels.ts) | 카카오 카드 설명, og:description, twitter:description | #2, #73 | 특이사항(요약의 한 부분) |
+| 공유 요약 (화면 없음) | 공고 한 줄 요약: 성별 · 나이 · 상태(· 공고 마감 M월 D일(요)) · 특이사항. 밖으로 나가는 것이라 마감은 날짜로 쓴다(마감 표기, #57). 공유 카드 설명과 링크 미리보기 설명이 같은 문자열을 쓴다 | `animalSummaryText`(entities/animal/ui/labels.ts) | 카카오 카드 설명, og:description, twitter:description | #2, #73 | 특이사항(요약의 한 부분) |
 | 링크 복사 (화면: 토스트 "링크가 복사됐어요") | 카카오톡 공유를 쓸 수 없을 때 자동으로 하는 동작. 따로 버튼은 없다 | `SHARE_MESSAGES`(features/animal-share/model/share.ts) | 클립보드 | share.ts | — |
 | 필터 (화면: 버튼·시트 제목 "필터", "적용하기") | 목록 조건(축종, 지역, 상태, 성별, 정렬). URL이 단일 진실 소스이고, 적용 전 고른 값은 반영하지 않는다 | `AnimalListFilter`, `FILTER_KEYS`, `useApplyAnimalFilter`, `AnimalFilterSheet` | URL `species`·`region`·`district`·`status`·`sex`·`sort` | architecture.md 7절, #28 | — |
-| 정렬 (화면: "최신순" / "공고 마감 빠른순") | 최신순: 공고 시작일이 늦은 순. 공고 마감 빠른순: 마감이 오늘 이후인 공고를 빠른 순으로 먼저, 지난 공고를 그 뒤에. 옛 링크(`sort=endingSoon`)는 모르는 값이라 기본 정렬(최신순)로 열린다(별칭 해석 없음, #57). **코드 반영 예정**: 지금 화면은 "종료임박순" | `ANIMAL_LIST_SORTS` `latest` / `deadline`, `compareDeadline`(server/animals/service.ts) | URL `sort=latest\|deadline` | architecture.md 5절, EL 합의(#51), EL 결정(#56), #57 | 종료임박순·임박순(쓰지 않는다), endingSoon(옛 코드 이름·옛 URL 값) |
+| 정렬 (화면: "최신순" / "공고 마감 빠른순") | 최신순: 공고 시작일이 늦은 순. 공고 마감 빠른순: 마감이 오늘 이후인 공고를 빠른 순으로 먼저, 지난 공고를 그 뒤에. 옛 링크(`sort=endingSoon`)는 모르는 값이라 기본 정렬(최신순)로 열린다(별칭 해석 없음, #57). | `ANIMAL_LIST_SORTS` `latest` / `deadline`, `compareDeadline`(server/animals/service.ts) | URL `sort=latest\|deadline` | architecture.md 5절, EL 합의(#51), EL 결정(#56), #57 | 종료임박순·임박순(쓰지 않는다), endingSoon(옛 코드 이름·옛 URL 값) |
 | 기억 (화면: "한 번 고르면 기억해둘게요.") | 마지막으로 고른 축종과 지역을 쿠키에 1년 둔다. 사용자가 직접 고를 때만 저장하고, 공유 링크로 들어온 값은 저장하지 않는다 | `rememberSpecies`, `rememberRegion`, `writeFilterCookie`, `FILTER_COOKIE_MAX_AGE` | 쿠키 두 개 | architecture.md 7절, PRD-v1.1 4절, PRD-v1.4 R2 | 관심(localStorage, 다른 저장) |
 | 지도 보기 (화면: "지도") | 보호소 주소를 카카오맵 검색으로 새 탭에서 연다. 보호소 정보 시트의 주소 줄 끝에 둔다(**코드 반영 예정**: 지금은 정보 줄 "주소" 끝) | `mapSearchUrl`, `DetailRowAction` `"map"` | 카카오맵 URL | #3 | — |
 | 전화 걸기 (화면: "전화") | 보호소 전화로 `tel:` 링크를 연다. 숫자가 없으면 링크가 없다. 보호소 정보 시트의 전화 줄 끝에 둔다(**코드 반영 예정**: 지금은 정보 줄 "전화" 끝) | `telHref`, `"call"` | `tel:` | #3 | 정보 줄 이름 "전화" |
@@ -129,9 +129,6 @@
 
 | 용어 | 바뀔 것 | 이슈 |
 |---|---|---|
-| 마감 D-N, 오늘 마감 | 카드 "보호중 · 마감 D-N", 상세·공유·OG "공고 마감 D-N", 당일 "오늘 마감" | #57 |
-| 강조 | "임박" 문구 없앰 | #57 |
-| 정렬 | 화면 문구 "공고 마감 빠른순" | #57 |
 | 관심, 관심 목록 | 화면 문구 "찜" → 관심 문구 | #58 |
 | 공고 번호 | `noticeNo`를 계약·도메인·상세·카드에 | #59 |
 | 나이 | "2026년생 · 60일 미만" 형식 정리 | #60 |
