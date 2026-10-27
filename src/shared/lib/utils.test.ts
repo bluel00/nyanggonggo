@@ -18,6 +18,6 @@ describe("cn(토큰 테마)", () => {
   });
 
   it("배경 토큰 덮어쓰기(사진 위 배지)", () => {
-    expect(cn("bg-status-soon-bg", "bg-photo-pill")).toBe("bg-photo-pill");
+    expect(cn("bg-status-near-deadline-bg", "bg-photo-pill")).toBe("bg-photo-pill");
   });
 });

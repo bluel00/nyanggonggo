@@ -9,7 +9,7 @@ import { statusBadgeText, type StatusSubject } from "./status-text";
  */
 const VARIANT_CLASS: Record<AnimalStatusVariant, { badge: string; dot: string }> = {
   protected: { badge: "bg-status-protected-bg text-status-protected-text", dot: "bg-status-protected" },
-  nearDeadline: { badge: "bg-status-soon-bg text-status-soon-text", dot: "bg-status-soon" },
+  nearDeadline: { badge: "bg-status-near-deadline-bg text-status-near-deadline-text", dot: "bg-status-near-deadline" },
   ended: { badge: "bg-status-ended-bg text-status-ended-text", dot: "bg-status-ended" },
 };
 

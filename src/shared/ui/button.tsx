@@ -23,7 +23,7 @@ const buttonVariants = cva(
           "rounded-pill bg-photo-pill text-text transition-transform duration-press ease-out active:not-disabled:scale-press active:not-disabled:bg-bg focus-visible:border-transparent focus-visible:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
         /** 디자인 Primary(bundle.css .cn-btn--primary). size="touch"와 함께 쓴다 */
         primary:
-          "rounded-pill bg-primary text-primary-foreground transition-transform duration-press ease-out active:not-disabled:scale-press active:not-disabled:bg-[#1E1712] focus-visible:border-transparent focus-visible:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:bg-disabled-bg disabled:text-disabled-text disabled:opacity-100",
+          "rounded-pill bg-primary text-primary-foreground transition-transform duration-press ease-out active:not-disabled:scale-press active:not-disabled:bg-primary-pressed focus-visible:border-transparent focus-visible:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:bg-disabled-bg disabled:text-disabled-text disabled:opacity-100",
         /** 필터 시트의 적용하기만(bundle.css .cn-btn--apply): 복숭아색 그라데이션 pill + shadow-apply. size="touch"와 함께 쓴다 */
         apply:
           "rounded-pill bg-linear-135 from-apply-from to-apply-to text-on-apply shadow-apply transition-transform duration-press ease-out active:not-disabled:scale-press focus-visible:border-transparent focus-visible:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:shadow-none disabled:opacity-50",

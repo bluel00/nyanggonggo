@@ -29,7 +29,7 @@
 | 공고 기간 | 주인이 찾아갈 수 있도록 보호소가 공고하는 기간(동물보호법 제40조, 7일 이상). 화면 표기 `MM.DD ~ MM.DD` | `noticePeriodText` | `noticeSdt` ~ `noticeEdt` | 동물보호법 제40조, detail-rows.ts | — |
 | 공고 마감(일) | 공고 기간의 마지막 날. 지나도 상태는 바뀌지 않는다(제43조: 10일이 지나면 지자체가 소유권을 취득한다). KST 달력 날짜 | `noticeEndAt`(Domain), `noticeEndDate`(Wire) | `noticeEdt`(`YYYYMMDD`) | 동물보호법 제43조, architecture.md 10절 | 종료일·공고 종료(쓰지 않는다) |
 | 마감 표기 (앱 안: 카드 "보호중 · 마감 D-N", 당일 "보호중 · 오늘 마감" / 상세 "공고 마감 D-N", 당일 "오늘 마감". 밖으로 나가는 것: 공유 카드 설명·링크 미리보기 설명·OG 이미지 "공고 마감 M월 D일(요)") | 공고 마감을 알리는 표기. **규칙: 앱 안은 상대 표기, 밖으로 나가는 것은 날짜다.** 앱 안은 열 때마다 지금 시각으로 마감까지 남은 날 수(KST 달력)를 계산한다. 공유 카드와 링크 미리보기는 보낸·수집된 시점의 내용으로 굳고 카카오는 수집 결과를 캐시해, 상대 표기는 시간이 지나면 틀린 정보가 되므로 날짜로 쓴다(EL, #57). 날짜 형식은 정확히 "M월 D일(요)": 월·일 앞에 0을 붙이지 않고, 요일은 한 글자, "일"과 "(" 사이에 공백이 없다. 날짜는 KST로 자른다(`getDDay`와 같은 고정 +9시간). 당일도 날짜로 쓴다. 종료 공고, 마감일이 없는 공고, 마감이 지난 공고에는 앱 안과 밖 모두 붙이지 않는다(날짜가 붙는 것은 마감 전 보호중 공고뿐이다) | `getDDay`(entities/animal/model/dDay.ts), `cardDeadlineText`·`detailDeadlineText`·`deadlineDateText`(entities/animal/ui/status-text.ts) | 공유 카드 설명, og:description, OG 이미지 | #29, architecture.md 10절, EL 결정(#56), #57 | D-day(쓰지 않는다), D-0, 임박(쓰지 않는다) |
-| 강조 (화면 없음, 색만) | 보호중이면서 마감 D-3 이하인 공고. 강조 색으로만 구분한다. 배지 문구는 마감이 가깝지 않은 보호중과 같다("보호중 · 마감 D-N") | `isNearDeadline`(entities/animal/model/dDay.ts), 기준 일수 `NEAR_DEADLINE_DAYS`(3), 배지 종류 `"nearDeadline"`(`AnimalStatusVariant`, entities/animal/model/status.ts, 카드 속성 `data-status-variant`), 토큰 `status-soon*`(이름은 디자인 시스템에서 먼저 바꾼다, #53) | 없음 | architecture.md 10절, design/README.md, EL 결정(#56), #57 | 임박(쓰지 않는다), soon·isSoon(옛 코드 이름) |
+| 강조 (화면 없음, 색만) | 보호중이면서 마감 D-3 이하인 공고. 강조 색으로만 구분한다. 배지 문구는 마감이 가깝지 않은 보호중과 같다("보호중 · 마감 D-N") | `isNearDeadline`(entities/animal/model/dDay.ts), 기준 일수 `NEAR_DEADLINE_DAYS`(3), 배지 종류 `"nearDeadline"`(`AnimalStatusVariant`, entities/animal/model/status.ts, 카드 속성 `data-status-variant`), 토큰 `status-near-deadline*`(#53) | 없음 | architecture.md 10절, design/README.md, EL 결정(#56), #57 | 임박(쓰지 않는다), soon·isSoon(옛 코드 이름), `status-soon*`(옛 토큰 이름) |
 
 ## 2. 공고와 동물
 
@@ -120,7 +120,7 @@
 |---|---|---|---|---|---|
 | 서비스 이름 (화면: "멍냥공고") | 이 서비스의 이름. 화면, 문서 제목, og:title, OG 이미지, 문서에 쓴다. 코드에서는 상수 한 곳에서만 정의한다. | `SERVICE_NAME`(shared/config/service.ts) | 문서 제목, og:title, OG 이미지, 카카오 개발자 콘솔의 앱 이름(공유 카드 아래 이름, 코드 밖) | EL 결정(#56), #64 | 냥공고(옛 이름, 쓰지 않는다) |
 | 한 줄 소개 (화면: "보호 중인 아이들의 공고가 / 더 많은 사람에게 닿도록.") | 서비스를 한 줄로 소개하는 문구. "/"는 줄바꿈 자리다. 홈 위쪽 서비스 이름 아래에 본문 글자(`body`, `text-2`)로 두 줄, 등장 효과 없이 처음부터 보인다 | `SERVICE_TAGLINE`(shared/config/service.ts) | 없음 | EL 결정(#56), #64 | — |
-| 로고 (화면: 홈 위쪽 가로 조합, 브라우저 탭·홈 화면 아이콘, 링크 미리보기 이미지의 알약) | 상징 C(크림 얼굴 + 갈색 선, 복숭아 타일). 컴포넌트 하나가 크기로 변형을 고른다: 24px 이하 tile-small, 25~55px tile, 56px 이상 line. 조합은 상징만(mark) / 가로 조합(lockup, 상징 + 이름 윤곽선). 쓰는 쪽은 크기와 조합만 말하고, 접근성 이름은 서비스 이름이다 | `Logo`(shared/ui/logo.tsx), 원본 SVG `shared/assets/logo/` | `app/favicon.ico`·`icon*.png`·`apple-icon.png`, OG 이미지 | #66 | 글자 로고(옛 홈 서비스명 글자), 로고 색 토큰 `logo`(로고에 쓰지 않는다) |
+| 로고 (화면: 홈 위쪽 가로 조합, 브라우저 탭·홈 화면 아이콘, 링크 미리보기 이미지의 알약) | 상징 C(크림 얼굴 + 갈색 선, 복숭아 타일). 컴포넌트 하나가 크기로 변형을 고른다: 24px 이하 tile-small, 25~55px tile, 56px 이상 line. 조합은 상징만(mark) / 가로 조합(lockup, 상징 + 이름 윤곽선). 쓰는 쪽은 크기와 조합만 말하고, 접근성 이름은 서비스 이름이다 | `Logo`(shared/ui/logo.tsx), 원본 SVG `shared/assets/logo/` | `app/favicon.ico`·`icon*.png`·`apple-icon.png`, OG 이미지 | #66 | 글자 로고(옛 홈 서비스명 글자), 로고 색 토큰 `logo`(디자인 시스템에서 지웠다, #53) |
 | 운영 주소·저장 키 (화면 없음) | 옛 이름이 들어간 주소와 키. 사용자 데이터와 이미 퍼진 링크를 지키려고 이름을 바꿔도 그대로 둔다(규칙의 예외) | 쿠키 `nyanggonggo.species`·`nyanggonggo.region`, 저장소 키 `nyanggonggo:favorites`·`nyanggonggo:visited-list`, 이벤트 `nyanggonggo:favorites-change` | `nyanggonggo.vercel.app`, 위 쿠키·저장소 키 | EL 결정(#56) | — |
 
 ## 코드 반영 예정 목록
@@ -152,7 +152,7 @@
 - **`regionText`와 `region`**: 관할 지역 이름(`orgNm`)과 필터의 시·도 코드가 같은 낱말이다.
 - **`status`의 세 뜻**: `Animal.status`(값 2개), 목록 쿼리 status(값 3개, `all` 포함), 카드 `data-status`(아래 항목, 바꿨다).
 - ~~카드 `data-status`에 variant 값~~: 바꿨다(#61). 카드 속성 `data-status` → `data-status-variant`(값은 배지 종류 `AnimalStatusVariant`: `protected` | `nearDeadline` | `ended`).
-- ~~강조·정렬 쪽 이름~~: 바꿨다(#57). `soon` → `nearDeadline`, `isSoon` → `isNearDeadline`, `SOON_THRESHOLD_DAYS` → `NEAR_DEADLINE_DAYS`, `endingSoon` → `deadline`(URL 정렬 값 포함), `compareEndingSoon` → `compareDeadline`. 토큰 `status-soon*`만 남았다(디자인 시스템에서 먼저 바꾼다, #53).
+- ~~강조·정렬 쪽 이름~~: 바꿨다(#57). `soon` → `nearDeadline`, `isSoon` → `isNearDeadline`, `SOON_THRESHOLD_DAYS` → `NEAR_DEADLINE_DAYS`, `endingSoon` → `deadline`(URL 정렬 값 포함), `compareEndingSoon` → `compareDeadline`. 토큰 `status-soon*`도 디자인 시스템이 먼저 바꾼 뒤 `status-near-deadline*`로 바꿨다(#53).
 - **enter·fade/info·press의 겹침**: `data-enter`(첫 화면 등장)와 `data-detail-enter`·`DetailEntry`(진입 효과). 진입 모드 `fade`와 morph 중 정보 페이드 값 `"info"`. 카드 누름 효과와 캐릭터 트리거 `press`.
 - **"목록"과 dialog의 여러 뜻**: "목록"은 목록 화면, 목록 화면들(목록 + 관심 목록, `shared/lib/app-navigation.ts`), 관심 목록을 가리킨다. 상세 층·시트·사진 크게 보기가 모두 `role="dialog"`다.
 - **공고 ↔ `Animal`**: 화면과 문서는 공고, 코드는 `Animal`·`entities/animal`이다.
