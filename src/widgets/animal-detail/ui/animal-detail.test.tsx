@@ -167,107 +167,78 @@ describe("AnimalDetail", () => {
     );
     const { container } = renderDetail();
     await screen.findByRole("heading");
+    // 주소·전화는 정보 줄이 아니라 보호소 정보 시트에 있다(#62). 보호소 줄 값은 버튼과 함께 있어 detail-value가 span이다
     const values = [...container.querySelectorAll('[data-slot="detail-value"]')];
-    expect(values.map((value) => value.textContent)).toEqual([
-      "서귀포시 남원읍",
-      "제2동물보호센터",
-      "가상특별시 예시구 테스트로 12",
-      "000-1234-5678",
-      "09.21 ~ 10.01",
-      "보호센터 내 출산",
-    ]);
+    expect(values.map((value) => value.textContent)).toEqual(["서귀포시 남원읍", "제2동물보호센터", "09.21 ~ 10.01", "보호센터 내 출산"]);
     for (const value of values) {
       expect(value.className.split(" ")).toEqual(expect.arrayContaining(["break-keep", "wrap-anywhere"]));
     }
   });
 
-  describe("보호소 주소·전화(이슈 #3, 지어낸 값)", () => {
+  describe("보호소 정보 시트(이슈 #62, 지어낸 값)", () => {
     const ADDRESS = "가상특별시 예시구 테스트로 12 (샘플동)";
     const TEL = "000-1234-5678";
     const contactWire = (overrides: Partial<AnimalWireDto> = {}) => wire({ shelterAddressText: ADDRESS, shelterTelText: TEL, ...overrides });
     const terms = (container: HTMLElement) => [...container.querySelectorAll("dt")].map((dt) => dt.textContent);
+    const openSheet = () => fireEvent.click(screen.getByRole("button", { name: "보호소 정보 보기" }));
 
-    it("보호 중: 발견 장소 → 보호소 → 주소 → 전화 순서이고, 값은 원문 그대로, 줄 끝에 [지도]·[전화] 링크", async () => {
-      fetchMock.mockResolvedValue(Response.json(contactWire()));
+    it("정보 줄에 주소·전화가 없고, 보호소 줄 끝에 [보호소 정보](작은 글자, 44px)", async () => {
+      fetchMock.mockResolvedValue(Response.json(contactWire({ specialMarkText: "가상 특이사항" })));
       const { container } = renderDetail();
       await screen.findByRole("heading");
-      expect(terms(container)).toEqual(["발견 장소", "보호소", "주소", "전화", "공고 기간"]);
+      expect(terms(container)).toEqual(["발견 장소", "보호소", "공고 기간", "특이사항"]);
+      expect(screen.queryByText(ADDRESS)).toBeNull();
+      expect(screen.queryByText(TEL)).toBeNull();
+      const button = screen.getByRole("button", { name: "보호소 정보 보기" });
+      expect(button.textContent).toBe("보호소 정보");
+      expect(button.closest("dd")?.textContent).toContain("제2동물보호센터");
+      expect(button.className).toContain("text-text-2");
+      expect(button.className).toContain("text-caption");
+      expect(button.className.split(" ")).toEqual(expect.arrayContaining(["min-h-11", "min-w-11"]));
+    });
+
+    it("버튼을 누르면 시트: 제목은 보호소 이름, 주소 + [지도](새 탭), 전화 + [전화](tel: 숫자만), 값은 그냥 글자", async () => {
+      fetchMock.mockResolvedValue(Response.json(contactWire()));
+      renderDetail();
+      await screen.findByRole("heading");
+      openSheet();
+      const sheet = await screen.findByRole("dialog", { name: "제2동물보호센터" });
+      expect(sheet.textContent).toContain(ADDRESS);
       expect(screen.getByText(ADDRESS).tagName).toBe("SPAN");
       expect(screen.getByText(TEL).tagName).toBe("SPAN");
-
       const map = screen.getByRole("link", { name: "지도에서 주소 보기(새 탭)" });
       expect(map.getAttribute("href")).toBe(`https://map.kakao.com/link/search/${encodeURIComponent(ADDRESS)}`);
       expect(map.getAttribute("target")).toBe("_blank");
       expect(map.getAttribute("rel")).toBe("noopener");
-      expect(map.textContent).toBe("지도");
-
       const call = screen.getByRole("link", { name: "보호소에 전화" });
       expect(call.getAttribute("href")).toBe("tel:00012345678");
       expect(call.hasAttribute("target")).toBe(false);
-      expect(call.textContent).toBe("전화");
-      // 채운 버튼이 아니라 보조 글자색 + 작은 글자, 누르는 영역 44×44px
-      for (const link of [map, call]) {
-        expect(link.className).toContain("text-text-2");
-        expect(link.className).toContain("text-caption");
-        expect(link.className.split(" ")).toEqual(expect.arrayContaining(["min-h-11", "min-w-11"]));
-        expect(link.className.split(" ").some((name) => name.startsWith("bg-"))).toBe(false);
-      }
     });
 
-    // 정보 줄 고정(이슈 #30): 모든 값이 있을 때 순서·라벨·값
-    it("모든 값이 있으면 발견 장소 → 보호소 → 주소 → 전화 → 공고 기간 → 특이사항, 값은 원문 그대로", async () => {
-      fetchMock.mockResolvedValue(Response.json(contactWire({ specialMarkText: "가상 특이사항" })));
-      const { container } = renderDetail();
+    it("값이 없는 줄은 시트에서 빼고, 숫자 없는 전화는 줄만 두고 [전화] 링크를 뺀다", async () => {
+      fetchMock.mockResolvedValue(Response.json(contactWire({ shelterAddressText: null, shelterTelText: "미정" })));
+      renderDetail();
       await screen.findByRole("heading");
-      expect(terms(container)).toEqual(["발견 장소", "보호소", "주소", "전화", "공고 기간", "특이사항"]);
-      expect([...container.querySelectorAll('[data-slot="detail-value"]')].map((value) => value.textContent)).toEqual([
-        "서귀포시 남원읍",
-        "제2동물보호센터",
-        ADDRESS,
-        TEL,
-        "09.21 ~ 10.01",
-        "가상 특이사항",
-      ]);
-      expect([...container.querySelectorAll('[data-slot="contact-link"]')].map((link) => link.getAttribute("aria-label"))).toEqual([
-        "지도에서 주소 보기(새 탭)",
-        "보호소에 전화",
-      ]);
-    });
-
-    it("전화에 숫자가 없으면 줄은 두고 [전화] 링크만 뺀다", async () => {
-      fetchMock.mockResolvedValue(Response.json(contactWire({ shelterTelText: "미정" })));
-      const { container } = renderDetail();
-      await screen.findByRole("heading");
-      expect(terms(container)).toEqual(["발견 장소", "보호소", "주소", "전화", "공고 기간"]);
+      openSheet();
+      const sheet = await screen.findByRole("dialog", { name: "제2동물보호센터" });
+      expect([...sheet.querySelectorAll("dt")].map((dt) => dt.textContent)).toEqual(["전화"]);
       expect(screen.getByText("미정")).toBeTruthy();
       expect(screen.queryByRole("link", { name: "보호소에 전화" })).toBeNull();
-      expect(screen.getByRole("link", { name: "지도에서 주소 보기(새 탭)" })).toBeTruthy();
-    });
-
-    it("종료: 주소·전화 줄을 숨기고 보호소 이름은 둔다", async () => {
-      fetchMock.mockResolvedValue(Response.json(contactWire({ status: "ended" })));
-      const { container } = renderDetail();
-      await screen.findByRole("heading");
-      expect(terms(container)).toEqual(["발견 장소", "보호소", "공고 기간"]);
-      expect(screen.getByText("제2동물보호센터")).toBeTruthy();
-      expect(screen.queryByText(ADDRESS)).toBeNull();
-      expect(screen.queryByText(TEL)).toBeNull();
-      expect(container.querySelector('[data-slot="contact-link"]')).toBeNull();
-    });
-
-    it("주소가 없으면 주소 줄만, 전화가 없으면 전화 줄만 뺀다", async () => {
-      fetchMock.mockResolvedValue(Response.json(contactWire({ shelterAddressText: null })));
-      const { container } = renderDetail();
-      await screen.findByRole("heading");
-      expect(terms(container)).toEqual(["발견 장소", "보호소", "전화", "공고 기간"]);
       expect(screen.queryByRole("link", { name: "지도에서 주소 보기(새 탭)" })).toBeNull();
+    });
+
+    it("종료 공고이거나 주소·전화가 모두 없으면 버튼이 없다(보호소 이름 줄은 그대로)", async () => {
+      fetchMock.mockResolvedValue(Response.json(contactWire({ status: "ended" })));
+      renderDetail();
+      await screen.findByRole("heading");
+      expect(screen.getByText("제2동물보호센터")).toBeTruthy();
+      expect(screen.queryByRole("button", { name: "보호소 정보 보기" })).toBeNull();
       cleanup();
 
-      fetchMock.mockResolvedValue(Response.json(contactWire({ shelterTelText: "  " })));
-      const second = renderDetail();
+      fetchMock.mockResolvedValue(Response.json(contactWire({ shelterAddressText: null, shelterTelText: "  " })));
+      renderDetail();
       await screen.findByRole("heading");
-      expect(terms(second.container)).toEqual(["발견 장소", "보호소", "주소", "공고 기간"]);
-      expect(screen.queryByRole("link", { name: "보호소에 전화" })).toBeNull();
+      expect(screen.queryByRole("button", { name: "보호소 정보 보기" })).toBeNull();
     });
   });
 
