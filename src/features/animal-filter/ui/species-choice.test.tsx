@@ -62,6 +62,15 @@ describe("SpeciesChoice", () => {
     expect(chevron.getAttribute("class")).toContain("lucide-chevron-right");
   });
 
+  it("고양이·강아지·기타 동물 카드는 누름이 같다: .98 + shadow-card-pressed, 움직임 줄이기면 없음(motion-safe)", () => {
+    render(<SpeciesChoice area={{ region: SEOUL }} enterFrom={1} />);
+    for (const name of ["고양이", "강아지", "기타 동물"]) {
+      const classes = screen.getByRole("link", { name }).className.split(" ");
+      expect(classes, name).toEqual(expect.arrayContaining(["motion-safe:active:scale-press", "motion-safe:active:shadow-card-pressed"]));
+      expect(classes, name).not.toContain("active:shadow-card-pressed");
+    }
+  });
+
   it("기타 동물 카드는 등장 순서에서 강아지 다음이다(링크 자리를 받는다)", () => {
     render(<SpeciesChoice area={{ region: SEOUL }} enterFrom={1} />);
     const order = (name: string) => screen.getByRole("link", { name }).style.getPropertyValue("--enter-i");

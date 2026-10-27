@@ -72,6 +72,22 @@ test("누르는 동안 카드는 .98 + shadow-card-pressed, 캐릭터 셋은 납
   await expect(page).toHaveURL(OTHER_LIST);
 });
 
+test("고양이·강아지 큰 카드도 누르는 동안 .98 + shadow-card-pressed다(#53 C1)", async ({ page }) => {
+  await page.goto("/home");
+  await waitEntered(page);
+  for (const name of ["고양이", "강아지"]) {
+    const card = page.getByRole("link", { name, exact: true });
+    const rest = await pressStyle(card);
+    await holdOn(page, card);
+    await expect.poll(() => pressStyle(card).then((style) => style.scale)).toBe("0.98");
+    expect((await pressStyle(card)).shadow, name).not.toBe(rest.shadow);
+    // 손을 떼면 이동하므로, 떼기 전에 카드 밖으로 옮겨 누름만 푼다
+    await page.mouse.move(0, 0);
+    await page.mouse.up();
+    await expect.poll(() => pressStyle(card)).toMatchObject({ scale: "none", shadow: rest.shadow });
+  }
+});
+
 test.describe("움직임 줄이기", () => {
   test.use({ reducedMotion: "reduce" });
 
@@ -86,5 +102,18 @@ test.describe("움직임 줄이기", () => {
     expect(await pressStyle(card)).toEqual(rest);
     await page.mouse.up();
     await expect(page).toHaveURL(OTHER_LIST);
+  });
+
+  test("고양이·강아지 큰 카드도 누름 반응(크기·그림자)이 없다", async ({ page }) => {
+    await page.goto("/home");
+    for (const name of ["고양이", "강아지"]) {
+      const card = page.getByRole("link", { name, exact: true });
+      await expect(card).toBeVisible();
+      const rest = await card.evaluate((element) => [getComputedStyle(element).scale, getComputedStyle(element).boxShadow]);
+      await holdOn(page, card);
+      expect(await card.evaluate((element) => [getComputedStyle(element).scale, getComputedStyle(element).boxShadow]), name).toEqual(rest);
+      await page.mouse.move(0, 0);
+      await page.mouse.up();
+    }
   });
 });
