@@ -87,7 +87,7 @@ test("종료 카드: 첫 화면 등장·누름·하트 튐이 없다(보호중 �
   await mockList(page, list);
   await page.goto("/");
   await expect(card(page, list[ENDED].id)).toBeVisible();
-  await expect(card(page, list[ENDED].id)).toHaveAttribute("data-status", "ended");
+  await expect(card(page, list[ENDED].id)).toHaveAttribute("data-status-variant", "ended");
 
   // 첫 화면의 두 장 중 보호중(0번)만 등장한다
   expect(await enteringCards(page)).toEqual([list[0].id]);

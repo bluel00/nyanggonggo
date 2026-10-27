@@ -149,7 +149,7 @@ test.describe("카드 → 상세 전환", () => {
       },
     );
     await openListWithPhoto(page, TWO_PHOTOS);
-    await expect(card(page, TWO_PHOTOS)).toHaveAttribute("data-status", "ended");
+    await expect(card(page, TWO_PHOTOS)).toHaveAttribute("data-status-variant", "ended");
     await card(page, TWO_PHOTOS).locator("a").click();
     await openedDetail(page);
     await page.waitForTimeout(400);

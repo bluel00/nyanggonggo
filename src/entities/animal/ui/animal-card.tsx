@@ -125,7 +125,7 @@ export function AnimalCard({
     ended ? "shadow-card-ended" : "shadow-card",
   );
   return (
-    <div data-slot={ANIMAL_CARD_SLOT} data-status={variant} {...(motion ? {} : { [ANIMAL_CARD_STILL_ATTR]: "" })} data-animal-id={animal.id} className="relative">
+    <div data-slot={ANIMAL_CARD_SLOT} data-status-variant={variant} {...(motion ? {} : { [ANIMAL_CARD_STILL_ATTR]: "" })} data-animal-id={animal.id} className="relative">
       {href ? (
         <Link
           href={href}
