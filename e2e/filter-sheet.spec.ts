@@ -89,3 +89,42 @@ test("시트 안 칩(보호 상태, 성별)은 토글 버튼(aria-pressed)으로
     "true",
   );
 });
+
+/** 시트와 바탕의 계산된 애니메이션 이름(tw-animate-css: 열림 enter, 닫힘 exit) */
+const sheetAnimations = (page: Page) =>
+  page.evaluate(() =>
+    ['[data-slot="sheet-overlay"]', '[data-slot="sheet-content"]'].map((selector) => {
+      const el = document.querySelector(selector);
+      return el ? getComputedStyle(el).animationName : null;
+    }),
+  );
+
+test.describe("움직임 줄이기(#61)", () => {
+  test.use({ reducedMotion: "reduce" });
+
+  test("시트는 애니메이션 없이 열리고 닫힌다", async ({ page }) => {
+    await page.goto(LIST_URL);
+    // 열고 닫는 동안 시작된 애니메이션 이름을 모은다
+    await page.evaluate(() => {
+      const started: string[] = [];
+      (window as unknown as { __started: string[] }).__started = started;
+      document.addEventListener("animationstart", (event) => started.push(event.animationName), true);
+    });
+    const started = () => page.evaluate(() => (window as unknown as { __started: string[] }).__started);
+
+    await page.getByRole("button", { name: "필터" }).click();
+    await expect(page.locator(SHEET)).toBeVisible();
+    expect(await sheetAnimations(page)).toEqual(["none", "none"]);
+
+    await page.keyboard.press("Escape");
+    await expect(page.locator(SHEET)).toHaveCount(0);
+    expect(await started()).toEqual([]);
+  });
+});
+
+test("움직임 줄이기가 아니면 시트는 애니메이션으로 열린다", async ({ page }) => {
+  await page.goto(LIST_URL);
+  await page.getByRole("button", { name: "필터" }).click();
+  await expect(page.locator(SHEET)).toBeVisible();
+  expect(await sheetAnimations(page)).toEqual(["enter", "enter"]);
+});
