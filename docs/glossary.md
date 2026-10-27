@@ -56,8 +56,8 @@
 | 전국 (화면: "전체 시/도") | 지역을 고르지 않음. 서버는 지역 코드를 보내지 않는다 | `REGION_ALL`(filter.ts) | URL `region=all` | architecture.md 7절 | 전체 |
 | 발견 장소 | `happenPlace` 원문. 보호소가 없으면 카드 2줄에도 쓴다 | `foundPlaceText`, `animalSubtitle`(labels.ts) | `happenPlace` | architecture.md 6절 | 지역(관할 지역) |
 | 보호소 | `careNm`. 동물병원일 수 있다 | `shelterName` | `careNm` | architecture.md 4절 | — |
-| 보호소 주소 (화면: 보호소 정보 시트의 주소 줄 + [지도]) | `careAddr`. 보호소 정보 시트에 복사할 수 있는 글자로 보인다. 종료 공고에는 보이지 않는다. 로그에 남기지 않는다. **코드 반영 예정**: 지금은 상세 정보 줄 "주소"에 있다 | `shelterAddressText` | `careAddr`, 카카오맵 검색 URL | #3, #30, EL 결정(#56) | — |
-| 보호소 전화 (화면: 보호소 정보 시트의 전화 줄 + [전화]) | `careTel` 원문. 보호소 정보 시트에 복사할 수 있는 글자로 보인다. 종료 공고에는 보이지 않는다. 로그에 남기지 않는다. **코드 반영 예정**: 지금은 상세 정보 줄 "전화"에 있다 | `shelterTelText` | `careTel`, `tel:` 링크 | #3, EL 결정(#56) | 전화 걸기(행동) |
+| 보호소 주소 (화면: 보호소 정보 시트의 주소 줄 + [지도]) | `careAddr`. 보호소 정보 시트에 복사할 수 있는 글자로 보인다(상세 정보 줄에는 없다, #62). 종료 공고에는 보이지 않는다. 로그에 남기지 않는다 | `shelterAddressText` | `careAddr`, 카카오맵 검색 URL | #3, #30, EL 결정(#56), #62 | — |
+| 보호소 전화 (화면: 보호소 정보 시트의 전화 줄 + [전화]) | `careTel` 원문. 보호소 정보 시트에 복사할 수 있는 글자로 보인다(상세 정보 줄에는 없다, #62). 종료 공고에는 보이지 않는다. 로그에 남기지 않는다 | `shelterTelText` | `careTel`, `tel:` 링크 | #3, EL 결정(#56), #62 | 전화 걸기(행동) |
 | 담당자 (화면 없음) | `careOwnerNm`. Wire·Domain·화면·로그 어디에도 내보내지 않는다 | DTO `careOwnerNm` | 없음 | CLAUDE.md 보안, architecture.md 6절 | — |
 
 ## 4. 사용자 행동
@@ -72,8 +72,8 @@
 | 필터 (화면: 버튼·시트 제목 "필터", "적용하기") | 목록 조건(축종, 지역, 상태, 성별, 정렬). URL이 단일 진실 소스이고, 적용 전 고른 값은 반영하지 않는다 | `AnimalListFilter`, `FILTER_KEYS`, `useApplyAnimalFilter`, `AnimalFilterSheet` | URL `species`·`region`·`district`·`status`·`sex`·`sort` | architecture.md 7절, #28 | — |
 | 정렬 (화면: "최신순" / "공고 마감 빠른순") | 최신순: 공고 시작일이 늦은 순. 공고 마감 빠른순: 마감이 오늘 이후인 공고를 빠른 순으로 먼저, 지난 공고를 그 뒤에. 옛 링크(`sort=endingSoon`)는 모르는 값이라 기본 정렬(최신순)로 열린다(별칭 해석 없음, #57). | `ANIMAL_LIST_SORTS` `latest` / `deadline`, `compareDeadline`(server/animals/service.ts) | URL `sort=latest\|deadline` | architecture.md 5절, EL 합의(#51), EL 결정(#56), #57 | 종료임박순·임박순(쓰지 않는다), endingSoon(옛 코드 이름·옛 URL 값) |
 | 기억 (화면: "한 번 고르면 기억해둘게요.") | 마지막으로 고른 축종과 지역을 쿠키에 1년 둔다. 사용자가 직접 고를 때만 저장하고, 공유 링크로 들어온 값은 저장하지 않는다 | `rememberSpecies`, `rememberRegion`, `writeFilterCookie`, `FILTER_COOKIE_MAX_AGE` | 쿠키 두 개 | architecture.md 7절, PRD-v1.1 4절, PRD-v1.4 R2 | 관심(localStorage, 다른 저장) |
-| 지도 보기 (화면: "지도") | 보호소 주소를 카카오맵 검색으로 새 탭에서 연다. 보호소 정보 시트의 주소 줄 끝에 둔다(**코드 반영 예정**: 지금은 정보 줄 "주소" 끝) | `mapSearchUrl`, `DetailRowAction` `"map"` | 카카오맵 URL | #3 | — |
-| 전화 걸기 (화면: "전화") | 보호소 전화로 `tel:` 링크를 연다. 숫자가 없으면 링크가 없다. 보호소 정보 시트의 전화 줄 끝에 둔다(**코드 반영 예정**: 지금은 정보 줄 "전화" 끝) | `telHref`, `"call"` | `tel:` | #3 | 정보 줄 이름 "전화" |
+| 지도 보기 (화면: "지도") | 보호소 주소를 카카오맵 검색으로 새 탭에서 연다. 보호소 정보 시트의 주소 줄 끝에 둔다 | `mapSearchUrl`(features/shelter-info/model/shelter-contact.ts) | 카카오맵 URL | #3, #62(entities에서 옮김) | — |
+| 전화 걸기 (화면: "전화") | 보호소 전화로 `tel:` 링크를 연다. 숫자가 없으면 링크가 없다. 보호소 정보 시트의 전화 줄 끝에 둔다 | `telHref`(features/shelter-info/model/shelter-contact.ts) | `tel:` | #3, #62 | 시트 줄 이름 "전화" |
 | 뒤로가기 | 이 탭에서 목록을 거쳐 왔으면 방문 기록을 되돌리고, 아니면 목록(`/`)으로 간다 | `useGoBack`, `BackButton`(shared/ui/back-button.tsx), `markListVisited` | sessionStorage 키 | PRD-v1.4 R1·R2, PRD-v1.5 | — |
 
 ## 5. 화면 요소
@@ -86,9 +86,9 @@
 | 관심 목록 (화면: 목록 이름·헤더 링크 "관심 공고", 빈 상태 "아직 관심 공고가 없어요" + 설명 "하트를 눌러 관심 공고에 담아 보세요", 오류 "지금은 관심 공고를 불러오지 못했어요") | 관심 공고만 모은 목록. 축종이 섞인다. 일부 실패 안내 "일부 공고를 불러오지 못했어요"는 관심을 말하지 않아 그대로다 | `FavoritesView`, `FavoriteList`, `FavoritesLink`, `ANIMAL_COPY.favoritesTitle`·`favoritesEmptyTitle`·`favoritesEmptyDescription`·`favoritesErrorTitle` | URL `/favorites` | architecture.md 8절, EL 결정(#56), #58 | 찜 목록(쓰지 않는다) |
 | 카드 (화면 없음) | 목록의 공고 한 칸. 사진 1:1, 상태 배지, 관심 버튼, 1줄 지역(관할 지역), 2줄 보호소(없으면 발견 장소) | `AnimalCard`, `ANIMAL_CARD_SLOT`(entities/animal/ui/animal-card.tsx) | 없음 | handoff 화면 1~2 | — |
 | 상세 (화면: 층 이름 "공고 상세") | 공고 하나의 화면. 목록·관심 목록에서 열면 목록 위에 얹힌 층이고, 링크로 바로 들어오면 새 문서다 | `AnimalDetail`, `StackLayer`(shared/ui/stack-layer.tsx), `app/@modal/(.)animals/[id]` | URL `/animals/{id}` | PRD-v1.5, architecture.md 7절 | 모달 |
-| 정보 줄 (화면 없음) | 상세의 이름-값 줄: 발견 장소 → 보호소 → 공고 기간 → 종료 사유 → 특이사항. 값이 없으면 줄을 뺀다. 보호소 주소·전화는 보호소 정보 시트에 둔다. **코드 반영 예정**: 지금은 보호소 뒤에 주소 → 전화 줄이 있다 | `detailRows`, `DETAIL_ROW_LABELS`, `DetailRow`(detail-rows.ts) | 없음 | #3, #30, #41, EL 결정(#56) | — |
+| 정보 줄 (화면 없음) | 상세의 이름-값 줄: 발견 장소 → 보호소 → 공고 번호 → 공고 기간 → 종료 사유 → 특이사항. 값이 없으면 줄을 뺀다. 보호소 주소·전화는 보호소 정보 시트에 두고, 보호소 줄 끝에 시트를 여는 [보호소 정보]가 붙는다 | `detailRows`, `DETAIL_ROW_LABELS`, `DetailRow`, 줄 끝 동작 `DetailRowAction` `"shelterInfo"`(detail-rows.ts) | 없음 | #3, #30, #41, EL 결정(#56), #59, #62 | — |
 | 시트 (화면: "필터", 보호소 정보 시트) | 모달 바텀시트. 화면 안의 상호작용이다. 화면을 떠나는 동작(쓸어넘기기·뒤로 가기)은 시트가 열려 있어도 화면을 닫는다. 방문 기록에 넣지 않는다 | `Sheet`(shared/ui/sheet.tsx), `AnimalFilterSheet` | 없음 | 기능명세서 4.2, EL 합의(#51) | 팝업(쓰지 않는다) |
-| 보호소 정보 시트 (화면: 보호소 줄 끝 작은 글자 버튼 "보호소 정보", 접근성 이름 "보호소 정보 보기". 시트 제목은 보호소 이름) | 상세 보호소 줄 끝의 [보호소 정보]로 여는 시트. 내용은 주소 + [지도], 전화 + [전화]이고 값이 없는 줄은 뺀다. 종료 공고이거나 주소·전화가 모두 없으면 버튼이 없다. 시트 정책을 따른다(상세가 닫히면 함께 사라진다). **코드 반영 예정**: 지금은 없다(주소·전화가 정보 줄에 있다) | 아직 없음. 기존 `Sheet`를 쓴다 | 없음 | EL 결정(#56) | 팝업(쓰지 않는다) |
+| 보호소 정보 시트 (화면: 보호소 줄 끝 작은 글자 버튼 "보호소 정보", 접근성 이름 "보호소 정보 보기". 시트 제목은 보호소 이름) | 상세 보호소 줄 끝의 [보호소 정보]로 여는 시트. 내용은 주소 + [지도], 전화 + [전화]이고 값이 없는 줄은 뺀다. 종료 공고이거나 주소·전화가 모두 없으면 버튼이 없다. 시트 정책을 따른다(배경 탭·핸들 탭·Esc로 닫고, 방문 기록에 넣지 않으며, 상세가 닫히면 함께 사라진다). 공고 번호는 두지 않는다(상세 정보 줄에 있다) | `ShelterInfoSheet`, `shelterContactRows`(features/shelter-info), 기존 `Sheet` | 없음 | EL 결정(#56), #62 | 팝업(쓰지 않는다) |
 | 사진 크게 보기 | 컬럼 전체를 덮는 검은 사진 뷰어. 보던 사진 위치를 지킨다 | `ImageViewer`(widgets/animal-detail) | 없음 | 기능명세서 4.4, architecture.md 9절 | 풀스크린 뷰어 |
 | 토스트 | 짧은 안내. 컬럼 안에 두고, 같은 문구는 하나로 갱신한다 | `showToast`(shared/ui/toast.ts), `Toaster`(shared/ui/sonner.tsx) | 없음 | architecture.md 9절 | — |
 | 링크 미리보기 (화면 없음) | 주소를 붙여 넣었을 때 메신저가 OG 메타(og:title·description·image·url)로 그리는 카드. 우리가 그리지 않고 메신저가 수집해 그린다(카카오는 수집 결과를 캐시한다) | `generateMetadata`(app/animals/[id]/page.tsx), `siteMetadata`(app/site-metadata.ts) | og:* 메타 | #69, #73 | 공유 카드 |
@@ -129,7 +129,6 @@
 
 | 용어 | 바뀔 것 | 이슈 |
 |---|---|---|
-| 정보 줄, 보호소 주소, 보호소 전화, 지도 보기, 전화 걸기, 보호소 정보 시트 | 주소·전화를 정보 줄에서 보호소 정보 시트로 | #62 |
 
 ## 받지 않는 공공 API 필드
 
