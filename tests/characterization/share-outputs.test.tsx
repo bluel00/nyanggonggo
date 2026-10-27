@@ -163,7 +163,7 @@ describe("OG 이미지 모델", () => {
     expect(driveOgModel(WIRES.rabbit)).toEqual({
       title: "토끼 · 가상도 예시시",
       sub: "예시 공원 입구",
-      variant: "soon",
+      variant: "nearDeadline",
       badgeText: "임박",
       dDayText: "D-1",
       imageSrc: null,

@@ -86,8 +86,8 @@ describe("list: 정렬", () => {
     ]);
   });
 
-  it("endingSoon: 미만료는 noticeEdt 오름차순(동률은 desertionNo 오름차순), 만료는 뒤로", async () => {
-    expect(ids(await service().list(params({ status: "all", sort: "endingSoon" })))).toEqual([
+  it("deadline: 미만료는 noticeEdt 오름차순(동률은 desertionNo 오름차순), 만료는 뒤로", async () => {
+    expect(ids(await service().list(params({ status: "all", sort: "deadline" })))).toEqual([
       ID.sexQ, // 0928
       ID.optionalSfe, // 1001, 445...
       ID.twoBrackets, // 1001, 448...
@@ -97,7 +97,7 @@ describe("list: 정렬", () => {
     ]);
   });
 
-  describe("endingSoon: 만료/미만료가 섞인 입력", () => {
+  describe("deadline: 만료/미만료가 섞인 입력", () => {
     const at = (id: string, noticeEdt: string): MappedAnimal => ({
       ...mapped[0],
       wire: { ...mapped[0].wire, id },
@@ -115,7 +115,7 @@ describe("list: 정렬", () => {
     ];
     const run = (now: Date) =>
       service(fakeSource(mixed), 20, now)
-        .list(params({ status: "all", sort: "endingSoon" }))
+        .list(params({ status: "all", sort: "deadline" }))
         .then(ids);
 
     it("미만료 오름차순 → 만료 내림차순 → 날짜 없음, 당일은 미만료", async () => {

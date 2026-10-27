@@ -86,7 +86,7 @@ describe("AnimalCard", () => {
 
   it("임박(D-3 이하): 주황 배지", () => {
     const { card, badge } = renderCard(animal({ noticeEndAt: kst("2026-09-23T00:00:00") }));
-    expect(card.getAttribute("data-status")).toBe("soon");
+    expect(card.getAttribute("data-status")).toBe("nearDeadline");
     expect(badge.textContent).toBe("임박 · D-2");
     expect(badge.className).toContain("text-status-soon-text");
   });

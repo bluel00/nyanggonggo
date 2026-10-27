@@ -53,8 +53,8 @@ describe("listPath: 목록 주소는 계약으로 해석한 필터 값만으로 
   });
 
   it("계약에 있는 값은 남기고, 기본값인 status·sex·sort는 생략한다", () => {
-    expect(listPath({ species: "cat", region: SEOUL, district: JONGNO, status: "all", sex: "female", sort: "endingSoon" })).toBe(
-      `/?species=cat&region=${SEOUL}&district=${JONGNO}&status=all&sex=female&sort=endingSoon`,
+    expect(listPath({ species: "cat", region: SEOUL, district: JONGNO, status: "all", sex: "female", sort: "deadline" })).toBe(
+      `/?species=cat&region=${SEOUL}&district=${JONGNO}&status=all&sex=female&sort=deadline`,
     );
     expect(listPath({ species: "cat", region: SEOUL, status: "protected", sex: "all", sort: "latest" })).toBe(
       `/?species=cat&region=${SEOUL}`,

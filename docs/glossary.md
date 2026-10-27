@@ -29,7 +29,7 @@
 | 공고 기간 | 주인이 찾아갈 수 있도록 보호소가 공고하는 기간(동물보호법 제40조, 7일 이상). 화면 표기 `MM.DD ~ MM.DD` | `noticePeriodText` | `noticeSdt` ~ `noticeEdt` | 동물보호법 제40조, detail-rows.ts | — |
 | 공고 마감(일) | 공고 기간의 마지막 날. 지나도 상태는 바뀌지 않는다(제43조: 10일이 지나면 지자체가 소유권을 취득한다). KST 달력 날짜 | `noticeEndAt`(Domain), `noticeEndDate`(Wire) | `noticeEdt`(`YYYYMMDD`) | 동물보호법 제43조, architecture.md 10절 | 종료일·공고 종료(쓰지 않는다) |
 | 마감 D-N (카드: "보호중 · 마감 D-N", 상세·공유 카드·링크 미리보기 이미지(OG): "공고 마감 D-N"), 오늘 마감 (마감 당일. 카드 "보호중 · 오늘 마감", 상세·공유·OG "오늘 마감") | 공고 마감까지 남은 날 수(KST 달력). 마감 당일은 숫자 대신 "오늘 마감"이다. 종료 공고, 마감일이 없는 공고, 마감이 지난 공고에는 붙이지 않는다. **코드 반영 예정**: 지금 화면은 카드 "보호중 · D-N"/"임박 · D-N", 상세·OG는 "D-N"만 따로, 당일은 "D-day"(#29) | `getDDay`(entities/animal/model/dDay.ts), `dDayText`(status-text.ts) | 링크 미리보기 이미지(OG), 공유 카드 설명 | #29, architecture.md 10절, EL 결정(#56) | D-day(쓰지 않는다), D-0 |
-| 강조 (화면 없음, 색만) | 보호중이면서 마감 D-3 이하인 공고. 강조 색으로만 구분한다. **코드 반영 예정**: 배지 문구 "임박"을 없애고, 코드 이름을 `soon` → `nearDeadline`, `isSoon` → `isNearDeadline`으로 바꾼다 | 지금 `isSoon`, `"soon"`(`AnimalStatusVariant`, entities/animal/model/status.ts), 토큰 `status-soon*` | 없음 | architecture.md 10절, design/README.md, EL 결정(#56) | 임박(쓰지 않는다), soon(옛 코드 이름) |
+| 강조 (화면 없음, 색만) | 보호중이면서 마감 D-3 이하인 공고. 강조 색으로만 구분한다. **코드 반영 예정**: 배지 문구 "임박"을 없앤다 | `isNearDeadline`(entities/animal/model/dDay.ts), 기준 일수 `NEAR_DEADLINE_DAYS`(3), 배지 종류 `"nearDeadline"`(`AnimalStatusVariant`, entities/animal/model/status.ts), 토큰 `status-soon*`(이름은 디자인 시스템에서 먼저 바꾼다, #53) | 없음 | architecture.md 10절, design/README.md, EL 결정(#56), #57 | 임박(쓰지 않는다), soon·isSoon(옛 코드 이름) |
 
 ## 2. 공고와 동물
 
@@ -70,7 +70,7 @@
 | 공유 요약 (화면 없음) | 공고 한 줄 요약: 성별 · 나이 · 상태(· D-N) · 특이사항. 공유 카드 설명과 링크 미리보기 설명이 같은 문자열을 쓴다 | `animalSummaryText`(entities/animal/ui/labels.ts) | 카카오 카드 설명, og:description, twitter:description | #2, #73 | 특이사항(요약의 한 부분) |
 | 링크 복사 (화면: 토스트 "링크가 복사됐어요") | 카카오톡 공유를 쓸 수 없을 때 자동으로 하는 동작. 따로 버튼은 없다 | `SHARE_MESSAGES`(features/animal-share/model/share.ts) | 클립보드 | share.ts | — |
 | 필터 (화면: 버튼·시트 제목 "필터", "적용하기") | 목록 조건(축종, 지역, 상태, 성별, 정렬). URL이 단일 진실 소스이고, 적용 전 고른 값은 반영하지 않는다 | `AnimalListFilter`, `FILTER_KEYS`, `useApplyAnimalFilter`, `AnimalFilterSheet` | URL `species`·`region`·`district`·`status`·`sex`·`sort` | architecture.md 7절, #28 | — |
-| 정렬 (화면: "최신순" / "공고 마감 빠른순") | 최신순: 공고 시작일이 늦은 순. 공고 마감 빠른순: 마감이 오늘 이후인 공고를 빠른 순으로 먼저, 지난 공고를 그 뒤에. **코드 반영 예정**: 지금 화면은 "종료임박순"이고, 정렬 값 `endingSoon`을 `deadline`으로 바꾼다. 정렬 값은 URL에도 실려 함께 바뀐다. 옛 링크(`sort=endingSoon`)는 모르는 값이라 기본 정렬(최신순)로 열린다 | 지금 `ANIMAL_LIST_SORTS` `latest` / `endingSoon`, `compareEndingSoon`(server/animals/service.ts) | URL `sort=latest\|endingSoon`(예정 `sort=latest\|deadline`) | architecture.md 5절, EL 합의(#51), EL 결정(#56) | 종료임박순·임박순(쓰지 않는다), endingSoon(옛 코드 이름) |
+| 정렬 (화면: "최신순" / "공고 마감 빠른순") | 최신순: 공고 시작일이 늦은 순. 공고 마감 빠른순: 마감이 오늘 이후인 공고를 빠른 순으로 먼저, 지난 공고를 그 뒤에. 옛 링크(`sort=endingSoon`)는 모르는 값이라 기본 정렬(최신순)로 열린다(별칭 해석 없음, #57). **코드 반영 예정**: 지금 화면은 "종료임박순" | `ANIMAL_LIST_SORTS` `latest` / `deadline`, `compareDeadline`(server/animals/service.ts) | URL `sort=latest\|deadline` | architecture.md 5절, EL 합의(#51), EL 결정(#56), #57 | 종료임박순·임박순(쓰지 않는다), endingSoon(옛 코드 이름·옛 URL 값) |
 | 기억 (화면: "한 번 고르면 기억해둘게요.") | 마지막으로 고른 축종과 지역을 쿠키에 1년 둔다. 사용자가 직접 고를 때만 저장하고, 공유 링크로 들어온 값은 저장하지 않는다 | `rememberSpecies`, `rememberRegion`, `writeFilterCookie`, `FILTER_COOKIE_MAX_AGE` | 쿠키 두 개 | architecture.md 7절, PRD-v1.1 4절, PRD-v1.4 R2 | 관심(localStorage, 다른 저장) |
 | 지도 보기 (화면: "지도") | 보호소 주소를 카카오맵 검색으로 새 탭에서 연다. 보호소 정보 시트의 주소 줄 끝에 둔다(**코드 반영 예정**: 지금은 정보 줄 "주소" 끝) | `mapSearchUrl`, `DetailRowAction` `"map"` | 카카오맵 URL | #3 | — |
 | 전화 걸기 (화면: "전화") | 보호소 전화로 `tel:` 링크를 연다. 숫자가 없으면 링크가 없다. 보호소 정보 시트의 전화 줄 끝에 둔다(**코드 반영 예정**: 지금은 정보 줄 "전화" 끝) | `telHref`, `"call"` | `tel:` | #3 | 정보 줄 이름 "전화" |
@@ -130,8 +130,8 @@
 | 용어 | 바뀔 것 | 이슈 |
 |---|---|---|
 | 마감 D-N, 오늘 마감 | 카드 "보호중 · 마감 D-N", 상세·공유·OG "공고 마감 D-N", 당일 "오늘 마감" | #57 |
-| 강조 | "임박" 문구 없앰, `soon` → `nearDeadline`, `isSoon` → `isNearDeadline` | #57 |
-| 정렬 | "공고 마감 빠른순", `endingSoon` → `deadline`(URL 정렬 값 포함) | #57 |
+| 강조 | "임박" 문구 없앰 | #57 |
+| 정렬 | 화면 문구 "공고 마감 빠른순" | #57 |
 | 관심, 관심 목록 | 화면 문구 "찜" → 관심 문구 | #58 |
 | 공고 번호 | `noticeNo`를 계약·도메인·상세·카드에 | #59 |
 | 나이 | "2026년생 · 60일 미만" 형식 정리 | #60 |
@@ -159,7 +159,7 @@
 - **`regionText`와 `region`**: 관할 지역 이름(`orgNm`)과 필터의 시·도 코드가 같은 낱말이다.
 - **`status`의 세 뜻**: `Animal.status`(값 2개), 목록 쿼리 status(값 3개, `all` 포함), 카드 `data-status`(아래 항목).
 - **카드 `data-status`에 variant 값**: `data-status`(animal-card.tsx)는 status가 아니라 배지 종류(`soon` 포함)를 담는다.
-- **강조·정렬 쪽 이름**: 정했다(#56). `soon` → `nearDeadline`, `isSoon` → `isNearDeadline`, `endingSoon` → `deadline`(URL 정렬 값 포함). #57에서 바꾼다. 토큰 `status-soon*`과 `compareEndingSoon`처럼 따라오는 이름은 바꿀 때 같이 맞춘다.
+- ~~강조·정렬 쪽 이름~~: 바꿨다(#57). `soon` → `nearDeadline`, `isSoon` → `isNearDeadline`, `SOON_THRESHOLD_DAYS` → `NEAR_DEADLINE_DAYS`, `endingSoon` → `deadline`(URL 정렬 값 포함), `compareEndingSoon` → `compareDeadline`. 토큰 `status-soon*`만 남았다(디자인 시스템에서 먼저 바꾼다, #53).
 - **enter·fade/info·press의 겹침**: `data-enter`(첫 화면 등장)와 `data-detail-enter`·`DetailEntry`(진입 효과). 진입 모드 `fade`와 morph 중 정보 페이드 값 `"info"`. 카드 누름 효과와 캐릭터 트리거 `press`.
 - **"목록"과 dialog의 여러 뜻**: "목록"은 목록 화면, 목록 화면들(목록 + 관심 목록, `shared/lib/app-navigation.ts`), 관심 목록을 가리킨다. 상세 층·시트·사진 크게 보기가 모두 `role="dialog"`다.
 - **공고 ↔ `Animal`**: 화면과 문서는 공고, 코드는 `Animal`·`entities/animal`이다.

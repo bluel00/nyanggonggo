@@ -45,7 +45,7 @@ describe("buildOgModel", () => {
   });
 
   it("임박 당일은 D-day, 종료는 D-day 없음, 만료된 보호중도 D-day 없음", () => {
-    expect(buildOgModel(animal({ noticeEndAt: kst("2026-09-21T00:00:00") }), NOW)).toMatchObject({ variant: "soon", badgeText: "임박", dDayText: "D-day" });
+    expect(buildOgModel(animal({ noticeEndAt: kst("2026-09-21T00:00:00") }), NOW)).toMatchObject({ variant: "nearDeadline", badgeText: "임박", dDayText: "D-day" });
     expect(buildOgModel(animal({ status: "ended" }), NOW)).toMatchObject({ variant: "ended", badgeText: "종료", dDayText: null, ended: true });
     expect(buildOgModel(animal({ noticeEndAt: kst("2026-09-20T00:00:00") }), NOW)).toMatchObject({ badgeText: "보호중", dDayText: null });
   });

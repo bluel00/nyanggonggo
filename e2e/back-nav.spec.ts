@@ -171,7 +171,7 @@ test.describe("R1: 목록 → 상세 → 뒤로가기", () => {
 
   // R2(PRD-v1.5): 얹은 상세에서 새로고침하면 상세 전체 페이지. 그 뒤 뒤로가기는 목록을 처음부터 부른다(위치는 보장하지 않는다)
   test("목록 → 상세 → 새로고침 → 화면 안 뒤로가기: 원래 목록 주소(쿼리 포함)로 간다", async ({ page, context }) => {
-    const listUrl = `${LIST_URL}&sort=endingSoon`;
+    const listUrl = `${LIST_URL}&sort=deadline`;
     await page.goto(listUrl);
     await expect(page.locator(CARDS)).toHaveCount(PAGE_SIZE);
     const first = (await page.locator(CARDS).first().getAttribute("data-animal-id"))!;

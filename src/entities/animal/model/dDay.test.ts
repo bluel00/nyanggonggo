@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Animal } from "./animal";
-import { getDDay, isSoon } from "./dDay";
+import { getDDay, isNearDeadline } from "./dDay";
 import { makeAnimal } from "@tests/factories/animal";
 
 const kst = (iso: string) => new Date(`${iso}+09:00`);
@@ -39,7 +39,7 @@ describe("getDDay", () => {
   });
 });
 
-describe("isSoon", () => {
+describe("isNearDeadline", () => {
   it.each([
     ["2026-09-21T00:00:00", 10, false],
     ["2026-09-27T12:00:00", 4, false],
@@ -48,12 +48,12 @@ describe("isSoon", () => {
     ["2026-10-01T00:00:00", 0, true],
   ])("기준 %s (D-%i) → %s", (now, dDay, expected) => {
     expect(getDDay(animal(), kst(now))).toBe(dDay);
-    expect(isSoon(animal(), kst(now))).toBe(expected);
+    expect(isNearDeadline(animal(), kst(now))).toBe(expected);
   });
 
   it("dDay가 null이면 false(지난 보호중, 종료, 종료일 없음)", () => {
-    expect(isSoon(animal(), kst("2026-10-02T00:00:00"))).toBe(false);
-    expect(isSoon(animal({ status: "ended" }), kst("2026-09-30T00:00:00"))).toBe(false);
-    expect(isSoon(animal({ noticeEndAt: null }), kst("2026-09-30T00:00:00"))).toBe(false);
+    expect(isNearDeadline(animal(), kst("2026-10-02T00:00:00"))).toBe(false);
+    expect(isNearDeadline(animal({ status: "ended" }), kst("2026-09-30T00:00:00"))).toBe(false);
+    expect(isNearDeadline(animal({ noticeEndAt: null }), kst("2026-09-30T00:00:00"))).toBe(false);
   });
 });

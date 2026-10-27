@@ -67,7 +67,7 @@ describe("animalKeys", () => {
   // 쿼리 키 모양을 값 조합마다 고정한다(이슈 #28). 기대값은 계약을 읽지 않고 글자로 적는다
   const combos = ["cat", "dog", "other"].flatMap((species) =>
     ["protected", "ended", "all"].flatMap((status) =>
-      ["all", "female", "male"].flatMap((sex) => ["latest", "endingSoon"].map((sort) => ({ species, status, sex, sort }))),
+      ["all", "female", "male"].flatMap((sex) => ["latest", "deadline"].map((sort) => ({ species, status, sex, sort }))),
     ),
   ) as { species: "cat"; status: "protected"; sex: "all"; sort: "latest" }[];
 
@@ -104,7 +104,7 @@ describe("isSameListFilter, listFilterKey", () => {
       { ...seoul, district: "3000000" },
       { ...seoul, status: "all" },
       { ...seoul, sex: "female" },
-      { ...seoul, sort: "endingSoon" },
+      { ...seoul, sort: "deadline" },
     ] as const) {
       expect(isSameListFilter(seoul, other)).toBe(false);
       expect(listFilterKey(seoul)).not.toBe(listFilterKey(other));
@@ -183,7 +183,7 @@ describe("useAnimalsInfinite", () => {
       goStale();
 
       // 필터가 바뀌면 쿼리 키가 달라 캐시가 없다
-      const other = renderHook(() => useAnimalsInfinite({ ...LIST_FILTER, sort: "endingSoon" }), {
+      const other = renderHook(() => useAnimalsInfinite({ ...LIST_FILTER, sort: "deadline" }), {
         wrapper: providerFor(client),
       });
       await waitFor(() => expect(other.result.current.isSuccess).toBe(true));

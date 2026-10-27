@@ -25,7 +25,7 @@ export type StatusSubject = Pick<Animal, "status" | "noticeEndAt" | "endResultTe
 export function statusBadgeText(animal: StatusSubject, now: Date, { dDay: withDDay = true }: { dDay?: boolean } = {}): string {
   const variant = getStatusVariant(animal, now);
   if (variant === "ended") return animal.endResultText ? `종료 · ${animal.endResultText}` : "종료";
-  const label = variant === "soon" ? "임박" : "보호중";
+  const label = variant === "nearDeadline" ? "임박" : "보호중";
   const dDay = withDDay ? getDDay(animal, now) : null;
   if (dDay === null) return label;
   return `${label} · ${dDayText(dDay)}`;

@@ -69,7 +69,7 @@ export const OG_COLORS = {
   photoPill: "rgba(255,255,255,0.9)",
   status: {
     protected: { dot: "#2E9F6B", bg: "#E6F6EE", text: "#1F7A50" },
-    soon: { dot: "#F08A24", bg: "#FDF0E1", text: "#A85508" },
+    nearDeadline: { dot: "#F08A24", bg: "#FDF0E1", text: "#A85508" },
     ended: { dot: "#8A8A8A", bg: "#EFEFEF", text: "#666666" },
   },
 } as const;
