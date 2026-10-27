@@ -35,6 +35,8 @@ export const AnimalWireDtoSchema = z.object({
   shelterAddressText: z.string().nullable(),
   /** 보호소 전화(careTel) 원문. 공백뿐이면 null */
   shelterTelText: z.string().nullable(),
+  /** 공고 번호(noticeNo) 원문(이슈 #59). 구조 번호(id)와 다르다. 공백뿐이면 null */
+  noticeNoText: z.string().nullable(),
   /** `MM.DD ~ MM.DD` */
   noticePeriodText: z.string().nullable(),
   /** 특이사항(specialMark). 공백뿐이면 null */

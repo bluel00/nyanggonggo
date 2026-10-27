@@ -56,6 +56,7 @@ export function mapUpstreamItem(
     foundPlaceText: nonEmpty(dto.happenPlace),
     shelterAddressText: nonEmpty(dto.careAddr),
     shelterTelText: nonEmpty(dto.careTel),
+    noticeNoText: nonEmpty(dto.noticeNo),
     noticePeriodText:
       noticeStart && noticeEnd
         ? `${formatMonthDay(noticeStart)} ~ ${formatMonthDay(noticeEnd)}`

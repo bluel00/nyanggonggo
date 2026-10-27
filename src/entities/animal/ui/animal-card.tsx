@@ -11,6 +11,7 @@ import type { CardPhotoSize } from "../model/detail-entry";
 import { allowsMotion } from "../model/motion";
 import { getPrimaryImage, getStatusVariant } from "../model/status";
 import { AnimalPhoto, PHOTO_SIZES } from "./animal-photo";
+import { DETAIL_ROW_LABELS } from "./detail-rows";
 import { CARD_TO_DETAIL, photoTransition } from "./photo-transition";
 import { animalSubtitle, animalTitle, photoAlt } from "./labels";
 import { StatusBadge } from "./status-badge";
@@ -108,6 +109,12 @@ export function AnimalCard({
       <div className="px-3 pt-2.5 pb-3">
         <p className="truncate text-card-title">{animalTitle(animal)}</p>
         {sub && <p className="mt-0.5 truncate text-body text-text-2">{sub}</p>}
+        {/* 3줄: 공고 번호(#59). 카드 표시는 운영에서 보고 다시 판단한다. 값이 없으면 줄이 없다 */}
+        {animal.noticeNoText && (
+          <p data-slot="notice-no" className="mt-0.5 truncate text-caption text-text-2">
+            {DETAIL_ROW_LABELS.noticeNo} {animal.noticeNoText}
+          </p>
+        )}
       </div>
     </>
   );

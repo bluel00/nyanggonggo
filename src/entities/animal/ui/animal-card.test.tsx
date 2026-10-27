@@ -110,6 +110,15 @@ describe("AnimalCard", () => {
     expect(screen.getByText("서귀포시 남원읍")).toBeTruthy();
   });
 
+  it("3줄: 공고 번호(작은 보조 글자), 값이 없으면 줄이 없다(#59, 지어낸 값)", () => {
+    const { card } = renderCard(animal({ noticeNoText: "가상-예시-2026-00001" }));
+    const line = card.querySelector('[data-slot="notice-no"]')!;
+    expect(line.textContent).toBe("공고 번호 가상-예시-2026-00001");
+    expect(line.className).toContain("text-caption");
+    cleanup();
+    expect(renderCard(animal({ noticeNoText: null })).card.querySelector('[data-slot="notice-no"]')).toBeNull();
+  });
+
   it("이미지 로딩 실패 시 대체 UI(같은 alt를 가진 role=img)", () => {
     renderCard(animal({ species: "dog" }));
     fireEvent.error(screen.getByRole("img"));

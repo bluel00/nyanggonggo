@@ -30,6 +30,7 @@ const WIRE_KEYS = [
   "images",
   "kindText",
   "noticeEndDate",
+  "noticeNoText",
   "noticePeriodText",
   "regionText",
   "sex",
@@ -271,6 +272,13 @@ describe("mapUpstreamItem", () => {
   });
 
   describe("날짜", () => {
+    it("noticeNoText는 공고 번호 원문(앞뒤 공백 제거), 없거나 공백뿐이면 null(#59, 지어낸 값)", () => {
+      expect(map({ ...PROTECTED_CAT, noticeNo: " 가상-예시-2026-00001 " }).wire.noticeNoText).toBe("가상-예시-2026-00001");
+      expect(map({ ...PROTECTED_CAT, noticeNo: "   " }).wire.noticeNoText).toBeNull();
+      const { noticeNo: _omit, ...withoutNoticeNo } = PROTECTED_CAT;
+      expect(map(withoutNoticeNo).wire.noticeNoText).toBeNull();
+    });
+
     it("noticePeriodText는 MM.DD ~ MM.DD, noticeEndDate는 YYYY-MM-DD", () => {
       const { wire } = map(PROTECTED_CAT);
       expect(wire.noticePeriodText).toBe("09.21 ~ 10.01");
@@ -302,6 +310,7 @@ describe("mapUpstreamItem", () => {
       foundPlaceText: null,
       shelterAddressText: null,
       shelterTelText: null,
+      noticeNoText: null,
       noticePeriodText: null,
       specialMarkText: null,
       endReasonText: null,

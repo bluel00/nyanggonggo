@@ -21,6 +21,8 @@ export type Animal = {
   shelterAddressText: string | null;
   /** careTel 원문. 상세 정보 줄(종료 공고는 숨긴다) */
   shelterTelText: string | null;
+  /** 공고 번호(noticeNo) 원문. 상세 정보 줄과 카드 3줄(이슈 #59). 구조 번호(id)와 다르다 */
+  noticeNoText: string | null;
   /** `MM.DD ~ MM.DD` */
   noticePeriodText: string | null;
   /** 특이사항(specialMark). 상세에서만 보여 준다 */
