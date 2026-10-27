@@ -73,10 +73,10 @@ test.describe("움직임 줄이기", () => {
     await page.mouse.up();
 
     // 찜 켜기·끄기
-    const favorite = card(page, items[0].id).getByRole("button", { name: "찜하기" });
+    const favorite = card(page, items[0].id).getByRole("button", { name: "관심 공고에 담기" });
     await favorite.click();
     expect(await cardAnimations(page, items[0].id)).toEqual([]);
-    await card(page, items[0].id).getByRole("button", { name: "찜 해제" }).click();
+    await card(page, items[0].id).getByRole("button", { name: "관심 공고에서 빼기" }).click();
     expect(await cardAnimations(page, items[0].id)).toEqual([]);
   });
 });
@@ -103,10 +103,10 @@ test("종료 카드: 첫 화면 등장·누름·하트 튐이 없다(보호중 �
   await page.mouse.up();
 
   // 찜: 종료는 채움만, 보호중은 튄다
-  await card(page, list[ENDED].id).getByRole("button", { name: "찜하기" }).click();
-  await expect(card(page, list[ENDED].id).getByRole("button", { name: "찜 해제" })).toBeVisible();
+  await card(page, list[ENDED].id).getByRole("button", { name: "관심 공고에 담기" }).click();
+  await expect(card(page, list[ENDED].id).getByRole("button", { name: "관심 공고에서 빼기" })).toBeVisible();
   expect(await cardAnimations(page, list[ENDED].id)).toEqual([]);
-  await card(page, list[0].id).getByRole("button", { name: "찜하기" }).click();
+  await card(page, list[0].id).getByRole("button", { name: "관심 공고에 담기" }).click();
   expect(await cardAnimations(page, list[0].id)).toContain("heart-pop");
 });
 

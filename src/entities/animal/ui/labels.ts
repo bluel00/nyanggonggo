@@ -53,13 +53,13 @@ export const ANIMAL_COPY = {
   homeOtherLink: "다른 동물들도 있어요",
   /** 목록 헤더의 홈 진입점 링크 이름(aria-label). 타이틀 뒤에 붙여 "고양이 공고, 다른 동물 고르기"로 읽힌다(시안 Header-A) */
   homeEntryLabel: (listTitle: string) => `${listTitle}, 다른 동물 고르기`,
-  favoritesTitle: "찜한 공고",
+  favoritesTitle: "관심 공고",
   /** 목록 위에 얹은 상세 층의 이름. 상세 제목이 아직 없을 때(뼈대)만 쓰인다(PRD-v1.5) */
   detailLayerLabel: "공고 상세",
-  favoritesEmptyTitle: "아직 찜한 공고가 없어요",
-  /** 🐾는 README가 허용한 유일한 이모지(찜 빈 상태) */
-  favoritesEmptyDescription: "마음에 드는 공고를 저장해보세요 🐾",
-  favoritesErrorTitle: "지금은 찜한 공고를 불러오지 못했어요",
+  favoritesEmptyTitle: "아직 관심 공고가 없어요",
+  /** 관심 목록 빈 상태 설명(용어 사전 "관심 목록", #58) */
+  favoritesEmptyDescription: "하트를 눌러 관심 공고에 담아 보세요",
+  favoritesErrorTitle: "지금은 관심 공고를 불러오지 못했어요",
   /** 찜 목록 위 한 줄. 일부 공고만 오류로 받지 못했을 때(이슈 #5) */
   favoritesPartialError: "일부 공고를 불러오지 못했어요",
   detailErrorTitle: "지금은 공고를 불러오지 못했어요",

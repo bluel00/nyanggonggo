@@ -172,10 +172,10 @@ describe("AnimalList 찜 하트", () => {
     fetchMock.mockResolvedValue(Response.json({ items: [wire("1"), wire("2")], nextCursor: null }));
     renderList();
     await screen.findByText("지역1");
-    const buttons = screen.getAllByRole("button", { name: "찜하기" });
+    const buttons = screen.getAllByRole("button", { name: "관심 공고에 담기" });
     expect(buttons).toHaveLength(2);
     fireEvent.click(buttons[0]);
-    expect(screen.getAllByRole("button", { name: "찜 해제" })).toHaveLength(1);
+    expect(screen.getAllByRole("button", { name: "관심 공고에서 빼기" })).toHaveLength(1);
     expect(JSON.parse(localStorage.getItem("nyanggonggo:favorites")!)).toEqual(["1"]);
   });
 });

@@ -154,14 +154,14 @@ describe("AnimalCard", () => {
         href="/animals/1"
         action={
           <button type="button" onClick={actionClick}>
-            찜하기
+            관심 공고에 담기
           </button>
         }
       />,
     );
     const link = container.querySelector("a")!;
     link.addEventListener("click", linkClick);
-    const action = screen.getByRole("button", { name: "찜하기" });
+    const action = screen.getByRole("button", { name: "관심 공고에 담기" });
     expect(link.contains(action)).toBe(false);
 
     fireEvent.click(action);

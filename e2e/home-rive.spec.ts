@@ -103,7 +103,7 @@ test.describe("홈이 아닌 화면", () => {
     await page.goto(`/animals/${items[0].id}`);
     await expect(page.getByRole("button", { name: "뒤로가기" })).toBeVisible();
     await page.goto("/favorites");
-    await expect(page.getByRole("heading", { name: "찜한 공고" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "관심 공고" })).toBeVisible();
     await page.waitForLoadState("networkidle");
     expect(seen).toEqual({ riveAssets: [], externalCdn: [], runtimeChunks: [] });
   });
