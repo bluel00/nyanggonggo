@@ -27,7 +27,8 @@ const getKakao = () => (window as unknown as { Kakao?: KakaoSdk }).Kakao;
 export const SHARE_BUTTON_LABEL = "카카오톡 공유";
 
 /**
- * 카카오톡 공유 버튼(bundle.css .cn-btn--share: kakao 배경, on-kakao 글자, 남은 폭).
+ * 카카오톡 공유 버튼(bundle.css .cn-btn--share: kakao 배경, on-kakao 글자, 남은 폭). 옆에 두 번째 공유 버튼이 있어
+ * 양옆 안쪽 여백은 space-2다(두 버튼이 375 폭에 들어가게, ShareButton README). 누름은 움직임이 허용될 때만 press-scale이다.
  *
  * 키가 있을 때만 SDK를 불러오고, **불러온 직후 바로 Kakao.init을 호출한다**(onLoad/onReady).
  * 예전에는 공유를 누를 때만 init해서 새로고침 직후 `Kakao.isInitialized()`가 계속 false였다.
@@ -92,8 +93,8 @@ export function ShareButton({
         disabled={busy}
         data-slot="share-button"
         className={cn(
-          "inline-flex min-h-touch flex-1 items-center justify-center gap-1 rounded-pill bg-kakao px-6 text-card-title text-kakao-fg",
-          "transition-transform duration-press ease-out active:not-disabled:scale-press active:not-disabled:brightness-95",
+          "inline-flex min-h-touch min-w-0 flex-1 items-center justify-center gap-1 rounded-pill bg-kakao px-2 text-card-title text-kakao-fg",
+          "transition-[scale] duration-press ease-out motion-safe:active:not-disabled:scale-press active:not-disabled:brightness-95",
           "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
         )}
       >

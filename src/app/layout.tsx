@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import { SHARE_SHEET_SCRIPT } from "@/features/animal-share";
 import { SERVICE_NAME } from "@/shared/config/service";
 import { AppShell } from "@/shared/ui/app-shell";
 import { Toaster } from "@/shared/ui/sonner";
@@ -28,7 +29,12 @@ export default function RootLayout({
   modal,
 }: Readonly<{ children: ReactNode; modal: ReactNode }>) {
   return (
-    <html lang="ko">
+    // <html>의 data-share-sheet는 아래 스크립트가 하이드레이션 전에 단다(서버 렌더에는 없다)
+    <html lang="ko" suppressHydrationWarning>
+      <head>
+        {/* 공유 시트를 열 수 있는지 첫 그림 전에 정한다(상세 하단 바 두 번째 공유 버튼의 이름표, features/animal-share/model/share-sheet.ts, #94) */}
+        <script dangerouslySetInnerHTML={{ __html: SHARE_SHEET_SCRIPT }} />
+      </head>
       <body>
         <Providers>
           <AppShell stack={modal} overlay={<Toaster />}>

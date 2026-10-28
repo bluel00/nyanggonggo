@@ -19,7 +19,7 @@ import {
   type DetailEntry,
 } from "@/entities/animal";
 import { FavoriteButton } from "@/features/animal-favorite";
-import { ShareButton } from "@/features/animal-share";
+import { ShareButton, ShareSheetButton } from "@/features/animal-share";
 import { ShelterInfoSheet } from "@/features/shelter-info";
 import { cn } from "@/shared/lib/utils";
 import { BackButton, useGoBack } from "@/shared/ui/back-button";
@@ -211,6 +211,7 @@ export function AnimalDetail({
         {/* 하트 튐·누름은 CSS(motion-safe:, no-preference)가 움직임 줄이기를 거르므로 false */}
         <FavoriteButton animalId={animal.id} still={!allowsMotion(animal, false)} />
         <ShareButton animal={animal} origin={origin} />
+        <ShareSheetButton animal={animal} origin={origin} />
       </BottomCtaBar>
 
       {viewerIndex !== null && (

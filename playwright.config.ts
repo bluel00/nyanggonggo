@@ -61,7 +61,7 @@ export default defineConfig({
   projects: [
     {
       name: "dev",
-      testIgnore: /(detail-loading|detail-photo|detail-title|detail-transition|home-rive|back-nav|motion|stack-nav|site-og|routes|detail-contact|skeleton-card|home-other)\.spec\.ts/,
+      testIgnore: /(detail-loading|detail-photo|detail-title|detail-transition|home-rive|back-nav|motion|stack-nav|site-og|routes|detail-contact|skeleton-card|home-other|detail-share)\.spec\.ts/,
       // 브라우저는 localhost로 연다(개발 서버가 127.0.0.1을 다른 오리진으로 보고 dev 리소스를 막는다)
       use: { baseURL: "http://localhost:3000" },
     },
@@ -72,13 +72,13 @@ export default defineConfig({
     },
     {
       name: "production-stub",
-      testMatch: /(back-nav|detail-photo|detail-title|detail-transition|stack-nav|site-og|routes|detail-contact|skeleton-card|home-other)\.spec\.ts/,
+      testMatch: /(back-nav|detail-photo|detail-title|detail-transition|stack-nav|site-og|routes|detail-contact|skeleton-card|home-other|detail-share)\.spec\.ts/,
       use: { baseURL: "http://localhost:3101" },
     },
     {
-      // 상세에서 뒤로가기, 상세 층, 상세 위 보호소 정보 시트(detail-contact, #62)와 로딩 카드 높이(skeleton-card, #84), 홈 기타 동물 카드(home-other, #86)는 iOS 사파리 엔진(WebKit)에서도 본다(쓸어넘기기 깜빡임, PRD-v1.5). 같은 스텁 서버
+      // 상세에서 뒤로가기, 상세 층, 상세 위 보호소 정보 시트(detail-contact, #62)와 로딩 카드 높이(skeleton-card, #84), 홈 기타 동물 카드(home-other, #86), 상세 공유 버튼(detail-share, #94)은 iOS 사파리 엔진(WebKit)에서도 본다(쓸어넘기기 깜빡임, PRD-v1.5). 같은 스텁 서버
       name: "production-stub-webkit",
-      testMatch: /(back-nav|stack-nav|detail-contact|skeleton-card|home-other)\.spec\.ts/,
+      testMatch: /(back-nav|stack-nav|detail-contact|skeleton-card|home-other|detail-share)\.spec\.ts/,
       use: { ...devices["iPhone 13"], baseURL: "http://localhost:3101" },
     },
   ],
