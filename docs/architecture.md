@@ -123,7 +123,7 @@ Route Handler (app/api/animals)                       # 얇게: 파싱 → servi
 - 목록 무한쿼리의 재요청(확정, 2026-09-30): `animalsInfiniteOptions`(`src/entities/animal/api/queries.ts`)에만 `refetchOnMount: false`, `refetchOnWindowFocus: false`, `refetchOnReconnect: false`를 준다. 상세와 by-ids는 기본값 그대로다.
   - 이유: 무한쿼리의 refetch는 쌓인 페이지를 **처음 커서부터 전부 순차로** 다시 받는다. 50페이지를 본 목록으로 돌아오면 `/api/animals`가 51번 나갔다(12절 42). 페이지 수에 비례해 라우트 실행과 지역 전체 조립이 늘고, 목록은 요청마다 새로 조립하므로 복원 직후 결과가 바뀌면 열었던 카드 위치도 밀린다. `staleTime`을 늘리는 것은 이 연쇄를 없애지 못하고 미루기만 한다. focus(공유 후 앱 복귀)와 reconnect도 같은 연쇄를 일으킨다.
   - 신선도 상한은 목록의 `gcTime` **30분**(`LIST_GC_TIME_MS`, PRD-v1.4 R1, 2026-10-14. 그 전에는 다른 쿼리와 같은 5분)이다. 목록을 떠나 30분이 지나면 비활성 쿼리가 캐시에서 사라지고 다음 진입은 첫 페이지부터 새로 받는다. 즉 화면에 남는 목록은 최대 30분 오래된 데이터다. 상세·by-ids는 기본값(`QUERY_GC_TIME_MS`, 5분) 그대로다.
-  - 데이터가 없으면(첫 진입, 필터 변경 = 새 쿼리 키, 새로고침) 이 설정과 무관하게 받는다. `gcTime`이 지난 뒤 돌아왔을 때 열었던 카드가 첫 페이지 밖이면 복원은 조용히 맨 위에 둔다(7절 규칙 그대로).
+  - 데이터가 없으면(첫 진입, 필터 변경 = 새 쿼리 키, 새로고침) 이 설정과 무관하게 받는다. 첫 페이지는 서버가 읽어 넣는다(7절 목록 첫 페이지, #109). `gcTime`이 지난 뒤 돌아왔을 때 열었던 카드가 첫 페이지 밖이면 복원은 조용히 맨 위에 둔다(7절 규칙 그대로).
   - 검증: `src/entities/animal/api/queries.test.tsx`(재마운트, 창 포커스, reconnect, 필터 변경, 목록 `gcTime` 30분)와 `e2e/list-refetch.spec.ts`(실제 브라우저, `page.clock.setFixedTime`으로 staleTime 경과).
 
 ## 6. 클라이언트 Domain과 Port
@@ -195,6 +195,14 @@ interface AnimalRepository {
   - 쓰기: **축종과 지역은 기본값이어도 늘 쓰고**(기억 대상이라서, 아래) 나머지는 기본값과 다를 때만 넣는다. 기본 상태의 목록 주소는 `/?species=cat&region=6110000`이다. 같은 필터는 같은 URL, 같은 쿼리 키. `page`/`cursor`는 적용 시 지우고, 필터와 무관한 파라미터(예: `utm_*`)는 보존한다.
   - 적용은 `router.replace`(히스토리를 쌓지 않음, `scroll: false`). URL이 바뀌면 서버 컴포넌트가 새 searchParams로 다시 렌더되고 목록 위젯이 내부 스크롤을 맨 위로 올린다.
   - 필터 시트의 `useState`는 열림 여부와 [적용하기] 전 draft만. 열 때 현재 URL 값으로 채우고 닫으면 버린다.
+- 목록 첫 페이지(확정, 2026-10-28, 이슈 [#109](https://github.com/bluel00/nyanggonggo/issues/109)): 첫 페이지는 서버가 읽어 HTML·RSC로 보낸다. 브라우저는 첫 페이지를 위해 `/api/animals`를 부르지 않고, 다음 페이지부터 커서로 부른다.
+  - 이유: 전에는 JS를 받아 실행한 뒤에야 `/api/animals`를 불러, 실제 스로틀(devtools) 측정에서 첫 카드 사진 요청이 4.9초에야 나갔다(목록 LCP 7.7초).
+  - 흐름: `app/page.tsx`가 필터를 정한 뒤 `app/list-data.ts`(server-only)의 `loadFirstListPage(filter)`를 **기다리지 않고** promise로 `views/animal-list` → `widgets/animal-list`에 넘긴다. 서버 경로는 `/api/animals`와 같다: `toAnimalListQuery`(클라이언트 저장소와 같은 함수) → `parseListQuery` → `getAnimalService().list`(업스트림 페이지 캐시 300초) → `AnimalListResponseSchema`. 넘기는 값은 `/api/animals` 응답 그대로(`{ ok: true, response }`)이고 실패면 `{ ok: false }`다(예외를 던지지 않아 페이지가 깨지지 않는다).
+  - 위젯: `Suspense`(목록 키별, 뼈대 3장) 안에서 `use(promise)`로 받아 `seedAnimalsFirstPage`로 무한쿼리 캐시의 첫 페이지에 넣는다(Domain 변환은 저장소와 같은 `toAnimalPage`). 같은 목록을 이미 받아 둔 적이 있으면(30분 안) 서버 응답을 기다리지 않는다. 서버가 읽지 못했으면 넣지 않아 지금처럼 클라이언트가 조회하고, 그것도 실패하면 목록 오류 화면(다시 시도)이다.
+  - 필터를 바꾸면(`router.replace`) 서버 컴포넌트가 새 필터로 다시 렌더되어 새 첫 페이지가 RSC 요청 한 번으로 온다. 클라이언트가 `/api/animals`로 다시 받지 않는다. 캐시·응답 헤더(API·페이지)는 바꾸지 않았다.
+  - 첫 화면 등장(handoff "목록 첫 화면 등장"): 뼈대가 실제로 보였을 때만 돈다. 뼈대가 한 번 칠해진 뒤에도 남아 있으면 `<html data-list-enter="N">`(N = 뼈대 위치로 잰 첫 화면 카드 수)을 단다: 문서로 처음 열 때는 뼈대 HTML 끝의 인라인 스크립트가, 앱 안 이동으로 뼈대가 클라이언트에서 그려질 때는 effect가 단다(`widgets/animal-list/model/list-enter.ts`). CSS(`app/globals.css`)가 그 표시가 있을 때만 서버 첫 페이지(`[data-list-first]`)의 앞 N장 중 움직이는 카드를 올린다. 하이드레이션에 기대지 않아 깜빡이지 않는다. 다 돌면 목록이 표시를 지운다. 클라이언트가 받은 목록(서버가 읽지 못한 경우)은 전처럼 `data-enter`로 돈다.
+  - 홈의 목록 링크 prefetch는 동적 페이지 본문을 실행하지 않아 서버 목록 조회가 늘지 않는다(로컬 production + 스텁, 홈에서 prefetch 6회 · 서버 목록 조회 0회).
+  - 검증: `tests/app/list-data.test.ts`(같은 필터의 `/api/animals` 응답과 같음, 실패는 `{ ok: false }`), `widgets/animal-list` 단위 테스트, `e2e/list-first-page.spec.ts`. E2E 스텁은 고정 목록에 없는 조합마다 조합이 id에 드러나는 지어낸 공고를 줘서(`e2e/stub-combo.mjs`) 서버가 어떤 축종·지역·시군구로 읽었는지 카드 id로 본다.
 - 상세 열기와 뒤로가기(확정, 2026-10-20, PRD-v1.5. 이전: 2026-09-29 카드 id 복원, 2026-10-20 픽셀 복원, 12절 37): 목록(`/`)·찜(`/favorites`)에서 카드를 누르면 상세를 **지금 화면 위에 얹는다**. 아래 화면은 내려가지 않아 로드된 페이지·스크롤 위치·디코드된 사진이 그대로이고, 뒤로가기는 층만 걷어 낸다. 돌아올 때 되돌릴 것이 없어 스크롤 복원 코드는 없다(R6). 규칙:
   - 구조(Next intercepting + parallel routes): 루트 레이아웃의 병렬 슬롯 `@modal`을 `AppShell`의 `stack`(스크롤 영역의 형제)에 그린다. `app/@modal/(.)animals/[id]`가 앱 안에서 `/animals/{id}`로 가는 이동을 가로챈다. 그 layout이 `StackLayer`(`shared/ui/stack-layer.tsx`)를 두르고, loading·page는 상세 전체 페이지(`app/animals/[id]`)의 것을 그대로 다시 내보낸다(메타데이터 포함, 탭 제목이 바뀐다). `@modal/default.tsx`는 비어 있고, `@modal/page.tsx`·`@modal/[...catchAll]/page.tsx`(비어 있음)는 층을 띄운 채 앱 안에서 다른 화면으로 가면 층을 걷는다(없으면 슬롯이 이전 상태를 그대로 둔다).
   - 직접 진입·새로고침·공유 링크는 가로채지 않아 상세 전체 페이지다(PRD-v1.4 R2 그대로). 얹은 상세에서 새로고침한 뒤 뒤로가기는 목록을 처음부터 부른다(위치 보장 없음, PRD-v1.5 R2).
