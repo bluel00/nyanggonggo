@@ -24,6 +24,17 @@ const pressStyle = (card: Locator) =>
 /** 등장(enter-rise)이 끝날 때까지 기다린다. 끝나기 전 값은 누름 값과 섞인다 */
 async function waitEntered(page: Page) {
   await page.waitForFunction(() => document.getAnimations().every((animation) => animation.playState !== "running"));
+  await waitHydrated(page);
+}
+
+/**
+ * 카드가 하이드레이션될 때까지 기다린다. 누름 값은 CSS `:active`인데, iOS WebKit은 터치 리스너가 붙기 전(React가 붙이기 전)에는
+ * `:active`를 적용하지 않는다. 등장이 끝나도 하이드레이션 전일 수 있다(#103에서 홈 로고를 먼저 받게 한 뒤 드물게 드러났다)
+ */
+async function waitHydrated(page: Page) {
+  await page.waitForFunction(() =>
+    [...document.querySelectorAll("main a")].every((link) => Object.keys(link).some((key) => key.startsWith("__reactProps"))),
+  );
 }
 
 async function holdOn(page: Page, card: Locator) {

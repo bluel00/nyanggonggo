@@ -28,9 +28,10 @@ describe("siteOpenGraph: 모든 페이지의 site_name·type·url", () => {
   });
 });
 
-describe("siteMetadata: 상세가 아닌 페이지의 사이트 OG", () => {
-  it("제목은 서비스 이름, 설명은 한 줄 소개를 한 줄로(줄바꿈 없음)", () => {
+describe("siteMetadata: 상세가 아닌 페이지의 검색엔진 설명과 사이트 OG", () => {
+  it("제목은 서비스 이름, 설명(검색엔진·OG)은 한 줄 소개를 한 줄로(줄바꿈 없음)", () => {
     expect(siteMetadata("/home")).toEqual({
+      description: "보호 중인 아이들의 공고가 더 많은 사람에게 닿도록.",
       openGraph: {
         siteName: "멍냥공고",
         type: "website",

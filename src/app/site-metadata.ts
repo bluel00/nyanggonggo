@@ -44,9 +44,15 @@ export function siteOpenGraph(path: string): NonNullable<Metadata["openGraph"]> 
 /** 사이트 OG 설명: 한 줄 소개를 한 줄로(줄바꿈 자리를 공백으로) */
 export const SITE_DESCRIPTION = SERVICE_TAGLINE.replace(/\s*\n\s*/g, " ");
 
-/** 상세가 아닌 페이지(홈, 목록, 관심)의 링크 미리보기: 제목은 서비스 이름, 설명은 한 줄 소개. `<title>`은 부르는 쪽이 정한다 */
-export function siteMetadata(path: string): Pick<Metadata, "openGraph"> {
-  return { openGraph: { ...siteOpenGraph(path), title: SERVICE_NAME, description: SITE_DESCRIPTION, images: [SITE_OG_IMAGE] } };
+/**
+ * 상세가 아닌 페이지(홈, 목록, 관심)의 검색엔진 설명(`<meta name="description">`)과 링크 미리보기. 설명은 둘 다 한 줄 소개,
+ * 미리보기 제목은 서비스 이름. `<title>`은 부르는 쪽이 정한다. 상세는 공고마다 설명을 따로 만든다(animals/[id]/page.tsx)
+ */
+export function siteMetadata(path: string): Pick<Metadata, "description" | "openGraph"> {
+  return {
+    description: SITE_DESCRIPTION,
+    openGraph: { ...siteOpenGraph(path), title: SERVICE_NAME, description: SITE_DESCRIPTION, images: [SITE_OG_IMAGE] },
+  };
 }
 
 /**

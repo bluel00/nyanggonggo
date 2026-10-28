@@ -81,4 +81,23 @@ describe("Logo", () => {
     expect(screen.getByRole("img", { name: SERVICE_NAME })).toBeTruthy();
     expect(SERVICE_NAME).toBe("멍냥공고");
   });
+  it.each([
+    [56, "lockup"],
+    [48, "lockup"],
+    [32, "mark"],
+  ] as const)("priority면 모든 그림을 지연 로딩 없이 먼저 받는다(%dpx %s, 홈 LCP)", (size, combo) => {
+    const { container } = render(<Logo size={size} combo={combo} priority />);
+    const imgs = [...container.querySelectorAll("img")];
+    expect(imgs.length).toBeGreaterThan(0);
+    for (const img of imgs) {
+      expect(img.getAttribute("loading")).toBe("eager");
+      expect(img.getAttribute("fetchpriority")).toBe("high");
+    }
+  });
+
+  it("priority가 없으면 next/image 기본값(지연 로딩)이다", () => {
+    const { container } = render(<Logo size={56} combo="lockup" />);
+    expect(container.querySelector("img")!.getAttribute("loading")).toBe("lazy");
+    expect(container.querySelector("img")!.getAttribute("fetchpriority")).toBeNull();
+  });
 });
