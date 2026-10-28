@@ -32,7 +32,7 @@
 
 ## 실행 방법
 
-Node `^20.19.0 || ^22.13.0 || >=24.0.0`, pnpm 10이 필요하다.
+Node 24(`.nvmrc`, `engines.node` `24.x`), pnpm 10이 필요하다.
 
 ```sh
 pnpm install
