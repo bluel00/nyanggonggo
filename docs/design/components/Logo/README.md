@@ -19,11 +19,11 @@ Where it is used (files in the asset group **Logo**):
 | Place | Size | Variant · combination | File |
 |---|---|---|---|
 | Home top | lockup, height 56; the tagline (`SERVICE_TAGLINE`, 2 lines, `body` `text-2`) sits under it and is not part of the logo | `line` · lockup | `myeongnyang-lockup.svg` |
-| Browser tab | 16 / 32 | `tile-small` / `tile`, transparent corners | `icon-16.png`, `icon-32.png` (→ `app/favicon.ico`, or `app/icon.png` 32) |
+| Browser tab | 16 / 32 | `tile-small` / `tile`, transparent corners | `icon-16.png`, `icon-32.png` (in the app: `app/favicon.ico`, `app/icon1.png` 16, `app/icon2.png` 32) |
 | iOS home screen | 180 | `tile`, full-bleed, no corner (iOS rounds it) | `apple-icon-180.png` → `app/apple-icon.png` |
-| Web app manifest | 192 / 512 | `tile`, full-bleed | `icon-192.png`, `icon-512.png` (`any`), `icon-512-maskable.png` (`maskable`, inset 17%, line inside the central 80% circle) |
+| Web app manifest | 192 / 512 | `tile`, full-bleed | Outside the code's scope (#66); the icon files stay in the source folder only: `icon-192.png`, `icon-512.png` (`any`), `icon-512-maskable.png` (`maskable`, inset 17%, line inside the central 80% circle) |
 | Kakao share card app icon | square source | `tile`, full-bleed | `icon-512.png` (console upload size: to be confirmed) |
-| Link-preview pill | 48 in the 1200×630 image | `tile` 48 filling a 48-high pill, so the pill ground does not show: in effect the tile alone, no wordmark | path from `myeongnyang-tile.svg` in `next/og` (`LogoPill`, `LOGO_SIZE = 48`) |
+| Link-preview pill | 48 in the 1200×630 image | `tile` 48 filling a 48-high pill, 24px in from the top-left (logical; 48 in the image), so the pill ground does not show: in effect the tile alone, no wordmark | path from `myeongnyang-tile.svg` in `next/og` (`LogoPill`, `LOGO_SIZE = 48`) |
 | Documents, decks | height 56 | `line` · lockup | `myeongnyang-lockup.svg` (wordmark outlined, no font needed; Jua is SIL OFL) |
 | Small tile source | 16 / 24 | `tile-small` | `myeongnyang-tile-small.svg` |
 

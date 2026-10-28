@@ -2,7 +2,10 @@
 
 이 폴더의 다른 파일은 디자인 시스템 "멍냥공고"의 사본이라 고치지 않는다. 싱크 기록만 여기에 적는다.
 
-- 마지막 싱크: 2026-10-27, 디자인 시스템 판 1793082441-ed30, 기준 코드 83e0269 (#53)
+- 마지막 싱크: 2026-10-27, 디자인 시스템 판 1793091314-d30d, 기준 코드 d4a3f5d (#53 둘째: design-sync-53b, 작은 수정 M1·M2, 공유 버튼 시안 2)
+  - 가져온 것: README.md, handoff.md, characters.md, tokens.json, bundle.css, bundle.js, 컴포넌트별 README·preview.html, assets/*/README.md. tokens.css는 같은 규칙으로 다시 만들었다(바뀐 토큰은 `toast-offset` 80px → 24px 하나).
+  - 가져오지 않은 것: 캐릭터·로고 그림(바뀌지 않음), Screens 캡처(저장소 밖 `nyanggonggo-review/screenshots/53/`), `design-system.json`, 글꼴.
+- 이전 싱크: 2026-10-27, 디자인 시스템 판 1793082441-ed30, 기준 코드 83e0269 (#53)
   - `bundle.css`·`bundle.js`는 디자인 시스템의 `components/` 아래에 있지만 이 폴더 바로 아래에 둔다.
   - `tokens.css`는 디자인 시스템에 없어 `tokens.json`에서 만든다(색 한 줄, 나머지 한 줄, 글자 스타일 클래스. 354e74a와 같은 규칙).
   - 가져오지 않은 것: 고양이·강아지 캐릭터 SVG 17개(2026-10-20 사본 그대로), 로고 그림(코드 `src/shared/assets/logo/`), Screens 캡처, 폰트 파일, `design-system.json`.
