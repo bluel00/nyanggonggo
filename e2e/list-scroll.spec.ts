@@ -1,27 +1,22 @@
 import { expect, test } from "@playwright/test";
-import {
-  isCardInView,
-  LIST_PAGE_SIZE,
-  loadNextListPage,
-  loadStubItems,
-  mockList,
-  rememberSpeciesCookie,
-  watchConsoleErrors,
-  type ListItem,
-} from "./helpers";
+import { isCardInView, loadNextListPage, rememberSpeciesCookie, watchConsoleErrors, watchList } from "./helpers";
 
 /**
  * 목록 → 상세 → 뒤로가기 때 열었던 카드로 돌아오는지 실제 브라우저에서 확인한다.
  * jsdom에는 레이아웃이 없어 스크롤을 검증할 수 없어서 이 흐름은 여기서만 제대로 확인된다.
+ * 목록은 서버(스텁 고양이·서울 30건)가 그린다: 첫 페이지 20건은 서버가 읽고(#109), 다음 10건은 /api/animals로 받는다.
  */
+
+/** 서버 목록 한 페이지 건수(SERVER_TUNING.listPageSize) */
+const PAGE = 20;
 
 /** 2페이지까지 불러온 뒤 아래쪽 카드를 눌러 상세로 간다. 누른 카드 id를 돌려준다 */
 async function openCardOnSecondPage(page: import("@playwright/test").Page) {
-  await expect(page.locator("[data-animal-id]")).toHaveCount(LIST_PAGE_SIZE);
+  await expect(page.locator("[data-animal-id]")).toHaveCount(PAGE);
   await loadNextListPage(page);
-  await expect(page.locator("[data-animal-id]")).toHaveCount(LIST_PAGE_SIZE * 2);
+  await expect(page.locator("[data-animal-id]")).toHaveCount(30);
 
-  const target = page.locator("[data-animal-id]").nth(LIST_PAGE_SIZE + 2); // 2페이지의 카드
+  const target = page.locator("[data-animal-id]").nth(PAGE + 2); // 2페이지의 카드
   const animalId = (await target.getAttribute("data-animal-id"))!;
   await target.locator("a").click();
   await expect(page).toHaveURL(new RegExp(`/animals/${animalId}$`));
@@ -29,17 +24,12 @@ async function openCardOnSecondPage(page: import("@playwright/test").Page) {
   return animalId;
 }
 
-let items: ListItem[];
-test.beforeAll(async ({ request }) => {
-  items = await loadStubItems(request);
-});
-
 const consoleWatch = watchConsoleErrors();
 test.beforeEach(async ({ page, context }) => {
   consoleWatch.attach(page);
   // 이 파일의 관심사는 축종이 아니다. 축종 기억을 심어 `/`가 홈을 건너뛰고 목록으로 가게 한다
   await rememberSpeciesCookie(context);
-  await mockList(page, items);
+  await watchList(page);
 });
 test.afterEach(() => consoleWatch.assertNone());
 

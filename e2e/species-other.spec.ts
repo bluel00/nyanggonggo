@@ -1,26 +1,33 @@
 import { expect, test } from "@playwright/test";
 import {
+  clearSeenCards,
+  expectListFrom,
   loadStubItems,
-  mockList,
   rememberSpeciesCookie,
   SPECIES_COOKIE,
   watchConsoleErrors,
+  watchList,
   type ListItem,
 } from "./helpers";
 
 /**
  * 기타 축종(upkind=429900). 기타 공고는 `kindNm`이 늘 "기타축종"이라 어떤 동물인지는
  * `kindFullNm`에서 뽑은 `kindText`에만 있다(architecture.md 12.A P12).
- * 목록은 page.route로 고정하고, 상세(서버 렌더)는 스텁(e2e/upstream-stub.mjs)의 기타 공고다. 실제 API가 기타 축종에 동물 이름을
+ * 목록과 상세는 모두 서버가 스텁(e2e/upstream-stub.mjs)의 기타 공고로 그린다(목록 첫 페이지는 #109부터 서버가 읽는다). 실제 API가 기타 축종에 동물 이름을
  * 담아 주는지는 `pnpm e2e:live`(e2e/live)가 본다.
  */
 
+const SEOUL = "6110000";
+
 let otherItems: ListItem[];
+let seoulOtherItems: ListItem[];
 test.beforeAll(async ({ request }) => {
   // 전국 기타·보호중
   otherItems = await loadStubItems(request, "", "other");
   const named = otherItems.find((item) => item.kindText);
   expect(named, "동물 이름이 있는 기타 공고가 있어야 한다").toBeTruthy();
+  // 서울 기타·보호중(필터에서 축종만 바꾸면 지역은 서울 그대로다)
+  seoulOtherItems = await loadStubItems(request, `region=${SEOUL}`, "other");
 });
 
 const consoleWatch = watchConsoleErrors();
@@ -32,20 +39,22 @@ test.beforeEach(async ({ page, context }) => {
 test.afterEach(() => consoleWatch.assertNone());
 
 test("필터에서 기타를 고르면 기타 조건으로 조회하고 카드에 동물 이름이 보인다", async ({ page }) => {
-  const requests = await mockList(page, otherItems);
+  await watchList(page);
   await page.goto("/");
-  await expect(page.locator("[data-animal-id]").first()).toBeVisible();
+  await expectListFrom(page, { species: "cat", region: SEOUL });
 
   await page.getByRole("button", { name: "필터" }).click();
   await page.getByRole("radio", { name: "기타 동물" }).click();
+  await clearSeenCards(page);
   await page.getByRole("button", { name: "적용하기" }).click();
 
   await expect(page).toHaveURL(/species=other/);
   await expect(page.getByRole("heading", { name: "기타 동물 공고" })).toBeVisible();
-  expect(requests.filter((url) => url.searchParams.get("species") === "other").length).toBeGreaterThan(0);
+  // 기타 조건(기타·서울)으로 읽은 목록이다
+  await expectListFrom(page, { species: "other", region: SEOUL });
 
   // 카드 1줄은 "<동물> · <지역>"이다
-  const target = otherItems.find((item) => item.kindText)!;
+  const target = seoulOtherItems.find((item) => item.kindText)!;
   const card = page.locator(`[data-animal-id="${target.id}"]`);
   await expect(card).toBeVisible();
   await expect(card).toContainText(`${target.kindText} · ${target.regionText}`);
@@ -55,7 +64,7 @@ test("공유 링크로 들어온 기타 공고는 상세에 동물 이름이 보
   page,
   context,
 }) => {
-  await mockList(page, otherItems);
+  await watchList(page);
   const target = otherItems.find((item) => item.kindText)!;
 
   await page.goto(`/animals/${target.id}`);

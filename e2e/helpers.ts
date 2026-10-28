@@ -1,5 +1,6 @@
 import { expect, type APIRequestContext, type BrowserContext, type Page } from "@playwright/test";
 import { SPECIES_COOKIE } from "../src/features/animal-filter/model/species-cookie";
+import { listIdPrefix } from "./stub-combo.mjs";
 
 /**
  * 앱의 쿠키·저장소 키. 값을 테스트에 복사하지 않고 앱 상수를 쓴다(#61). spec은 이 파일에서 가져온다.
@@ -18,8 +19,6 @@ export async function rememberSpeciesCookie(context: BrowserContext, species = "
   await context.addCookies([{ name: SPECIES_COOKIE, value: species, url: "http://localhost:3000" }]);
 }
 
-/** 목록 API를 고정 데이터로 바꿀 때 한 페이지에 담는 건수 */
-export const LIST_PAGE_SIZE = 6;
 export const SCROLL = '[data-slot="app-scroll"]';
 
 /** 투명 1x1 PNG(카드 사진 대신. 업스트림 이미지를 받지 않아 테스트가 빨라진다) */
@@ -32,7 +31,7 @@ export type ListItem = { id: string; regionText: string; species: string; kindTe
 
 /**
  * 고정 데이터로 쓸 공고를 개발 서버의 목록 API에서 받아 온다. E2E 서버는 모두 스텁(e2e/upstream-stub.mjs)을 쓰므로 스텁의 고정
- * 공고다(고양이·서울 30건, 기타·전국 20건, 개·세종 120건). 상세 페이지는 서버 렌더라 브라우저 라우팅으로 가릴 수 없어, 서버(스텁)가
+ * 공고다(고양이·서울 30건, 기타·전국 20건, 개·세종 120건, 그 밖의 조합은 조합마다 지어낸 30건, e2e/stub-combo.mjs). 상세 페이지는 서버 렌더라 브라우저 라우팅으로 가릴 수 없어, 서버(스텁)가
  * 아는 공고 id가 필요하다. species를 바꾸면 그 축종으로 받는다(기타는 `other`). query를 비우면 전국이다.
  */
 export async function loadStubItems(
@@ -50,23 +49,28 @@ export async function loadStubItems(
   return body.items;
 }
 
+/** 목록 조건(축종·지역·시군구). 지역이 없으면 전국 */
+export type ListCondition = { species: "cat" | "dog" | "other"; region?: string | null; district?: string | null };
+
 /**
- * 목록 API를 고정 데이터로 바꾼다. 커서는 이 목킹 안에서만 쓰는 offset 문자열이다.
- * 돌려주는 배열에는 목록 API로 나간 요청의 URL이 순서대로 쌓인다(어떤 지역으로 조회했는지 확인용).
+ * 목록을 지켜본다(가로채지 않는다, #109). 목록 첫 페이지는 서버가 읽어 HTML·RSC로 오므로 브라우저 요청으로는 조건을 볼 수 없다.
+ * 대신 스텁이 조건마다 다른 공고를 주고(e2e/stub-combo.mjs), 여기서는 화면에 한 번이라도 그려진 카드 id를 모두 기록한다.
+ * 돌려주는 배열에는 브라우저가 부른 /api/animals 요청(다음 페이지, 서버가 첫 페이지를 읽지 못한 경우)이 쌓인다.
+ * 카드 사진은 1x1 PNG로 바꾼다(업스트림 이미지를 받지 않아 테스트가 빨라진다).
  */
-export async function mockList(page: Page, items: ListItem[]) {
+export async function watchList(page: Page) {
   const requests: URL[] = [];
-  await page.route(
-    (url) => url.pathname === "/api/animals",
-    async (route) => {
-      requests.push(new URL(route.request().url()));
-      const start = Number(new URL(route.request().url()).searchParams.get("cursor") ?? 0);
-      const end = start + LIST_PAGE_SIZE;
-      await route.fulfill({
-        json: { items: items.slice(start, end), nextCursor: end < items.length ? String(end) : null },
-      });
-    },
-  );
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if (url.pathname === "/api/animals") requests.push(url);
+  });
+  await page.addInitScript(() => {
+    const seen = new Set<string>();
+    (window as unknown as { __seenCards: Set<string> }).__seenCards = seen;
+    const record = () => document.querySelectorAll("[data-animal-id]").forEach((el) => seen.add(el.getAttribute("data-animal-id")!));
+    new MutationObserver(record).observe(document, { childList: true, subtree: true });
+    document.addEventListener("DOMContentLoaded", record);
+  });
   await page.route(
     (url) => url.pathname === "/api/image-proxy",
     (route) => route.fulfill({ contentType: "image/png", body: PNG_1X1 }),
@@ -74,14 +78,40 @@ export async function mockList(page: Page, items: ListItem[]) {
   return requests;
 }
 
-/** 목록 API로 나간 요청들의 region 값 */
-export function requestedRegions(requests: URL[]): (string | null)[] {
-  return requests.map((url) => url.searchParams.get("region"));
+/** 기록을 비운다. 앱 안에서 다른 목록으로 옮겨 가기 직전에 부르면 그 뒤에 그려진 카드만 남는다 */
+export async function clearSeenCards(page: Page) {
+  await page.evaluate(() => (window as unknown as { __seenCards?: Set<string> }).__seenCards?.clear());
 }
 
-/** 목록 API로 나간 요청들의 species 값 */
-export function requestedSpecies(requests: URL[]): (string | null)[] {
-  return requests.map((url) => url.searchParams.get("species"));
+/** 이 페이지에서 한 번이라도 그려진 목록 카드 id(watchList를 먼저 불러야 한다) */
+export function seenCardIds(page: Page): Promise<string[]> {
+  return page.evaluate(() => [...(window as unknown as { __seenCards?: Set<string> }).__seenCards ?? []]);
+}
+
+/**
+ * 목록이 이 조건으로 조회됐는지(#109): 카드가 보이고, 지금 그려진 카드와 이 페이지에서 한 번이라도 그려진 카드가 모두 그 조건의 공고다
+ * (스텁이 조건마다 다른 id를 준다, e2e/stub-combo.mjs). 다른 조건의 목록이 먼저 그려졌다가 바뀌어도 여기서 실패한다.
+ */
+export async function expectListFrom(page: Page, { species, region = null, district = null }: ListCondition) {
+  const prefix = listIdPrefix(species, region, district);
+  await expect(page.locator("[data-animal-id]").first()).toBeVisible();
+  const now = await page.locator("[data-animal-id]").evaluateAll((els) => els.map((el) => el.getAttribute("data-animal-id")!));
+  const seen = await seenCardIds(page);
+  const wrong = [...now, ...seen].filter((id) => !id.startsWith(prefix));
+  expect(wrong, `${species}·${region ?? "전국"}·${district ?? "-"} 목록(접두어 ${prefix})이 아닌 카드`).toEqual([]);
+}
+
+/**
+ * 이 조건·정렬로 읽은 목록 첫 페이지의 공고 id 순서(개발 서버 목록 API, 서버와 같은 데이터·정렬). 화면 카드 순서와 비교해 정렬이 반영됐는지 본다
+ */
+export async function listOrder(request: APIRequestContext, condition: ListCondition, query = ""): Promise<string[]> {
+  const params = new URLSearchParams({ species: condition.species, status: "protected" });
+  if (condition.region) params.set("region", condition.region);
+  if (condition.region && condition.district) params.set("district", condition.district);
+  for (const [key, value] of new URLSearchParams(query)) params.set(key, value);
+  const response = await request.get(`http://127.0.0.1:3000/api/animals?${params}`);
+  expect(response.ok()).toBeTruthy();
+  return ((await response.json()) as { items: { id: string }[] }).items.map((item) => item.id);
 }
 
 /** 그중 첫 페이지 요청(커서 없는 것)만. 무한 스크롤의 다음 페이지 요청과 구분한다 */
@@ -158,16 +188,22 @@ export function scrollTop(page: Page) {
  */
 export function watchConsoleErrors() {
   const errors: string[] = [];
+  let expected: RegExp | null = null;
   return {
     attach(page: Page) {
       errors.length = 0;
+      expected = null;
       page.on("console", (message) => {
         if (message.type() === "error") errors.push(message.text());
       });
       page.on("pageerror", (error) => errors.push(String(error)));
     },
+    /** 이 테스트에서 일부러 낸 오류(예: 실패 응답)는 빼고 본다 */
+    expect(pattern: RegExp) {
+      expected = pattern;
+    },
     assertNone() {
-      expect(errors, "콘솔 오류가 없어야 한다").toEqual([]);
+      expect(errors.filter((error) => !expected?.test(error)), "콘솔 오류가 없어야 한다").toEqual([]);
     },
   };
 }
