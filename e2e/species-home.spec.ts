@@ -1,15 +1,15 @@
 import { expect, test, type BrowserContext, type Page } from "@playwright/test";
 import {
+  clearSeenCards,
+  expectListFrom,
   firstPageRequests,
   loadStubItems,
-  mockList,
   openedDetail,
   REGION_COOKIE,
   rememberSpeciesCookie,
-  requestedRegions,
-  requestedSpecies,
   SPECIES_COOKIE,
   watchConsoleErrors,
+  watchList,
   type ListItem,
 } from "./helpers";
 
@@ -17,7 +17,8 @@ import {
  * 홈(축종 선택)과 축종 기억(PRD-v1.1 3절 7)·8), 4절, architecture.md 7절).
  *
  * 쿠키와 리다이렉트는 서버에서 일어나고(`app/page.tsx`), 홈의 선택은 클라이언트에서 쿠키를 쓴다.
- * 둘이 실제로 맞물리는지는 브라우저에서만 볼 수 있어 여기서 본다. 목록 API 응답은 고정한다.
+ * 둘이 실제로 맞물리는지는 브라우저에서만 볼 수 있어 여기서 본다. 목록 첫 페이지는 서버가 읽으므로(#109) 어떤 축종·지역으로 읽었는지는
+ * 화면의 카드 id로 본다(스텁이 조건마다 다른 공고를 준다, e2e/stub-combo.mjs).
  */
 
 const SEOUL = "6110000";
@@ -55,7 +56,7 @@ function watchDocumentRedirects(page: Page): string[] {
 }
 
 test("첫 방문은 홈을 거치고, 고른 축종을 기억해 다음 방문은 바로 그 목록이다", async ({ page, context }) => {
-  const requests = await mockList(page, items);
+  const requests = await watchList(page);
 
   // 기억이 없으면 홈이다. 기본 축종(고양이)으로 밀어 넣지 않는다
   await page.goto("/");
@@ -66,44 +67,46 @@ test("첫 방문은 홈을 거치고, 고른 축종을 기억해 다음 방문�
   await page.getByRole("link", { name: "강아지" }).click();
   await expect(page).toHaveURL(`/?species=dog&region=${SEOUL}`);
   await expect(page.getByRole("heading", { name: "강아지 공고" })).toBeVisible();
-  const asked = requestedSpecies(firstPageRequests(requests));
-  expect(asked.length).toBeGreaterThan(0);
-  expect(asked.every((species) => species === "dog"), `첫 페이지 요청 축종: ${asked.join(", ")}`).toBe(true);
+  // 강아지·서울로 읽은 목록이고, 첫 페이지는 서버가 읽어 브라우저가 부르지 않는다
+  await expectListFrom(page, { species: "dog", region: SEOUL });
+  expect(firstPageRequests(requests)).toEqual([]);
   expect(await rememberedSpecies(context)).toBe("dog");
 
   // 같은 브라우저로 다시 들어오면 홈을 건너뛴다. 축종과 지역을 한 번의 리다이렉트로 채운다
   const next = await context.newPage();
   consoleWatch.attach(next);
-  const nextRequests = await mockList(next, items);
+  await watchList(next);
   const redirects = watchDocumentRedirects(next);
   await next.goto("/");
   await expect(next).toHaveURL(`/?species=dog&region=${SEOUL}`);
   await expect(next.getByRole("heading", { name: "강아지 공고" })).toBeVisible();
   expect(redirects, `리다이렉트: ${redirects.join(", ")}`).toHaveLength(1);
-  expect(requestedSpecies(nextRequests)).not.toContain("cat");
+  // 고양이 목록이 먼저 그려지지 않는다
+  await expectListFrom(next, { species: "dog", region: SEOUL });
 });
 
 test("목록 헤더에서 홈으로 가면 기억이 있어도 홈이 보이고, 다시 고르면 지역은 그대로다", async ({ page, context }) => {
   await rememberSpeciesCookie(context, "dog");
   await context.addCookies([{ name: REGION_COOKIE, value: BUSAN, url: "http://localhost:3000" }]);
-  const requests = await mockList(page, items);
+  await watchList(page);
 
   await page.goto("/");
   await expect(page).toHaveURL(`/?species=dog&region=${BUSAN}`);
-  await expect(page.locator("[data-animal-id]").first()).toBeVisible();
+  await expectListFrom(page, { species: "dog", region: BUSAN });
 
   // 축종 기억이 있어도 홈은 건너뛰지 않는다(결정 G1). 보고 있던 지역을 함께 넘긴다(결정 G2)
   await page.getByRole("link", { name: /다른 동물 고르기/ }).click();
   await expect(page).toHaveURL(`/home?region=${BUSAN}`);
   await expect(page.getByRole("heading", { name: HOME_TITLE })).toBeVisible();
 
+  await clearSeenCards(page);
   await page.getByRole("link", { name: "고양이" }).click();
   await expect(page).toHaveURL(`/?species=cat&region=${BUSAN}`);
   await expect(page.getByRole("heading", { name: "고양이 공고" })).toBeVisible();
   expect(await rememberedSpecies(context)).toBe("cat");
-  // 홈에서는 축종만 기억한다. 지역 기억은 그대로이고, 목록 요청도 그 지역이다
+  // 홈에서는 축종만 기억한다. 지역 기억은 그대로이고, 목록도 그 지역(고양이·부산)으로 읽었다
   expect((await context.cookies()).find((cookie) => cookie.name === REGION_COOKIE)?.value).toBe(BUSAN);
-  expect(requestedRegions(requests).every((region) => region === BUSAN)).toBe(true);
+  await expectListFrom(page, { species: "cat", region: BUSAN });
 });
 
 test("공유 링크로 다른 축종 공고를 열면 뒤로가기는 기억된 축종의 목록이고, 기억은 바뀌지 않는다", async ({
@@ -111,7 +114,7 @@ test("공유 링크로 다른 축종 공고를 열면 뒤로가기는 기억된 
   context,
 }) => {
   await rememberSpeciesCookie(context, "dog");
-  await mockList(page, items);
+  await watchList(page);
   const target = items[3];
 
   await page.goto(`/animals/${target.id}`);
@@ -127,14 +130,18 @@ test("공유 링크로 다른 축종 공고를 열면 뒤로가기는 기억된 
 
 test("필터 시트에서 축종을 바꾸면 그 축종을 기억한다", async ({ page, context }) => {
   await rememberSpeciesCookie(context, "cat");
-  await mockList(page, items);
+  await watchList(page);
 
   await page.goto("/");
+  await expectListFrom(page, { species: "cat", region: SEOUL });
   await page.getByRole("button", { name: "필터" }).click();
   await page.getByRole("radio", { name: "강아지" }).click();
+  await clearSeenCards(page);
   await page.getByRole("button", { name: "적용하기" }).click();
 
   await expect(page).toHaveURL(/species=dog/);
+  // 바꾼 축종(강아지·서울)으로 읽은 목록이다
+  await expectListFrom(page, { species: "dog", region: SEOUL });
   expect(await rememberedSpecies(context)).toBe("dog");
 });
 
@@ -178,7 +185,7 @@ test("홈의 선택지는 캐릭터(장식) + 텍스트 라벨의 링크이고, 
 });
 
 test("목록 헤더 진입점은 접근 가능한 이름에 '다른 동물 고르기'가 들어간다", async ({ page, context }) => {
-  await mockList(page, items);
+  await watchList(page);
   for (const [species, title] of [
     ["cat", "고양이 공고"],
     ["other", "기타 동물 공고"],

@@ -1,5 +1,5 @@
 import { expect, test, type BrowserContext, type Page } from "@playwright/test";
-import { isCardInView, loadNextListPage, openedDetail, REGION_COOKIE, SPECIES_COOKIE } from "./helpers";
+import { expectListFrom, isCardInView, loadNextListPage, openedDetail, REGION_COOKIE, SPECIES_COOKIE, watchList } from "./helpers";
 import { belowScrollTop, LAYER, recordStackFrames, rememberCards, sameCards, stackFrames, stackFramesDone } from "./stack";
 
 /**
@@ -8,7 +8,7 @@ import { belowScrollTop, LAYER, recordStackFrames, rememberCards, sameCards, sta
  * Chromium과 WebKit(아이폰 사파리 엔진) 둘 다 돈다(playwright.config.ts).
  *
  * 스텁의 고정 목록은 개·세종 120건(6페이지)이고, 최신순으로 id가 990000202601000부터 하나씩 는다.
- * 다른 조합의 목록은 빈 결과다. 아래 값은 스텁과 같아야 한다.
+ * 다른 조합의 목록은 조합마다 지어낸 공고다(e2e/stub-combo.mjs). 아래 값은 스텁과 같아야 한다.
  */
 const LIST_URL = "/?species=dog&region=5690000";
 const PAGE_SIZE = 20;
@@ -208,13 +208,15 @@ test.describe("R2: 공유 링크 → 상세 → 뒤로가기", () => {
       { name: SPECIES_COOKIE, value: "cat" },
     ];
     await context.addCookies(remembered.map((cookie) => ({ ...cookie, url: "http://localhost:3101" })));
+    await watchList(page);
 
     await page.goto(`/animals/${shared}`);
     await openedDetail(page);
     await page.getByRole("button", { name: "뒤로가기" }).click();
 
     await expect(page).toHaveURL("/?species=cat&region=6500000");
-    await expect(page.getByRole("status")).toBeVisible(); // 스텁에서 제주 고양이는 빈 목록(빈 상태 문구)
+    // 쿠키의 축종·지역(고양이·제주)으로 읽은 목록이다(스텁이 조합마다 다른 공고를 준다, e2e/stub-combo.mjs)
+    await expectListFrom(page, { species: "cat", region: "6500000" });
     expect(await filterCookies(context)).toEqual(remembered);
   });
 

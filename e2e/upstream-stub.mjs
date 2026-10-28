@@ -5,6 +5,17 @@
 //
 // 공고 id는 실제 공고와 겹치지 않는 99로 시작한다. 날짜는 오늘(KST) 기준이라 어느 날 돌려도 보호중이다.
 import sharp from "sharp";
+import {
+  COMBO_SIZE,
+  COMBO_SPECIES,
+  comboItemId,
+  FAILING_REGION,
+  hasComboTwoPhotos,
+  isComboEnded,
+  parseComboId,
+  SLOW_LIST_MS,
+  SLOW_REGIONS,
+} from "./stub-combo.mjs";
 
 const IMAGE_HOST = "openapi.animal.go.kr";
 const photo = (width, height) => `http://${IMAGE_HOST}/e2e-fixture/${width}x${height}.jpg`;
@@ -96,7 +107,7 @@ const updTmAgo = (minutes) => `2026-10-13 ${String(Math.floor(minutes / 60)).pad
 
 /**
  * 고양이·서울(upr_cd 6110000) 30건. 개발·production 서버의 화면 E2E(목록·필터·지역·축종 기억·움직임·상세 로딩)가
- * 상세(서버 렌더)로 들어갈 공고 id를 여기서 얻는다(e2e/helpers.ts의 loadStubItems). 목록 자체는 대개 page.route로 고정한다.
+ * 상세(서버 렌더)로 들어갈 공고 id를 여기서 얻는다(e2e/helpers.ts의 loadStubItems). 목록 첫 페이지도 서버가 이 데이터로 그린다(#109).
  * 성별은 index % 3으로 암컷(F) / 수컷(M) / 미상(Q)을 돌린다(e2e/sex-filter.spec.ts와 같아야 한다).
  */
 const SEOUL_CAT_SEX = ["F", "M", "Q"];
@@ -129,7 +140,36 @@ const OTHER_ITEMS = Array.from({ length: 20 }, (_, index) =>
   }),
 );
 
-/** 목록 조합(upkind, upr_cd, org_cd 없음) → 고정 목록. 다른 조합은 빈 결과다 */
+/**
+ * 고정 목록에 없는 조합의 지어낸 공고(e2e/stub-combo.mjs, #109). id에 축종·시도·시군구가 들어 있어, 화면의 카드 id로 서버가 어떤 조건으로
+ * 조회했는지 알 수 있다. updTm이 하나씩 이르고 종료일이 5~14일 뒤로 돌아 최신순과 공고 마감 빠른순이 다르다. 몇 개는 종료 공고다.
+ */
+const COMBO_KIND = {
+  dog: { kind: "개", fullKind: "개", animal: "믹스" },
+  cat: { kind: "고양이", fullKind: "고양이", animal: "코리안 숏헤어" },
+  other: { kind: "기타", fullKind: "기타축종", animal: null },
+};
+function comboItem(species, region, district, index) {
+  const kind = COMBO_KIND[species];
+  return item(comboItemId(species, region, district, index), {
+    upkind: COMBO_SPECIES[species].upkind,
+    kind: kind.kind,
+    fullKind: kind.fullKind,
+    animal: kind.animal ?? OTHER_ANIMALS[index % OTHER_ANIMALS.length],
+    orgNm: `E2E 조합 ${region ?? "전국"}${district ? ` ${district}` : ""}`,
+    photos: hasComboTwoPhotos(index) ? [[600, 450], [400, 400]] : [[400, 400]],
+    updTm: updTmAgo(COMBO_SIZE - index),
+    noticeEdtDays: isComboEnded(index) ? -1 : 5 + (index % 10),
+    processState: isComboEnded(index) ? "종료(입양)" : "보호중",
+  });
+}
+function comboItems(upkind, region, district) {
+  const species = Object.keys(COMBO_SPECIES).find((key) => COMBO_SPECIES[key].upkind === upkind);
+  if (!species) return [];
+  return Array.from({ length: COMBO_SIZE }, (_, index) => comboItem(species, region, district, index));
+}
+
+/** 목록 조합(upkind, upr_cd, org_cd 없음) → 고정 목록. 다른 조합은 조합 공고(comboItems)다 */
 const LISTS = [
   { upkind: STUB_LIST.upkind, region: STUB_LIST.region, items: LIST_ITEMS },
   { upkind: "422400", region: "6110000", items: SEOUL_CAT_ITEMS },
@@ -204,15 +244,20 @@ globalThis.fetch = async function stubFetch(input) {
       return new Response("slow stub", { status: 500 });
     }
     if (id) {
-      const found = BY_ID.get(id);
+      const combo = parseComboId(id);
+      const found = BY_ID.get(id) ?? (combo && combo.index < COMBO_SIZE ? comboItem(combo.species, combo.region, combo.district, combo.index) : undefined);
       return upstreamPage(found ? [found] : [], found ? 1 : 0, 1, 10);
     }
     const pageNo = Number(params.get("pageNo") ?? 1);
     const rows = Number(params.get("numOfRows") ?? 10);
+    const region = params.get("upr_cd");
+    const district = params.get("org_cd");
+    if (region === FAILING_REGION) return new Response("failing stub", { status: 500 });
     const mine =
-      LISTS.find(
-        (list) => params.get("upkind") === list.upkind && params.get("upr_cd") === list.region && !params.get("org_cd"),
-      )?.items ?? [];
+      LISTS.find((list) => params.get("upkind") === list.upkind && region === list.region && !district)?.items ??
+      comboItems(params.get("upkind"), region, district);
+    // 뼈대를 붙잡아 두는 조합(e2e/stub-combo.mjs)
+    if (region && SLOW_REGIONS.includes(region)) await new Promise((resolve) => setTimeout(resolve, SLOW_LIST_MS));
     return upstreamPage(mine.slice((pageNo - 1) * rows, pageNo * rows), mine.length, pageNo, rows);
   }
   if (url.hostname === IMAGE_HOST) {

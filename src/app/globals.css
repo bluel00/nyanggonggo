@@ -285,6 +285,30 @@
     animation: enter-rise var(--list-enter-duration) var(--ease-out) both;
     animation-delay: calc(var(--enter-i, 0) * var(--list-enter-stagger));
   }
+  /*
+   * 서버가 그린 목록 첫 페이지의 첫 화면 등장(#109). 위와 같은 효과를 하이드레이션 없이 CSS만으로 돌린다.
+   * <html data-list-enter="N">(뼈대가 실제로 칠해졌을 때 widgets/animal-list/model/list-enter.ts가 단다, N = 첫 화면 카드 수)일 때만
+   * [data-list-first] 목록의 앞 N장 중 움직이는 카드(종료 제외)를 올린다. 순서(--enter-i)는 움직이는 카드끼리 센다. N은 6까지다(LIST_ENTER_MAX).
+   * 붙이는 곳: widgets/animal-list/ui/animal-list.tsx(FeedList first)
+   */
+  html[data-list-enter] [data-list-first] > [data-slot="animal-card"]:not([data-still]) {
+    --enter-rise: var(--list-enter-distance);
+    animation: enter-rise var(--list-enter-duration) var(--ease-out) both;
+    animation-delay: calc(var(--enter-i, 0) * var(--list-enter-stagger));
+  }
+  html[data-list-enter="1"] [data-list-first] > [data-slot="animal-card"]:not([data-still]):nth-child(n + 2),
+  html[data-list-enter="2"] [data-list-first] > [data-slot="animal-card"]:not([data-still]):nth-child(n + 3),
+  html[data-list-enter="3"] [data-list-first] > [data-slot="animal-card"]:not([data-still]):nth-child(n + 4),
+  html[data-list-enter="4"] [data-list-first] > [data-slot="animal-card"]:not([data-still]):nth-child(n + 5),
+  html[data-list-enter="5"] [data-list-first] > [data-slot="animal-card"]:not([data-still]):nth-child(n + 6),
+  html[data-list-enter="6"] [data-list-first] > [data-slot="animal-card"]:not([data-still]):nth-child(n + 7) {
+    animation: none;
+  }
+  [data-list-first] > :nth-child(2 of [data-slot="animal-card"]:not([data-still])) { --enter-i: 1; }
+  [data-list-first] > :nth-child(3 of [data-slot="animal-card"]:not([data-still])) { --enter-i: 2; }
+  [data-list-first] > :nth-child(4 of [data-slot="animal-card"]:not([data-still])) { --enter-i: 3; }
+  [data-list-first] > :nth-child(5 of [data-slot="animal-card"]:not([data-still])) { --enter-i: 4; }
+  [data-list-first] > :nth-child(6 of [data-slot="animal-card"]:not([data-still])) { --enter-i: 5; }
   /* 붙이는 곳: features/animal-favorite/ui/favorite-button.tsx */
   [data-heart-pop] {
     animation: heart-pop var(--heart-duration) both;

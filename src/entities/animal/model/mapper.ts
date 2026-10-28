@@ -1,5 +1,10 @@
-import type { AnimalWireDto } from "@/contract/animals";
-import type { Animal } from "./animal";
+import type { AnimalListResponse, AnimalWireDto } from "@/contract/animals";
+import type { Animal, AnimalPage } from "./animal";
+
+/** 목록 응답(/api/animals) → Domain 페이지. 저장소(클라이언트 조회)와 서버가 읽은 첫 페이지 넣기가 함께 쓴다 */
+export function toAnimalPage(response: AnimalListResponse): AnimalPage {
+  return { items: response.items.map(toAnimal), nextCursor: response.nextCursor };
+}
 
 /** 클라이언트 Mapper: AnimalWireDto → Animal. */
 export function toAnimal(wire: AnimalWireDto): Animal {

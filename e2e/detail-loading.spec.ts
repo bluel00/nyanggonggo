@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { loadStubItems, mockList, openedDetail, rememberSpeciesCookie, watchConsoleErrors, type ListItem } from "./helpers";
+import { loadStubItems, openedDetail, rememberSpeciesCookie, watchConsoleErrors, watchList, type ListItem } from "./helpers";
 
 /**
  * 목록 카드를 누르면 상세가 뜨기 전에 바로 상세 뼈대가 보이는지(`app/animals/[id]/loading.tsx`).
@@ -27,7 +27,7 @@ test.beforeEach(async ({ page, context }) => {
 test.afterEach(() => consoleWatch.assertNone());
 
 test("상세가 느려도 카드를 누르면 바로 상세 뼈대가 보이고, 이어서 실제 상세로 바뀐다", async ({ page }) => {
-  await mockList(page, items);
+  await watchList(page);
   const target = items[1];
 
   // 실제 이동 요청만 늦춘다(prefetch는 그대로 둔다). 늦춘 요청이 끝났는지 기록한다
@@ -80,7 +80,7 @@ async function delayDetailNavigation(page: Page, id: string, ms: number) {
 const SLOW_DETAIL_MS = 4000;
 
 test("목록에서 들어와 뼈대가 떠 있을 때 뒤로가기를 누르면 그 목록으로 돌아간다(브라우저 뒤로가기)", async ({ page }) => {
-  await mockList(page, items);
+  await watchList(page);
   const target = items[1];
   const navigation = await delayDetailNavigation(page, target.id, SLOW_DETAIL_MS);
 

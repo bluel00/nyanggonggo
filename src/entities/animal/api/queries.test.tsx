@@ -12,6 +12,7 @@ import {
   isSameListFilter,
   LIST_GC_TIME_MS,
   listFilterKey,
+  seedAnimalsFirstPage,
   useAnimal,
   useAnimalsByIds,
   useAnimalsInfinite,
@@ -268,5 +269,27 @@ describe("useRetryFailedAnimals", () => {
 
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(client.getQueryData(animalKeys.byIds(ids))).toBe(before);
+  });
+});
+
+describe("seedAnimalsFirstPage(#109)", () => {
+  const filter = { species: "cat", region: "6110000", status: "protected", sex: "all", sort: "latest" } as const;
+  const response = { items: [makeWire({ id: "1" }), makeWire({ id: "2" })], nextCursor: "Mg" };
+
+  it("서버가 읽은 첫 페이지를 목록 무한쿼리의 첫 페이지로 넣는다(Domain으로 바꿔서, 다음 커서 그대로)", () => {
+    const client = createQueryClient();
+    expect(seedAnimalsFirstPage(client, filter, response)).toBe(true);
+    expect(client.getQueryData(animalKeys.list(filter))).toEqual({
+      pages: [{ items: response.items.map(toAnimal), nextCursor: "Mg" }],
+      pageParams: [null],
+    });
+  });
+
+  it("이미 받아 둔 목록이면 덮어쓰지 않는다", () => {
+    const client = createQueryClient();
+    const existing = { pages: [{ items: [toAnimal(makeWire({ id: "9" }))], nextCursor: null }], pageParams: [null] };
+    client.setQueryData(animalKeys.list(filter), existing);
+    expect(seedAnimalsFirstPage(client, filter, response)).toBe(false);
+    expect(client.getQueryData(animalKeys.list(filter))).toBe(existing);
   });
 });

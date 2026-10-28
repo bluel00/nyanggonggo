@@ -1,10 +1,10 @@
 export type { Animal, AnimalPage, AnimalsByIds } from "./model/animal";
 export type { AnimalListParams, AnimalRepository, AnimalRequestOptions } from "./model/repository";
-export { toAnimal } from "./model/mapper";
+export { toAnimal, toAnimalPage } from "./model/mapper";
 export { getDDay, isNearDeadline } from "./model/dDay";
 export { getPrimaryImage, getStatusVariant, type AnimalStatusVariant } from "./model/status";
 export { allowsMotion } from "./model/motion";
-export { animalRepository, createAnimalRepository } from "./api/animal-repository";
+export { animalRepository, createAnimalRepository, toAnimalListQuery } from "./api/animal-repository";
 export {
   animalKeys,
   animalOptions,
@@ -13,11 +13,13 @@ export {
   isSameListFilter,
   listFilterKey,
   seedAnimalDetail,
+  seedAnimalsFirstPage,
   useAnimal,
   useAnimalsByIds,
   useAnimalsInfinite,
   useRetryFailedAnimals,
   type AnimalListFilter,
+  type AnimalListFirstPage,
 } from "./api/queries";
 export {
   chooseDetailEntryMode,

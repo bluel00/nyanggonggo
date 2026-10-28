@@ -2,16 +2,21 @@ import { expect, test, type Page } from "@playwright/test";
 import {
   loadNextListPage,
   loadStubItems,
-  mockList,
   openedDetail,
   rememberSpeciesCookie,
   watchConsoleErrors,
+  watchList,
   type ListItem,
 } from "./helpers";
+import { comboLatestIds, SLOW_REGIONS } from "./stub-combo.mjs";
 
 /**
  * 움직임(architecture.md 14.2 3단계, README 움직임 표·원칙). production 빌드에서 본다(링크 prefetch가 실제와 같다).
  * 애니메이션 유무는 `getAnimations()`로 본다(CSS animation·transition 모두 잡힌다).
+ *
+ * 목록 첫 화면 등장은 뼈대가 실제로 보였을 때만 돈다(handoff "목록 첫 화면 등장", #109). 첫 페이지는 서버가 읽으므로 뼈대가 꼭 보여야 하는
+ * 테스트는 스텁이 늦게 답하는 조합(e2e/stub-combo.mjs SLOW_REGIONS)을 연다. 늦는 것은 서버 캐시가 빈 첫 요청뿐이라 테스트마다 다른 조합이다.
+ * 등장한 카드는 `enter-rise` 애니메이션이 시작된 카드로 센다(서버가 그린 첫 페이지는 CSS만으로, 클라이언트가 받은 목록은 data-enter로 돈다).
  */
 
 /** 휴대폰 화면(Pixel 7 크기). 첫 화면에 카드 두 장(0·1번)이 보인다 */
@@ -26,6 +31,21 @@ const consoleWatch = watchConsoleErrors();
 test.beforeEach(async ({ page, context }) => {
   consoleWatch.attach(page);
   await rememberSpeciesCookie(context);
+  // 등장(enter-rise)이 시작된 카드 id를 순서대로 남긴다
+  await page.addInitScript(() => {
+    const w = window as unknown as { __entered: string[] };
+    w.__entered = [];
+    document.addEventListener(
+      "animationstart",
+      (event) => {
+        const target = event.target as Element;
+        if (event.animationName === "enter-rise" && target.matches('[data-slot="animal-card"]')) {
+          w.__entered.push(target.getAttribute("data-animal-id")!);
+        }
+      },
+      true,
+    );
+  });
 });
 test.afterEach(() => consoleWatch.assertNone());
 
@@ -46,15 +66,18 @@ const cardAnimations = (page: Page, id: string) =>
       .map((a) => (a as CSSAnimation).animationName ?? (a as CSSTransition).transitionProperty);
   }, id);
 
-/** 목록 첫 화면 등장 표시가 붙은 카드 id */
-const enteringCards = (page: Page) =>
-  page.evaluate(() => [...document.querySelectorAll('[data-enter="list"]')].map((el) => el.getAttribute("data-animal-id")));
+/** 목록 첫 화면 등장이 시작된 카드 id(시작한 순서) */
+const enteringCards = (page: Page) => page.evaluate(() => (window as unknown as { __entered: string[] }).__entered);
+
+/** 등장 표시(서버 첫 페이지의 html[data-list-enter], 클라이언트 목록의 data-enter="list")가 남아 있는지 */
+const enterMarks = (page: Page) =>
+  page.evaluate(() => document.documentElement.hasAttribute("data-list-enter") || document.querySelector('[data-enter="list"]') !== null);
 
 test.describe("움직임 줄이기", () => {
   test.use({ reducedMotion: "reduce" });
 
   test("홈·목록·카드 누름·찜 어디서도 애니메이션이 하나도 돌지 않는다", async ({ page }) => {
-    await mockList(page, items);
+    await watchList(page);
     await page.goto("/home");
     await expect(page.getByRole("heading", { name: "오늘은 누구를 보러 왔어요?" })).toBeVisible();
     expect(await runningAnimations(page)).toBe(0);
@@ -82,15 +105,18 @@ test.describe("움직임 줄이기", () => {
 });
 
 test("종료 카드: 첫 화면 등장·누름·하트 튐이 없다(보호중 카드는 등장·튐이 있다)", async ({ page }) => {
+  // 스텁 조합 목록(상태 전체)은 1번이 종료 공고다. 뼈대가 보이도록 늦게 답하는 조합을 연다
   const ENDED = 1;
-  const list = items.map((item, index) => (index === ENDED ? ({ ...item, status: "ended" } as ListItem) : item));
-  await mockList(page, list);
-  await page.goto("/");
+  const region = SLOW_REGIONS[2];
+  const list = comboLatestIds("cat", region, null, { status: "all" }).map((id) => ({ id }));
+  await watchList(page);
+  await page.goto(`/?species=cat&region=${region}&status=all`, { waitUntil: "commit" });
+  await expect(page.locator('[data-slot="skeleton-card"]').first()).toBeVisible();
   await expect(card(page, list[ENDED].id)).toBeVisible();
   await expect(card(page, list[ENDED].id)).toHaveAttribute("data-status-variant", "ended");
 
   // 첫 화면의 두 장 중 보호중(0번)만 등장한다
-  expect(await enteringCards(page)).toEqual([list[0].id]);
+  await expect.poll(() => enteringCards(page)).toEqual([list[0].id]);
   expect(await cardAnimations(page, list[ENDED].id)).toEqual([]);
 
   // 누르고 있는 동안에도 아무것도 돌지 않는다
@@ -111,25 +137,29 @@ test("종료 카드: 첫 화면 등장·누름·하트 튐이 없다(보호중 �
 });
 
 test("다음 페이지 카드와 상세에서 돌아온 목록에는 등장 효과가 없다", async ({ page }) => {
-  await mockList(page, items);
-  await page.goto("/");
-  await expect(card(page, items[0].id)).toBeVisible();
+  // 뼈대가 보이도록 늦게 답하는 조합을 연다(첫 화면 등장이 돈다)
+  const region = SLOW_REGIONS[3];
+  const ids = comboLatestIds("cat", region, null);
+  await watchList(page);
+  await page.goto(`/?species=cat&region=${region}`, { waitUntil: "commit" });
+  await expect(page.locator('[data-slot="skeleton-card"]').first()).toBeVisible();
+  await expect(card(page, ids[0])).toBeVisible();
   // 첫 화면은 한 번 등장한다
-  expect(await enteringCards(page)).toEqual([items[0].id, items[1].id]);
-  await expect.poll(() => enteringCards(page), { message: "등장이 끝나면 표시를 지운다" }).toEqual([]);
+  await expect.poll(() => enteringCards(page)).toEqual([ids[0], ids[1]]);
+  await expect.poll(() => enterMarks(page), { message: "등장이 끝나면 표시를 지운다" }).toBe(false);
 
   await loadNextListPage(page);
-  const next = items[6];
-  await expect(card(page, next.id)).toBeVisible();
-  expect(await enteringCards(page)).toEqual([]);
-  expect(await cardAnimations(page, next.id)).toEqual([]);
+  const next = ids[20]; // 2페이지 첫 카드(서버 목록 한 페이지 20건)
+  await expect(card(page, next)).toBeVisible();
+  expect(await enteringCards(page)).toEqual([ids[0], ids[1]]);
+  expect(await cardAnimations(page, next)).toEqual([]);
 
-  await card(page, next.id).locator("a").click();
+  await card(page, next).locator("a").click();
   await openedDetail(page);
   await page.goBack();
-  await expect(card(page, next.id)).toBeVisible();
-  expect(await enteringCards(page)).toEqual([]);
-  for (const id of [items[0].id, next.id]) expect(await cardAnimations(page, id)).toEqual([]);
+  await expect(card(page, next)).toBeVisible();
+  expect(await enteringCards(page)).toEqual([ids[0], ids[1]]);
+  for (const id of [ids[0], next]) expect(await cardAnimations(page, id)).toEqual([]);
 });
 
 test("홈 등장: 제목 → 고양이 → 강아지 → 링크, 60ms 간격으로 320ms씩, 500ms에 끝난다", async ({ page }) => {
@@ -145,7 +175,7 @@ test("홈 등장: 제목 → 고양이 → 강아지 → 링크, 60ms 간격으�
 });
 
 test("등장 중에 축종 카드를 누르면 목록 이동이 바로 시작된다(이동을 늦추지 않는다)", async ({ page }) => {
-  await mockList(page, items);
+  await watchList(page);
   // 누른 순간(click 이벤트)의 시각과 그때 등장이 돌고 있었는지를 남긴다
   await page.addInitScript(() => {
     const w = window as unknown as { __click: { at: number; entering: boolean } };

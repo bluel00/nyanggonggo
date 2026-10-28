@@ -1,9 +1,10 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type Ref } from "react";
+import { Suspense, use, useEffect, useLayoutEffect, useRef, useState, type ReactNode, type Ref } from "react";
 import {
   allowsMotion,
+  animalKeys,
   ANIMAL_CARD_SELECTOR,
   ANIMAL_CARD_STILL_SELECTOR,
   AnimalCard,
@@ -13,11 +14,13 @@ import {
   detailDisplayText,
   listFilterKey,
   seedAnimalDetail,
+  seedAnimalsFirstPage,
   SPECIES_COPY,
   startDetailEntry,
   useAnimalsInfinite,
   type Animal,
   type AnimalListFilter,
+  type AnimalListFirstPage,
   type CardSelection,
 } from "@/entities/animal";
 import { FavoriteButton } from "@/features/animal-favorite";
@@ -28,6 +31,7 @@ import { appScrollViewport, scrollAppToTop } from "@/shared/ui/app-column";
 import { Button } from "@/shared/ui/button";
 import { SKELETON_CARD_SELECTOR, SkeletonCard } from "@/shared/ui/skeleton-card";
 import { routes } from "@/shared/config/routes";
+import { clearListEnterWhenDone, LIST_ENTER_SCRIPT, LIST_FIRST_ATTR, markListEnterFrom } from "../model/list-enter";
 
 /** 다음 페이지를 미리 부를 거리(sentinel이 화면 아래 이만큼 앞에 오면) */
 const PREFETCH_MARGIN = "600px 0px";
@@ -41,7 +45,56 @@ const EAGER_CARDS = 2;
  * - 끝: 아무것도 표시하지 않는다(명세 옵션 A, "끝났다"는 느낌을 주지 않음)
  * - 빈 결과 / 오류 문구는 handoff 화면 6. 다음 페이지 오류의 표시 방식은 디자인 미정이라 최소로 둔다
  */
-export function AnimalList({ filter }: { filter: AnimalListFilter }) {
+export function AnimalList({ filter, firstPage }: { filter: AnimalListFilter; firstPage?: Promise<AnimalListFirstPage> }) {
+  if (!firstPage) return <AnimalFeed filter={filter} />;
+  return (
+    // 목록(필터)마다 새 경계: 필터를 바꾸면 이 목록의 첫 페이지를 기다리는 동안 뼈대가 보인다
+    <Suspense key={listFilterKey(filter)} fallback={<FirstPageSkeleton />}>
+      <ServerFirstPage filter={filter} firstPage={firstPage} />
+    </Suspense>
+  );
+}
+
+/**
+ * 서버가 읽은 첫 페이지(이슈 #109, app/list-data.ts)를 목록 캐시에 넣고 목록을 그린다. 첫 페이지를 위해 /api/animals를 부르지 않는다.
+ * - 같은 목록을 이미 받아 둔 적이 있으면(30분 안) 서버 응답을 기다리지 않고 받아 둔 것을 그린다(지금처럼 다시 받지 않는다)
+ * - 서버가 읽지 못했으면 넣지 않는다: 목록이 지금처럼 클라이언트에서 조회하고, 그것도 실패하면 목록 오류 화면(다시 시도)이다
+ */
+function ServerFirstPage({ filter, firstPage }: { filter: AnimalListFilter; firstPage: Promise<AnimalListFirstPage> }) {
+  const queryClient = useQueryClient();
+  // 이 promise로 캐시를 채운 뒤의 렌더(StrictMode 이중 렌더, 다시 그리기)도 같은 판단을 하도록, 채운 promise를 기억한다.
+  // 캐시만 보면 두 번째 렌더가 "이미 받아 둔 목록"으로 보여 서버 HTML과 달라진다(하이드레이션 불일치)
+  const seededHere = seededFirstPages.has(firstPage);
+  const cached = !seededHere && queryClient.getQueryData(animalKeys.list(filter)) !== undefined;
+  const result = cached ? null : use(firstPage);
+  if (result?.ok && !seededHere) {
+    seedAnimalsFirstPage(queryClient, filter, result.response);
+    seededFirstPages.add(firstPage);
+  }
+  return <AnimalFeed filter={filter} serverFirstPage={result?.ok === true} />;
+}
+
+/** 목록 캐시를 채운 서버 첫 페이지 promise(ServerFirstPage) */
+const seededFirstPages = new WeakSet<Promise<AnimalListFirstPage>>();
+
+/**
+ * 서버 첫 페이지를 기다리는 동안의 뼈대(첫 로드와 같은 3장). 뼈대가 실제로 칠해지면 첫 화면 등장 표시를 단다(model/list-enter.ts):
+ * 문서로 처음 열 때는 맨 끝의 인라인 스크립트가, 앱 안에서 이동해 클라이언트가 그릴 때는 effect가 단다.
+ */
+function FirstPageSkeleton() {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => markListEnterFrom(ref.current), []);
+  return (
+    <FeedList ref={ref}>
+      {Array.from({ length: INITIAL_SKELETONS }, (_, i) => (
+        <SkeletonCard key={i} />
+      ))}
+      <script dangerouslySetInnerHTML={{ __html: LIST_ENTER_SCRIPT }} />
+    </FeedList>
+  );
+}
+
+function AnimalFeed({ filter, serverFirstPage = false }: { filter: AnimalListFilter; serverFirstPage?: boolean }) {
   const query = useAnimalsInfinite(filter);
   const queryClient = useQueryClient();
   /**
@@ -68,6 +121,8 @@ export function AnimalList({ filter }: { filter: AnimalListFilter }) {
   // 상세는 이 목록 위에 얹히고(PRD-v1.5) 목록은 내려가지 않으므로, 돌아왔을 때 따로 되돌릴 것이 없다
   const listKey = listFilterKey(filter);
   const feedRef = useFirstScreenEntrance(listKey, query.isPending);
+  // 서버 첫 페이지의 등장(CSS, 뼈대가 보였을 때만)이 다 돌면 표시를 지운다
+  useEffect(() => (serverFirstPage ? clearListEnterWhenDone(feedRef.current) : undefined), [serverFirstPage, feedRef]);
   useEffect(() => {
     if (!query.isSuccess) return;
     const firstScreen = [...(feedRef.current?.querySelectorAll<HTMLImageElement>(`${ANIMAL_CARD_SELECTOR} img`) ?? [])].slice(0, EAGER_CARDS);
@@ -108,7 +163,7 @@ export function AnimalList({ filter }: { filter: AnimalListFilter }) {
   }
 
   return (
-    <FeedList ref={feedRef}>
+    <FeedList ref={feedRef} first={serverFirstPage}>
       {animals.map((animal, index) => (
         <AnimalCard
           key={animal.id}
@@ -139,9 +194,10 @@ export function AnimalList({ filter }: { filter: AnimalListFilter }) {
   );
 }
 
-function FeedList({ children, ref }: { children: ReactNode; ref?: Ref<HTMLDivElement> }) {
+/** first: 서버가 그린 첫 페이지(첫 화면 등장 CSS가 읽는다, app/globals.css) */
+function FeedList({ children, ref, first = false }: { children: ReactNode; ref?: Ref<HTMLDivElement>; first?: boolean }) {
   return (
-    <div ref={ref} className="flex flex-col gap-feed-gap px-page pb-page">
+    <div ref={ref} {...(first ? { [LIST_FIRST_ATTR]: "" } : {})} className="flex flex-col gap-feed-gap px-page pb-page">
       {children}
     </div>
   );

@@ -5,9 +5,12 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
+  type InfiniteData,
   type QueryClient,
 } from "@tanstack/react-query";
-import type { Animal, AnimalsByIds } from "../model/animal";
+import type { AnimalListResponse } from "@/contract/animals";
+import type { Animal, AnimalPage, AnimalsByIds } from "../model/animal";
+import { toAnimalPage } from "../model/mapper";
 import type { AnimalListParams, AnimalRepository } from "../model/repository";
 import { animalRepository } from "./animal-repository";
 
@@ -87,6 +90,23 @@ export function seedAnimalDetail(queryClient: QueryClient, animal: Animal): void
   const key = animalKeys.detail(animal.id);
   if (queryClient.getQueryData(key) !== undefined) return;
   queryClient.setQueryData(key, animal, { updatedAt: Date.now() - SEEDED_DETAIL_AGE_MS });
+}
+
+/**
+ * 서버가 읽은 목록 첫 페이지(이슈 #109). 성공이면 `/api/animals` 응답과 같은 모양 그대로다(필드를 더하지 않는다).
+ * 실패면 내용 없이 실패만 알린다: 목록은 지금처럼 클라이언트가 조회하고, 그것도 실패하면 목록 오류 화면이다.
+ */
+export type AnimalListFirstPage = { ok: true; response: AnimalListResponse } | { ok: false };
+
+/**
+ * 서버가 읽은 첫 페이지를 목록 무한쿼리 캐시에 넣는다. 그러면 목록이 첫 페이지를 위해 /api/animals를 부르지 않는다.
+ * 이미 있으면(같은 목록을 30분 안에 본 적이 있음) 그대로 두고 false. 다음 페이지는 지금처럼 커서로 클라이언트가 받는다.
+ */
+export function seedAnimalsFirstPage(queryClient: QueryClient, filter: AnimalListFilter, response: AnimalListResponse): boolean {
+  const key = animalKeys.list(filter);
+  if (queryClient.getQueryData(key) !== undefined) return false;
+  queryClient.setQueryData<InfiniteData<AnimalPage, string | null>>(key, { pages: [toAnimalPage(response)], pageParams: [null] });
+  return true;
 }
 
 export function animalsByIdsOptions(ids: readonly string[], repository: AnimalRepository = animalRepository) {

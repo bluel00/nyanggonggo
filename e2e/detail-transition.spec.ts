@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { openedDetail } from "./helpers";
 import { belowScrollTop, LAYER, LAYER_SCROLL } from "./stack";
+import { comboItemId } from "./stub-combo.mjs";
 
 /**
  * 카드 → 상세 전환(architecture.md 14.2 4단계, 구조 D1, PRD-v1.5 R5). production 빌드 + 스텁 서버(e2e/upstream-stub.mjs).
@@ -69,8 +70,8 @@ const resetTransitions = (page: Page) =>
 const card = (page: Page, id: string) => page.locator(`[data-animal-id="${id}"]`);
 
 /** 목록을 열고 그 카드의 사진이 로드될 때까지 기다린다(사진이 있어야 목록 데이터 상세로 간다) */
-async function openListWithPhoto(page: Page, id: string) {
-  await page.goto(LIST_URL);
+async function openListWithPhoto(page: Page, id: string, url = LIST_URL) {
+  await page.goto(url);
   const img = card(page, id).locator("img");
   await expect(img).toBeVisible();
   await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth > 0)).toBe(true);
@@ -138,19 +139,11 @@ test.describe("카드 → 상세 전환", () => {
 
   test("종료 공고 카드: 전환·진입 효과 없이 바로 바뀐다", async ({ page }) => {
     await watchTransitions(page);
-    // 목록 응답에서 그 공고만 종료로 바꾼다(스텁 목록은 모두 보호중)
-    await page.route(
-      (url) => url.pathname === "/api/animals",
-      async (route) => {
-        const response = await route.fetch();
-        const body = (await response.json()) as { items: { id: string; status: string }[] };
-        for (const item of body.items) if (item.id === TWO_PHOTOS) item.status = "ended";
-        await route.fulfill({ response, json: body });
-      },
-    );
-    await openListWithPhoto(page, TWO_PHOTOS);
-    await expect(card(page, TWO_PHOTOS)).toHaveAttribute("data-status-variant", "ended");
-    await card(page, TWO_PHOTOS).locator("a").click();
+    // 목록 첫 페이지는 서버가 읽는다(#109). 스텁의 조합 목록(개·부산, 상태 전체)은 1번이 종료 공고다(e2e/stub-combo.mjs)
+    const ended = comboItemId("dog", "6260000", null, 1);
+    await openListWithPhoto(page, ended, "/?species=dog&region=6260000&status=all");
+    await expect(card(page, ended)).toHaveAttribute("data-status-variant", "ended");
+    await card(page, ended).locator("a").click();
     await openedDetail(page);
     await page.waitForTimeout(400);
     expect(await moved(page)).toEqual([]);
