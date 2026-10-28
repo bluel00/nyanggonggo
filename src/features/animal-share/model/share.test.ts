@@ -63,7 +63,7 @@ describe("shareAnimal", () => {
     await expect(shareAnimal(CONTENT, d)).resolves.toBe("copied");
     expect(getKakao).not.toHaveBeenCalled();
     expect(copy).toHaveBeenCalledWith(CONTENT.url);
-    expect(notify).toHaveBeenCalledWith(SHARE_MESSAGES.copied);
+    expect(notify).toHaveBeenCalledWith(SHARE_MESSAGES.kakaoCopied);
     expect(onIssue).toHaveBeenCalledWith(expect.stringContaining("카카오 키가 비어 있어"));
   });
 
@@ -113,11 +113,11 @@ describe("shareAnimal", () => {
         },
       }),
     ],
-  ] as [string, () => KakaoSdk | undefined][])("%s → 링크 복사 + '링크가 복사됐어요'", async (_label, getKakao) => {
+  ] as [string, () => KakaoSdk | undefined][])("%s → 링크 복사 + '카카오톡을 열지 못해 링크를 복사했어요'", async (_label, getKakao) => {
     const { copy, notify, deps: d } = deps({ getKakao });
     await expect(shareAnimal(CONTENT, d)).resolves.toBe("copied");
     expect(copy).toHaveBeenCalledWith(CONTENT.url);
-    expect(notify).toHaveBeenCalledWith("링크가 복사됐어요");
+    expect(notify).toHaveBeenCalledWith("카카오톡을 열지 못해 링크를 복사했어요");
   });
 
   it("링크가 폰에서 열 수 없는 주소(localhost)면 카카오 공유를 건너뛰고 링크 복사로 간다", async () => {

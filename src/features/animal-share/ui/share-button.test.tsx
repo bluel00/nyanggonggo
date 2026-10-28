@@ -34,7 +34,7 @@ describe("ShareButton", () => {
     render(<ShareButton animal={animal} origin={ORIGIN} />);
     expect(document.querySelector("script#kakao-sdk")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "카카오톡 공유" }));
-    await waitFor(() => expect(showToast).toHaveBeenCalledWith("링크가 복사됐어요"));
+    await waitFor(() => expect(showToast).toHaveBeenCalledWith("카카오톡을 열지 못해 링크를 복사했어요"));
     expect(writeText).toHaveBeenCalledWith("https://nyang.example/animals/1");
   });
 
@@ -51,7 +51,7 @@ describe("ShareButton", () => {
   it("키가 있어도 SDK가 로드되지 않았으면 링크 복사로 폴백한다", async () => {
     render(<ShareButton animal={animal} origin={ORIGIN} kakaoKey="test-kakao-key" />);
     fireEvent.click(screen.getByRole("button", { name: "카카오톡 공유" }));
-    await waitFor(() => expect(showToast).toHaveBeenCalledWith("링크가 복사됐어요"));
+    await waitFor(() => expect(showToast).toHaveBeenCalledWith("카카오톡을 열지 못해 링크를 복사했어요"));
   });
 
   it("SDK가 있으면 카카오톡 공유를 호출하고 토스트는 띄우지 않는다(링크는 공유 가능한 도메인)", async () => {
@@ -80,7 +80,7 @@ describe("ShareButton", () => {
     (window as unknown as { Kakao: unknown }).Kakao = { isInitialized: () => true, init: vi.fn(), Share: { sendDefault } };
     render(<ShareButton animal={animal} kakaoKey="test-kakao-key" origin="http://localhost:3000" />);
     fireEvent.click(screen.getByRole("button", { name: "카카오톡 공유" }));
-    await waitFor(() => expect(showToast).toHaveBeenCalledWith("링크가 복사됐어요"));
+    await waitFor(() => expect(showToast).toHaveBeenCalledWith("카카오톡을 열지 못해 링크를 복사했어요"));
     expect(sendDefault).not.toHaveBeenCalled();
   });
 });

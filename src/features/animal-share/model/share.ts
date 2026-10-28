@@ -4,7 +4,7 @@ import type { ShareContent } from "./share-content";
 
 /**
  * 공유(명세 UC-05). 카카오톡 공유를 먼저 시도하고, 할 수 없거나 실패하면 링크를 복사한다.
- * - 키 없음, SDK 미로드, init 실패, Share 미지원, sendDefault 예외 → 링크 복사 + "링크가 복사됐어요"
+ * - 키 없음, SDK 미로드, init 실패, Share 미지원, sendDefault 예외 → 링크 복사 + "카카오톡을 열지 못해 링크를 복사했어요"(#94)
  * - 링크 복사도 실패 → "공유에 실패했어요. 링크로 대신 공유해보세요"
  * SDK, 클립보드, 토스트는 인자로 받아 테스트에서 가짜로 바꾼다.
  * 조용히 폴백하지 않도록 실패 경로마다 onIssue로 이유를 남긴다(화면에서는 콘솔 경고).
@@ -44,7 +44,10 @@ export type KakaoSdk = {
 export type ShareResult = "kakao" | "copied" | "failed";
 
 export const SHARE_MESSAGES = {
+  /** 링크 복사 버튼, 공유 시트 실패의 대신 */
   copied: "링크가 복사됐어요",
+  /** 카카오톡 공유를 열지 못해 링크를 복사했을 때(#94) */
+  kakaoCopied: "카카오톡을 열지 못해 링크를 복사했어요",
   failed: "공유에 실패했어요. 링크로 대신 공유해보세요",
 } as const;
 
@@ -108,9 +111,18 @@ export function initKakao(kakaoKey: string, kakao: KakaoSdk | undefined, onIssue
 
 export async function shareAnimal(content: ShareCard, deps: ShareDeps): Promise<ShareResult> {
   if (tryKakao(content, deps)) return "kakao";
+  return copyLink(content.url, SHARE_MESSAGES.kakaoCopied, deps);
+}
+
+/** 링크를 복사하고 알린다(message). 복사도 실패하면 "공유에 실패했어요 …". 카카오 실패, 링크 복사 버튼, 공유 시트 실패가 함께 쓴다 */
+export async function copyLink(
+  url: string,
+  message: string,
+  deps: Pick<ShareDeps, "copy" | "notify" | "onIssue">,
+): Promise<"copied" | "failed"> {
   try {
-    await deps.copy(content.url);
-    deps.notify(SHARE_MESSAGES.copied);
+    await deps.copy(url);
+    deps.notify(message);
     return "copied";
   } catch (error) {
     deps.onIssue?.("링크 복사도 실패했습니다", describeError(error));
