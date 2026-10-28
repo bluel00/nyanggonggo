@@ -2,7 +2,9 @@
 
 이 폴더의 다른 파일은 디자인 시스템 "멍냥공고"의 사본이라 고치지 않는다. 싱크 기록만 여기에 적는다.
 
-- 마지막 싱크: 2026-10-27, 디자인 시스템 판 1793091314-d30d, 기준 코드 d4a3f5d (#53 둘째: design-sync-53b, 작은 수정 M1·M2, 공유 버튼 시안 2)
+- 마지막 싱크: 2026-10-28, 디자인 시스템 판 1793152397-4492, 기준 코드 5914d13 (#53 마지막 두 줄: 공유 버튼 구현 반영 S2, Icon chevron-right I1)
+  - 가져온 것: 지난번과 같은 묶음. 바뀐 파일은 README.md, handoff.md, bundle.js, Icon·ShareButton·Toast README와 Icon preview. tokens.json은 바뀌지 않아 tokens.css도 그대로다.
+- 이전 싱크: 2026-10-27, 디자인 시스템 판 1793091314-d30d, 기준 코드 d4a3f5d (#53 둘째: design-sync-53b, 작은 수정 M1·M2, 공유 버튼 시안 2)
   - 가져온 것: README.md, handoff.md, characters.md, tokens.json, bundle.css, bundle.js, 컴포넌트별 README·preview.html, assets/*/README.md. tokens.css는 같은 규칙으로 다시 만들었다(바뀐 토큰은 `toast-offset` 80px → 24px 하나).
   - 가져오지 않은 것: 캐릭터·로고 그림(바뀌지 않음), Screens 캡처(저장소 밖 `nyanggonggo-review/screenshots/53/`), `design-system.json`, 글꼴.
 - 이전 싱크: 2026-10-27, 디자인 시스템 판 1793082441-ed30, 기준 코드 83e0269 (#53)
