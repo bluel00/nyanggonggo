@@ -54,14 +54,14 @@ export default defineConfig({
   /*
    * 대부분은 개발 서버에서 돈다. 상세 로딩 경계(detail-loading), 홈 캐릭터 Rive(home-rive)는 production 서버에서 돈다:
    * Next는 production에서만 링크를 prefetch하고, 카드를 누른 즉시 로딩 뼈대가 보이는 것은 그 prefetch 덕분이다.
-   * 상세에서 뒤로가기(back-nav, PRD-v1.4·v1.5), 상세 층(stack-nav, PRD-v1.5), 상세 사진(detail-photo), 상세 제목 줄(detail-title), 링크 미리보기 메타(site-og), 경로(routes)는
+   * 상세에서 뒤로가기(back-nav, PRD-v1.4·v1.5), 상세 층(stack-nav, PRD-v1.5), 상세 사진(detail-photo), 상세 제목 줄(detail-title), 링크 미리보기 메타(site-og), 경로(routes), 모바일 첫 화면(first-paint)은
    * 같은 빌드를 스텁 서버(e2e/upstream-stub.mjs: 고정 공고, 크기를 아는 단색 사진)로 띄워 본다.
    * 개발 서버(.next/dev)와 production 빌드(.next)는 출력 폴더가 달라 함께 띄울 수 있다.
    */
   projects: [
     {
       name: "dev",
-      testIgnore: /(detail-loading|detail-photo|detail-title|detail-transition|home-rive|back-nav|motion|stack-nav|site-og|routes|detail-contact|skeleton-card|home-other|detail-share)\.spec\.ts/,
+      testIgnore: /(detail-loading|detail-photo|detail-title|detail-transition|home-rive|back-nav|motion|stack-nav|site-og|routes|detail-contact|skeleton-card|home-other|detail-share|first-paint)\.spec\.ts/,
       // 브라우저는 localhost로 연다(개발 서버가 127.0.0.1을 다른 오리진으로 보고 dev 리소스를 막는다)
       use: { baseURL: "http://localhost:3000" },
     },
@@ -72,13 +72,13 @@ export default defineConfig({
     },
     {
       name: "production-stub",
-      testMatch: /(back-nav|detail-photo|detail-title|detail-transition|stack-nav|site-og|routes|detail-contact|skeleton-card|home-other|detail-share)\.spec\.ts/,
+      testMatch: /(back-nav|detail-photo|detail-title|detail-transition|stack-nav|site-og|routes|detail-contact|skeleton-card|home-other|detail-share|first-paint)\.spec\.ts/,
       use: { baseURL: "http://localhost:3101" },
     },
     {
-      // 상세에서 뒤로가기, 상세 층, 상세 위 보호소 정보 시트(detail-contact, #62)와 로딩 카드 높이(skeleton-card, #84), 홈 기타 동물 카드(home-other, #86), 상세 공유 버튼(detail-share, #94)은 iOS 사파리 엔진(WebKit)에서도 본다(쓸어넘기기 깜빡임, PRD-v1.5). 같은 스텁 서버
+      // 상세에서 뒤로가기, 상세 층, 상세 위 보호소 정보 시트(detail-contact, #62)와 로딩 카드 높이(skeleton-card, #84), 홈 기타 동물 카드(home-other, #86), 상세 공유 버튼(detail-share, #94), 모바일 첫 화면(first-paint, #103)은 iOS 사파리 엔진(WebKit)에서도 본다(쓸어넘기기 깜빡임, PRD-v1.5). 같은 스텁 서버
       name: "production-stub-webkit",
-      testMatch: /(back-nav|stack-nav|detail-contact|skeleton-card|home-other|detail-share)\.spec\.ts/,
+      testMatch: /(back-nav|stack-nav|detail-contact|skeleton-card|home-other|detail-share|first-paint)\.spec\.ts/,
       use: { ...devices["iPhone 13"], baseURL: "http://localhost:3101" },
     },
   ],
