@@ -1,9 +1,11 @@
-<!-- @dsCard group="Actions" height=130 subtitle="Kakao Yellow, the only non-status accent" -->
+<!-- @dsCard group="Actions" height=360 subtitle="detail CTA bar: heart + Kakao (primary) + second share button, 390 and 375" -->
 <div id="r" class="cn-root" style="padding:16px;background:var(--canvas)"></div>
 <script>
 var N=window.CatNotice,h=React.createElement,S=function(t){return h('div',{style:{font:'12px var(--font-sans)',color:'var(--text-2)',margin:'0 0 6px'}},t)};
-var Row=function(p){return h('div',{style:{display:'flex',gap:12,alignItems:'center',flexWrap:'wrap',marginBottom:16}},p.children)};
-var Col=function(t,c,w){return h('div',{style:{width:w||'auto'}},S(t),c)};
-function App(){return h(Row,null,Col("default",h("div",{style:{width:200,display:"flex"}},h(N.ShareButton))),Col("pressed",h("div",{style:{width:200,display:"flex"}},h(N.ShareButton,{className:"cn-pressed"}))),Col("disabled",h("div",{style:{width:200,display:"flex"}},h(N.ShareButton,{disabled:true}))))}
+function Bar(p){return h('div',{style:{marginBottom:16}},S(p.t),h('div',{style:{width:p.w,display:'flex',gap:8,padding:'12px 16px',background:'var(--bg)',boxShadow:'var(--shadow-bar)',borderRadius:12}},h(N.FavoriteButton,null),h(N.ShareButton,null),h(N.ShareButton,{variant:'other',canShare:p.can,className:p.cls,disabled:p.dis})))}
+function App(){return h('div',null,
+ h('div',{style:{display:'flex',gap:24,flexWrap:'wrap'}},h(Bar,{t:'390 · share sheet available',w:390,can:true}),h(Bar,{t:'390 · no share sheet → copy link',w:390,can:false})),
+ h('div',{style:{display:'flex',gap:24,flexWrap:'wrap'}},h(Bar,{t:'375 · share sheet available',w:375,can:true}),h(Bar,{t:'375 · no share sheet → copy link',w:375,can:false})),
+ h('div',{style:{display:'flex',gap:24,flexWrap:'wrap'}},h(Bar,{t:'pressed (second button)',w:390,can:true,cls:'cn-pressed'}),h(Bar,{t:'disabled (second button)',w:390,can:true,dis:true})))}
 ReactDOM.createRoot(document.getElementById('r')).render(h(App));
 </script>

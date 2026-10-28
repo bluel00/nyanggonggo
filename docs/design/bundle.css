@@ -8,7 +8,11 @@
 .cn-btn--primary:active:not(:disabled){background:var(--primary-pressed)}
 .cn-btn--block{width:100%}
 .cn-btn:disabled{background:var(--disabled-bg);color:var(--text-disabled);cursor:not-allowed}
-.cn-btn--share{background:var(--kakao);color:var(--on-kakao);flex:1}
+.cn-btn--share{background:var(--kakao);color:var(--on-kakao);flex:1 1 auto;min-width:0;padding:0 var(--space-2);white-space:nowrap}
+/* Second share button (ShareButton variant="other"): white pill like FavoriteButton, as wide as its content. */
+.cn-btn--share-other{flex:none;gap:6px;padding:0 var(--space-3);background:var(--surface);color:var(--text);box-shadow:var(--shadow-control);font-size:14px;line-height:20px;font-weight:600;white-space:nowrap}
+.cn-btn--share-other:active:not(:disabled),.cn-btn--share-other.cn-pressed{background:var(--bg)}
+.cn-btn--share-other:disabled{background:var(--disabled-bg);box-shadow:none}
 .cn-btn--share:active:not(:disabled){filter:brightness(.95)}
 .cn-btn--apply{background:linear-gradient(135deg,var(--apply-from),var(--apply-to));color:var(--on-apply);box-shadow:var(--shadow-apply)}
 .cn-btn--apply:disabled{box-shadow:none}
@@ -75,7 +79,7 @@
 .cn-sheet{position:absolute;left:0;right:0;bottom:0;display:flex;flex-direction:column;max-height:min(85%,85svh);background:var(--surface);border-radius:var(--radius-card) var(--radius-card) 0 0;overflow:hidden;transform:translateY(100%);transition:transform var(--sheet-duration) var(--ease-out)}
 .cn-sheet__head{flex:none;padding:0 var(--space-4)}
 .cn-sheet__body{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:0 var(--space-4)}
-.cn-sheet__foot{flex:none;position:relative;background:var(--surface);box-shadow:var(--shadow-bar);padding:var(--space-4) var(--space-4) calc(var(--space-4) + env(safe-area-inset-bottom,0px))}
+.cn-sheet__foot{flex:none;position:relative;background:var(--surface);box-shadow:var(--shadow-bar);padding:var(--space-3) var(--space-4) calc(var(--space-4) + env(safe-area-inset-bottom,0px))}
 .cn-sheet-wrap[data-open="true"] .cn-sheet{transform:translateY(0)}
 .cn-sheet__handle{width:36px;height:4px;border-radius:2px;background:var(--border);margin:8px auto 12px}
 .cn-sheet__handle-hit{padding:0;border:0;background:transparent;display:block;width:100%;cursor:grab}
@@ -85,8 +89,11 @@
 .cn-skel{border-radius:var(--radius-card);overflow:hidden}
 .cn-skel{background:var(--surface);box-shadow:var(--shadow-card-ended)}
 .cn-skel__photo{aspect-ratio:1/1;background:var(--status-ended-bg)}
-.cn-skel__line{height:14px;border-radius:7px;background:var(--status-ended-bg);margin:var(--space-3) var(--space-3) 0}
-.cn-skel__line+.cn-skel__line{height:12px;margin:8px var(--space-3) var(--space-3);width:60%}
+/* 3 text lines (code skeleton-card.tsx, #84): line boxes 24/20/16 with 2px gaps, padding 10 top, 12 sides and bottom; bars centred in them, so 15/11/8 above each bar and 14 below the last. */
+.cn-skel__lines{padding:0 var(--space-3) 14px}
+.cn-skel__line{height:14px;border-radius:7px;background:var(--status-ended-bg);margin-top:15px}
+.cn-skel__line:nth-child(2){height:12px;border-radius:6px;width:60%;margin-top:11px}
+.cn-skel__line:nth-child(3){height:12px;border-radius:6px;width:50%;margin-top:8px}
 .cn-toast{position:absolute;left:var(--space-4);right:var(--space-4);bottom:calc(var(--space-6) + env(safe-area-inset-bottom,0px));z-index:40;display:flex;justify-content:center;pointer-events:none;opacity:0;transform:translateY(8px);transition:opacity var(--sheet-duration) var(--ease-out),transform var(--sheet-duration) var(--ease-out)}
 .cn-toast[data-visible="true"]{opacity:1;transform:none}
 .cn-toast span{background:var(--text);color:var(--on-text);padding:12px 20px;border-radius:var(--radius-control);text-align:center}
@@ -113,7 +120,9 @@
 .cn-deadline--protected{color:var(--status-protected-text)}
 .cn-deadline--near-deadline{color:var(--status-near-deadline-text)}
 .cn-card__no{margin:2px 0 0;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cn-sheet-wrap--nofoot .cn-sheet__body{padding-bottom:calc(var(--space-4) + env(safe-area-inset-bottom,0px))}
+.cn-sheet-wrap--nofoot .cn-sheet__body{padding-bottom:calc(var(--space-6) + env(safe-area-inset-bottom,0px))}
+/* Shelter info sheet: rows with a link get 6px above and below label and value, so the 44px hit areas of [지도] and [전화] do not overlap (row gap 12 + line 20 = 32). The detail [보호소 정보] row keeps its height. */
+.cn-info--sheet .cn-info__row--action>dt,.cn-info--sheet .cn-info__row--action>dd{padding-block:6px}
 .cn-logo{display:inline-flex;align-items:center;flex:none;line-height:0}
 .cn-logo--lockup{line-height:normal}
 .cn-logo__word{color:var(--text);font-family:var(--font-display);white-space:nowrap}

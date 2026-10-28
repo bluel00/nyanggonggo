@@ -7,13 +7,13 @@ var Half=function(c){return h('div',{style:{width:600,height:315,overflow:'hidde
 function Og(p){var ended=p.ended;
  return Half([
   h('img',{key:'p',src:N.mockPhoto(p.photo,1200,630),alt:'',style:{position:'absolute',inset:0,width:1200,height:630,objectFit:'cover',objectPosition:'center 35%'}}),
-  h('div',{key:'l',style:{position:'absolute',left:32,top:32,height:48,borderRadius:24,overflow:'hidden',background:'var(--photo-pill)'}},h(N.Logo,{size:48,variant:'tile'})),
-  h('div',{key:'c',style:{position:'absolute',left:32,bottom:32,width:600,boxSizing:'border-box',padding:'28px 32px',background:'var(--surface)',borderRadius:32,display:'flex',flexDirection:'column',gap:10,fontFamily:'var(--font-sans)'}},
-   h('div',null,h('span',{style:{display:'inline-flex',alignItems:'center',gap:8,height:48,padding:'0 20px 0 16px',borderRadius:999,background:ended?'var(--status-ended-bg)':'var(--status-protected-bg)',color:ended?'var(--status-ended-text)':'var(--status-protected-text)',font:'600 24px/32px var(--font-sans)'}},h('i',{style:{width:12,height:12,borderRadius:'50%',background:ended?'var(--status-ended)':'var(--status-protected)'}}),ended?'종료 · 입양':'보호중')),
-   ended?null:h('div',{style:{font:'700 40px/52px var(--font-sans)',color:'var(--status-protected-text)'}},'공고 마감 11월 3일(화)'),
+  h('div',{key:'l',style:{position:'absolute',left:48,top:48,height:48,borderRadius:24,overflow:'hidden',background:'var(--photo-pill)'}},h(N.Logo,{size:48,variant:'tile'})),
+  h('div',{key:'c',style:{position:'absolute',left:32,bottom:32,minWidth:600,maxWidth:1136,boxSizing:'border-box',padding:'28px 32px',background:'var(--surface)',borderRadius:32,display:'flex',flexDirection:'column',gap:10,fontFamily:'var(--font-sans)'}},
+   h('div',{style:{display:'flex',alignItems:'center',gap:16}},h('span',{style:{flex:'none',whiteSpace:'nowrap',display:'inline-flex',alignItems:'center',gap:8,height:48,padding:'0 20px 0 16px',borderRadius:999,background:ended?'var(--status-ended-bg)':'var(--status-protected-bg)',color:ended?'var(--status-ended-text)':'var(--status-protected-text)',font:'600 24px/32px var(--font-sans)'}},h('i',{style:{width:12,height:12,borderRadius:'50%',background:ended?'var(--status-ended)':'var(--status-protected)'}}),ended?'종료 · 입양':'보호중'),
+    ended?null:h('span',{style:{whiteSpace:'nowrap',font:'700 40px/52px var(--font-sans)',color:'var(--status-protected-text)'}},'공고 마감 11월 3일(화)')),
    h('div',{style:{font:'700 40px/52px var(--font-sans)',color:'var(--text)'}},'가나시 다라구'),
    h('div',{style:{font:'400 28px/38px var(--font-sans)',color:'var(--text-2)'}},'가나시 동물보호센터'))])}
-function None(){return Half(h('div',{style:{width:1200,height:630,background:'var(--bg)',display:'flex',alignItems:'center',justifyContent:'center',font:'700 72px/1 var(--font-sans)',color:'var(--text)'}},N.SERVICE_NAME))}
-function App(){return h('div',{style:{display:'flex',gap:16,flexWrap:'wrap'}},h('div',null,S('notice · protected'),h(Og,{photo:0})),h('div',null,S('notice · ended (no date)'),h(Og,{photo:5,ended:true})),h('div',null,S('no notice (ground and weight: confirm)'),h(None)))}
+function None(){return Half(h('div',{style:{width:1200,height:630,background:'var(--canvas)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:16,fontFamily:'var(--font-sans)'}},h('div',{style:{font:'700 72px/1.2 var(--font-sans)',color:'var(--text)'}},N.SERVICE_NAME),h('div',{style:{font:'400 32px/1.3 var(--font-sans)',color:'var(--text-2)'}},'유기동물 공고')))}
+function App(){return h('div',{style:{display:'flex',gap:16,flexWrap:'wrap'}},h('div',null,S('notice · protected'),h(Og,{photo:0})),h('div',null,S('notice · ended (no date)'),h(Og,{photo:5,ended:true})),h('div',null,S('no notice'),h(None)))}
 ReactDOM.createRoot(document.getElementById('r')).render(h(App));
 </script>

@@ -33,6 +33,8 @@
       : n === 'map-pin' ? [P('M20 10c0 5-8 12-8 12s-8-7-8-12a8 8 0 0 1 16 0z'), h('circle', { cx: 12, cy: 10, r: 3 })]
       : n === 'phone' ? P('M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z')
       : n === 'info' ? [h('circle', { cx: 12, cy: 12, r: 9 }), P('M12 11v5'), P('M12 7.6v.2')]
+      : n === 'share' ? [h('circle', { cx: 18, cy: 5, r: 3 }), h('circle', { cx: 6, cy: 12, r: 3 }), h('circle', { cx: 18, cy: 19, r: 3 }), P('M8.59 13.51l6.83 3.98'), P('M15.41 6.51l-6.82 3.98')]
+      : n === 'link' ? [P('M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71'), P('M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71')]
       : n === 'image-off' ? [P('M2 2l20 20'), P('M10.4 4.8H19a2 2 0 0 1 2 2v8.6'), P('M21 21H5a2 2 0 0 1-2-2V5'), P('M3 16l5-5 3 3'), h('circle', { cx: 15.5, cy: 8.5, r: 1.5 })] : null;
     return h.apply(null, ['svg', { width: s, height: s, viewBox: '0 0 24 24', 'aria-hidden': true, fill: p.filled ? 'currentColor' : 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', style: { display: 'block', flex: 'none' } }].concat(body));
   }
@@ -48,7 +50,18 @@
     }
     return h('button', { type: p.type || 'button', className: cx('cn-btn card-title', 'cn-btn--' + (p.variant || 'primary'), p.block && 'cn-btn--block', p.className), disabled: p.disabled, 'aria-label': p['aria-label'] || p.ariaLabel, onClick: p.onClick }, p.children);
   }
+  /* Share actions in the detail CTA bar (2026-10-27, canvas board "상세 하단 바 · 다른 앱으로 공유", draft 2).
+     Default: Kakao Yellow primary, takes the remaining width.
+     variant 'other': the second share button, a white pill as wide as its content (14px label + 18px icon).
+       canShare true (default): "다른 앱으로 공유" + share icon, opens the OS share sheet (Web Share).
+       canShare false (share sheet unavailable, some desktop browsers): "링크 복사" + link icon; the caller copies the link and shows Toast "링크가 복사됐어요".
+     The visible label is the accessible name. */
   function ShareButton(p) {
+    if (p.variant === 'other') {
+      var copy = p.canShare === false;
+      return h('button', { type: 'button', className: cx('cn-btn cn-btn--share-other', p.className), disabled: p.disabled, onClick: p.onClick },
+        h(Icon, { name: copy ? 'link' : 'share', size: 18 }), h('span', null, copy ? '링크 복사' : '다른 앱으로 공유'));
+    }
     return h('button', { type: 'button', className: cx('cn-btn card-title cn-btn--share', p.className), disabled: p.disabled, onClick: p.onClick }, h(ChatIcon), p.children || '카카오톡 공유');
   }
   /* Favourite toggle. Default: 44x44 surface pill in the detail CTA bar.
@@ -198,7 +211,7 @@
   function InfoList(rows, onAction, className) {
     return h('dl', { className: cx('cn-info', className) }, rows.map(function (r) {
       var act = r[2];
-      return h('div', { key: r[0], className: 'cn-info__row' },
+      return h('div', { key: r[0], className: cx('cn-info__row', act && 'cn-info__row--action') },
         h('dt', { className: 'body' }, r[0]),
         h('dd', { className: 'body' }, h('span', { className: 'cn-info__val' }, r[1]),
           act ? h(Button, { variant: 'small-action', icon: act.icon, href: act.href, external: act.external, 'aria-label': act.aria,
@@ -247,7 +260,8 @@
 
   function SkeletonCard(p) {
     return h('div', { className: cx('cn-skel', p.className), 'aria-hidden': true },
-      h('div', { className: 'cn-skel__photo' }), h('div', { className: 'cn-skel__line' }), h('div', { className: 'cn-skel__line' }));
+      h('div', { className: 'cn-skel__photo' }),
+      h('div', { className: 'cn-skel__lines' }, h('div', { className: 'cn-skel__line' }), h('div', { className: 'cn-skel__line' }), h('div', { className: 'cn-skel__line' })));
   }
   function Toast(p) {
     return h('div', { className: 'cn-toast body', 'data-visible': !!p.visible, role: 'status', 'aria-live': 'polite' }, h('span', null, p.message));
