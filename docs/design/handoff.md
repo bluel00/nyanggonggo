@@ -100,7 +100,7 @@ Type scale (`fontSize`): `title` 20/28/700, `card-title` 16/24/600, `body` 14/20
 | `features/animal-filter` | 필터 시트 조립, 목록 헤더 필터 버튼 | 시트: 축종 Segmented(3) + 지역 Select 2개(시/도, 시/군/구) + 보호 상태 Chip + 성별 Chip + 정렬 Radio. 머리 / 스크롤 내용 / 고정 아래 영역(적용하기, `shadow-bar`). 값은 URL search params를 읽고, [적용하기]에서만 `router.replace`. 시트 안 draft state는 "적용 전 임시 값"이라 허용, 닫히면 버림 |
 | `features/animal-favorite` | FavoriteButton(관심), 목록 헤더 관심 링크, localStorage 훅 | 저장은 id만. 위젯이 카드의 `action` 자리에 넣는다 |
 | `features/shelter-info` | 보호소 정보 시트(`ShelterInfoSheet`), 연락처 문구 `SHELTER_CONTACT_LABELS` · `SHELTER_CONTACT_LINK_COPY` | 상세 보호소 줄의 [보호소 정보]로 연다(화면 3~4) |
-| `features/animal-share` | ShareButton(카카오) + Kakao SDK + 링크 복사 폴백 + Toast, 두 번째 공유 버튼(`ShareButton variant="other"`: Web Share / 링크 복사, 코드 미구현) | 카카오 실패 시 "링크가 복사됐어요". 두 번째 버튼은 공유 시트를 열 수 없으면 "링크 복사"로 바뀌고 같은 토스트를 띄운다 |
+| `features/animal-share` | ShareButton(카카오) + Kakao SDK + 링크 복사 폴백 + Toast, 두 번째 공유 버튼 `ShareSheetButton`(이 디자인 시스템의 `ShareButton variant="other"`: Web Share / 링크 복사, #94, PR #95) | 카카오 실패 시 링크를 복사하고 "카카오톡을 열지 못해 링크를 복사했어요". 두 번째 버튼은 공유 시트를 열 수 없으면 "링크 복사"로 바뀌고, 누르면 "링크가 복사됐어요" |
 | `widgets/animal-list` | 헤더(타이틀 / 하트 / 필터) + AnimalCard 리스트 + SkeletonCard + 빈 상태 + 에러 | `useInfiniteQuery` 커서 |
 | `widgets/favorite-list` | 관심 목록(헤더, 카드, 빈 상태, 전체·일부 오류) | |
 | `widgets/animal-detail` | 스와이프 이미지 + 정보 줄 + 하단 CTA + 뼈대 + 오류 + 풀스크린 뷰어 | 뷰어는 이 위젯 안에 있다 |
@@ -121,7 +121,7 @@ Type scale (`fontSize`): `title` 20/28/700, `card-title` 16/24/600, `body` 14/20
 | `Radio` | `RadioOption` | `src/shared/ui` |
 | `Icon` | 컴포넌트 없음, lucide 바로 씀 | — |
 | `FavoriteButton onPhoto` (카드 사진 위), `calm` (종료 카드) | `FavoriteButton variant="overlay"`, `still` (움직이지 않는 카드) | `features/animal-favorite` |
-| `ShareButton variant="other"` (`canShare`), `Icon` `share` · `link` | 코드 미구현(구현 뒤에 이름을 맞춘다). 아이콘은 lucide Share2 · Link | `features/animal-share` 예정 |
+| `ShareButton variant="other"` (`canShare`), `Icon` `share` · `link` | `ShareSheetButton`(#94, PR #95). 아이콘은 lucide Share2 · Link | `features/animal-share` |
 
 ## (c) 구현 시 주의할 점
 
@@ -203,7 +203,9 @@ Type scale (`fontSize`): `title` 20/28/700, `card-title` 16/24/600, `body` 14/20
   - 누름은 하트·카카오 버튼과 같은 규칙(`press-scale`, `press-duration`, 흰 알약은 누르는 동안 바탕 `bg`)이고, 움직임 줄이기면 효과가 없다.
   - 종료 공고도 같은 바를 쓴다(관심·공유 활성).
   - 보드 기준 폭(카카오 : 두 번째): 390에서 159 : 139, 375에서 144 : 139. "링크 복사"일 때 198 : 100, 183 : 100.
-  - 두 번째 공유 버튼은 코드 미구현이다. 컬럼 안 `absolute`(또는 `sticky bottom-0`), 정보 리스트는 이 바 뒤로 스크롤된다.
+  - 카카오 공유가 실패하면 링크를 복사하고 토스트 "카카오톡을 열지 못해 링크를 복사했어요"를 띄운다([링크 복사]의 "링크가 복사됐어요"와 다른 문구).
+  - 두 번째 공유 버튼은 코드에서 `ShareSheetButton`이다(#94, PR #95). 디자인과 다른 점은 없고 이름만 다르다.
+  - 바는 컬럼 안 `absolute`(또는 `sticky bottom-0`)이고, 정보 리스트는 이 바 뒤로 스크롤된다.
 - 상세 로딩 뼈대: 실제 상세와 같은 구조·치수(사진 칸, 32px 제목 줄, 도트 줄, 정보 줄, CTA 자리)이고 뒤로가기 버튼을 보인다. 하이드레이션 전에는 `/`로 가는 링크로 동작한다(Screens 13).
 - 상세 오류: 사진 칸 자리에 뒤로가기 + "지금은 공고를 불러오지 못했어요"(`card-title`) + Primary [뒤로가기].
 - 풀스크린 뷰어: `viewer-bg` 전체, 이미지는 원본 비율 `contain`, Close는 우상단 `Button variant="overlay"`, 페이지 표시(예: 2/3)는 상단 중앙 `caption` + `on-viewer`. 목 데이터에 5장짜리가 없어 "1/5" 대신 3장 기준이며, 가로 사진으로 contain 여백을 보여주려고 2/3를 표시했다.
@@ -222,7 +224,7 @@ Type scale (`fontSize`): `title` 20/28/700, `card-title` 16/24/600, `body` 14/20
 - 에러: "지금은 고양이를 불러오지 못했어요"(`card-title`) + Primary 버튼 "다시 시도". 빈 상태와 에러는 헤더를 유지하고 메시지·버튼만 중앙에 둔다.
 - 종료 공고 카드(피드): 사진 `saturate(.7)`, 배지 "종료 · <결과>"(결과가 없으면 "종료"). 딤 처리 없음. 종료 공고는 관심 목록과 목록(`status=ended`, `status=all`)에서 나타난다.
 - 종료 공고 상세: 사진 `saturate(.7)`, 배지 "종료 · <결과>"만 표시하고 마감 글자 없음. 보호소 줄에 [보호소 정보]가 없고, 종료 사유 줄을 더한다. 관심·공유 버튼은 활성이다(코드에서 확정).
-- 토스트: "링크가 복사됐어요"(카카오 공유 실패 폴백, 하단 바 [링크 복사]), "관심 공고에 담았어요" / "관심 공고에서 뺐어요". 기본 위치는 컬럼 아래에서 `toast-offset`(`space-6` 24px) + 아래 안전 영역이다. 상세처럼 아래 CTA가 있는 화면에서는 코드가 CTA 위로 계산한다(지금 `bottom-cta-h` + `space-3` = 80px, 안전 영역은 더함). 표시 시간은 따로 정하지 않고 sonner 기본값(약 4초)을 쓴다.
+- 토스트: "링크가 복사됐어요"(하단 바 [링크 복사]), "카카오톡을 열지 못해 링크를 복사했어요"(카카오 공유 실패, 링크를 대신 복사함), "관심 공고에 담았어요" / "관심 공고에서 뺐어요". 기본 위치는 컬럼 아래에서 `toast-offset`(`space-6` 24px) + 아래 안전 영역이다. 상세처럼 아래 CTA가 있는 화면에서는 코드가 CTA 위로 계산한다(지금 `bottom-cta-h` + `space-3` = 80px, 안전 영역은 더함). 표시 시간은 따로 정하지 않고 sonner 기본값(약 4초)을 쓴다.
 
 화면 7 (링크 미리보기 OG 이미지 / 카카오 피드 카드)
 - 두 화면 모두 코드(Next.js 동적 OG, `next/og`)가 만든다. 1200×630, 600×315 논리 레이아웃의 2배다. 미리보기는 컴포넌트 시트의 `OgImage` 카드다.
@@ -453,4 +455,6 @@ Type scale (`fontSize`): `title` 20/28/700, `card-title` 16/24/600, `body` 14/20
 | 그 밖 | 홈 기타 동물 카드 구현(#86, #87) | (f), (g), characters.md, Characters README |
 | M1 | 큰 카드(고양이·강아지) 누름에 `shadow-card-pressed`를 더함. 코드에는 이미 있다(#92). EL 결정, 싱크 뒤 작은 수정 | README 움직임 표 "Choice card press" |
 | M2 | FavoriteButton 속성 이름은 바꾸지 않음(`onPhoto`/`calm` ↔ 코드 `variant="overlay"`/`still`). 이름 대응 표에 한 줄 더함. EL 결정 | (b) 아래 "디자인 시스템 이름 ↔ 코드 이름" |
-| S1 | 상세 하단 바에 두 번째 공유 버튼(`ShareButton variant="other"`): "다른 앱으로 공유" + 공유 아이콘 / "링크 복사" + 고리 아이콘, 흰 알약 글자 폭, 카카오는 남은 폭(양옆 여백 `space-2`). EL 결정(보드 시안 2), 코드 미구현 | 화면 3~4 하단 CTA 바, (b), 이름 대응 표, 화면 6 토스트, README, `ShareButton`, `Icon`(`share`, `link`), bundle.js, bundle.css |
+| S1 | 상세 하단 바에 두 번째 공유 버튼(`ShareButton variant="other"`): "다른 앱으로 공유" + 공유 아이콘 / "링크 복사" + 고리 아이콘, 흰 알약 글자 폭, 카카오는 남은 폭(양옆 여백 `space-2`). EL 결정(보드 시안 2). 당시 코드 미구현, S2에서 구현됨 | 화면 3~4 하단 CTA 바, (b), 이름 대응 표, 화면 6 토스트, README, `ShareButton`, `Icon`(`share`, `link`), bundle.js, bundle.css |
+| S2 | 두 번째 공유 버튼이 코드에 들어감(`ShareSheetButton`, #94, PR #95). "코드 미구현" 표시 지움, 이름 대응 표 고침. 카카오 실패 토스트 "카카오톡을 열지 못해 링크를 복사했어요" 추가. 공유 시트 판단 기준(브라우저 지원)과 시트를 그냥 닫으면 토스트 없음 | 화면 3~4 하단 CTA 바, 화면 6 토스트, (b), 이름 대응 표, README, `ShareButton`, `Toast` |
+| I1 | lucide ChevronRight(홈 기타 동물 카드, #87)를 아이콘 목록에 더함, 이름 `chevron-right` | README Iconography, `Icon` README·preview, bundle.js |

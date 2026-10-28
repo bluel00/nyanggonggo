@@ -1,7 +1,7 @@
-<!-- @dsCard group="Foundations" height=130 subtitle="heart · filter · close · back · chevron-down · map-pin · phone · image-off · info · share · link" -->
+<!-- @dsCard group="Foundations" height=130 subtitle="heart · filter · close · back · chevron-down · chevron-right · map-pin · phone · image-off · info · share · link" -->
 <div id="r" class="cn-root" style="padding:16px;background:var(--canvas)"></div>
 <script>
 var N=window.CatNotice,h=React.createElement;
-function App(){return h('div',{style:{display:'flex',gap:20,alignItems:'center',flexWrap:'wrap',color:'var(--text)'}},['heart','filter','close','back','chevron-down','map-pin','phone','image-off','info','share','link'].map(function(n){return h('div',{key:n,style:{display:'flex',flexDirection:'column',alignItems:'center',gap:8}},h(N.Icon,{name:n}),h('span',{className:'caption',style:{color:'var(--text-2)'}},n))}),h('div',{style:{display:'flex',flexDirection:'column',alignItems:'center',gap:8}},h(N.Icon,{name:'heart',filled:true}),h('span',{className:'caption',style:{color:'var(--text-2)'}},'heart filled')))}
+function App(){return h('div',{style:{display:'flex',gap:20,alignItems:'center',flexWrap:'wrap',color:'var(--text)'}},['heart','filter','close','back','chevron-down','chevron-right','map-pin','phone','image-off','info','share','link'].map(function(n){return h('div',{key:n,style:{display:'flex',flexDirection:'column',alignItems:'center',gap:8}},h(N.Icon,{name:n}),h('span',{className:'caption',style:{color:'var(--text-2)'}},n))}),h('div',{style:{display:'flex',flexDirection:'column',alignItems:'center',gap:8}},h(N.Icon,{name:'heart',filled:true}),h('span',{className:'caption',style:{color:'var(--text-2)'}},'heart filled')))}
 ReactDOM.createRoot(document.getElementById('r')).render(h(App));
 </script>
