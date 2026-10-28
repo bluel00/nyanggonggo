@@ -32,7 +32,8 @@ export function errorResponse(error: unknown, logger: Logger): Response {
   return Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
 }
 
-function classify(error: unknown, logger: Logger): ErrorCode {
+/** 오류를 응답 코드로 나누고 원인을 로그에 남긴다(값·연락처는 남기지 않는다). 응답을 만들지 않는 곳(서버 페이지의 첫 목록, app/list-data.ts)도 쓴다 */
+export function classify(error: unknown, logger: Logger): ErrorCode {
   if (error instanceof InvalidRequestError) return "invalid_request";
   if (error instanceof NotFoundError) return "not_found";
   if (error instanceof UpstreamError) {

@@ -1,6 +1,7 @@
 /**
  * app/page.tsx: 쿠키 두 개(축종·지역)를 읽어 진입 판정에 넘기고, 결과대로 그리거나 리다이렉트하는지.
  * 판정 규칙 자체(표)는 `features/animal-filter/model/entry.test.ts`에 있다.
+ * 그릴 때는 같은 필터로 서버 첫 페이지 조회를 시작해 목록에 넘긴다(#109). 조회 자체는 `tests/app/list-data.test.ts`가 본다.
  */
 import { isValidElement } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -31,9 +32,19 @@ vi.mock("next/navigation", () => ({
   },
 }));
 
+/** 첫 페이지 조회는 부른 필터만 기록하고, 필터마다 다른 promise를 돌려준다(페이지가 그대로 넘기는지 확인) */
+const firstPageCalls: unknown[] = [];
+vi.mock("@/app/list-data", () => ({
+  loadFirstListPage: (filter: unknown) => {
+    firstPageCalls.push(filter);
+    return Promise.resolve({ ok: false, filter });
+  },
+}));
+
 beforeEach(() => {
   speciesCookie = undefined;
   regionCookie = undefined;
+  firstPageCalls.length = 0;
 });
 
 const SEOUL = "6110000";
@@ -47,13 +58,19 @@ async function renderPage(searchParams: SearchParams) {
   const element = await Page({ searchParams: Promise.resolve(searchParams) });
   expect(isValidElement(element)).toBe(true);
   expect(element.type).toBe(AnimalListView);
-  return (element.props as { filter: unknown }).filter;
+  const { filter, firstPage } = element.props as { filter: unknown; firstPage: Promise<{ filter: unknown }> };
+  // 같은 필터로 첫 페이지 조회를 한 번 시작해 그 promise를 넘긴다
+  expect(firstPageCalls).toEqual([filter]);
+  expect((await firstPage).filter).toBe(filter);
+  return filter;
 }
 
 async function redirectOf(searchParams: SearchParams) {
   try {
     await Page({ searchParams: Promise.resolve(searchParams) });
   } catch (error) {
+    // 리다이렉트하면 첫 페이지를 읽지 않는다
+    expect(firstPageCalls).toEqual([]);
     if (error instanceof Redirected) return error.url;
     throw error;
   }

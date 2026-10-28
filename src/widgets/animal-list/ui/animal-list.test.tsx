@@ -3,7 +3,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { AnimalListFilter } from "@/entities/animal";
+import { animalKeys, toAnimalPage, type AnimalListFilter, type AnimalListFirstPage } from "@/entities/animal";
 import { FAVORITES_STORAGE_KEY } from "@/features/animal-favorite";
 import { createQueryClient } from "@/shared/api/query-client";
 import { AnimalList } from "./animal-list";
@@ -204,5 +204,67 @@ describe("AnimalList 상세로 갈 때(PRD-v1.5 R6)", () => {
 
     expect(scroll.scrollTop).toBe(800);
     expect(Object.keys(sessionStorage).sort()).toEqual(keysBefore);
+  });
+});
+
+describe("AnimalList: 서버가 읽은 첫 페이지(#109)", () => {
+  const filter: AnimalListFilter = { species: "cat", status: "protected", sex: "all", sort: "latest" };
+
+  /** use(promise)로 멈추는 렌더라 act를 기다린다(React가 다시 그리기를 act 안에서 한다) */
+  async function renderWithFirstPage(firstPage: Promise<AnimalListFirstPage>, client = createQueryClient()) {
+    client.setDefaultOptions({ queries: { ...client.getDefaultOptions().queries, retry: false } });
+    const wrapper = ({ children }: { children: ReactNode }) => <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+    let result!: ReturnType<typeof render>;
+    await act(async () => {
+      result = render(<AnimalList filter={filter} firstPage={firstPage} />, { wrapper });
+    });
+    return { client, ...result };
+  }
+
+  it("기다리는 동안 뼈대 3장, 받으면 카드를 그리고 첫 페이지를 위해 /api/animals를 부르지 않는다. 다음 페이지는 커서로 부른다", async () => {
+    let resolve!: (page: AnimalListFirstPage) => void;
+    const firstPage = new Promise<AnimalListFirstPage>((r) => (resolve = r));
+    fetchMock.mockImplementation(async () => Response.json({ items: [wire("3")], nextCursor: null }));
+    const { container } = await renderWithFirstPage(firstPage);
+
+    expect(container.querySelectorAll('[data-slot="skeleton-card"]')).toHaveLength(3);
+    await act(async () => resolve({ ok: true, response: { items: [wire("1"), wire("2")], nextCursor: "Mg" } }));
+    expect(await screen.findByText("지역1")).toBeTruthy();
+    expect(container.querySelector("[data-list-first]")).not.toBeNull();
+    expect(listRequests()).toEqual([]);
+
+    triggerSentinel();
+    await screen.findByText("지역3");
+    expect(listRequests().map((url) => url.searchParams.get("cursor"))).toEqual(["Mg"]);
+  });
+
+  it("같은 목록을 이미 받아 둔 적이 있으면 서버 응답을 기다리지 않고 받아 둔 것을 그린다", async () => {
+    const client = createQueryClient();
+    client.setQueryData(animalKeys.list(filter), { pages: [toAnimalPage({ items: [wire("9")], nextCursor: null })], pageParams: [null] });
+    const never = new Promise<AnimalListFirstPage>(() => {});
+    const { container } = await renderWithFirstPage(never, client);
+    expect(await screen.findByText("지역9")).toBeTruthy();
+    expect(container.querySelectorAll('[data-slot="skeleton-card"]')).toHaveLength(0);
+    // 서버가 그린 첫 페이지가 아니다(등장 CSS 대상 아님)
+    expect(container.querySelector("[data-list-first]")).toBeNull();
+    expect(listRequests()).toEqual([]);
+  });
+
+  it("서버가 읽지 못했으면 지금처럼 클라이언트가 첫 페이지를 부르고, 그것도 실패하면 목록 오류(다시 시도)다", async () => {
+    fetchMock.mockImplementation(async () => new Response("oops", { status: 500 }));
+    await renderWithFirstPage(Promise.resolve({ ok: false }));
+    expect(await screen.findByRole("button", { name: "다시 시도" })).toBeTruthy();
+    expect(listRequests().map((url) => url.searchParams.get("cursor"))).toEqual([null]);
+
+    fetchMock.mockImplementation(async () => Response.json({ items: [wire("5")], nextCursor: null }));
+    fireEvent.click(screen.getByRole("button", { name: "다시 시도" }));
+    expect(await screen.findByText("지역5")).toBeTruthy();
+  });
+
+  it("뼈대 목록 맨 끝에 첫 화면 등장 표시 스크립트가 있다(문서로 처음 열 때 하이드레이션 없이 돈다)", async () => {
+    const { container } = await renderWithFirstPage(new Promise<AnimalListFirstPage>(() => {}));
+    const script = container.querySelector("script");
+    expect(script?.innerHTML).toContain("data-list-enter");
+    expect(script?.parentElement?.querySelectorAll('[data-slot="skeleton-card"]')).toHaveLength(3);
   });
 });

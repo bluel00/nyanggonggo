@@ -8,8 +8,8 @@ import {
 import { ApiError, getValidated } from "@/shared/api/api-request";
 import { createHttpClient, type HttpClient } from "@/shared/api/http-client";
 import { mapWithConcurrency } from "@/shared/lib/concurrency";
-import { toAnimal } from "../model/mapper";
-import type { AnimalRepository } from "../model/repository";
+import { toAnimal, toAnimalPage } from "../model/mapper";
+import type { AnimalListParams, AnimalRepository } from "../model/repository";
 
 /** by-ids를 여러 번 나눠 보낼 때 동시 요청 수 */
 export const BY_IDS_CHUNK_CONCURRENCY = 3;
@@ -21,6 +21,19 @@ export type AnimalRepositoryOptions = {
 };
 
 /**
+ * 목록 API(/api/animals)의 쿼리. 클라이언트 조회와 서버가 읽는 목록 첫 페이지(app/list-data.ts)가 같은 쿼리로 같은 파서를 지난다.
+ */
+export function toAnimalListQuery({ species, region, district, status, sex, sort, cursor }: AnimalListParams): URLSearchParams {
+  const query = new URLSearchParams({ species, status, sort });
+  if (region) query.set("region", region);
+  if (region && district) query.set("district", district);
+  // 전체면 보내지 않는다(성별을 고르지 않은 요청이 지금과 같은 주소 = 같은 CDN 캐시를 쓴다)
+  if (sex !== ANIMAL_LIST_DEFAULTS.sex) query.set("sex", sex);
+  if (cursor) query.set("cursor", cursor);
+  return query;
+}
+
+/**
  * AnimalRepository 어댑터. 자체 /api/**를 호출하고, 응답을 계약(Zod)으로 검증한 뒤 클라이언트 Mapper로 Domain을 돌려준다.
  * 실패는 ApiError(shared/api/api-request)로 던진다.
  */
@@ -29,15 +42,9 @@ export function createAnimalRepository({
   baseUrl = "",
 }: AnimalRepositoryOptions = {}): AnimalRepository {
   return {
-    async getAnimals({ species, region, district, status, sex, sort, cursor }, options) {
-      const query = new URLSearchParams({ species, status, sort });
-      if (region) query.set("region", region);
-      if (region && district) query.set("district", district);
-      // 전체면 보내지 않는다(성별을 고르지 않은 요청이 지금과 같은 주소 = 같은 CDN 캐시를 쓴다)
-      if (sex !== ANIMAL_LIST_DEFAULTS.sex) query.set("sex", sex);
-      if (cursor) query.set("cursor", cursor);
-      const response = await getValidated(http, `${baseUrl}/api/animals?${query}`, AnimalListResponseSchema, options);
-      return { items: response.items.map(toAnimal), nextCursor: response.nextCursor };
+    async getAnimals(params, options) {
+      const response = await getValidated(http, `${baseUrl}/api/animals?${toAnimalListQuery(params)}`, AnimalListResponseSchema, options);
+      return toAnimalPage(response);
     },
 
     async getAnimalById(id, options) {
