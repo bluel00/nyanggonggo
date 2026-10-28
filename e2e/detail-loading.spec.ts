@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { loadStubItems, mockList, openedDetail, rememberSpeciesCookie, watchConsoleErrors, type ListItem } from "./helpers";
 
 /**
- * 목록 카드를 누르면 상세가 뜨기 전에 바로 상세 뼈대가 보이는지(`app/animals/[id]/loading.tsx`).
+ * 목록 카드를 누르면 상세가 뜨기 전에 바로 상세 뼈대가 보이는지(`app/@modal/(.)animals/[id]/loading.tsx`).
  *
  * 상세는 서버가 공고를 조회한 뒤 그려진다(실측 0.5~0.9초). 그동안 화면이 그대로면 사용자가 여러 번 누른다.
  * 서버가 느린 상황을 만들려고 상세로 가는 RSC 요청(prefetch가 아닌 실제 이동 요청)을 일부러 늦춘다.

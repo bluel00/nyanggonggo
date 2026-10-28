@@ -8,7 +8,7 @@ import { BottomCtaBar, DetailPhotoArea } from "./detail-frame";
 /**
  * 상세 뼈대(명세 7.1, 스켈레톤은 SkeletonCard와 같은 status-ended-bg 면, 움직임 없음).
  *
- * 두 곳이 같은 뼈대를 쓴다: 라우트 로딩 경계(`app/animals/[id]/loading.tsx`, 카드를 누른 즉시)와
+ * 두 곳이 같은 뼈대를 쓴다: 라우트 로딩 경계(`app/@modal/(.)animals/[id]/loading.tsx`, 카드를 누른 즉시)와
  * 상세 위젯의 조회 대기(`useAnimal`이 pending). 그래서 뼈대 → 실제 상세로 바뀔 때 레이아웃이 튀지 않게
  * 실제 상세(`AnimalDetail`)와 같은 구조·치수로 둔다:
  * - 사진 칸(좌우 24px 안쪽, radius-card, 그림자 없음) + 캐러셀 점 줄 자리(pt-3 + 6px). 실제 공고는 모두 사진 2장 이상이라 점 줄이 늘 있다(12.A P7).

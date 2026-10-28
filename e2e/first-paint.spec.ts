@@ -4,7 +4,7 @@ import { LAYER } from "./stack";
 
 /**
  * 모바일 첫 화면(이슈 #103): 홈 LCP 그림(헤더 로고)은 지연 로딩하지 않고, 홈·목록에 검색엔진 설명이 있고,
- * 상세에는 주 랜드마크(`<main>`)가 하나다. 스텁 서버(e2e/upstream-stub.mjs), Chromium·WebKit.
+ * 상세에는 주 랜드마크(`<main>`)가 하나고, 공유 링크로 연 상세는 JS 없이도 첫 사진이 보인다. 스텁 서버(e2e/upstream-stub.mjs), Chromium·WebKit.
  */
 const LIST_URL = "/?species=dog&region=5690000";
 const DETAIL_ID = "990000202600001";
@@ -44,4 +44,19 @@ test("목록에서 얹은 상세: <main>은 아래 목록의 것 하나다(층�
   await openedDetail(page);
   await expect(page.locator("main")).toHaveCount(1);
   await expect(page.locator(LAYER).locator("main")).toHaveCount(0);
+});
+
+test.describe("JS 없이 연 상세", () => {
+  test.use({ javaScriptEnabled: false });
+
+  test("공유 링크로 바로 연 상세: 첫 사진이 서버 HTML 그대로 보이고, 칸은 첫 사진 비율이다", async ({ page }) => {
+    await page.goto(`/animals/${DETAIL_ID}`);
+    const photo = page.locator('[data-slot="image-carousel"] button').first().locator("img");
+    await expect(photo).toBeVisible();
+    await expect.poll(() => photo.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth > 0)).toBe(true);
+    // 스텁의 첫 사진은 1600 × 1200(4:3, detail-photo.spec.ts와 같은 공고)
+    const box = await page.locator('[data-slot="image-carousel"] button').first().boundingBox();
+    expect(box!.width / box!.height).toBeCloseTo(4 / 3, 2);
+    await expect(page.locator('[data-slot="detail-skeleton"]')).toHaveCount(0);
+  });
 });

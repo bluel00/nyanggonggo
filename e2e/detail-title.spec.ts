@@ -3,7 +3,7 @@ import { FAVORITES_STORAGE_KEY } from "./helpers";
 
 /**
  * 상세 제목 줄은 상태와 상관없이 32px이다(architecture.md 14.1·14.4 2단계). 종료 공고 제목은 title 크기(20px)지만 줄 높이를
- * 맞춰, 로딩 뼈대(`app/animals/[id]/loading.tsx`) → 종료 공고 상세로 바뀔 때 제목과 그 아래 내용이 움직이지 않는다.
+ * 맞춰, 로딩 뼈대(`app/@modal/(.)animals/[id]/loading.tsx`) → 종료 공고 상세로 바뀔 때 제목과 그 아래 내용이 움직이지 않는다.
  *
  * 스텁 서버(e2e/upstream-stub.mjs)의 종료 공고를 찜 목록에 넣어 두고 카드를 눌러 앱 안에서 이동한다. 상세로 가는 RSC 요청
  * (prefetch가 아닌 실제 이동 요청)을 늦춰 뼈대를 붙잡아 둔다(e2e/detail-loading.spec.ts와 같은 방법). 사진은 1:1이라 뼈대의 기본 칸(1:1)과
