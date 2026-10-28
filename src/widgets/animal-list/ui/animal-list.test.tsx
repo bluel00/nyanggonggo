@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { QueryClientProvider } from "@tanstack/react-query";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import type { ReactNode } from "react";
+import { StrictMode, type ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { animalKeys, toAnimalPage, type AnimalListFilter, type AnimalListFirstPage } from "@/entities/animal";
 import { FAVORITES_STORAGE_KEY } from "@/features/animal-favorite";
@@ -236,6 +236,23 @@ describe("AnimalList: 서버가 읽은 첫 페이지(#109)", () => {
     triggerSentinel();
     await screen.findByText("지역3");
     expect(listRequests().map((url) => url.searchParams.get("cursor"))).toEqual(["Mg"]);
+  });
+
+  it("StrictMode 이중 렌더에서도 서버 첫 페이지로 판단한다(캐시를 채운 뒤 렌더가 서버 HTML과 같다)", async () => {
+    const client = createQueryClient();
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <StrictMode>
+        <QueryClientProvider client={client}>{children}</QueryClientProvider>
+      </StrictMode>
+    );
+    const firstPage = Promise.resolve<AnimalListFirstPage>({ ok: true, response: { items: [wire("1")], nextCursor: null } });
+    let result!: ReturnType<typeof render>;
+    await act(async () => {
+      result = render(<AnimalList filter={filter} firstPage={firstPage} />, { wrapper });
+    });
+    expect(await screen.findByText("지역1")).toBeTruthy();
+    expect(result.container.querySelector("[data-list-first]")).not.toBeNull();
+    expect(listRequests()).toEqual([]);
   });
 
   it("같은 목록을 이미 받아 둔 적이 있으면 서버 응답을 기다리지 않고 받아 둔 것을 그린다", async () => {

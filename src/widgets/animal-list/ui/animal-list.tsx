@@ -62,11 +62,20 @@ export function AnimalList({ filter, firstPage }: { filter: AnimalListFilter; fi
  */
 function ServerFirstPage({ filter, firstPage }: { filter: AnimalListFilter; firstPage: Promise<AnimalListFirstPage> }) {
   const queryClient = useQueryClient();
-  const cached = queryClient.getQueryData(animalKeys.list(filter)) !== undefined;
+  // 이 promise로 캐시를 채운 뒤의 렌더(StrictMode 이중 렌더, 다시 그리기)도 같은 판단을 하도록, 채운 promise를 기억한다.
+  // 캐시만 보면 두 번째 렌더가 "이미 받아 둔 목록"으로 보여 서버 HTML과 달라진다(하이드레이션 불일치)
+  const seededHere = seededFirstPages.has(firstPage);
+  const cached = !seededHere && queryClient.getQueryData(animalKeys.list(filter)) !== undefined;
   const result = cached ? null : use(firstPage);
-  const [fromServer] = useState(() => result?.ok === true && seedAnimalsFirstPage(queryClient, filter, result.response));
-  return <AnimalFeed filter={filter} serverFirstPage={fromServer} />;
+  if (result?.ok && !seededHere) {
+    seedAnimalsFirstPage(queryClient, filter, result.response);
+    seededFirstPages.add(firstPage);
+  }
+  return <AnimalFeed filter={filter} serverFirstPage={result?.ok === true} />;
 }
+
+/** 목록 캐시를 채운 서버 첫 페이지 promise(ServerFirstPage) */
+const seededFirstPages = new WeakSet<Promise<AnimalListFirstPage>>();
 
 /**
  * 서버 첫 페이지를 기다리는 동안의 뼈대(첫 로드와 같은 3장). 뼈대가 실제로 칠해지면 첫 화면 등장 표시를 단다(model/list-enter.ts):
