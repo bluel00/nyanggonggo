@@ -12,12 +12,13 @@ export const OTHER_CHARACTER_SRC = [
 
 /**
  * 홈 기타 동물 카드의 정지 그림 셋(handoff (g) "홈 기타 동물 선택지"): 각 44px, 둘째는 6px·셋째는 4px 겹친다. 후광은 없다.
- * 장식이라 `alt=""`·`aria-hidden`이고 의미는 옆의 이름표가 전한다. 움직임(대기·인사)은 아직 없다.
+ * 장식이라 `alt=""`·`aria-hidden`이고 의미는 옆의 이름표가 전한다. 대기·인사 움직임은 없고, 홈 첫인상 장면에서만 차례로 까딱한다(handoff (k)).
  * `characterClassName`은 각 그림에 붙는다(카드가 누름 반응을 준다).
  */
 export function OtherCharacters({ characterClassName }: { characterClassName?: string }) {
   return (
-    <span aria-hidden className="flex shrink-0 items-end">
+    // data-slot: 홈 첫인상 장면의 까딱(app/globals.css, handoff (k))이 읽는다
+    <span aria-hidden data-slot="other-characters" className="flex shrink-0 items-end">
       {OTHER_CHARACTER_SRC.map((src, index) => (
         // eslint-disable-next-line @next/next/no-img-element -- 120px 원본을 44px로 그리는 고정 SVG라 next/image 최적화가 할 일이 없다
         <img

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { loadStubItems, rememberSpeciesCookie, watchConsoleErrors, watchList, type ListItem } from "./helpers";
+import { loadStubItems, rememberSpeciesCookie, skipHomeScene, watchConsoleErrors, watchList, type ListItem } from "./helpers";
 
 /**
  * 홈 캐릭터 Rive(architecture.md 9절 "홈 캐릭터 Rive"). production 빌드에서 본다(실제 번들 분할·정적 파일 그대로).
@@ -9,6 +9,8 @@ import { loadStubItems, rememberSpeciesCookie, watchConsoleErrors, watchList, ty
  * - 홈이 아닌 화면(목록·상세·찜): Rive 런타임·.riv·WASM을 받지 않는다
  * - 카드를 누르면 바로 이동한다(press 때문에 늦추지 않는다), 교체 전후 레이아웃 이동 0
  * - greet 동안 카드·라벨이 움직이지 않고, greet 중간에 눌러도 바로 이동한다(PRD v1.2 5.1, 7절 "방해 없음")
+ *
+ * 모두 두 번째 진입부터의 모습(지금 등장 → 인사, firstVisit = false)을 본다. 세션 첫 진입의 첫인상 장면은 home-scene.spec.ts가 본다(#115).
  */
 
 /** Rive 런타임 번들에만 있는 문자열. 청크 이름은 해시라 내용으로 찾는다 */
@@ -32,7 +34,10 @@ function watchRive(page: Page): Seen {
 }
 
 const consoleWatch = watchConsoleErrors();
-test.beforeEach(({ page }) => consoleWatch.attach(page));
+test.beforeEach(async ({ page }) => {
+  consoleWatch.attach(page);
+  await skipHomeScene(page);
+});
 test.afterEach(() => consoleWatch.assertNone());
 
 const canvasesReady = (page: Page) =>

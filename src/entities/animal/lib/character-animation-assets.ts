@@ -14,3 +14,5 @@ export const RIVE_WASM_URL = `/rive/rive-canvas-lite-${RIVE_RUNTIME_VERSION}.was
 /** 상태 머신과 앱 → 캐릭터 신호(뷰 모델 트리거). 이름은 docs/design/characters.md 모션 절 그대로다 */
 export const CHARACTER_STATE_MACHINE = "State Machine 1";
 export const CHARACTER_PRESS_TRIGGER = "press";
+/** 시작할 때 한 번 정하는 뷰 모델 불리언. true면 인사 앞에 올려다보기(lookUp)를 한다(characters.md "올려다보기", handoff (k)) */
+export const CHARACTER_FIRST_VISIT_INPUT = "firstVisit";

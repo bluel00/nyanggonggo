@@ -200,6 +200,100 @@
     translate: 0 var(--enter-rise);
   }
 }
+/* 홈 첫인상 장면(handoff (k)). 쓰는 곳은 아래 no-preference 안의 html[data-home-scene="play"] 규칙 */
+@keyframes scene-bob {
+  50% {
+    translate: 0 -5px;
+  }
+}
+/*
+ * 로고 "멍"·고양이 눈(handoff (k) 시간표, 데모 보드 12절). 데모는 Web Animations의 효과 전체 곡선(easing 옵션)이라, CSS의 구간 곡선으로
+ * 정확히 옮겼다: 키프레임 진행 k는 효과 곡선 E(t) = k인 시간 t에 닿으므로 CSS 키프레임 위치는 t이고, 두 키프레임 사이는 E의 그 조각이라
+ * 조각을 [0,1]로 정규화한 cubic-bezier를 구간마다 단다(3차 베지어의 조각은 다시 3차 베지어). 1001점 비교에서 데모 값과의 차는 최대
+ * 0.0009°(귀). 데모 값: 얼굴 ease-in-out 28%에 위로 1.6·−5°, 62%에 0·+2° / 귀 ease-in-out 30%에 −16°, 66%에 +9° / 입 linear 0 → 15%에 1 →
+ * 70%까지 1 → 0 / 소리 선 ease-out 배율 0.6·투명 → 35%에 1·불투명 → 1.15·투명 / 고양이 눈 ease-in-out 25~75%에 오른쪽 0.9
+ */
+@keyframes scene-bark-face {
+  0% {
+    translate: 0 0; rotate: 0deg;
+    animation-timing-function: cubic-bezier(0.3995, 0, 0.7128, 0.4343);
+  }
+  36.6583% {
+    translate: 0 -1.6px; rotate: -5deg;
+    animation-timing-function: cubic-bezier(0.3435, 0.3099, 0.6662, 0.6677);
+  }
+  57.0483% {
+    translate: 0 0; rotate: 2deg;
+    animation-timing-function: cubic-bezier(0.2864, 0.5373, 0.59, 1);
+  }
+  100% {
+    translate: 0 0; rotate: 0deg;
+  }
+}
+@keyframes scene-bark-ear {
+  0% {
+    rotate: 0deg;
+    animation-timing-function: cubic-bezier(0.4018, 0, 0.7133, 0.4399);
+  }
+  37.9704% {
+    rotate: -16deg;
+    animation-timing-function: cubic-bezier(0.3413, 0.315, 0.6628, 0.6756);
+  }
+  59.4938% {
+    rotate: 9deg;
+    animation-timing-function: cubic-bezier(0.2863, 0.5489, 0.5939, 1);
+  }
+  100% {
+    rotate: 0deg;
+  }
+}
+@keyframes scene-bark-mouth {
+  0% {
+    opacity: 0;
+    animation-timing-function: linear;
+  }
+  15% {
+    opacity: 1;
+    animation-timing-function: linear;
+  }
+  70% {
+    opacity: 1;
+    animation-timing-function: linear;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes scene-bark-lines {
+  0% {
+    opacity: 0; scale: 0.6;
+    animation-timing-function: cubic-bezier(0, 0, 0.4014, 0.454);
+  }
+  22.9601% {
+    opacity: 1; scale: 1;
+    animation-timing-function: cubic-bezier(0.2692, 0.4436, 0.6721, 1);
+  }
+  100% {
+    opacity: 0; scale: 1.15;
+  }
+}
+@keyframes scene-cat-glance {
+  0% {
+    translate: 0 0;
+    animation-timing-function: cubic-bezier(0.3959, 0, 0.7118, 0.426);
+  }
+  34.6203% {
+    translate: 0.9px 0;
+    animation-timing-function: linear;
+  }
+  65.3797% {
+    translate: 0.9px 0;
+    animation-timing-function: cubic-bezier(0.2882, 0.574, 0.6041, 1);
+  }
+  100% {
+    translate: 0 0;
+  }
+}
 @keyframes heart-pop {
   0% {
     scale: 1;
@@ -278,6 +372,82 @@
     --enter-rise: var(--enter-distance);
     animation: enter-rise var(--enter-duration) var(--ease-out) both;
     animation-delay: calc(var(--enter-i, 0) * var(--enter-stagger));
+  }
+  /*
+   * 홈 첫인상 "부르고 답하기"(handoff (k), #115). <html data-home-scene>는 features/animal-filter/model/home-scene.ts가 단다.
+   * pending: 첫 진입에서 Rive를 기다리는 동안(최대 0.3초) 질문·보조 문구·카드는 안 보이는 첫 프레임. 로고·소개는 처음부터 보인다.
+   * play: 장면 0초(두 캐릭터 Rive가 그릴 준비가 된 순간, Rive도 같은 순간 firstVisit = true로 시작). 아래 시간표 그대로.
+   * off(대체)나 속성 없음: 위의 지금 등장([data-enter="home"]) 그대로.
+   * 카드의 강아지·고양이(올려다보기 0.92/1.04 → 인사 1.34/1.46)는 Rive가 맡는다. 여기에는 없다.
+   * 로고 부위의 기준점은 48 격자 좌표다(가로 조합은 상징이 scale(1.1667) 그룹 안이라 그 좌표 그대로, shared/ui/logo-lockup-drawing.tsx).
+   * 붙이는 곳: views/species-picker/ui/species-picker-view.tsx(질문 두 줄 data-scene, 로고), features/animal-filter/ui/species-choice.tsx(카드, 기타 동물 셋)
+   */
+  html[data-home-scene="pending"] [data-enter="home"] {
+    animation: none;
+    opacity: 0;
+  }
+  html[data-home-scene="play"] {
+    --scene-bark-face: 120ms;
+    --scene-bark-ear: 140ms;
+    --scene-bark-mouth: 150ms;
+    --scene-bark-lines: 180ms;
+    --scene-cat-glance: 300ms;
+    --scene-question: 260ms;
+    --scene-question-gap: 80ms;
+    --scene-sub: 420ms;
+    --scene-cards: 520ms;
+    --scene-bob: 1180ms;
+  }
+  html[data-home-scene="play"] [data-enter="home"][data-scene="intro"] {
+    animation: none;
+  }
+  /* 질문 두 줄: 16px 아래에서 한 줄씩 0.38초(0.26 / 0.34) */
+  html[data-home-scene="play"] [data-scene="question-line"] {
+    --enter-rise: 16px;
+    animation: enter-rise 380ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation-delay: calc(var(--scene-question) + var(--line-i, 0) * var(--scene-question-gap));
+  }
+  /* 보조 문구: 8px, 0.32초 ease-out(0.42) */
+  html[data-home-scene="play"] [data-scene="sub"] {
+    --enter-rise: 8px;
+    animation: enter-rise 320ms ease-out both;
+    animation-delay: var(--scene-sub);
+  }
+  /* 카드: 지금 등장과 같은 모양(12px, 320ms), 고양이 → 강아지 → 기타 동물 0.52 / 0.58 / 0.64 */
+  html[data-home-scene="play"] [data-enter="home"]:not([data-scene="intro"]) {
+    animation-delay: calc(var(--scene-cards) + (var(--enter-i, 1) - 1) * var(--enter-stagger));
+  }
+  /* 기타 동물 셋 까딱: 위로 5px, 0.3초, 1.18 / 1.25 / 1.32 */
+  html[data-home-scene="play"] [data-slot="other-characters"] > img {
+    animation: scene-bob 300ms ease-in-out both;
+    animation-delay: var(--scene-bob);
+  }
+  html[data-home-scene="play"] [data-slot="other-characters"] > img:nth-child(2) {
+    animation-delay: calc(var(--scene-bob) + 70ms);
+  }
+  html[data-home-scene="play"] [data-slot="other-characters"] > img:nth-child(3) {
+    animation-delay: calc(var(--scene-bob) + 140ms);
+  }
+  /* 로고 속 강아지 "멍"(handoff (k), 시작 · 길이): 얼굴 0.12 · 0.44초(기준 턱 아래 32.6, 39), 귀 0.14 · 0.52초(밑동 39.4, 18),
+     입 0.15 · 0.36초, 소리 선 0.18 · 0.48초(기준 44, 15). 곡선은 키프레임에 구간마다 달았다(위 @keyframes 설명) */
+  html[data-home-scene="play"] [data-slot="logo"] [data-part="dog"] {
+    transform-origin: 32.6px 39px;
+    animation: scene-bark-face 440ms linear var(--scene-bark-face);
+  }
+  html[data-home-scene="play"] [data-slot="logo"] [data-part="dog-ear"] {
+    transform-origin: 39.4px 18px;
+    animation: scene-bark-ear 520ms linear var(--scene-bark-ear);
+  }
+  html[data-home-scene="play"] [data-slot="logo"] [data-part="dog-mouth"] {
+    animation: scene-bark-mouth 360ms linear var(--scene-bark-mouth);
+  }
+  html[data-home-scene="play"] [data-slot="logo"] [data-part="bark-lines"] {
+    transform-origin: 44px 15px;
+    animation: scene-bark-lines 480ms linear var(--scene-bark-lines);
+  }
+  /* 로고 속 고양이 눈만 힐끗(0.30 · 0.6초 · ease-in-out): 오른쪽(강아지 쪽)으로 0.9, 25~75% 유지 */
+  html[data-home-scene="play"] [data-slot="logo"] [data-part="cat-eyes"] {
+    animation: scene-cat-glance 600ms linear var(--scene-cat-glance);
   }
   /* 붙이는 곳: widgets/animal-list/ui/animal-list.tsx(useFirstScreenEntrance) */
   [data-enter="list"] {
