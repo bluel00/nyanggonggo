@@ -2,7 +2,10 @@
 
 이 폴더의 다른 파일은 디자인 시스템 "멍냥공고"의 사본이라 고치지 않는다. 싱크 기록만 여기에 적는다.
 
-- 마지막 싱크: 2026-10-30, 디자인 시스템 판 1793339419-eafd, 기준 코드 b5c822d (#115 홈 첫인상 "부르고 답하기", handoff (k), (j) L6)
+- 마지막 싱크: 2026-10-30, 디자인 시스템 판 1793341485-eae1, 기준 코드 bfbf494 (#115 2단계: 홈 질문 `display-home` 32/40 두 줄, handoff (a)·(k))
+  - 바뀐 파일: tokens.json, README.md, handoff.md. 그림은 바뀌지 않았다.
+  - tokens.css는 같은 규칙으로 다시 만들었다(바뀐 것은 `.display-home` 28/36 → 32/40 한 줄. tokens.json의 나머지 바뀐 곳은 usage 설명이라 CSS에 없다).
+- 이전 싱크: 2026-10-30, 디자인 시스템 판 1793339419-eafd, 기준 코드 b5c822d (#115 홈 첫인상 "부르고 답하기", handoff (k), (j) L6)
   - 바뀐 파일: handoff.md, characters.md. 새 파일: `assets/Logo/myeongnyang-lockup-rigged.svg`, `assets/Logo/myeongnyang-mark-rigged.svg`(부위를 나눈 로고, data-part).
   - tokens.json은 바뀌지 않아 tokens.css도 그대로다. 기존 로고 그림(코드 `src/shared/assets/logo/`)과 캐릭터 그림은 바뀌지 않았다.
 - 이전 싱크: 2026-10-30, 디자인 시스템 판 1793332855-64a0, 기준 코드 8c2baee (#111 로딩 시머·캐릭터, handoff (j) L1~L5)

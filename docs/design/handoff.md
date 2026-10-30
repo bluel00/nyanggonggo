@@ -61,7 +61,7 @@ CSS 변수는 `globals.css`의 `:root`에 hex 그대로 정의하고, Tailwind�
 | `--font-sans` | `fontFamily.sans` | Pretendard Variable, … |
 | `--font-display` | (미사용, 아래) | Jua는 `next/font/local`로 싣는다 |
 
-Type scale (`fontSize`): `title` 20/28/700, `card-title` 16/24/600, `body` 14/20/400, `caption` 12/16/400, `badge` 12/16/600. Display (Jua, 400만, 고정 문구만): `display-home` 28/36, `display-title` 22/28, `display-logo` 20/28(디자인 시스템 `Logo` 가로 조합 미리보기의 글자에만 쓴다. 코드의 가로 조합은 윤곽선 그림이라 쓰지 않는다). `display-detail` 24/32/700은 Pretendard(상세 제목). Line-heights are derived by the designer, not in the brief. 코드는 이 값들을 `@theme`의 `--text-*`에 숫자로 복사해 `text-title` 같은 유틸리티로 쓴다(복사라 tokens.json이 바뀌면 함께 고친다). 글꼴: 이 디자인 시스템에는 미리보기용 `fonts/PretendardVariable.woff2`(약 2MB)가 있지만, 저장소에는 글꼴 파일을 두지 않고 앱은 `pretendard` 패키지의 dynamic subset CSS를 쓴다.
+Type scale (`fontSize`): `title` 20/28/700, `card-title` 16/24/600, `body` 14/20/400, `caption` 12/16/400, `badge` 12/16/600. Display (Jua, 400만, 고정 문구만): `display-home` 32/40(2026-10-30, (k), 이전 28/36), `display-title` 22/28, `display-logo` 20/28(디자인 시스템 `Logo` 가로 조합 미리보기의 글자에만 쓴다. 코드의 가로 조합은 윤곽선 그림이라 쓰지 않는다). `display-detail` 24/32/700은 Pretendard(상세 제목). Line-heights are derived by the designer, not in the brief. 코드는 이 값들을 `@theme`의 `--text-*`에 숫자로 복사해 `text-title` 같은 유틸리티로 쓴다(복사라 tokens.json이 바뀌면 함께 고친다). 글꼴: 이 디자인 시스템에는 미리보기용 `fonts/PretendardVariable.woff2`(약 2MB)가 있지만, 저장소에는 글꼴 파일을 두지 않고 앱은 `pretendard` 패키지의 dynamic subset CSS를 쓴다.
 
 `status.protected.DEFAULT` etc. are for dots and points only. Text uses `status-*-text`.
 
@@ -506,7 +506,7 @@ EL 결정. 목표는 처음 온 사람에게 좋은 첫인상을 주는 것이�
 | 1.34 / 1.46 | 기존 인사(강아지 놀자 자세, 고양이 씰룩 → 덮치기) | `characters.md` "들어올 때 동작" 그대로. 이어서 대기, 약 10초 뒤 잠 |
 
 **질문 글자**
-- "오늘은 누구를 / 보러 왔어요?" 두 줄(줄바꿈 자리 고정), Jua 32/40. 지금 `display-home` 28/36 한 줄에서 바꾼다. 구현할 때 tokens.json `display-home`을 32/40으로 고친다.
+- "오늘은 누구를 / 보러 왔어요?" 두 줄(줄바꿈 자리 고정), Jua 32/40. 이전 `display-home` 28/36 한 줄에서 바꿨다. tokens.json `display-home`은 32/40으로 고쳤다(2026-10-30, 2단계 전).
 - 글자는 같아서 Jua 부분 글꼴은 다시 만들지 않아도 된다.
 
 **로고에 새로 필요한 것**
@@ -542,7 +542,7 @@ EL 결정. 목표는 처음 온 사람에게 좋은 첫인상을 주는 것이�
 
 | 단계 | 할 일 | 확인 |
 |---|---|---|
-| 1 | 로고를 부위(강아지 얼굴·귀·입, 소리 선, 고양이 눈)로 나눈 인라인 SVG 컴포넌트로 바꾼다. 입과 소리 선은 숨긴 채로 | 정지 상태가 지금 가로 조합 그림과 같아 보이는지(나란히 캡처), 접근성 이름이 `SERVICE_NAME`인지 |
+| 1 | 로고를 부위(강아지 얼굴·귀·입, 소리 선, 고양이 눈)로 나눈 인라인 SVG 컴포넌트로 바꾼다. 입과 소리 선은 숨긴 채로 | 정지 상태가 지금 가로 조합 그림과 같아 보이는지(나란히 캡처), 접근성 이름이 `SERVICE_NAME`인지. **구현됨(2026-10-30, PR #119, main `bfbf494`)**: 코드 `shared/ui/logo-lockup-drawing.tsx`, 56px 이상 가로 조합만 인라인. `<img>`와 인라인은 Chromium의 선 가장자리 그리기가 달라 로고 영역 약 3.7%(3배, 3,178픽셀)가 가장자리에서 다르다. 같은 방식으로 그리면 차이 0, 눈으로는 구분되지 않음. `<img>`일 때 높이 56.14px이던 것이 56px이 됨 |
 | 2 | 질문을 Jua 32/40 두 줄로, tokens.json `display-home` 32/40 | 390·375 폭 캡처, 부분 글꼴에 빠진 글자가 없는지 |
 | 3 | Rive 파일에 `firstVisit` 입력과 올려다보기 구간을 더한다. 인사는 그대로 | Rive 미리보기에서 true / false 두 흐름, 어느 상태에서든 `press` |
 | 4 | 홈 장면 조립: 첫 진입 판단(세션 저장소), Rive 준비 대기(최대 0.3초), CSS 시간표, 대체 규칙 | 첫 진입 / 두 번째 진입 / 새로고침 / Rive를 늦게 받을 때(네트워크 느리게) / 움직임 줄이기 / 장면 중 누름 |
