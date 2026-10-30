@@ -12,7 +12,7 @@
 .caption{font-family:var(--font-sans);font-size:12px;line-height:16px;font-weight:400;}
 .badge{font-family:var(--font-sans);font-size:12px;line-height:16px;font-weight:600;}
 .display-detail{font-family:var(--font-sans);font-size:24px;line-height:32px;font-weight:700;}
-.display-home{font-family:var(--font-display);font-size:28px;line-height:36px;font-weight:400;}
+.display-home{font-family:var(--font-display);font-size:32px;line-height:40px;font-weight:400;}
 .display-title{font-family:var(--font-display);font-size:22px;line-height:28px;font-weight:400;}
 .display-logo{font-family:var(--font-display);font-size:20px;line-height:28px;font-weight:400;}
 /* ── 토큰 끝 ── */
@@ -153,8 +153,8 @@
   --text-badge--font-weight: 600;
   /* 제목(tokens.css의 .display-*와 같은 크기). 글꼴은 Jua 셋은 displayFont.className(src/shared/ui/display-font.ts)으로 따로 준다.
      display-detail은 Pretendard 700이다(토큰 .display-detail과 같다, architecture.md 14.1) */
-  --text-display-home: 28px;
-  --text-display-home--line-height: 36px;
+  --text-display-home: 32px;
+  --text-display-home--line-height: 40px;
   --text-display-home--font-weight: 400;
   --text-display-title: 22px;
   --text-display-title--line-height: 28px;

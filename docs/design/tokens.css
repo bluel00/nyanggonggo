@@ -6,6 +6,6 @@
 .caption{font-family:var(--font-sans);font-size:12px;line-height:16px;font-weight:400;}
 .badge{font-family:var(--font-sans);font-size:12px;line-height:16px;font-weight:600;}
 .display-detail{font-family:var(--font-sans);font-size:24px;line-height:32px;font-weight:700;}
-.display-home{font-family:var(--font-display);font-size:28px;line-height:36px;font-weight:400;}
+.display-home{font-family:var(--font-display);font-size:32px;line-height:40px;font-weight:400;}
 .display-title{font-family:var(--font-display);font-size:22px;line-height:28px;font-weight:400;}
 .display-logo{font-family:var(--font-display);font-size:20px;line-height:28px;font-weight:400;}

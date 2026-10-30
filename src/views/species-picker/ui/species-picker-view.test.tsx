@@ -6,6 +6,18 @@ import { SpeciesPickerView } from "./species-picker-view";
 
 afterEach(cleanup);
 
+describe("SpeciesPickerView: 질문 두 줄(#115)", () => {
+  it("질문은 \"오늘은 누구를 / 보러 왔어요?\" 두 줄로 고정하고, 접근성 이름·글자 내용은 한 문장이다", () => {
+    render(<SpeciesPickerView area={{}} />);
+    const heading = screen.getByRole("heading", { level: 1, name: "오늘은 누구를 보러 왔어요?" });
+    expect(heading.textContent).toBe("오늘은 누구를 보러 왔어요?");
+    const lines = [...heading.children];
+    expect(lines.map((line) => line.textContent)).toEqual(["오늘은 누구를", "보러 왔어요?"]);
+    for (const line of lines) expect(line.className.split(" ")).toEqual(expect.arrayContaining(["block", "whitespace-nowrap"]));
+    expect(heading.className).toContain("text-display-home");
+  });
+});
+
 describe("SpeciesPickerView: 위쪽 로고와 한 줄 소개(#64, #66)", () => {
   it("로고(가로 조합 56, 이름은 서비스 이름) 아래에 한 줄 소개를 두 줄로 보인다. 둘 다 등장 효과가 없다", () => {
     render(<SpeciesPickerView area={{}} />);

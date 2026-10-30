@@ -4,15 +4,18 @@ import { cn } from "@/shared/lib/utils";
 /**
  * 화면 틀: 헤더 줄 + 본문(`main`). 안전 영역 위쪽은 헤더 줄이 맡는다(sticky 헤더가 노치 영역까지 바탕을 칠한다).
  *
- * center: 본문을 남은 영역이 아니라 **화면 전체**의 세로 가운데에 둔다(홈). 세 줄 격자(1fr / 본문 / 1fr)의 첫 줄에 헤더를 두어
- * 위아래 빈 줄이 같은 높이가 되게 한다. 헤더 높이를 따로 적지 않으므로 헤더 내용(서비스 이름·한 줄 소개·로고)이 바뀌어도 맞는다.
- * 헤더가 남은 높이의 절반보다 크면 첫 줄이 헤더만큼 늘어 본문이 아래로 밀린다(겹치지 않는다). 아래 안전 영역도 비운다.
+ * center: 본문을 남은 영역이 아니라 **화면 전체**의 세로 가운데에 둔다(홈). 세 줄 격자(1fr / 본문 / minmax(0,1fr))의 첫 줄에 헤더를 두어
+ * 공간이 넉넉하면 위아래 빈 줄이 같은 높이가 되게 한다. 헤더 높이를 따로 적지 않으므로 헤더 내용(서비스 이름·한 줄 소개·로고)이 바뀌어도 맞는다.
+ * 넘치지 않는 것이 가운데보다 먼저다(#115, EL 결정 2026-10-30): 짧은 화면에서는 아래 빈 줄만 0까지 줄고, 위 빈 줄은 헤더 높이보다
+ * 줄지 않는다(겹치지 않는다). 그때 본문은 가운데보다 조금 아래에 놓인다. 아래 안전 영역도 비운다.
+ * 높이는 min-h가 아니라 h-full이다: 높이가 정해지지 않은 격자는 fr 줄을 가장 큰 줄(헤더)에 맞춰 같게 늘려 아래 줄이 줄지 않는다.
+ * 그래도 본문이 화면보다 크면 격자 밖으로 넘치고 바깥 스크롤 영역이 스크롤한다.
  * 목록·찜은 아래 안전 영역을 비우지 않는다(handoff: 하단 34px은 시트·CTA 바만).
  */
 export function ScreenShell({ header, children, center = false }: { header: ReactNode; children: ReactNode; center?: boolean }) {
   if (center) {
     return (
-      <div className="grid min-h-full grid-rows-[1fr_auto_1fr] pb-[env(safe-area-inset-bottom,0px)]">
+      <div className="grid h-full grid-rows-[1fr_auto_minmax(0,1fr)] pb-[env(safe-area-inset-bottom,0px)]">
         <div className="self-start">{header}</div>
         <main className="flex flex-col">{children}</main>
       </div>
