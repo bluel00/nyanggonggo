@@ -6,6 +6,7 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetCharacterAnimationForTest } from "@/entities/animal/lib/character-animation";
+import { HOME_SCENE_SEEN_KEY } from "../model/home-scene";
 import { SpeciesChoice } from "./species-choice";
 
 const runtime = vi.hoisted(() => ({
@@ -89,7 +90,7 @@ const images = () => document.querySelectorAll<HTMLImageElement>('[data-slot="ch
 
 describe("홈 캐릭터 Rive", () => {
   // 이 묶음은 두 번째 진입(지금 등장 + 인사)을 본다. 첫 진입이면 대체 타이머가 남아 다음 테스트의 장면을 바꾼다
-  beforeEach(() => sessionStorage.setItem("nyanggonggo.home-scene-seen", "1"));
+  beforeEach(() => sessionStorage.setItem(HOME_SCENE_SEEN_KEY, "1"));
 
   it("움직임 줄이기 설정이면 런타임을 import하지 않고 .riv·WASM도 받지 않는다(정지 이미지만)", async () => {
     setReducedMotion(true);
@@ -155,7 +156,7 @@ describe("홈 첫인상 장면", () => {
     runtime.holdLoad = true;
     render(<SpeciesChoice area={{ region: "6110000" }} enterFrom={1} />);
     expect(scene()).toBe("pending");
-    expect(sessionStorage.getItem("nyanggonggo.home-scene-seen")).toBe("1");
+    expect(sessionStorage.getItem(HOME_SCENE_SEEN_KEY)).toBe("1");
     await waitFor(() => expect(runtime.pendingLoads).toHaveLength(2));
     act(() => runtime.pendingLoads[0]());
     expect(runtime.started).toEqual([]);
@@ -168,7 +169,7 @@ describe("홈 첫인상 장면", () => {
 
   it("두 번째 진입: 장면 없이(속성 없음) 지금 등장이 끝난 뒤 firstVisit = false로 시작한다", async () => {
     setReducedMotion(false);
-    sessionStorage.setItem("nyanggonggo.home-scene-seen", "1");
+    sessionStorage.setItem(HOME_SCENE_SEEN_KEY, "1");
     render(<SpeciesChoice area={{ region: "6110000" }} enterFrom={1} />);
     expect(scene()).toBeNull();
     await waitFor(() => expect(runtime.started).toHaveLength(2));
@@ -217,7 +218,7 @@ describe("홈 첫인상 장면", () => {
     setReducedMotion(true);
     render(<SpeciesChoice area={{ region: "6110000" }} enterFrom={1} />);
     expect(scene()).toBeNull();
-    expect(sessionStorage.getItem("nyanggonggo.home-scene-seen")).toBe("1");
+    expect(sessionStorage.getItem(HOME_SCENE_SEEN_KEY)).toBe("1");
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 20));
     });

@@ -61,13 +61,13 @@ test("첫 진입: 장면이 돌고(pending → play) 두 캐릭터가 firstVisit
     ),
   );
   expect(delays).toEqual([[260], [340], [420], [520], [580], [640]]);
-  // 로고 속 강아지 "멍"(0.12), 고양이 눈 힐끗(0.30), 기타 동물 셋 까딱(1.18/1.25/1.32)
+  // 로고 속 강아지 "멍"(얼굴 0.12, 귀 0.14, 입 0.15, 소리 선 0.18), 고양이 눈 힐끗(0.30), 기타 동물 셋 까딱(1.18/1.25/1.32)
   const logo = await page.evaluate(() =>
     ["dog", "dog-ear", "dog-mouth", "bark-lines", "cat-eyes"].map((part) =>
       document.querySelector(`[data-slot="logo"] [data-part="${part}"]`)!.getAnimations().map((a) => Math.round(Number((a.effect as KeyframeEffect).getTiming().delay))),
     ),
   );
-  expect(logo).toEqual([[120], [120], [120], [120], [300]]);
+  expect(logo).toEqual([[120], [140], [150], [180], [300]]);
   const bob = await page.evaluate(() =>
     [...document.querySelectorAll('[data-slot="other-characters"] > img')].map((img) => img.getAnimations().map((a) => Math.round(Number((a.effect as KeyframeEffect).getTiming().delay)))),
   );

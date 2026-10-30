@@ -11,12 +11,13 @@
  * 대체 타이머도 건다. 그래서 JS 번들이 늦거나 실패해도 0.3초 뒤에는 지금 등장으로 보인다. 앱 안에서 이동해 홈이 클라이언트에서
  * 그려질 때는 같은 함수를 effect에서 부른다(인라인 스크립트는 클라이언트 렌더에서 돌지 않는다).
  *
- * 첫 진입 기록은 정하는 순간 남긴다(장면을 돌든, 대체로 넘어가든, 움직임 줄이기든). 키는 handoff (k)대로 `nyanggonggo.` 접두어다.
+ * 첫 진입 기록은 정하는 순간 남긴다(장면을 돌든, 대체로 넘어가든, 움직임 줄이기든). 키는 handoff (k)대로 세션 저장소의 기존 키와 같은
+ * `nyanggonggo:` 접두어다(`nyanggonggo:visited-list`, shared/lib/app-navigation.ts).
  */
 export const HOME_SCENE_ATTR = "data-home-scene";
 
 /** 이 세션에서 홈 첫 진입을 썼는지(sessionStorage, 값 "1") */
-export const HOME_SCENE_SEEN_KEY = "nyanggonggo.home-scene-seen";
+export const HOME_SCENE_SEEN_KEY = "nyanggonggo:home-scene-seen";
 
 /** 홈이 보인 뒤 Rive를 기다리는 최대 시간. 넘으면 장면 없이 지금처럼 보인다(handoff (k) "장면의 0초와 대체 규칙") */
 export const HOME_SCENE_WAIT_MS = 300;
