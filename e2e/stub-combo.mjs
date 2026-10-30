@@ -50,6 +50,13 @@ export function parseComboId(id) {
 export const SLOW_LIST_MS = 1500;
 export const SLOW_REGIONS = ["6270000", "6280000", "6300000", "6310000", "6430000", "6440000", "6470000", "6540000"];
 
+/**
+ * 로딩 캐릭터를 보는 조합(#111). 이 시도의 공공 API 목록 응답을 WAIT_LIST_MS 늦춘다(캐릭터가 나오는 500ms보다 길다).
+ * 서버 페이지 캐시는 시군구까지 키라서 테스트마다 다른 시군구를 쓴다(e2e/loading.spec.ts). 다른 테스트가 쓰지 않는 시도다.
+ */
+export const WAIT_LIST_MS = 1000;
+export const WAIT_REGION = "6530000";
+
 /** 고정 목록의 id 접두어(e2e/upstream-stub.mjs의 고정 공고 id와 같아야 한다) */
 const FIXED_LIST_PREFIX = [
   { species: "dog", region: "5690000", prefix: "9900002026010" },

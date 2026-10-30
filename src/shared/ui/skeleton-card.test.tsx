@@ -22,4 +22,23 @@ describe("SkeletonCard", () => {
     expect(lines[0]).not.toContain("mt-");
     expect(container.querySelector('[data-slot="skeleton-line"]')!.parentElement!.className).toBe("px-3 pt-2.5 pb-3");
   });
+
+  it("사진 칸과 막대 셋에 첫 프레임부터 로딩 시머가 있다(handoff (j) L1)", () => {
+    const { container } = render(<SkeletonCard />);
+    const shimmering = [...container.querySelectorAll("[data-shimmer]")];
+    expect(shimmering).toHaveLength(4);
+    expect(shimmering[0].getAttribute("data-slot")).toBe("skeleton-photo");
+  });
+
+  it("기본은 카드 전체를 읽기에서 숨기고, wait가 있으면 사진 칸 가운데에 두고 막대만 숨긴다", () => {
+    const plain = render(<SkeletonCard />).container.firstElementChild!;
+    expect(plain.getAttribute("aria-hidden")).toBe("true");
+    cleanup();
+
+    const { container } = render(<SkeletonCard wait={<p>기다려요</p>} />);
+    const card = container.firstElementChild!;
+    expect(card.hasAttribute("aria-hidden")).toBe(false);
+    expect(container.querySelector("[data-slot=\"skeleton-photo\"]")!.textContent).toBe("기다려요");
+    expect(container.querySelector("[data-slot=\"skeleton-line\"]")!.parentElement!.getAttribute("aria-hidden")).toBe("true");
+  });
 });

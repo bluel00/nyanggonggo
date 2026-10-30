@@ -61,6 +61,8 @@ export const ANIMAL_COPY = {
   /** 찜 목록 위 한 줄. 일부 공고만 오류로 받지 못했을 때(이슈 #5) */
   favoritesPartialError: "일부 공고를 불러오지 못했어요",
   detailErrorTitle: "지금은 공고를 불러오지 못했어요",
+  /** 목록 첫 페이지가 늦을 때 로딩 캐릭터 아래 문구(handoff (j) L2) */
+  listLoading: "공고를 불러오고 있어요",
   /* 상세 정보 줄의 이름과 줄 끝 링크 문구는 줄 규칙과 함께 ui/detail-rows.ts에 있다(이슈 #30) */
   /** 나이를 모를 때 */
   ageUnknown: "나이 미상",

@@ -15,6 +15,8 @@ import {
   parseComboId,
   SLOW_LIST_MS,
   SLOW_REGIONS,
+  WAIT_LIST_MS,
+  WAIT_REGION,
 } from "./stub-combo.mjs";
 
 const IMAGE_HOST = "openapi.animal.go.kr";
@@ -258,6 +260,8 @@ globalThis.fetch = async function stubFetch(input) {
       comboItems(params.get("upkind"), region, district);
     // 뼈대를 붙잡아 두는 조합(e2e/stub-combo.mjs)
     if (region && SLOW_REGIONS.includes(region)) await new Promise((resolve) => setTimeout(resolve, SLOW_LIST_MS));
+    // 로딩 캐릭터를 보는 조합(e2e/stub-combo.mjs)
+    if (region === WAIT_REGION) await new Promise((resolve) => setTimeout(resolve, WAIT_LIST_MS));
     return upstreamPage(mine.slice((pageNo - 1) * rows, pageNo * rows), mine.length, pageNo, rows);
   }
   if (url.hostname === IMAGE_HOST) {
