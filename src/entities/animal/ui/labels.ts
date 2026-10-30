@@ -40,13 +40,18 @@ export const SPECIES_COPY: Record<Animal["species"], SpeciesCopy> = {
   },
 };
 
+/** 홈 질문의 두 줄. 화면 폭과 상관없이 이 자리에서만 끊는다(handoff (k) "질문 글자", 용어 사전 "홈") */
+const HOME_TITLE_LINES = ["오늘은 누구를", "보러 왔어요?"] as const;
+
 /**
  * 축종이 섞이는 화면(찜 목록), 축종을 알 수 없는 화면(상세 조회 실패), 축종을 고르는 화면(홈)의 문구. 축종 중립이다.
  * 찜 목록은 고양이, 강아지가 함께 들어오므로 명세 4.5.2의 "고양이" 문구를 "공고"로 바꿔 쓴다.
  */
 export const ANIMAL_COPY = {
-  /** 홈(축종 선택) 화면. 문구는 시안("냥공고 홈 · 축종 선택"의 Main) 그대로다 */
-  homeTitle: "오늘은 누구를 보러 왔어요?",
+  /** 홈(축종 선택) 화면. 문구는 시안("냥공고 홈 · 축종 선택"의 Main) 그대로다. 문서 제목·접근성 이름은 한 문장으로 읽힌다 */
+  homeTitle: HOME_TITLE_LINES.join(" "),
+  /** 화면에 그리는 두 줄(Jua 32/40, #115) */
+  homeTitleLines: HOME_TITLE_LINES,
   /** 시안의 줄바꿈을 지킨다. 화면은 `whitespace-pre-line`으로 그린다 */
   homeDescription: "한 번 고르면 기억해둘게요.\n목록에서 언제든 바꿀 수 있어요.",
   /** 목록 헤더의 홈 진입점 링크 이름(aria-label). 타이틀 뒤에 붙여 "고양이 공고, 다른 동물 고르기"로 읽힌다(시안 Header-A) */

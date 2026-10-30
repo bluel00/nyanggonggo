@@ -37,13 +37,19 @@ export function SpeciesPickerView({ area }: { area: AnimalArea }) {
   );
 }
 
-/** 제목과 부제. 함께 등장한다(순서 0) */
+/**
+ * 제목과 부제. 함께 등장한다(순서 0).
+ * 제목은 두 줄로 고정한다(handoff (k) "질문 글자"): 줄마다 블록으로 두고 줄 안에서는 끊지 않는다. 두 줄 사이의 공백 글자는 화면에서는
+ * 블록 사이라 그려지지 않고, 글자 내용과 접근성 이름은 "오늘은 누구를 보러 왔어요?" 한 문장이 된다.
+ */
 function HomeIntro() {
+  const [first, second] = ANIMAL_COPY.homeTitleLines;
   return (
     // data-enter="home"은 app/globals.css의 [data-enter="home"]이 읽는다
     <div data-enter="home" style={enterOrder(0)} className="flex flex-col gap-2 text-center">
       <DisplayText as="h1" size="home">
-        {ANIMAL_COPY.homeTitle}
+        <span className="block whitespace-nowrap">{first}</span>{" "}
+        <span className="block whitespace-nowrap">{second}</span>
       </DisplayText>
       <p className="whitespace-pre-line text-body text-text-2">{ANIMAL_COPY.homeDescription}</p>
     </div>
