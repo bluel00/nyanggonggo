@@ -20,8 +20,10 @@ async function openSheet(page: Page) {
   await page.goto(LIST_URL);
   await page.getByRole("button", { name: "필터" }).click();
   await expect(page.locator(SHEET)).toBeVisible();
-  // 올라오는 움직임(duration-sheet)이 끝난 자리에서 잰다
-  await page.waitForFunction(() => document.getAnimations().every((a) => a.playState !== "running"));
+  // 올라오는 움직임(duration-sheet)이 끝난 자리에서 잰다. 끝이 없는 것(아직 받지 않은 사진 칸의 로딩 시머, #111)은 기다리지 않는다
+  await page.waitForFunction(() =>
+    document.getAnimations().every((a) => a.playState !== "running" || a.effect?.getComputedTiming().endTime === Infinity),
+  );
   return page.getByRole("button", { name: "적용하기" });
 }
 

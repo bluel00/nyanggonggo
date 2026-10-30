@@ -14,6 +14,9 @@ import { APP_SCROLL_SELECTOR } from "@/shared/ui/app-shell";
  */
 export const LIST_ENTER_ATTR = "data-list-enter";
 
+/** 첫 화면 등장의 CSS 애니메이션 이름(app/globals.css @keyframes enter-rise) */
+const ENTER_ANIMATION = "enter-rise";
+
 /** 서버가 그린 첫 페이지 목록에 붙는 속성(CSS가 읽는다) */
 export const LIST_FIRST_ATTR = "data-list-first";
 
@@ -52,12 +55,17 @@ export function markListEnterFrom(feed: Element | null): void {
   markListEnter(feed, SKELETON_CARD_SELECTOR, APP_SCROLL_SELECTOR, LIST_ENTER_ATTR, LIST_ENTER_MAX);
 }
 
-/** 서버 첫 페이지의 등장이 다 돌면(또는 돌 것이 없으면) 표시를 지운다 */
+/**
+ * 서버 첫 페이지의 등장이 다 돌면(또는 돌 것이 없으면) 표시를 지운다. 등장(ENTER_ANIMATION)만 기다린다: 목록 안에는 끝나지 않는
+ * 애니메이션(사진이 로드되기 전의 로딩 시머, #111)도 있다
+ */
 export function clearListEnterWhenDone(feed: Element | null): () => void {
   const root = document.documentElement;
   if (!root.hasAttribute(LIST_ENTER_ATTR) || !feed) return () => {};
   let cancelled = false;
-  const running = feed.getAnimations({ subtree: true }).filter((animation) => animation.playState !== "finished");
+  const running = feed
+    .getAnimations({ subtree: true })
+    .filter((animation) => (animation as CSSAnimation).animationName === ENTER_ANIMATION && animation.playState !== "finished");
   void Promise.allSettled(running.map((animation) => animation.finished)).then(() => {
     if (!cancelled) root.removeAttribute(LIST_ENTER_ATTR);
   });

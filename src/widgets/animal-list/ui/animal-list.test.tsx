@@ -76,8 +76,9 @@ describe("AnimalList", () => {
     });
     const { container } = renderList();
 
-    // 로딩 중에는 스켈레톤 3개
+    // 로딩 중에는 스켈레톤 3개(클라이언트 조회 대기도 첫 장에 로딩 캐릭터)
     expect(container.querySelectorAll('[data-slot="skeleton-card"]')).toHaveLength(3);
+    expect(container.querySelectorAll('[data-slot="loading-character"]')).toHaveLength(1);
     await screen.findByText("지역1");
     expect(listRequests()).toHaveLength(1);
     expect(listRequests()[0].searchParams.has("page")).toBe(false);
@@ -91,6 +92,19 @@ describe("AnimalList", () => {
     triggerSentinel();
     await waitFor(() => expect(container.querySelectorAll('[data-slot="animal-card"]')).toHaveLength(3));
     expect(listRequests()).toHaveLength(2);
+  });
+
+  it("다음 페이지 뼈대는 시머만이고 로딩 캐릭터가 없다(handoff (j) L3)", async () => {
+    fetchMock.mockImplementation(async (input) => {
+      const cursor = new URL(String(input), "http://localhost").searchParams.get("cursor");
+      return cursor === null ? Response.json({ items: [wire("1")], nextCursor: "Mg" }) : new Promise<Response>(() => {});
+    });
+    const { container } = renderList();
+    await screen.findByText("지역1");
+    triggerSentinel();
+    await waitFor(() => expect(container.querySelectorAll('[data-slot="skeleton-card"]')).toHaveLength(1));
+    expect(container.querySelector('[data-slot="skeleton-card"] [data-shimmer]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="loading-character"]')).toBeNull();
   });
 
   it("다음 페이지를 붙인 뒤에도 sentinel이 범위 안이면 이어서 부른다(감시를 페이지마다 새로 건다)", async () => {
@@ -276,6 +290,23 @@ describe("AnimalList: 서버가 읽은 첫 페이지(#109)", () => {
     fetchMock.mockImplementation(async () => Response.json({ items: [wire("5")], nextCursor: null }));
     fireEvent.click(screen.getByRole("button", { name: "다시 시도" }));
     expect(await screen.findByText("지역5")).toBeTruthy();
+  });
+
+  it.each([
+    ["고양이", { species: "cat", status: "protected" }, "cat"],
+    ["강아지 상태 전체", { species: "dog", status: "all" }, "dog"],
+    ["기타 동물", { species: "other", status: "protected" }, null],
+    ["종료 필터", { species: "cat", status: "ended" }, null],
+  ] as const)("로딩 캐릭터(handoff (j) L2·L3): %s 첫 페이지 뼈대", async (_, partial, expected) => {
+    const client = createQueryClient();
+    const wrapper = ({ children }: { children: ReactNode }) => <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+    const { container } = await act(async () =>
+      render(<AnimalList filter={{ ...filter, ...partial }} firstPage={new Promise<AnimalListFirstPage>(() => {})} />, { wrapper }),
+    );
+    const characters = [...container.querySelectorAll<HTMLElement>('[data-slot="loading-character"]')];
+    expect(characters.map((el) => el.dataset.species)).toEqual(expected ? [expected] : []);
+    // 첫 장 사진 칸에만
+    if (expected) expect(characters[0].closest('[data-slot="skeleton-card"]')).toBe(container.querySelector('[data-slot="skeleton-card"]'));
   });
 
   it("뼈대 목록 맨 끝에 첫 화면 등장 표시 스크립트가 있다(문서로 처음 열 때 하이드레이션 없이 돈다)", async () => {

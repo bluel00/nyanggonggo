@@ -6,7 +6,8 @@ import { PHOTO_BOX_RATIO } from "../model/photo-box";
 import { BottomCtaBar, DetailPhotoArea } from "./detail-frame";
 
 /**
- * 상세 뼈대(명세 7.1, 스켈레톤은 SkeletonCard와 같은 status-ended-bg 면, 움직임 없음).
+ * 상세 뼈대(명세 7.1, 스켈레톤은 SkeletonCard와 같은 status-ended-bg 면). 모든 블록·줄에 첫 프레임부터 로딩 시머가 지나가고
+ * 로딩 캐릭터는 두지 않는다(handoff (j) L1·L3, `data-shimmer`는 app/globals.css).
  *
  * 두 곳이 같은 뼈대를 쓴다: 라우트 로딩 경계(`app/animals/[id]/loading.tsx`, 카드를 누른 즉시)와
  * 상세 위젯의 조회 대기(`useAnimal`이 pending). 그래서 뼈대 → 실제 상세로 바뀔 때 레이아웃이 튀지 않게
@@ -27,7 +28,7 @@ export function AnimalDetailSkeleton({ photoRatio = PHOTO_BOX_RATIO.unknown }: {
   return (
     <div data-slot="detail-skeleton" aria-busy="true" className="flex min-h-full flex-col">
       <DetailPhotoArea back={<BackButton onClick={goBack} href={routes.entry()} />}>
-        <div aria-hidden data-slot="detail-skeleton-photo" className="rounded-card bg-status-ended-bg" style={{ aspectRatio: photoRatio }} />
+        <div aria-hidden data-slot="detail-skeleton-photo" data-shimmer="" className="rounded-card bg-status-ended-bg" style={{ aspectRatio: photoRatio }} />
         <div aria-hidden className="pt-3">
           <div className="h-1.5" />
         </div>
@@ -35,20 +36,20 @@ export function AnimalDetailSkeleton({ photoRatio = PHOTO_BOX_RATIO.unknown }: {
 
       <div aria-hidden className="flex-1 px-page pt-4 pb-6">
         <div className="flex h-7 items-center">
-          <div className="h-6 w-24 rounded-pill bg-status-ended-bg" />
+          <div data-shimmer="" className="h-6 w-24 rounded-pill bg-status-ended-bg" />
         </div>
-        <div data-slot="detail-title" className="mt-3 h-8 w-2/3 rounded-[7px] bg-status-ended-bg" />
-        <div className="mt-1 h-5 w-1/3 rounded-[6px] bg-status-ended-bg" />
+        <div data-slot="detail-title" data-shimmer="" className="mt-3 h-8 w-2/3 rounded-[7px] bg-status-ended-bg" />
+        <div data-shimmer="" className="mt-1 h-5 w-1/3 rounded-[6px] bg-status-ended-bg" />
         <div className="mt-6 flex flex-col gap-3">
           {["w-3/4", "w-2/3", "w-1/2"].map((width) => (
-            <div key={width} className={`h-5 rounded-[6px] bg-status-ended-bg ${width}`} />
+            <div key={width} data-shimmer="" className={`h-5 rounded-[6px] bg-status-ended-bg ${width}`} />
           ))}
         </div>
       </div>
 
       <BottomCtaBar aria-hidden>
-        <div className="size-touch flex-none rounded-pill bg-status-ended-bg" />
-        <div className="min-h-touch flex-1 rounded-pill bg-status-ended-bg" />
+        <div data-shimmer="" className="size-touch flex-none rounded-pill bg-status-ended-bg" />
+        <div data-shimmer="" className="min-h-touch flex-1 rounded-pill bg-status-ended-bg" />
       </BottomCtaBar>
     </div>
   );

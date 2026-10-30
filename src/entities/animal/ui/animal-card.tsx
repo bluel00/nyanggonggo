@@ -24,6 +24,7 @@ import { StatusBadge } from "./status-badge";
  *   등장 효과는 목록 위젯이 첫 화면 카드에만 붙인다(data-enter, 여기서는 하지 않는다). 움직이지 않는 카드(allowsMotion)에는
  *   ANIMAL_CARD_STILL_ATTR를 달아 목록이 등장에서 뺀다
  * - 사진 1:1 cover, 가운데(center). 이미지 프록시 경유 plain img(lazy). 종료 공고는 saturate(.7), 딤 없음.
+ *   사진이 로드될 때까지 칸에 로딩 시머(종료 카드 포함, handoff (j) L4, AnimalPhoto shimmer)
  *   4:5 center 35%는 4:3 가로 사진(약 절반)에서 한쪽에 치우친 동물의 얼굴을 잘라 1:1로 바꿨다(architecture.md 12절 51)
  * - 배지: 사진 좌상단(12px), photo-pill 배경. 문구는 상태 표기(statusBadgeText) 그대로다(종료 공고는 "종료 · <결과>"이고 D-day가 없다)
  * - 텍스트: Domain에 이름이 없어 1줄은 지역(regionText), 2줄은 보호소(없으면 발견 장소). 명세의 "지역 · 보호소"를
@@ -93,7 +94,7 @@ export function AnimalCard({
   const [departing, setDeparting] = useState<CardSelection>(null);
   const photo = (
     <div className="relative aspect-square overflow-hidden bg-status-ended-bg">
-      <AnimalPhoto src={getPrimaryImage(animal)} alt={alt} ended={ended} priority={priority} highPriority={highPriority} sizes={PHOTO_SIZES.card} />
+      <AnimalPhoto src={getPrimaryImage(animal)} alt={alt} ended={ended} priority={priority} highPriority={highPriority} sizes={PHOTO_SIZES.card} shimmer />
       {href && departing && (
         <DepartingPhoto id={animal.id} href={href} src={departing.photoSrc} onArrived={() => setDeparting(null)} />
       )}

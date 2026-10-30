@@ -9,4 +9,5 @@
 - **Press.** `press-scale` and `shadow-card-pressed` over `press-duration`, only when the card link is pressed.
 - **Ended cards.** saturate(0.7) on the photo only, no dim, `shadow-card-ended`, and no press, entrance or transition effect; the heart only toggles its fill.
 - **Card → detail.** Only list (`/`) cards run the transition (see README motion table). 관심 공고 cards open the detail at once. If the tapped card's photo has not loaded yet, the detail opens straight to its skeleton.
+- **Photo loading.** Until its photo has loaded, the 1:1 block is `status-ended-bg` with the loading shimmer, on every card including ended ones (it says loading, it is not decoration). Each card's block stops on its own. See `SkeletonCard`.
 - Reduced motion: no effect. Never pass DTO fields or contact numbers to the card. Nothing else goes on the photo.

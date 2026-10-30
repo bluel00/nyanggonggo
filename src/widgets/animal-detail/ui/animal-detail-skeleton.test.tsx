@@ -57,3 +57,15 @@ describe("AnimalDetailSkeleton 뒤로가기(공고를 아직 모른다)", () => 
     expect(html).not.toContain("back-placeholder");
   });
 });
+
+describe("AnimalDetailSkeleton 로딩 시머(handoff (j) L1·L3)", () => {
+  it("모든 블록·줄(사진, 상태, 제목, 성별·나이, 정보 줄 셋, CTA 둘)에 시머가 있고 로딩 캐릭터는 없다", async () => {
+    const { AnimalDetailSkeleton } = await load();
+    const { container } = render(<AnimalDetailSkeleton />);
+    expect(container.querySelectorAll("[data-shimmer]")).toHaveLength(9);
+    expect(container.querySelector("[data-slot=\"detail-skeleton-photo\"]")!.hasAttribute("data-shimmer")).toBe(true);
+    expect(container.querySelector("[data-slot=\"loading-character\"]")).toBeNull();
+    // 색 면이 있는 블록은 모두 시머다
+    for (const block of container.querySelectorAll(".bg-status-ended-bg")) expect(block.hasAttribute("data-shimmer")).toBe(true);
+  });
+});

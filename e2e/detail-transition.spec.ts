@@ -35,7 +35,8 @@ async function watchTransitions(page: Page) {
     const tick = () => {
       for (const animation of document.getAnimations()) {
         const effect = animation.effect as KeyframeEffect | null;
-        if (!effect?.pseudoElement || seen.has(animation)) continue;
+        // 전환 의사 요소만 본다(로딩 시머 ::after 등은 빼고, #111)
+        if (!effect?.pseudoElement?.startsWith("::view-transition") || seen.has(animation)) continue;
         seen.add(animation);
         const first = effect.getKeyframes()[0] as { width?: string; height?: string } | undefined;
         const from = first?.width && first.height ? { width: first.width, height: first.height } : undefined;

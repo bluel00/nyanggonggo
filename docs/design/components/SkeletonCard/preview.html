@@ -1,9 +1,12 @@
-<!-- @dsCard group="Feedback" height=420 subtitle="1:1 block + three lines, flat card" -->
+<!-- @dsCard group="Feedback" height=440 subtitle="1:1 block + three lines, flat card, shimmer; character after 500ms" -->
 <div id="r" class="cn-root" style="padding:16px;background:var(--bg)"></div>
 <script>
 var N=window.CatNotice,h=React.createElement,S=function(t){return h('div',{style:{font:'12px var(--font-sans)',color:'var(--text-2)',margin:'0 0 6px'}},t)};
-var Row=function(p){return h('div',{style:{display:'flex',gap:12,alignItems:'center',flexWrap:'wrap',marginBottom:16}},p.children)};
+var Row=function(p){return h('div',{style:{display:'flex',gap:12,alignItems:'flex-start',flexWrap:'wrap',marginBottom:16}},p.children)};
 var Col=function(t,c,w){return h('div',{style:{width:w||'auto'}},S(t),c)};
-function App(){return h(Row,null,Col("loading",h(N.SkeletonCard),260))}
+var Slow=function(){return h('div',{className:'cn-skel'},
+  h('div',{className:'cn-skel__photo'},h('div',{className:'cn-skel__wait'},h('img',{src:'/_blob/c9952040a56f09c8d9765788c803624b',alt:'','aria-hidden':'true'}),h('p',{style:{fontSize:14,lineHeight:'20px'}},'공고를 불러오고 있어요'))),
+  h('div',{className:'cn-skel__lines'},h('div',{className:'cn-skel__line'}),h('div',{className:'cn-skel__line'}),h('div',{className:'cn-skel__line'})))};
+function App(){return h(Row,null,Col("loading (shimmer)",h(N.SkeletonCard),260),Col("loading, 500ms+ (cat list, first card)",h(Slow),260))}
 ReactDOM.createRoot(document.getElementById('r')).render(h(App));
 </script>

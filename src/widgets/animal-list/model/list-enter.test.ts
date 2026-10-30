@@ -58,7 +58,13 @@ describe("첫 화면 등장 표시(#109)", () => {
     document.documentElement.setAttribute(LIST_ENTER_ATTR, "2");
     let finish!: () => void;
     const finished = new Promise<void>((resolve) => (finish = resolve));
-    feed.getAnimations = () => [{ playState: "running", finished } as unknown as Animation];
+    // 끝나지 않는 로딩 시머(사진이 아직 로드되지 않은 칸, #111)는 기다리지 않는다
+    const never = new Promise<void>(() => {});
+    feed.getAnimations = () =>
+      [
+        { animationName: "enter-rise", playState: "running", finished },
+        { animationName: "shimmer", playState: "running", finished: never },
+      ] as unknown as Animation[];
     clearListEnterWhenDone(feed);
     await Promise.resolve();
     expect(document.documentElement.hasAttribute(LIST_ENTER_ATTR)).toBe(true);

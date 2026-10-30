@@ -9,7 +9,7 @@ import { ViewTransition } from "@/shared/ui/view-transition";
  * 상세 메인 사진. 칸은 부모가 좌우 24px 안쪽으로 두고, 여기서 radius-card로 자르고 칸 바깥 둘레에 shadow-photo를 둔다
  * (사진 위·안에는 그림자를 넣지 않는다. 종료 공고는 그림자 없음, 방향 A). 네이티브 CSS scroll-snap으로 좌우 스와이프한다(라이브러리 없음).
  * 사진은 잘리지 않는다(PRD v1.3): 모든 슬라이드가 같은 칸 비율(boxRatio, 첫 사진 비율을 3:4~4:3으로 제한, 모르면 1:1)이고
- * 사진은 그 칸 안에 contain, 빈 곳은 bg다. 칸 비율은 서버 HTML에 들어 있어 사진이 로드될 때 화면이 밀리지 않고, 넘겨도 높이가 같다.
+ * 사진은 그 칸 안에 contain, 빈 곳은 bg다. 사진이 로드될 때까지 그 장은 status-ended-bg에 로딩 시머다(장마다 따로, handoff (j) L4). 칸 비율은 서버 HTML에 들어 있어 사진이 로드될 때 화면이 밀리지 않고, 넘겨도 높이가 같다.
  * 현재 위치(index)는 부모가 들고 있다(뷰어를 닫으면 그 위치로 맞춘다, 명세 4.4.2).
  * 사진을 탭하면 onOpen(index). 1장이면 도트 없이 정적, 0장이면 카드와 같은 대체 UI.
  * 도트는 사진 아래(handoff 화면 3: 6px, 현재 text, 나머지 control-border, 간격 space-2). 도트 줄 자리(위 12px + 6px)는 사진 수와
@@ -98,7 +98,7 @@ export function ImageCarousel({
             onClick={() => onOpen(i)}
             aria-label={images.length > 1 ? `사진 크게 보기 (${i + 1}/${images.length})` : "사진 크게 보기"}
             style={{ aspectRatio: boxRatio }}
-            className="w-full shrink-0 snap-center bg-bg focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+            className="relative w-full shrink-0 snap-center bg-bg focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
           >
             <AnimalPhoto
               src={src}
@@ -110,6 +110,7 @@ export function ImageCarousel({
               sizes={PHOTO_SIZES.detail}
               knownSrc={i === 0 ? firstPhotoSrc : undefined}
               decodeSync={Boolean(firstPhotoSrc) && i === shownAtMount}
+              shimmer
             />
           </button>
         ))}

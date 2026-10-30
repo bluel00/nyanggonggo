@@ -13,6 +13,7 @@ import {
   DETAIL_ROW_LABELS,
   detailDisplayText,
   listFilterKey,
+  LoadingCharacter,
   seedAnimalDetail,
   seedAnimalsFirstPage,
   SPECIES_COPY,
@@ -41,7 +42,7 @@ const EAGER_CARDS = 2;
 
 /**
  * 무한 스크롤 목록(명세 4.1.4). 필터는 URL에서 파싱한 값을 prop으로 받는다. page는 URL에 없고 useInfiniteQuery의 커서다.
- * - 로딩: SkeletonCard 3개(handoff 화면 6), 다음 페이지 로딩도 스켈레톤을 이어 붙인다
+ * - 로딩: SkeletonCard 3개(handoff 화면 6, 첫 장에 로딩 캐릭터), 다음 페이지 로딩도 스켈레톤을 이어 붙인다(시머만)
  * - 끝: 아무것도 표시하지 않는다(명세 옵션 A, "끝났다"는 느낌을 주지 않음)
  * - 빈 결과 / 오류 문구는 handoff 화면 6. 다음 페이지 오류의 표시 방식은 디자인 미정이라 최소로 둔다
  */
@@ -49,7 +50,7 @@ export function AnimalList({ filter, firstPage }: { filter: AnimalListFilter; fi
   if (!firstPage) return <AnimalFeed filter={filter} />;
   return (
     // 목록(필터)마다 새 경계: 필터를 바꾸면 이 목록의 첫 페이지를 기다리는 동안 뼈대가 보인다
-    <Suspense key={listFilterKey(filter)} fallback={<FirstPageSkeleton />}>
+    <Suspense key={listFilterKey(filter)} fallback={<FirstPageSkeleton filter={filter} />}>
       <ServerFirstPage filter={filter} firstPage={firstPage} />
     </Suspense>
   );
@@ -81,14 +82,12 @@ const seededFirstPages = new WeakSet<Promise<AnimalListFirstPage>>();
  * 서버 첫 페이지를 기다리는 동안의 뼈대(첫 로드와 같은 3장). 뼈대가 실제로 칠해지면 첫 화면 등장 표시를 단다(model/list-enter.ts):
  * 문서로 처음 열 때는 맨 끝의 인라인 스크립트가, 앱 안에서 이동해 클라이언트가 그릴 때는 effect가 단다.
  */
-function FirstPageSkeleton() {
+function FirstPageSkeleton({ filter }: { filter: AnimalListFilter }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => markListEnterFrom(ref.current), []);
   return (
     <FeedList ref={ref}>
-      {Array.from({ length: INITIAL_SKELETONS }, (_, i) => (
-        <SkeletonCard key={i} />
-      ))}
+      <FirstPageSkeletonCards filter={filter} />
       <script dangerouslySetInnerHTML={{ __html: LIST_ENTER_SCRIPT }} />
     </FeedList>
   );
@@ -140,9 +139,7 @@ function AnimalFeed({ filter, serverFirstPage = false }: { filter: AnimalListFil
   if (query.isPending) {
     return (
       <FeedList ref={feedRef}>
-        {Array.from({ length: INITIAL_SKELETONS }, (_, i) => (
-          <SkeletonCard key={i} />
-        ))}
+        <FirstPageSkeletonCards filter={filter} />
       </FeedList>
     );
   }
@@ -192,6 +189,17 @@ function AnimalFeed({ filter, serverFirstPage = false }: { filter: AnimalListFil
       <div ref={sentinelRef} data-slot="load-more-sentinel" aria-hidden className="h-px" />
     </FeedList>
   );
+}
+
+/**
+ * 첫 페이지를 기다리는 뼈대 3장(서버 첫 페이지의 Suspense fallback, 클라이언트 조회 대기). 고양이·강아지 목록이고 종료 필터가 아니면
+ * 첫 장의 사진 자리에 로딩 캐릭터를 둔다(handoff (j) L2·L3). 500ms 안에 공고가 오면 뼈대와 함께 빠져 보이지 않는다(CSS, LoadingCharacter).
+ * 기타 동물(어떤 동물인지 모름), 종료 필터(종료 맥락에는 캐릭터를 쓰지 않음)는 시머만이다. 다음 페이지 뼈대는 여기를 거치지 않는다.
+ */
+function FirstPageSkeletonCards({ filter }: { filter: AnimalListFilter }) {
+  const { species } = filter;
+  const wait = species !== "other" && filter.status !== "ended" ? <LoadingCharacter species={species} /> : undefined;
+  return Array.from({ length: INITIAL_SKELETONS }, (_, i) => <SkeletonCard key={i} wait={i === 0 ? wait : undefined} />);
 }
 
 /** first: 서버가 그린 첫 페이지(첫 화면 등장 CSS가 읽는다, app/globals.css) */
