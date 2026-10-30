@@ -2,7 +2,10 @@
 
 이 폴더의 다른 파일은 디자인 시스템 "멍냥공고"의 사본이라 고치지 않는다. 싱크 기록만 여기에 적는다.
 
-- 마지막 싱크: 2026-10-28, 디자인 시스템 판 1793154884-da6b, 기준 코드 262bdb8 (handoff (i) W1 "링크 복사" 조건을 브라우저 공유 시트 지원으로, M3 "공유에 실패했어요…" 토스트가 뜨는 때)
+- 마지막 싱크: 2026-10-30, 디자인 시스템 판 1793332855-64a0, 기준 코드 8c2baee (#111 로딩 시머·캐릭터, handoff (j) L1~L5)
+  - 바뀐 파일: README.md, characters.md, handoff.md, tokens.json, bundle.css(디자인 시스템 `components/bundle.css`), SkeletonCard README·preview.html, AnimalCard README. 그림은 바뀌지 않았다.
+  - tokens.css는 같은 규칙으로 다시 만들었다(새 토큰 `shimmer-duration` 1400ms, `loading-character-delay` 500ms, `loading-character-fade` 200ms).
+- 이전 싱크: 2026-10-28, 디자인 시스템 판 1793154884-da6b, 기준 코드 262bdb8 (handoff (i) W1 "링크 복사" 조건을 브라우저 공유 시트 지원으로, M3 "공유에 실패했어요…" 토스트가 뜨는 때)
   - 바뀐 파일: handoff.md, ShareButton·Toast README. tokens.json은 바뀌지 않았다(tokens.css 그대로).
 - 이전 싱크: 2026-10-28, 디자인 시스템 판 1793152397-4492, 기준 코드 5914d13 (#53 마지막 두 줄: 공유 버튼 구현 반영 S2, Icon chevron-right I1)
   - 가져온 것: 지난번과 같은 묶음. 바뀐 파일은 README.md, handoff.md, bundle.js, Icon·ShareButton·Toast README와 Icon preview. tokens.json은 바뀌지 않아 tokens.css도 그대로다.

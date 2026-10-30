@@ -94,6 +94,15 @@
 .cn-skel__line{height:14px;border-radius:7px;background:var(--status-ended-bg);margin-top:15px}
 .cn-skel__line:nth-child(2){height:12px;border-radius:6px;width:60%;margin-top:11px}
 .cn-skel__line:nth-child(3){height:12px;border-radius:6px;width:50%;margin-top:8px}
+/* Loading shimmer (#111): a light band over skeleton blocks and lines, and over a photo box until its photo loads (.cn-loading). */
+.cn-skel__photo,.cn-skel__line,.cn-loading{position:relative;overflow:hidden}
+.cn-skel__photo::after,.cn-skel__line::after,.cn-loading::after{content:"";position:absolute;inset:0;z-index:0;background:linear-gradient(100deg,rgba(255,255,255,0) 30%,rgba(255,255,255,.7) 50%,rgba(255,255,255,0) 70%);transform:translateX(-100%);animation:cn-shimmer var(--shimmer-duration,1400ms) ease-in-out infinite;pointer-events:none}
+@keyframes cn-shimmer{to{transform:translateX(100%)}}
+/* Loading character: centred in the first skeleton photo block, over the shimmer. */
+.cn-skel__wait{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;animation:cn-fade var(--loading-character-fade,200ms) var(--ease-out) both}
+.cn-skel__wait img,.cn-skel__wait svg{width:96px;height:96px}
+.cn-skel__wait p{margin:0;color:var(--text-2)}
+@keyframes cn-fade{from{opacity:0}to{opacity:1}}
 .cn-toast{position:absolute;left:var(--space-4);right:var(--space-4);bottom:calc(var(--space-6) + env(safe-area-inset-bottom,0px));z-index:40;display:flex;justify-content:center;pointer-events:none;opacity:0;transform:translateY(8px);transition:opacity var(--sheet-duration) var(--ease-out),transform var(--sheet-duration) var(--ease-out)}
 .cn-toast[data-visible="true"]{opacity:1;transform:none}
 .cn-toast span{background:var(--text);color:var(--on-text);padding:12px 20px;border-radius:var(--radius-control);text-align:center}
