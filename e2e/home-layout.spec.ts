@@ -47,9 +47,16 @@ test("홈 위쪽: 이름이 멍냥공고인 로고(가로 조합)가 처음부�
   await expect(logo).toBeVisible();
   await expect(logo).toHaveAttribute("data-combo", "lockup");
   await expect(logo).toHaveAttribute("data-variant", "line");
-  // 그림 파일이 읽혀 크기가 있다(깨진 이미지가 아니다)
-  const loaded = await logo.locator("img").evaluateAll((imgs) => imgs.map((img) => (img as HTMLImageElement).naturalWidth > 0));
-  expect(loaded).toEqual([true]);
+  // 부위를 나눈 인라인 SVG가 실제로 그려진다(입과 소리 선은 숨김, #115)
+  const drawing = logo.locator("svg");
+  await expect(drawing).toHaveCount(1);
+  for (const part of ["dog", "dog-ear", "dog-eyes", "cat", "cat-eyes", "wordmark"]) {
+    const box = await drawing.locator(`[data-part="${part}"]`).boundingBox();
+    expect(box && box.width > 0 && box.height > 0, part).toBe(true);
+  }
+  for (const part of ["dog-mouth", "bark-lines"]) {
+    await expect(drawing.locator(`[data-part="${part}"]`), part).toHaveAttribute("opacity", "0");
+  }
   const box = (await logo.boundingBox())!;
   expect(Math.round(box.height)).toBe(56);
   await expect(page.getByText("보호 중인 아이들의 공고가")).toBeVisible();

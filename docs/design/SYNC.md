@@ -2,7 +2,10 @@
 
 이 폴더의 다른 파일은 디자인 시스템 "멍냥공고"의 사본이라 고치지 않는다. 싱크 기록만 여기에 적는다.
 
-- 마지막 싱크: 2026-10-30, 디자인 시스템 판 1793332855-64a0, 기준 코드 8c2baee (#111 로딩 시머·캐릭터, handoff (j) L1~L5)
+- 마지막 싱크: 2026-10-30, 디자인 시스템 판 1793339419-eafd, 기준 코드 b5c822d (#115 홈 첫인상 "부르고 답하기", handoff (k), (j) L6)
+  - 바뀐 파일: handoff.md, characters.md. 새 파일: `assets/Logo/myeongnyang-lockup-rigged.svg`, `assets/Logo/myeongnyang-mark-rigged.svg`(부위를 나눈 로고, data-part).
+  - tokens.json은 바뀌지 않아 tokens.css도 그대로다. 기존 로고 그림(코드 `src/shared/assets/logo/`)과 캐릭터 그림은 바뀌지 않았다.
+- 이전 싱크: 2026-10-30, 디자인 시스템 판 1793332855-64a0, 기준 코드 8c2baee (#111 로딩 시머·캐릭터, handoff (j) L1~L5)
   - 바뀐 파일: README.md, characters.md, handoff.md, tokens.json, bundle.css(디자인 시스템 `components/bundle.css`), SkeletonCard README·preview.html, AnimalCard README. 그림은 바뀌지 않았다.
   - tokens.css는 같은 규칙으로 다시 만들었다(새 토큰 `shimmer-duration` 1400ms, `loading-character-delay` 500ms, `loading-character-fade` 200ms).
 - 이전 싱크: 2026-10-28, 디자인 시스템 판 1793154884-da6b, 기준 코드 262bdb8 (handoff (i) W1 "링크 복사" 조건을 브라우저 공유 시트 지원으로, M3 "공유에 실패했어요…" 토스트가 뜨는 때)

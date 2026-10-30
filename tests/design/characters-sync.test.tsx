@@ -10,6 +10,7 @@ import { join } from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { LoadingCharacter } from "@/entities/animal";
+import { drawingTags } from "./svg-drawing";
 
 const ROOT = process.cwd();
 const SOURCE_DIR = join(ROOT, "docs/design/assets/characters");
@@ -36,37 +37,14 @@ describe("캐릭터 SVG 원본과 앱 사본", () => {
   });
 });
 
-/** SVG 안쪽을 여닫는 태그의 차례로 편다. 속성은 이름순이고 id는 뺀다. 감싼 움직임 그룹(data-loading-motion)은 여닫는 태그를 함께 뺀다 */
-function drawingTags(svg: string): string[] {
-  const inner = svg.replace(/^[\s\S]*?<svg[^>]*>/, "").replace(/<\/svg>[\s\S]*$/, "");
-  const tags: string[] = [];
-  // 열린 g마다 감싼 그룹인지(닫는 태그를 뺄지)
-  const wrappers: boolean[] = [];
-  for (const [, close, name, rawAttrs, selfClose] of inner.matchAll(/<(\/?)(\w+)([^>]*?)(\/?)>/g)) {
-    if (close) {
-      if (!wrappers.pop()) tags.push(`</${name}>`);
-      continue;
-    }
-    const attrs = [...rawAttrs.matchAll(/([\w:-]+)="([^"]*)"/g)].filter(([, key]) => key !== "id");
-    const wrapper = attrs.some(([, key]) => key === "data-loading-motion");
-    if (!wrapper) tags.push(`<${name} ${attrs.map(([, key, value]) => `${key}="${value}"`).sort().join(" ")}>`);
-    if (selfClose) {
-      if (!wrapper) tags.push(`</${name}>`);
-    } else {
-      wrappers.push(wrapper);
-    }
-  }
-  return tags;
-}
-
 describe("로딩 캐릭터의 인라인 SVG와 앱 사본", () => {
   it.each(["cat", "dog"] as const)("%s: 감싼 그룹과 id 말고는 그림이 같다", (species) => {
     const inline = renderToStaticMarkup(<LoadingCharacter species={species} />);
     const source = readFileSync(join(PUBLIC_DIR, `nyang-${species}.svg`), "utf8");
     expect(inline).toContain(`viewBox="${/viewBox="([^"]*)"/.exec(source)![1]}"`);
-    const tags = drawingTags(inline);
+    const tags = drawingTags(inline, "data-loading-motion");
     expect(tags.length).toBeGreaterThan(20);
-    expect(tags).toEqual(drawingTags(source));
+    expect(tags).toEqual(drawingTags(source, "data-loading-motion"));
     expect(inline.match(/data-loading-motion="\w+"/g)).toHaveLength(3);
   });
 });
