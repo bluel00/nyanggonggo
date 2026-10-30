@@ -4,7 +4,7 @@ import { useEffect, useImperativeHandle, useRef, useState, type Ref } from "reac
 import { cn } from "@/shared/lib/utils";
 import { describeError, warnClient } from "@/shared/lib/client-log";
 import { prefersReducedMotion } from "@/shared/lib/use-reduced-motion";
-import { CHARACTER_PRESS_TRIGGER, CHARACTER_STATE_MACHINE } from "../lib/character-animation-assets";
+import { CHARACTER_FIRST_VISIT_INPUT, CHARACTER_PRESS_TRIGGER, CHARACTER_STATE_MACHINE } from "../lib/character-animation-assets";
 import { loadCharacterAnimation, type CharacterAnimationKit } from "../lib/character-animation";
 import type { Animal } from "../model/animal";
 
@@ -32,8 +32,13 @@ const CHARACTER_ARTBOARD: Record<CharacterSpecies, string> = {
 /** 원본 크기. 1:1에서 선이 1.8px로 아이콘과 같은 굵기다(characters.md 그리기 규칙) */
 const CHARACTER_SIZE = 120;
 
-/** 앱 → 캐릭터 신호. 지금은 press 하나다(characters.md 모션 절) */
-export type CharacterHandle = { press(): void };
+/**
+ * 앱 → 캐릭터 신호(characters.md 모션 절, handoff (k) "신호와 시간을 누가 맡나").
+ * - press(): 실행 중 신호(뷰 모델 트리거 press)
+ * - start(firstVisit): 미리 불러 둔(prepare) 캐릭터를 지금 시작한다. firstVisit(뷰 모델 불리언)은 시작 직전에 한 번 정한다.
+ *   홈 첫인상 장면이 두 캐릭터와 CSS 장면을 같은 순간에 시작하려고 쓴다. 아직 로드 전이거나 이미 시작했으면 아무 일도 없다
+ */
+export type CharacterHandle = { press(): void; start(firstVisit: boolean): void };
 
 type RiveInstance = InstanceType<typeof import("@rive-app/canvas-lite").Rive>;
 
@@ -48,23 +53,73 @@ type RiveInstance = InstanceType<typeof import("@rive-app/canvas-lite").Rive>;
  *   greet이 바로 돈다. 홈은 등장이 끝난 뒤 true로 바꾼다(README 움직임 표: greet은 등장이 끝나고 0.3초 안에).
  * - 움직임을 줄이도록 설정했거나 로드가 실패하면 정지 이미지 그대로다(런타임·WASM·.riv를 받지 않거나, 로그만 남긴다).
  * - `ref`의 `press()`가 뷰 모델 트리거 `press`를 보낸다(카드를 누를 때). 아직 로드 전이면 아무 일도 없다.
+ * - `prepare`이면 `play` 전에 인스턴스까지 만들어(autoplay 없이) 그릴 준비를 하고 `onLoad`로 알린다. 시작은 `play`가 true가 되거나
+ *   `ref`의 `start(firstVisit)`로 한다(홈 첫인상, handoff (k)). `play`로 시작하면 firstVisit은 false(지금 인사 그대로)다.
+ * - firstVisit은 인스턴스가 열리는 순간(onLoad)에 정해야 한다: autoplay가 없어도 런타임이 열자마자 첫 프레임을 그리며 상태 머신의
+ *   Entry를 고른다. 그래서 열 때 `firstVisitOnLoad()`로 값을 정하고, 시작할 때 다른 값을 원하면 인스턴스를 다시 만든다
+ *   (장면을 기다리다 대체로 넘어간 드문 경우).
  */
 export function SpeciesCharacter({
   species,
   animated = false,
   play = true,
+  prepare = false,
+  onLoad,
+  firstVisitOnLoad,
   ref,
 }: {
   species: CharacterSpecies;
   animated?: boolean;
   /** false면 미리 받기만 하고 시작하지 않는다 */
   play?: boolean;
+  /** true면 시작 전에 인스턴스까지 만들어 둔다(그릴 준비) */
+  prepare?: boolean;
+  /** 인스턴스가 그릴 준비가 되면(Rive onLoad) 한 번 */
+  onLoad?: () => void;
+  /** 인스턴스가 열릴 때 정할 firstVisit(기본 false) */
+  firstVisitOnLoad?: () => boolean;
   ref?: Ref<CharacterHandle>;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const riveRef = useRef<RiveInstance | null>(null);
+  const startedRef = useRef(false);
+  /** 지금 인스턴스가 열릴 때 정한 firstVisit */
+  const loadedWithRef = useRef(false);
+  /** 열리기 전(또는 다시 만드는 중)에 받은 시작 요청 */
+  const pendingStartRef = useRef<boolean | null>(null);
+  const onLoadRef = useRef(onLoad);
+  const firstVisitOnLoadRef = useRef(firstVisitOnLoad);
   const [ready, setReady] = useState(false);
+  /** 시작할 때 정한 firstVisit(캔버스의 data-first-visit, 확인용) */
+  const [startedWith, setStartedWith] = useState<boolean | null>(null);
+  const [loaded, setLoaded] = useState(false);
+  const [generation, setGeneration] = useState(0);
   const [kit, setKit] = useState<CharacterAnimationKit | null>(null);
+
+  useEffect(() => {
+    onLoadRef.current = onLoad;
+    firstVisitOnLoadRef.current = firstVisitOnLoad;
+  });
+
+  /** 불러 둔 인스턴스를 시작한다. firstVisit은 열 때 정한 값이어야 한다(다르면 다시 만들고 열리면 시작한다) */
+  const startRef = useRef((firstVisit: boolean) => {
+    if (startedRef.current) return;
+    const instance = riveRef.current;
+    if (!instance || loadedWithRef.current !== firstVisit) {
+      pendingStartRef.current = firstVisit;
+      if (instance) setGeneration((n) => n + 1);
+      return;
+    }
+    startedRef.current = true;
+    pendingStartRef.current = null;
+    try {
+      instance.play(CHARACTER_STATE_MACHINE);
+      setStartedWith(firstVisit);
+      setReady(true);
+    } catch (error) {
+      warnClient("character-animation", "Rive를 시작하지 못해 정지 이미지를 쓴다", { species, ...describeError(error) });
+    }
+  });
 
   useImperativeHandle(
     ref,
@@ -75,6 +130,9 @@ export function SpeciesCharacter({
         } catch (error) {
           warnClient("character-animation", "press를 보내지 못했다", describeError(error));
         }
+      },
+      start(firstVisit: boolean) {
+        startRef.current(firstVisit);
       },
     }),
     [],
@@ -92,9 +150,11 @@ export function SpeciesCharacter({
     };
   }, [animated]);
 
+  // 인스턴스는 시작할 때(play) 또는 미리(prepare) 만든다. 시작은 아래 effect나 start()가 한다(autoplay 없음)
+  const create = play || prepare;
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!kit || !play || !canvas) return;
+    if (!kit || !create || !canvas) return;
     let cancelled = false;
     let instance: RiveInstance | null = null;
     try {
@@ -104,12 +164,23 @@ export function SpeciesCharacter({
         artboard: CHARACTER_ARTBOARD[species],
         stateMachine: CHARACTER_STATE_MACHINE,
         autoBind: true,
-        autoplay: true,
+        autoplay: false,
         onLoad: () => {
           if (cancelled || !instance) return;
           instance.resizeDrawingSurfaceToCanvas();
+          // 첫 프레임(상태 머신의 Entry)보다 먼저 정한다
+          const firstVisit = pendingStartRef.current ?? firstVisitOnLoadRef.current?.() ?? false;
+          try {
+            const input = instance.viewModelInstance?.boolean(CHARACTER_FIRST_VISIT_INPUT);
+            if (input) input.value = firstVisit;
+          } catch (error) {
+            warnClient("character-animation", "firstVisit을 정하지 못했다", { species, ...describeError(error) });
+          }
+          loadedWithRef.current = firstVisit;
           riveRef.current = instance;
-          setReady(true);
+          setLoaded(true);
+          if (pendingStartRef.current !== null) startRef.current(pendingStartRef.current);
+          else onLoadRef.current?.();
         },
         onLoadError: (event) => warnClient("character-animation", ".riv를 열지 못해 정지 이미지를 쓴다", { species, type: event?.type }),
       });
@@ -119,9 +190,18 @@ export function SpeciesCharacter({
     return () => {
       cancelled = true;
       riveRef.current = null;
+      startedRef.current = false;
+      setLoaded(false);
+      setReady(false);
+      setStartedWith(null);
       instance?.cleanup();
     };
-  }, [kit, play, species]);
+  }, [kit, create, species, generation]);
+
+  // play로 시작: 지금 인사 그대로(firstVisit = false)
+  useEffect(() => {
+    if (loaded && play) startRef.current(false);
+  }, [loaded, play]);
 
   return (
     <span aria-hidden className="relative block shrink-0" style={{ width: CHARACTER_SIZE, height: CHARACTER_SIZE }}>
@@ -140,6 +220,7 @@ export function SpeciesCharacter({
           ref={canvasRef}
           data-slot="character-canvas"
           data-ready={ready}
+          data-first-visit={startedWith ?? undefined}
           className={cn("absolute inset-0 size-full", !ready && "invisible")}
         />
       )}

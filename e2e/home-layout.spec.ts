@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { watchConsoleErrors } from "./helpers";
+import { homeSettled, watchConsoleErrors } from "./helpers";
 
 /**
  * 홈의 세로 배치(시안 Main 390 / Home-PC 480, architecture.md 12절 44).
@@ -36,6 +36,8 @@ for (const viewport of VIEWPORTS) {
     const other = page.getByRole("link", { name: "기타 동물", exact: true });
     await expect(title).toBeVisible();
     await expect(other).toBeVisible();
+    // 배치는 등장(첫 진입이면 첫인상 장면, #115)이 끝난 뒤의 자리로 잰다
+    await homeSettled(page);
 
     const top = (await title.boundingBox())!.y;
     const otherBox = (await other.boundingBox())!;

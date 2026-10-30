@@ -2,7 +2,7 @@
 
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import {
   OtherCharacters,
   SPECIES_LABEL,
@@ -14,6 +14,7 @@ import { DEFAULT_ANIMAL_FILTER, toListHref, type AnimalArea, type AnimalSpecies 
 import { animationsFinished, enterOrder } from "@/shared/lib/motion";
 import { DisplayText } from "@/shared/ui/display-text";
 import { rememberSpecies } from "../model/species-cookie";
+import { decideHomeSceneFromApp, holdHomeScene, homeSceneState, startHomeScene, watchHomeScene } from "../model/home-scene";
 
 /**
  * 홈에서 축종을 고른다(PRD-v1.1 3절 7)·8), 시안 "냥공고 홈 · 축종 선택"의 Main).
@@ -28,6 +29,11 @@ import { rememberSpecies } from "../model/species-cookie";
  * 시작 번호(enterFrom)부터 이어 붙인다(홈은 제목이 0이라 1부터).
  * 캐릭터 greet은 마지막 등장(기타 동물 카드)이 끝난 뒤 시작한다(Rive는 미리 받아 두고 인스턴스만 그때 만든다).
  *
+ * 캐릭터는 늘 미리 그릴 준비까지 해 둔다(prepare, autoplay 없음. 시작 전에는 정지 이미지 그대로라 보이는 것은 같다).
+ * 세션의 첫 홈 진입이면 첫인상 장면(handoff (k), model/home-scene.ts)이다: 두 캐릭터가 모두 준비되는
+ * 순간 `<html data-home-scene="play">`(CSS 장면)와 Rive(firstVisit = true)를 같이 시작한다. 그 뒤의 박자(올려다보기 → 인사)는 Rive가
+ * 맡는다. 0.3초 안에 준비되지 않으면 대체 타이머가 off로 바꾸고 지금 등장 + 인사(firstVisit = false)로 돈다.
+ *
  * 캐릭터는 Rive로 움직인다(greet → idle, 정지 SVG에서 교체). 카드를 누르는 순간(pointerdown, 키보드 Enter) 그 캐릭터에
  * press 신호를 보낸다. 이동은 늦추지 않는다(반응이 다 보이기 전에 화면이 바뀌어도 된다, characters.md 모션 절).
  */
@@ -40,17 +46,52 @@ export function SpeciesChoice({ area, enterFrom }: { area: AnimalArea; enterFrom
   const press = (species: CharacterSpecies) => characterRef[species].current?.press();
   const lastEnterRef = useRef<HTMLAnchorElement>(null);
   const [entered, setEntered] = useState(false);
-  useEffect(() => {
-    const last = lastEnterRef.current;
-    if (!last) return;
+  const loadedRef = useRef(new Set<CharacterSpecies>());
+
+  // 첫 그림 전에 정한다(앱 안 이동). 문서로 연 홈은 인라인 스크립트가 이미 정했다
+  useLayoutEffect(() => {
+    decideHomeSceneFromApp();
+    const release = holdHomeScene();
     let cancelled = false;
-    void animationsFinished(last).then(() => {
-      if (!cancelled) setEntered(true);
-    });
+    let stopWatching = () => {};
+    // 지금 등장(또는 대체)이 끝나면 인사를 시작한다(firstVisit = false)
+    const greetAfterEntrance = () => {
+      const last = lastEnterRef.current;
+      if (!last) return;
+      void animationsFinished(last).then(() => {
+        if (!cancelled) setEntered(true);
+      });
+    };
+    if (homeSceneState() === "pending") {
+      // 장면이 시작되면(play) Rive가 이어 간다. 대체로 넘어가면(off) 지금 등장이 그때 시작되니 끝나기를 기다린다
+      stopWatching = watchHomeScene((state) => {
+        if (state === "pending") return;
+        stopWatching();
+        if (state === "off") greetAfterEntrance();
+      });
+    } else {
+      greetAfterEntrance();
+    }
     return () => {
       cancelled = true;
+      stopWatching();
+      release();
     };
   }, []);
+
+  /** 장면을 기다리거나 시작했으면 캐릭터를 firstVisit = true로 연다(열 때 정해야 한다, SpeciesCharacter) */
+  const sceneWanted = () => {
+    const state = homeSceneState();
+    return state === "pending" || state === "play";
+  };
+
+  /** 두 캐릭터가 모두 그릴 준비가 되면 장면 0초: CSS 장면과 Rive(firstVisit = true)를 같은 순간에 시작한다 */
+  const onCharacterLoad = (species: CharacterSpecies) => {
+    loadedRef.current.add(species);
+    if (!BIG_CHOICES.every((each) => loadedRef.current.has(each))) return;
+    if (!startHomeScene()) return;
+    for (const each of BIG_CHOICES) characterRef[each].current?.start(true);
+  };
   // 지역은 넘겨받은 값 그대로다(전국 `{}`이면 region이 undefined여야 하므로 `...area`가 아니라 두 값을 직접 넣는다)
   const listHref = (species: AnimalSpecies) =>
     toListHref({ ...DEFAULT_ANIMAL_FILTER, species, region: area.region, district: area.district });
@@ -79,7 +120,15 @@ export function SpeciesChoice({ area, enterFrom }: { area: AnimalArea; enterFrom
                 className="absolute size-[104px] rounded-full bg-[radial-gradient(circle,var(--choice-halo)_0%,var(--choice-halo-end)_72%)]"
               />
               <span className="relative">
-                <SpeciesCharacter species={species} animated play={entered} ref={characterRef[species]} />
+                <SpeciesCharacter
+                  species={species}
+                  animated
+                  play={entered}
+                  prepare
+                  onLoad={() => onCharacterLoad(species)}
+                  firstVisitOnLoad={sceneWanted}
+                  ref={characterRef[species]}
+                />
               </span>
             </span>
             <DisplayText size="title">{SPECIES_LABEL[species]}</DisplayText>

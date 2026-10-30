@@ -116,6 +116,7 @@
 | 누름 효과 (화면 없음) | 카드를 누를 때 살짝 줄어드는 효과(100ms) | `active:scale-press`(animal-card.tsx) | 없음 | architecture.md 14.4 | 캐릭터의 `press` |
 | 하트 튐 (화면 없음) | 관심을 켤 때 하트가 튀는 효과 | `FavoriteButton` | 없음 | architecture.md 14.4 | — |
 | 캐릭터 움직임 (화면 없음) | 홈의 고양이·강아지 캐릭터. 정지 그림으로 시작해 클라이언트에서 Rive 애니메이션으로 바뀐다 | `SpeciesCharacter`(entities/animal/ui/species-character.tsx) | `/characters/*.riv`, `/rive/*.wasm` | PRD-v1.2, architecture.md 9절 | — |
+| 홈 첫인상 장면 (화면 없음) | 세션의 첫 홈 진입에서만 도는 "부르고 답하기": 로고 속 강아지 "멍"·고양이 눈 힐끗, 질문 두 줄과 카드가 차례로, 카드의 강아지·고양이 올려다보기 → 인사, 기타 동물 셋 까딱. Rive를 0.3초 안에 못 받으면 대체(지금 등장). 같은 세션의 두 번째 진입·새로고침·움직임 줄이기는 장면 없음 | `<html data-home-scene>`(`pending`·`play`·`off`), `HOME_SCENE_SCRIPT`·`decideHomeScene`(features/animal-filter/model/home-scene.ts), 세션 저장소 키 `nyanggonggo.home-scene-seen`, CSS app/globals.css | 없음 | handoff (k), #115 | 지금 등장(첫 화면 등장 `data-enter="home"`) |
 | 올려다보기 (화면 없음) | 세션 첫 홈 진입에서만, 인사 앞에 카드의 강아지·고양이가 로고 쪽을 올려다보는 동작. 앱이 시작할 때 한 번 정하는 불리언 `firstVisit`이 true일 때만 한다(기본 false) | Rive 상태·애니메이션 `lookUp`, 뷰 모델 불리언 `firstVisit`(rive/nyang-characters, scripts/rive-characters-scene.mjs) | `/characters/*.riv` | characters.md "올려다보기", handoff (k), #115 | 인사(`greet`), 실행 중 신호 `press`(트리거)와 달리 `firstVisit`은 실행 중에 바꾸지 않는다 |
 
 ## 7. 브랜드

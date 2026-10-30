@@ -1,4 +1,5 @@
 import { expect, type APIRequestContext, type BrowserContext, type Page } from "@playwright/test";
+import { HOME_SCENE_SEEN_KEY } from "../src/features/animal-filter/model/home-scene";
 import { SPECIES_COOKIE } from "../src/features/animal-filter/model/species-cookie";
 import { listIdPrefix } from "./stub-combo.mjs";
 
@@ -8,7 +9,7 @@ import { listIdPrefix } from "./stub-combo.mjs";
  */
 export { FAVORITES_STORAGE_KEY } from "../src/features/animal-favorite/model/favorites-store";
 export { REGION_COOKIE } from "../src/features/animal-filter/model/region-cookie";
-export { SPECIES_COOKIE };
+export { HOME_SCENE_SEEN_KEY, SPECIES_COOKIE };
 
 /**
  * 축종 기억을 심는다. `/`로 들어가는 테스트는 축종 기억이 있어야 홈(`/home`)을 건너뛰고 목록으로 간다
@@ -215,4 +216,21 @@ export function watchConsoleErrors() {
  */
 export async function openedDetail(page: Page) {
   await expect(page.locator('[data-slot="animal-detail"]')).toBeVisible();
+}
+
+
+/**
+ * 홈 첫인상 장면(handoff (k), #115)을 건너뛴다: 이 세션에서 홈 첫 진입을 이미 쓴 것으로 둔다. 새 브라우저 컨텍스트의 첫 홈은
+ * 장면이라, 지금 등장과 인사(두 번째 진입부터의 모습)를 보는 테스트가 문서를 열기 전에 부른다. 장면은 `e2e/home-scene.spec.ts`가 본다.
+ */
+export async function skipHomeScene(page: Page) {
+  await page.addInitScript((key) => sessionStorage.setItem(key, "1"), HOME_SCENE_SEEN_KEY);
+}
+
+/** 홈이 다 그려질 때까지(장면을 기다리는 중이 아니고, 등장·장면의 CSS 애니메이션이 모두 끝남). 배치를 잴 때 쓴다 */
+export async function homeSettled(page: Page) {
+  await page.waitForFunction(() => {
+    if (document.documentElement.getAttribute("data-home-scene") === "pending") return false;
+    return document.getAnimations().every((animation) => animation.playState === "finished");
+  });
 }

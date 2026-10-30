@@ -52,7 +52,7 @@ export default defineConfig({
     screenshot: "only-on-failure",
   },
   /*
-   * 대부분은 개발 서버에서 돈다. 상세 로딩 경계(detail-loading), 홈 캐릭터 Rive(home-rive)는 production 서버에서 돈다:
+   * 대부분은 개발 서버에서 돈다. 상세 로딩 경계(detail-loading), 홈 캐릭터 Rive(home-rive), 홈 첫인상 장면(home-scene, #115)은 production 서버에서 돈다:
    * Next는 production에서만 링크를 prefetch하고, 카드를 누른 즉시 로딩 뼈대가 보이는 것은 그 prefetch 덕분이다.
    * 상세에서 뒤로가기(back-nav, PRD-v1.4·v1.5), 상세 층(stack-nav, PRD-v1.5), 상세 사진(detail-photo), 상세 제목 줄(detail-title), 링크 미리보기 메타(site-og), 경로(routes), 모바일 첫 화면(first-paint), 목록 첫 페이지 서버 렌더(list-first-page, #109),
    * 로딩 시머·캐릭터(loading, #111)는 같은 빌드를 스텁 서버(e2e/upstream-stub.mjs: 고정 공고, 크기를 아는 단색 사진)로 띄워 본다.
@@ -61,13 +61,13 @@ export default defineConfig({
   projects: [
     {
       name: "dev",
-      testIgnore: /(detail-loading|detail-photo|detail-title|detail-transition|home-rive|back-nav|motion|stack-nav|site-og|routes|detail-contact|skeleton-card|home-other|detail-share|first-paint|list-first-page|loading)\.spec\.ts/,
+      testIgnore: /(detail-loading|detail-photo|detail-title|detail-transition|home-rive|home-scene|back-nav|motion|stack-nav|site-og|routes|detail-contact|skeleton-card|home-other|detail-share|first-paint|list-first-page|loading)\.spec\.ts/,
       // 브라우저는 localhost로 연다(개발 서버가 127.0.0.1을 다른 오리진으로 보고 dev 리소스를 막는다)
       use: { baseURL: "http://localhost:3000" },
     },
     {
       name: "production",
-      testMatch: /(detail-loading|home-rive|motion)\.spec\.ts/,
+      testMatch: /(detail-loading|home-rive|home-scene|motion)\.spec\.ts/,
       use: { baseURL: "http://localhost:3100" },
     },
     {

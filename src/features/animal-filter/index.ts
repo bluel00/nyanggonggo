@@ -25,3 +25,4 @@ export { parseRegionCookie, REGION_COOKIE, rememberRegion } from "./model/region
 export { useApplyAnimalFilter } from "./model/use-apply-animal-filter";
 export { AnimalFilterSheet } from "./ui/animal-filter-sheet";
 export { SpeciesChoice } from "./ui/species-choice";
+export { HOME_SCENE_SCRIPT } from "./model/home-scene";
