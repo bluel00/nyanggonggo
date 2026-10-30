@@ -58,11 +58,24 @@ describe("Logo", () => {
     expect([img.getAttribute("width"), img.getAttribute("height")]).toEqual([String(size), String(size)]);
   });
 
-  it("가로 조합 56px 이상: 원본 가로 조합(line + 이름) 그대로", () => {
-    const { container } = render(<Logo size={56} combo="lockup" />);
-    expect(files(container)).toEqual(["myeongnyang-lockup.svg"]);
-    expect(container.querySelector("img")!.getAttribute("height")).toBe("56");
+  it.each([56, 112] as const)("가로 조합 %dpx(56 이상): 그림 파일 없이 부위를 나눈 인라인 SVG 하나(#115)", (size) => {
+    const { container } = render(<Logo size={size} combo="lockup" />);
+    expect(container.querySelectorAll("img")).toHaveLength(0);
+    const svgs = container.querySelectorAll("svg");
+    expect(svgs).toHaveLength(1);
+    expect(svgs[0].getAttribute("viewBox")).toBe("0 0 130.34 56");
+    expect([svgs[0].getAttribute("width"), svgs[0].getAttribute("height")]).toEqual([String((130.34 * size) / 56), String(size)]);
     expect(screen.getByRole("img").dataset.variant).toBe("line");
+  });
+
+  it("인라인 가로 조합: 부위(data-part)가 모두 있고 입과 소리 선은 숨겨져 있다. id는 없다(handoff (k))", () => {
+    const { container } = render(<Logo size={56} combo="lockup" />);
+    const parts = [...container.querySelectorAll("[data-part]")].map((el) => el.getAttribute("data-part"));
+    expect(parts.sort()).toEqual(["bark-lines", "cat", "cat-eyes", "dog", "dog-ear", "dog-eyes", "dog-mouth", "wordmark"]);
+    for (const part of ["dog-mouth", "bark-lines"]) {
+      expect(container.querySelector(`[data-part="${part}"]`)!.getAttribute("opacity"), part).toBe("0");
+    }
+    expect(container.querySelectorAll("[id]")).toHaveLength(0);
   });
 
   it.each([
@@ -76,28 +89,21 @@ describe("Logo", () => {
   });
 
   it.each([16, 56] as const)("접근성 이름은 서비스 이름 하나(%dpx), 안쪽 그림은 읽히지 않는다", (size) => {
-    render(<Logo size={size} combo="lockup" />);
+    const { container } = render(<Logo size={size} combo="lockup" />);
     expect(screen.getAllByRole("img")).toHaveLength(1);
     expect(screen.getByRole("img", { name: SERVICE_NAME })).toBeTruthy();
     expect(SERVICE_NAME).toBe("멍냥공고");
-  });
-  it.each([
-    [56, "lockup"],
-    [48, "lockup"],
-    [32, "mark"],
-  ] as const)("priority면 모든 그림을 지연 로딩 없이 먼저 받는다(%dpx %s, 홈 LCP)", (size, combo) => {
-    const { container } = render(<Logo size={size} combo={combo} priority />);
-    const imgs = [...container.querySelectorAll("img")];
-    expect(imgs.length).toBeGreaterThan(0);
-    for (const img of imgs) {
-      expect(img.getAttribute("loading")).toBe("eager");
-      expect(img.getAttribute("fetchpriority")).toBe("high");
+    // 안쪽 그림(img·svg)은 모두 보조기기에서 숨긴다
+    for (const drawing of container.querySelectorAll("[data-slot=logo] img, [data-slot=logo] svg")) {
+      expect(drawing.closest('[aria-hidden="true"]'), drawing.tagName).not.toBeNull();
     }
   });
 
-  it("priority가 없으면 next/image 기본값(지연 로딩)이다", () => {
-    const { container } = render(<Logo size={56} combo="lockup" />);
-    expect(container.querySelector("img")!.getAttribute("loading")).toBe("lazy");
-    expect(container.querySelector("img")!.getAttribute("fetchpriority")).toBeNull();
+  it("그림 파일은 next/image 기본값(지연 로딩)이다(48px 가로 조합의 이름 부분)", () => {
+    const { container } = render(<Logo size={48} combo="lockup" />);
+    // 테스트에서 작은 파일(타일)은 data URL로 들어오고 next/image는 data URL을 지연 로딩하지 않아, 파일 주소인 이름 부분만 본다
+    const name = [...container.querySelectorAll("img")].find((img) => img.getAttribute("src") === SOURCES["myeongnyang-lockup.svg"])!;
+    expect(name.getAttribute("loading")).toBe("lazy");
+    expect(name.getAttribute("fetchpriority")).toBeNull();
   });
 });
