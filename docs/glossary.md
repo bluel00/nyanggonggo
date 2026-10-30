@@ -100,7 +100,9 @@
 | 하단 CTA | 상세 아래의 관심·공유 버튼 줄. 컬럼 안에서 sticky. 토스트는 그 위에 뜬다 | `data-slot="bottom-cta"` | 없음 | CLAUDE.md 디자인 적용 | — |
 | 빈 상태 | 조건에 맞는 공고가 없을 때 | `emptyTitle`(`SPECIES_COPY`), `favoritesEmptyTitle`, `StateMessage`(widgets/animal-list/ui/animal-list.tsx) | 없음 | handoff 화면 6 | — |
 | 오류 상태 (화면: "지금은 …를 불러오지 못했어요" + "다시 시도") | 조회 실패. 관심 목록은 일부만 실패하면 받은 카드를 두고 한 줄로 알린다 | `errorTitle`, `favoritesPartialError`, `ApiError`(shared/api/api-request.ts), `ApiErrorResponse` | API 오류 응답 `error.code`·`message` | handoff 화면 6, #5, architecture.md 5절 | 에러·재시도 |
-| 로딩 뼈대 (화면 없음) | 받기 전 자리를 지키는 회색 모양. 움직이지 않는다 | `SkeletonCard`(shared/ui/skeleton-card.tsx), `AnimalDetailSkeleton` | 없음 | architecture.md 7절 | 스켈레톤 |
+| 로딩 뼈대 (화면 없음) | 받기 전 자리를 지키는 회색 모양. 로딩 시머가 지나간다 | `SkeletonCard`(shared/ui/skeleton-card.tsx), `AnimalDetailSkeleton` | 없음 | architecture.md 7절 | 스켈레톤 |
+| 로딩 시머 (화면 없음) | 뼈대 블록·막대와 아직 로드되지 않은 사진 칸 위를 지나가는 빛 띠(1400ms 반복). 움직임 줄이기면 없다 | `data-shimmer`(app/globals.css) | 없음 | handoff (j) L1·L4, #111 | 펄스 |
+| 로딩 캐릭터 (화면: "공고를 불러오고 있어요") | 고양이·강아지 목록 첫 페이지가 500ms 안에 오지 않을 때 첫 뼈대 카드의 사진 자리에 나오는 그 축종 캐릭터와 문구. 공고가 오면 뼈대와 함께 사라진다 | `LoadingCharacter`(entities/animal/ui/loading-character.tsx), `ANIMAL_COPY.listLoading`, `data-loading-wait` | 없음 | handoff (j) L2·L3·L5, characters.md, #111 | 캐릭터 움직임(홈 Rive) |
 
 ## 6. 표시 정책
 
