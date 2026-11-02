@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
+import { preload } from "react-dom";
 import { ANIMAL_COPY } from "@/entities/animal";
-import { REGION_COOKIE, resolveHomeArea, type SearchParamsInput } from "@/features/animal-filter";
+import { HOME_RIVE_PRELOAD, REGION_COOKIE, resolveHomeArea, type SearchParamsInput } from "@/features/animal-filter";
+import { CHARACTER_RIV_URL, RIVE_WASM_URL } from "@/entities/animal";
 import { SERVICE_NAME } from "@/shared/config/service";
 import { SpeciesPickerView } from "@/views/species-picker";
 import { homePath, siteMetadata } from "../site-metadata";
@@ -17,8 +19,13 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
  * **축종 기억이 있어도 건너뛰지 않는다**(결정 G1): 축종을 바꾸러 목록 헤더에서 직접 오는 화면이기도 하다.
  * 건너뛰기는 `/` 진입에만 적용한다.
  * 지역은 목록에서 넘겨받은 값(없으면 기억된 지역, 그것도 없으면 서울 전체)을 쓰고, 여기서 기억하지는 않는다(결정 G2).
+ *
+ * 홈 캐릭터 Rive의 런타임(wasm)과 .riv를 처음부터 미리 받는다(handoff (k) "장면의 0초와 Rive"). 하이드레이션을 기다리지 않고 받아 두어
+ * 장면 0.92초까지 준비될 가능성을 높인다. 앱이 받는 요청과 같게 맞춰 두 번 받지 않는다(HOME_RIVE_PRELOAD).
  */
 export default async function Page({ searchParams }: { searchParams: Promise<SearchParamsInput> }) {
+  preload(RIVE_WASM_URL, HOME_RIVE_PRELOAD);
+  preload(CHARACTER_RIV_URL, HOME_RIVE_PRELOAD);
   const [params, cookieStore] = await Promise.all([searchParams, cookies()]);
   return <SpeciesPickerView area={resolveHomeArea(params, cookieStore.get(REGION_COOKIE)?.value)} />;
 }
