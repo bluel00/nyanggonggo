@@ -2,7 +2,7 @@
 
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   OtherCharacters,
   SPECIES_LABEL,
@@ -11,10 +11,11 @@ import {
   type CharacterSpecies,
 } from "@/entities/animal";
 import { DEFAULT_ANIMAL_FILTER, toListHref, type AnimalArea, type AnimalSpecies } from "../model/filter";
-import { animationsFinished, enterOrder } from "@/shared/lib/motion";
+import { enterOrder } from "@/shared/lib/motion";
+import { prefersReducedMotion } from "@/shared/lib/use-reduced-motion";
 import { DisplayText } from "@/shared/ui/display-text";
 import { rememberSpecies } from "../model/species-cookie";
-import { decideHomeSceneFromApp, holdHomeScene, homeSceneState, startHomeScene, watchHomeScene } from "../model/home-scene";
+import { homeSceneStartTime, LOOK_UP_AT_MS } from "../model/home-scene";
 
 /**
  * 홈에서 축종을 고른다(PRD-v1.1 3절 7)·8), 시안 "냥공고 홈 · 축종 선택"의 Main).
@@ -25,14 +26,13 @@ import { decideHomeSceneFromApp, holdHomeScene, homeSceneState, startHomeScene, 
  * 지역은 목록에서 넘겨받은 값을 그대로 다음 목록에 실어 보내고, 기억하지는 않는다(결정 G2).
  *
  * 누름 피드백은 카드 누름(100ms, scale .98 + shadow-card-pressed, 기타 동물 카드와 같다)이고 reduced-motion이면 반응이 없다(`motion-safe:`). 누르면 바로 목록으로 간다.
- * 등장(README 움직임 표): 고양이 → 강아지 → 기타 동물 카드가 차례로 올라오며 나타난다(globals.css [data-enter]). 순서는 화면이 정한
- * 시작 번호(enterFrom)부터 이어 붙인다(홈은 제목이 0이라 1부터).
- * 캐릭터 greet은 마지막 등장(기타 동물 카드)이 끝난 뒤 시작한다(Rive는 미리 받아 두고 인스턴스만 그때 만든다).
+ * 등장: 홈에 들어올 때마다 첫인상 장면(handoff (k), model/home-scene.ts)이 홈의 등장을 대신한다. 카드는 장면 0.52 / 0.58 / 0.64초에
+ * 고양이 → 강아지 → 기타 동물 순서로 올라오며 나타나고(app/globals.css), 기타 동물 셋은 1.18초부터 차례로 까딱한다. 순서는 화면이 정한
+ * 시작 번호(enterFrom)부터 이어 붙인다(홈은 제목이 0이라 1부터). CSS만으로 돌아 하이드레이션을 기다리지 않는다.
  *
- * 캐릭터는 늘 미리 그릴 준비까지 해 둔다(prepare, autoplay 없음. 시작 전에는 정지 이미지 그대로라 보이는 것은 같다).
- * 세션의 첫 홈 진입이면 첫인상 장면(handoff (k), model/home-scene.ts)이다: 두 캐릭터가 모두 준비되는
- * 순간 `<html data-home-scene="play">`(CSS 장면)와 Rive(firstVisit = true)를 같이 시작한다. 그 뒤의 박자(올려다보기 → 인사)는 Rive가
- * 맡는다. 0.3초 안에 준비되지 않으면 대체 타이머가 off로 바꾸고 지금 등장 + 인사(firstVisit = false)로 돈다.
+ * 캐릭터 Rive는 미리 열어 두고(prepare, autoplay 없음. 재생 전에는 정면 정지 그림 그대로) 장면 0.92초에 두 캐릭터가 모두 준비돼 있으면
+ * 그 순간 withLookUp = true로 같이 재생한다(올려다보기 → 인사). 0.92초까지 준비되지 않으면 준비되는 대로 withLookUp = false(지금 인사)다.
+ * withLookUp은 Rive가 열리는 순간 정해야 해서(SpeciesCharacter), 열릴 때 아직 0.92초 전이면 true로 열고 그 뒤면 false로 연다.
  *
  * 캐릭터는 Rive로 움직인다(greet → idle, 정지 SVG에서 교체). 카드를 누르는 순간(pointerdown, 키보드 Enter) 그 캐릭터에
  * press 신호를 보낸다. 이동은 늦추지 않는다(반응이 다 보이기 전에 화면이 바뀌어도 된다, characters.md 모션 절).
@@ -45,52 +45,37 @@ export function SpeciesChoice({ area, enterFrom }: { area: AnimalArea; enterFrom
   const characterRef = { cat: catRef, dog: dogRef } as const;
   const press = (species: CharacterSpecies) => characterRef[species].current?.press();
   const lastEnterRef = useRef<HTMLAnchorElement>(null);
-  const [entered, setEntered] = useState(false);
+  /** 장면 시계로 쓰는 카드(장면 CSS 애니메이션이 시작된 시각 = 장면 0초) */
+  const sceneClockRef = useRef<HTMLAnchorElement>(null);
+  /** 장면 0.92초(document timeline 시각). 정하기 전이면 null */
+  const lookUpAtRef = useRef<number | null>(null);
   const loadedRef = useRef(new Set<CharacterSpecies>());
+  /** 0.92초까지 둘 다 준비되지 않았다: 준비되는 대로 withLookUp = false로 재생한다 */
+  const [late, setLate] = useState(false);
 
-  // 첫 그림 전에 정한다(앱 안 이동). 문서로 연 홈은 인라인 스크립트가 이미 정했다
-  useLayoutEffect(() => {
-    decideHomeSceneFromApp();
-    const release = holdHomeScene();
-    let cancelled = false;
-    let stopWatching = () => {};
-    // 지금 등장(또는 대체)이 끝나면 인사를 시작한다(firstVisit = false)
-    const greetAfterEntrance = () => {
-      const last = lastEnterRef.current;
-      if (!last) return;
-      void animationsFinished(last).then(() => {
-        if (!cancelled) setEntered(true);
-      });
-    };
-    if (homeSceneState() === "pending") {
-      // 장면이 시작되면(play) Rive가 이어 간다. 대체로 넘어가면(off) 지금 등장이 그때 시작되니 끝나기를 기다린다
-      stopWatching = watchHomeScene((state) => {
-        if (state === "pending") return;
-        stopWatching();
-        if (state === "off") greetAfterEntrance();
-      });
-    } else {
-      greetAfterEntrance();
-    }
-    return () => {
-      cancelled = true;
-      stopWatching();
-      release();
-    };
+  useEffect(() => {
+    // 움직임 줄이기면 장면도 인사도 없다(캐릭터는 Rive를 받지 않는다)
+    if (prefersReducedMotion()) return;
+    const lookUpAt = homeSceneStartTime(sceneClockRef.current) + LOOK_UP_AT_MS;
+    lookUpAtRef.current = lookUpAt;
+    const timer = setTimeout(
+      () => {
+        if (BIG_CHOICES.every((species) => loadedRef.current.has(species))) {
+          catRef.current?.start(true);
+          dogRef.current?.start(true);
+        } else {
+          setLate(true);
+        }
+      },
+      Math.max(0, lookUpAt - performance.now()),
+    );
+    return () => clearTimeout(timer);
   }, []);
 
-  /** 장면을 기다리거나 시작했으면 캐릭터를 firstVisit = true로 연다(열 때 정해야 한다, SpeciesCharacter) */
-  const sceneWanted = () => {
-    const state = homeSceneState();
-    return state === "pending" || state === "play";
-  };
-
-  /** 두 캐릭터가 모두 그릴 준비가 되면 장면 0초: CSS 장면과 Rive(firstVisit = true)를 같은 순간에 시작한다 */
+  /** 열리는 지금이 장면 0.92초 전이면 올려다보기를 붙일 수 있다(그때 재생한다) */
+  const lookUpStillPossible = () => lookUpAtRef.current !== null && performance.now() < lookUpAtRef.current;
   const onCharacterLoad = (species: CharacterSpecies) => {
     loadedRef.current.add(species);
-    if (!BIG_CHOICES.every((each) => loadedRef.current.has(each))) return;
-    if (!startHomeScene()) return;
-    for (const each of BIG_CHOICES) characterRef[each].current?.start(true);
   };
   // 지역은 넘겨받은 값 그대로다(전국 `{}`이면 region이 undefined여야 하므로 `...area`가 아니라 두 값을 직접 넣는다)
   const listHref = (species: AnimalSpecies) =>
@@ -102,6 +87,7 @@ export function SpeciesChoice({ area, enterFrom }: { area: AnimalArea; enterFrom
         {BIG_CHOICES.map((species, index) => (
           <Link
             key={species}
+            ref={index === 0 ? sceneClockRef : undefined}
             // app/globals.css의 [data-enter="home"]이 읽는다
             data-enter="home"
             style={enterOrder(enterFrom + index)}
@@ -123,10 +109,10 @@ export function SpeciesChoice({ area, enterFrom }: { area: AnimalArea; enterFrom
                 <SpeciesCharacter
                   species={species}
                   animated
-                  play={entered}
+                  play={late}
                   prepare
                   onLoad={() => onCharacterLoad(species)}
-                  firstVisitOnLoad={sceneWanted}
+                  withLookUpOnLoad={lookUpStillPossible}
                   ref={characterRef[species]}
                 />
               </span>

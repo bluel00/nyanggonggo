@@ -1,6 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
-  skipHomeScene,
   loadNextListPage,
   loadStubItems,
   openedDetail,
@@ -163,22 +162,20 @@ test("다음 페이지 카드와 상세에서 돌아온 목록에는 등장 효�
   for (const id of [ids[0], next]) expect(await cardAnimations(page, id)).toEqual([]);
 });
 
-test("홈 등장: 제목 → 고양이 → 강아지 → 링크, 60ms 간격으로 320ms씩, 500ms에 끝난다", async ({ page }) => {
-  // 두 번째 진입부터의 등장이다(세션 첫 진입의 첫인상 장면은 home-scene.spec.ts, #115)
-  await skipHomeScene(page);
+test("홈 등장(첫인상 장면, #115): 질문 묶음은 그대로, 카드 고양이 → 강아지 → 기타 동물이 0.52 / 0.58 / 0.64초에 320ms씩", async ({ page }) => {
+  // 질문 두 줄·보조 문구·로고·까딱의 시간표는 home-scene.spec.ts가 본다
   await page.goto("/home");
   await expect(page.getByRole("link", { name: "고양이", exact: true })).toBeVisible();
   const entrance = await page.evaluate(() =>
     [...document.querySelectorAll('[data-enter="home"]')].map((el) => {
       const timing = el.getAnimations()[0]?.effect?.getComputedTiming();
-      return timing ? Number(timing.delay) + Number(timing.duration) : null;
+      return timing ? Math.round(Number(timing.delay) + Number(timing.duration)) : null;
     }),
   );
-  expect(entrance).toEqual([320, 380, 440, 500]);
+  expect(entrance).toEqual([null, 840, 900, 960]);
 });
 
 test("등장 중에 축종 카드를 누르면 목록 이동이 바로 시작된다(이동을 늦추지 않는다)", async ({ page }) => {
-  await skipHomeScene(page);
   await watchList(page);
   // 누른 순간(click 이벤트)의 시각과 그때 등장이 돌고 있었는지를 남긴다
   await page.addInitScript(() => {

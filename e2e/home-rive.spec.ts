@@ -1,16 +1,16 @@
 import { expect, test, type Page } from "@playwright/test";
-import { loadStubItems, rememberSpeciesCookie, skipHomeScene, watchConsoleErrors, watchList, type ListItem } from "./helpers";
+import { homeSettled, loadStubItems, rememberSpeciesCookie, watchConsoleErrors, watchList, type ListItem } from "./helpers";
 
 /**
  * 홈 캐릭터 Rive(architecture.md 9절 "홈 캐릭터 Rive"). production 빌드에서 본다(실제 번들 분할·정적 파일 그대로).
  *
- * - 홈: 정지 SVG가 같은 자리의 캔버스로 바뀌고, .riv·WASM은 우리 도메인에서만 받는다(외부 CDN 요청 0)
+ * - 홈: 정지 SVG가 같은 자리의 캔버스로 바뀌고, .riv·WASM은 우리 도메인에서만, 한 번씩만 받는다(홈 HTML의 미리 받기와 앱의 요청이 같다, 외부 CDN 요청 0)
  * - 움직임 줄이기 설정: 정지 이미지만, Rive 런타임·.riv·WASM을 받지 않는다
  * - 홈이 아닌 화면(목록·상세·찜): Rive 런타임·.riv·WASM을 받지 않는다
  * - 카드를 누르면 바로 이동한다(press 때문에 늦추지 않는다), 교체 전후 레이아웃 이동 0
  * - greet 동안 카드·라벨이 움직이지 않고, greet 중간에 눌러도 바로 이동한다(PRD v1.2 5.1, 7절 "방해 없음")
  *
- * 모두 두 번째 진입부터의 모습(지금 등장 → 인사, firstVisit = false)을 본다. 세션 첫 진입의 첫인상 장면은 home-scene.spec.ts가 본다(#115).
+ * 캐릭터 재생 시점은 홈 첫인상 장면의 0.92초다(handoff (k), #115). 장면 전체(올려다보기가 붙는지 포함)는 home-scene.spec.ts가 본다.
  */
 
 /** Rive 런타임 번들에만 있는 문자열. 청크 이름은 해시라 내용으로 찾는다 */
@@ -34,10 +34,7 @@ function watchRive(page: Page): Seen {
 }
 
 const consoleWatch = watchConsoleErrors();
-test.beforeEach(async ({ page }) => {
-  consoleWatch.attach(page);
-  await skipHomeScene(page);
-});
+test.beforeEach(({ page }) => consoleWatch.attach(page));
 test.afterEach(() => consoleWatch.assertNone());
 
 const canvasesReady = (page: Page) =>
@@ -127,8 +124,8 @@ test("Rive가 붙은 뒤 카드를 누르면 바로 이동한다(press 반응 �
   await expect(page).toHaveURL(/species=cat/);
 });
 
-test("greet은 홈 등장이 끝난 뒤 0.3초 안에 시작한다(README 움직임 표)", async ({ page }) => {
-  // Rive 자산을 미리 받아 둔 상태(두 번째 방문)에서 잰다. 처음 받는 시간은 망에 따라 다르다
+test("캐릭터는 장면 0.92초보다 먼저 재생하지 않고, 자산이 캐시에 있으면 0.92초에 재생한다(handoff (k))", async ({ page }) => {
+  // Rive 자산을 받아 둔 상태(두 번째 방문)에서 잰다. 처음 받는 시간은 망에 따라 다르다(home-scene.spec.ts·망 조건 측정)
   await page.goto("/home");
   await canvasesReady(page);
   await page.addInitScript(() => {
@@ -143,16 +140,15 @@ test("greet은 홈 등장이 끝난 뒤 0.3초 안에 시작한다(README 움직
   });
   await page.reload();
   await canvasesReady(page);
-  const { ready, entranceEnd } = await page.evaluate(async () => {
-    const last = [...document.querySelectorAll('[data-enter="home"]')].at(-1)!;
-    const animation = last.getAnimations()[0];
-    const end = animation ? Number(animation.startTime) + Number(animation.effect!.getComputedTiming().endTime) : 0;
-    return { ready: (window as unknown as { __ready: number[] }).__ready, entranceEnd: end };
+  const { ready, sceneStart } = await page.evaluate(() => {
+    const card = document.querySelector('[data-enter="home"]:not([data-scene="intro"])')!;
+    return { ready: (window as unknown as { __ready: number[] }).__ready, sceneStart: Number(card.getAnimations()[0]?.startTime ?? 0) };
   });
   expect(ready).toHaveLength(2);
   for (const t of ready) {
-    expect(t, "등장이 끝나기 전에 시작하지 않는다").toBeGreaterThanOrEqual(entranceEnd);
-    expect(t - entranceEnd, `등장 끝 → greet ${Math.round(t - entranceEnd)}ms`).toBeLessThan(300);
+    const at = Math.round(t - sceneStart);
+    expect(at, `장면 ${at}ms에 재생`).toBeGreaterThanOrEqual(920 - 5);
+    expect(at, `장면 ${at}ms에 재생`).toBeLessThan(920 + 150);
   }
 });
 
@@ -173,6 +169,8 @@ const cardLayout = (page: Page) =>
 test("greet(들어올 때 동작) 동안 카드·캐릭터 칸·라벨의 위치와 크기가 바뀌지 않는다(PRD v1.2 5.1)", async ({ page }) => {
   await page.goto("/home");
   await canvasesReady(page);
+  // 카드 등장(장면 0.96초에 끝)과 캐릭터 재생(0.92초)이 겹치므로 등장이 끝난 뒤부터 잰다
+  await homeSettled(page);
   const first = await cardLayout(page);
   // 두 greet는 2초 안에 끝난다. 100ms마다 2.2초 동안 잰다
   for (let i = 0; i < 22; i++) {

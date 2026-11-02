@@ -37,17 +37,18 @@ describe("캐릭터 Rive 원본", () => {
    * 머리 기울기는 없다(어떤 그룹도 회전하지 않는다). 잠에서 깨는 wake도 같은 반응이다.
    */
   /**
-   * 올려다보기(characters.md "올려다보기", handoff (k), #115): 뷰 모델 불리언 firstVisit(기본 false)이 true일 때만 Entry → lookUp → greet.
-   * false면 Entry → greet로 지금과 같다. 강아지가 먼저(60fps 55프레임 ≈ 0.92초, −11°), 고양이가 0.12초 뒤(62프레임 ≈ 1.04초, −7°).
+   * 올려다보기(characters.md "올려다보기", handoff (k), #115): 뷰 모델 불리언 withLookUp(기본 false)이 true일 때만 Entry → lookUp → greet.
+   * false면 Entry → greet로 지금과 같다. 재생 시작 즉시 강아지(0프레임, −11°), 고양이는 0.12초 뒤(60fps 7프레임, −7°).
+   * 앱이 장면 0.92초에 재생을 시작해 시간표(0.92 / 1.04)와 맞춘다.
    * 24fps f0~f10(25프레임): f3에 다 올려다보고 f7까지 유지, f10에 정면. 몸은 바닥 기준 세로 1.03(f3) → 1(f6).
    */
-  it("firstVisit: 기본 false, true일 때만 lookUp을 거쳐 greet. lookUp 중에도 press", () => {
+  it("withLookUp: 기본 false, true일 때만 lookUp을 거쳐 greet. lookUp 중에도 press", () => {
     const rml = readFileSync(join(process.cwd(), "rive/nyang-characters/scene.rml"), "utf8");
-    expect(rml).toContain('<ViewModelPropertyBoolean name="firstVisit" id="0:53"/>');
+    expect(rml).toContain('<ViewModelPropertyBoolean name="withLookUp" id="0:53"/>');
     expect(rml).toContain('<ViewModelInstanceBoolean propertyValue="false" viewModelPropertyId="0:53"/>');
     const cases = [
-      { animal: "cat", lookUpState: "0:18", greetState: "0:12", pressState: "0:14", anim: "0:26", head: "0:1002", rig: "0:900", start: 62, deg: -7 },
-      { animal: "dog", lookUpState: "0:215", greetState: "0:212", pressState: "0:214", anim: "0:223", head: "0:3001", rig: "0:3900", start: 55, deg: -11 },
+      { animal: "cat", lookUpState: "0:18", greetState: "0:12", pressState: "0:14", anim: "0:26", head: "0:1002", rig: "0:900", start: 7, deg: -7 },
+      { animal: "dog", lookUpState: "0:215", greetState: "0:212", pressState: "0:214", anim: "0:223", head: "0:3001", rig: "0:3900", start: 0, deg: -11 },
     ];
     const entries = [...rml.matchAll(/<EntryState[^>]*>([\s\S]*?)<\/EntryState>/g)].map((m) => m[1]);
     expect(entries).toHaveLength(2);
@@ -66,9 +67,11 @@ describe("캐릭터 Rive 원본", () => {
       expect(body, c.animal).not.toBeNull();
       const rad = +((c.deg * Math.PI) / 180).toFixed(4);
       // 머리 회전(15): 시작까지 정면, f3(+7.5 → 반올림 +8)에 올려다봄, f7(+17.5 → +18)까지 유지, f10(+25)에 정면
-      expect(keyframes(body![1], c.head, 15)).toEqual([[0, 0], [c.start, 0], [c.start + 8, rad], [c.start + 18, rad], [c.start + 25, 0]]);
+      // 같은 프레임의 키는 하나다(강아지는 시작이 0프레임)
+      const lead = c.start === 0 ? [[0, 0]] : [[0, 0], [c.start, 0]];
+      expect(keyframes(body![1], c.head, 15)).toEqual([...lead, [c.start + 8, rad], [c.start + 18, rad], [c.start + 25, 0]]);
       // 몸(rig 세로, 17): 1 → 1.03 → 1
-      expect(keyframes(body![1], c.rig, 17)).toEqual([[0, 1], [c.start, 1], [c.start + 8, 1.03], [c.start + 15, 1]]);
+      expect(keyframes(body![1], c.rig, 17)).toEqual([...lead.map(([frame]) => [frame, 1]), [c.start + 8, 1.03], [c.start + 15, 1]]);
     }
   });
 

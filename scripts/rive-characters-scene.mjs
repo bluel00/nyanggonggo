@@ -16,9 +16,9 @@
  *     고양이: front 정면 앉음 · q34 3/4 · side 옆 앉음(정점 id, 웅크림·씰룩·덮치기 공중·착지로 보간) · lie 기우는 중간(누움으로 보간)
  *     강아지: front 정면 앉음 · q34 3/4 · side 옆 앉음(정점 id, 놀자로 보간). 3/4·옆·놀자는 flip −1로 왼쪽을 본다(고양이와 마주 봄)
  *   상태: Entry → greet → idle. 고양이는 idle →(무입력 10초) sleepEnter → sleep(반복).
- *   firstVisit(뷰 모델 불리언, 기본 false)이 true면 Entry → lookUp(정면 앉음 대기 → 올려다보기) → greet(handoff (k), #115).
+ *   withLookUp(뷰 모델 불리언, 기본 false)이 true면 Entry → lookUp(시작 즉시 올려다보기) → greet(handoff (k), characters.md "올려다보기", #115).
  *   press 트리거: lookUp·greet·idle → press(lookUp·greet는 끊는다), sleepEnter·sleep → wake. press·wake가 끝나면 idle.
- *   앱이 보내는 신호는 뷰 모델의 실행 중 트리거 press와 시작할 때 한 번 정하는 불리언 firstVisit이다(scene.rml의 ViewModel "Character").
+ *   앱이 보내는 신호는 뷰 모델의 실행 중 트리거 press와 재생을 시작할 때 한 번 정하는 불리언 withLookUp이다(scene.rml의 ViewModel "Character").
  *
  * 숫자는 60fps 프레임이다. characters.md 프레임표는 24fps라 `f24(n)` = n × 2.5로 옮긴다.
  */
@@ -217,10 +217,10 @@ function character(animal, { ids, views }) {
   };
 
   /**
-   * 올려다보기(characters.md "올려다보기", handoff (k)): 정면 앉음 그대로 기다리다 start(60fps 프레임)부터 24fps f0~f10.
+   * 올려다보기(characters.md "올려다보기", handoff (k)): 재생 시작에서 start(60fps 프레임) 뒤부터 24fps f0~f10(강아지 0, 고양이 0.12초 뒤).
    * f1–3(ease-out) 머리가 목(60,74 = head 그룹 원점)을 기준으로 왼쪽 위로 headDeg°, 1.5 위로, 눈(eyes-*)이 eyes만큼 이동,
    * 몸이 바닥(rig) 기준 세로 1 → 1.03. f4–7 유지(몸은 f6까지 1.0으로, 가속 지정이 없어 선형). f8–10(ease-in-out) 정면으로 돌아온다.
-   * 끝나면 greet로 넘어가 인사 첫 동작(3/4로 돌아섬)으로 이어진다. 시점은 Rive 안에서 센다(0 = 재생 시작).
+   * 끝나면 greet로 넘어가 인사 첫 동작(3/4로 돌아섬)으로 이어진다. 앱이 장면 0.92초에 재생을 시작해 장면 시간표(0.92 / 1.04)와 맞춘다.
    */
   ch.lookUp = (anim, start, { headDeg, eyes }) => {
     const at = (n) => start + f24(n);
@@ -263,7 +263,7 @@ const triggerXml = `<TransitionViewModelCondition>
                             </TransitionPropertyViewModelComparator>
                             <TransitionValueTriggerComparator/>
                         </TransitionViewModelCondition>`;
-const firstVisitXml = `<TransitionViewModelCondition opValue="equal">
+const withLookUpXml = `<TransitionViewModelCondition opValue="equal">
                             <TransitionPropertyViewModelComparator>
                                 <BindablePropertyBoolean>
                                     <DataBindContext sourcePathIds="0:50-0:53" propertyKey="634"/>
@@ -271,8 +271,8 @@ const firstVisitXml = `<TransitionViewModelCondition opValue="equal">
                             </TransitionPropertyViewModelComparator>
                             <TransitionValueBooleanComparator value="true"/>
                         </TransitionViewModelCondition>`;
-const transition = ({ to, press, done, afterMs, firstVisit }) => {
-  if (firstVisit) return `<StateTransition stateToId="${to}">\n                        ${firstVisitXml}\n                    </StateTransition>`;
+const transition = ({ to, press, done, afterMs, withLookUp }) => {
+  if (withLookUp) return `<StateTransition stateToId="${to}">\n                        ${withLookUpXml}\n                    </StateTransition>`;
   if (press) return `<StateTransition stateToId="${to}">\n                        ${triggerXml}\n                    </StateTransition>`;
   if (done) return `<StateTransition stateToId="${to}" enableExitTime="true" exitTimeIsPercetange="true" exitTime="100"/>`;
   if (afterMs !== undefined) return `<StateTransition stateToId="${to}" enableExitTime="true" exitTime="${afterMs}"/>`;
@@ -280,7 +280,7 @@ const transition = ({ to, press, done, afterMs, firstVisit }) => {
 };
 /**
  * states: [{ id, anim, name, x, y, reset?, comment?, out: [transition…] }]. entry: Entry에서 나가는 전환(앞의 것부터 본다).
- * firstVisit이 true면 lookUp, 아니면 greet(조건 없는 전환은 맨 뒤)
+ * withLookUp이 true면 lookUp, 아니면 greet(조건 없는 전환은 맨 뒤)
  */
 function stateMachineXml(ids, states, entry) {
   const body = states
@@ -399,8 +399,8 @@ const catIdle = new Anim("idle", "0:21", 300, "loop");
   catIdle.key(g("tail"), "rotation", [[0, 0, "easeInOut"], [75, 0.07, "easeInOut"], [150, 0, "easeInOut"], [225, -0.056, "easeInOut"], [300, 0]]);
   catIdle.key(g("bow"), "rotation", [[0, 0], [60, 0, "easeInOut"], [75, 0.07, "easeInOut"], [90, -0.05, "easeInOut"], [105, 0.02, "easeInOut"], [120, 0], [300, 0]]);
 }
-// lookUp: firstVisit일 때만. 고양이는 1.04초(강아지보다 0.12초 뒤)에 −7°, 눈 (−1, −1.6). 60fps 62프레임 = 1.033초
-const catLookUp = cat.lookUp(new Anim("lookUp", "0:26", 62 + f24(10), "oneShot"), 62, { headDeg: -7, eyes: [-1, -1.6] });
+// lookUp: withLookUp일 때만. 고양이는 강아지보다 0.12초 뒤(60fps 7프레임 = 0.117초)에 −7°, 눈 (−1, −1.6)
+const catLookUp = cat.lookUp(new Anim("lookUp", "0:26", 7 + f24(10), "oneShot"), 7, { headDeg: -7, eyes: [-1, -1.6] });
 const catPress = cat.pressLike(new Anim("press", "0:22", PRESS_FRAMES, "oneShot"), false);
 const catWake = cat.pressLike(new Anim("wake", "0:25", PRESS_FRAMES, "oneShot"), true);
 
@@ -452,9 +452,9 @@ const catArtboard = artboardXml(
     { id: CS.sleepEnter, anim: catSleepEnter, name: "sleepEnter", x: 600, y: 0, reset: true, comment: "sleep: 졸기 → 눕기 → 잠(반복). 누르면 wake(정면 앉음으로 튀어 오름)", out: [{ to: CS.sleep, done: true }, { to: CS.wake, press: true }] },
     { id: CS.sleep, anim: catSleep, name: "sleep", x: 800, y: 0, out: [{ to: CS.wake, press: true }] },
     { id: CS.wake, anim: catWake, name: "wake", x: 600, y: -160, reset: true, out: [{ to: CS.idle, done: true }] },
-    { id: CS.lookUp, anim: catLookUp, name: "lookUp", x: 200, y: 160, comment: "lookUp: firstVisit일 때만. 정면 앉음 대기 → 올려다보기 → greet. 누르면 끊고 press", out: [{ to: CS.greet, done: true }, { to: CS.press, press: true }] },
+    { id: CS.lookUp, anim: catLookUp, name: "lookUp", x: 200, y: 160, comment: "lookUp: withLookUp일 때만. 시작 즉시 올려다보기 → greet. 누르면 끊고 press", out: [{ to: CS.greet, done: true }, { to: CS.press, press: true }] },
   ],
-  [{ to: CS.lookUp, firstVisit: true }, { to: CS.greet }],
+  [{ to: CS.lookUp, withLookUp: true }, { to: CS.greet }],
   [catGreet, catIdle, catPress, catWake, catSleepEnter, catSleep, catLookUp],
 );
 
@@ -517,8 +517,8 @@ const dogIdle = new Anim("idle", "0:221", 330, "loop");
   dogIdle.key(g("body"), "scaleY", [[0, 1, "easeInOut"], [165, 1.015, "easeInOut"], [330, 1]]);
   dogIdle.key(g("tail"), "rotation", [[0, 0, "easeInOut"], [83, 0.09, "easeInOut"], [165, 0, "easeInOut"], [248, -0.072, "easeInOut"], [330, 0]]);
 }
-// lookUp: firstVisit일 때만. 강아지가 먼저(0.92초), 오른쪽 카드라 로고가 더 멀어 −11°, 눈 (−1.6, −1.4). 60fps 55프레임 = 0.917초
-const dogLookUp = dog.lookUp(new Anim("lookUp", "0:223", 55 + f24(10), "oneShot"), 55, { headDeg: -11, eyes: [-1.6, -1.4] });
+// lookUp: withLookUp일 때만. 강아지가 먼저(재생 시작 즉시), 오른쪽 카드라 로고가 더 멀어 −11°, 눈 (−1.6, −1.4)
+const dogLookUp = dog.lookUp(new Anim("lookUp", "0:223", 0 + f24(10), "oneShot"), 0, { headDeg: -11, eyes: [-1.6, -1.4] });
 const dogPress = dog.pressLike(new Anim("press", "0:222", PRESS_FRAMES, "oneShot"), false);
 dog.finalize([dogLookUp, dogGreet, dogIdle, dogPress]);
 
@@ -530,9 +530,9 @@ const dogArtboard = artboardXml(
     { id: DS.greet, anim: dogGreet, name: "greet", x: 200, y: 0, comment: "greet: 들어올 때 1회(놀자 자세) → idle. 누르면 끊고 press", out: [{ to: DS.idle, done: true }, { to: DS.press, press: true }] },
     { id: DS.idle, anim: dogIdle, name: "idle", x: 400, y: 0, out: [{ to: DS.press, press: true }] },
     { id: DS.press, anim: dogPress, name: "press", x: 400, y: -160, reset: true, comment: "press: 200ms(100ms 납작 + 100ms 돌아옴) → idle", out: [{ to: DS.idle, done: true }] },
-    { id: DS.lookUp, anim: dogLookUp, name: "lookUp", x: 200, y: 160, comment: "lookUp: firstVisit일 때만. 정면 앉음 대기 → 올려다보기 → greet. 누르면 끊고 press", out: [{ to: DS.greet, done: true }, { to: DS.press, press: true }] },
+    { id: DS.lookUp, anim: dogLookUp, name: "lookUp", x: 200, y: 160, comment: "lookUp: withLookUp일 때만. 시작 즉시 올려다보기 → greet. 누르면 끊고 press", out: [{ to: DS.greet, done: true }, { to: DS.press, press: true }] },
   ],
-  [{ to: DS.lookUp, firstVisit: true }, { to: DS.greet }],
+  [{ to: DS.lookUp, withLookUp: true }, { to: DS.greet }],
   [dogGreet, dogIdle, dogPress, dogLookUp],
 );
 

@@ -49,6 +49,8 @@ export {
 export { AnimalPhoto, PHOTO_SIZES } from "./ui/animal-photo";
 export { photoTransition } from "./ui/photo-transition";
 export { CHARACTER_SRC, SpeciesCharacter, type CharacterHandle, type CharacterSpecies } from "./ui/species-character";
+// 홈이 미리 받는 Rive 자산 주소(app/home/page.tsx의 preload)
+export { CHARACTER_RIV_URL, RIVE_WASM_URL } from "./lib/character-animation-assets";
 export { OTHER_CHARACTER_SRC, OtherCharacters } from "./ui/other-characters";
 export { LoadingCharacter } from "./ui/loading-character";
 export { StatusBadge } from "./ui/status-badge";
