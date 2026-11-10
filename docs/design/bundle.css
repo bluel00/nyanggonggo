@@ -123,9 +123,13 @@
 .cn-info dt{margin:0;color:var(--text-2)}
 .cn-info dd{margin:0;display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-2);min-width:0}
 .cn-info__val{min-width:0;word-break:keep-all;overflow-wrap:anywhere}
-.cn-small-action{position:relative;flex:none;display:inline-flex;align-items:center;gap:2px;padding:0;border:0;background:transparent;color:var(--text-2);text-decoration:none;white-space:nowrap;cursor:pointer;font-family:inherit}
-.cn-small-action::after{content:"";position:absolute;left:50%;top:50%;width:var(--touch);height:var(--touch);transform:translate(-50%,-50%)}
-.cn-small-action:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px;border-radius:4px}
+/* TextButton (2026-11-10, handoff (l)): text action, no container. text 600 + a cue that is not colour (underline under the label, or a chevron after it). Pressed and hovered: text-2. 44x44 hit area, line height unchanged. */
+.cn-text-btn{position:relative;flex:none;display:inline-flex;align-items:center;gap:2px;padding:0;border:0;background:transparent;color:var(--text);font-weight:600;text-decoration:none;white-space:nowrap;cursor:pointer;font-family:inherit}
+.cn-text-btn::after{content:"";position:absolute;left:50%;top:50%;width:var(--touch);height:var(--touch);transform:translate(-50%,-50%)}
+.cn-text-btn:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px;border-radius:4px}
+.cn-text-btn--underline .cn-text-btn__label{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
+.cn-text-btn:active,.cn-text-btn.cn-pressed{color:var(--text-2);transform:none}
+@media (hover:hover){.cn-text-btn:hover{color:var(--text-2)}}
 .cn-deadline--protected{color:var(--status-protected-text)}
 .cn-deadline--near-deadline{color:var(--status-near-deadline-text)}
 .cn-card__no{margin:2px 0 0;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

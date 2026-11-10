@@ -95,7 +95,7 @@ Type scale (`fontSize`): `title` 20/28/700, `card-title` 16/24/600, `body` 14/20
 
 | 레이어 | 컴포넌트 | 비고 |
 |---|---|---|
-| `shared/ui` | Button, Chip, Segmented, `RadioOption`, `NativeSelect`, `Sheet`(Radix Dialog), `Toaster`/`showToast`(sonner), SkeletonCard, `BackButton`, `ScreenShell`/`ScreenHeader`, `DisplayText`, `StackLayer`, `AppShell`, `ViewTransition`, `Logo`(`src/shared/ui/logo.tsx`. 크기로 변형을 고름: 24 이하 tile-small, 25~55 tile, 56 이상 line, 조합 mark / lockup) | 도메인 모름. Icon 컴포넌트는 없고 lucide 아이콘을 바로 쓴다(이 디자인 시스템의 `Icon`은 자리표시). 토큰은 위 매핑만 사용 |
+| `shared/ui` | Button, `TextButton`((l), 구현 전), Chip, Segmented, `RadioOption`, `NativeSelect`, `Sheet`(Radix Dialog), `Toaster`/`showToast`(sonner), SkeletonCard, `BackButton`, `ScreenShell`/`ScreenHeader`, `DisplayText`, `StackLayer`, `AppShell`, `ViewTransition`, `Logo`(`src/shared/ui/logo.tsx`. 크기로 변형을 고름: 24 이하 tile-small, 25~55 tile, 56 이상 line, 조합 mark / lockup) | 도메인 모름. Icon 컴포넌트는 없고 lucide 아이콘을 바로 쓴다(이 디자인 시스템의 `Icon`은 자리표시). 토큰은 위 매핑만 사용 |
 | `entities/animal` | AnimalCard, StatusBadge, `getStatusVariant(animal, now)`, 문구 `statusBadgeText` · `cardDeadlineText` · `detailDeadlineText` · `deadlineDateText` · `statusShareText`, 상세 줄 `detailRows` | Domain `Animal`만 props로 받는다. AnimalCard는 `action`(ReactNode)만 받고 관심은 모른다. 마감 D-3 이하(`nearDeadline`) 판정은 domain 쪽 |
 | `features/animal-filter` | 필터 시트 조립, 목록 헤더 필터 버튼 | 시트: 축종 Segmented(3) + 지역 Select 2개(시/도, 시/군/구) + 보호 상태 Chip + 성별 Chip + 정렬 Radio. 머리 / 스크롤 내용 / 고정 아래 영역(적용하기, `shadow-bar`). 값은 URL search params를 읽고, [적용하기]에서만 `router.replace`. 시트 안 draft state는 "적용 전 임시 값"이라 허용, 닫히면 버림 |
 | `features/animal-favorite` | FavoriteButton(관심), 목록 헤더 관심 링크, localStorage 훅 | 저장은 id만. 위젯이 카드의 `action` 자리에 넣는다 |
@@ -112,7 +112,7 @@ Type scale (`fontSize`): `title` 20/28/700, `card-title` 16/24/600, `body` 14/20
 
 | 디자인 시스템 | 코드 | 코드 위치 |
 |---|---|---|
-| `Button variant="small-action"` | `SMALL_ACTION` 클래스 상수를 붙인 `<button>`·`<a>` | `src/features/shelter-info/ui/shelter-info-sheet.tsx` |
+| `TextButton` (2026-11-10 전에는 `Button variant="small-action"`) | 지금은 `SMALL_ACTION` 클래스 상수를 붙인 `<button>`·`<a>`. (l) 구현으로 공용 `TextButton`이 된다(구현 전) | 지금 `src/features/shelter-info/ui/shelter-info-sheet.tsx` |
 | `Button variant="icon"` (목록 헤더 하트) | `next/link` `Link`, 이름 "관심 공고" | `favorites-link.tsx` |
 | `DeadlineText` | `<span data-slot="d-day">`, 문구는 `detailDeadlineText` | `animal-detail.tsx`, `status-text.ts` |
 | `BottomSheet` | `Sheet` (Radix Dialog, shadcn) | `sheet.tsx` |
@@ -158,7 +158,7 @@ Type scale (`fontSize`): `title` 20/28/700, `card-title` 16/24/600, `body` 14/20
 컴포넌트 내부 치수 (`bundle.css`, 토큰 없음)
 - 배지 높이 24px / 점 6px, Chip 36px 높이 (터치 영역은 위아래 4px 확장해 44px), Segmented 버튼 36px, Radio 원 20px
 - BottomSheet 핸들 36x4px, 딤 rgba(0,0,0,.4), 카드 텍스트 패딩 10px 12px 12px(흰 카드 안, 방향 A), 카드 줄 사이 간격 2px
-- 아이콘 선 두께 1.8px, 기본 크기 22px (필터 버튼 안 16px, 줄 끝 작은 글자 버튼 14px)
+- 아이콘 선 두께 1.8px, 기본 크기 22px (필터 버튼 안 16px, TextButton 14px)
 
 화면 1~2 (목록 + 필터 시트)
 - 필터 버튼은 Chip 모양 + 필터 아이콘이고 그림자는 `shadow-control`이다(`FilterButton`). 성별을 고르면 칩을 고른 모양(`text` 채움)이 되고 접근성 이름이 "필터, 암컷"이 된다. 다른 조건은 버튼에 표시하지 않고, 목록 위 필터 요약은 미정이다.
@@ -182,15 +182,15 @@ Type scale (`fontSize`): `title` 20/28/700, `card-title` 16/24/600, `body` 14/20
 - 제목은 늘 지역이고(Domain에 이름이 없다), 기타 축종은 "<동물> · <지역>"이다. 보호 중 공고는 `display-detail`(Pretendard 24/32/700), 종료는 `title`(20/700)에 줄 높이 32px라 제목 줄은 상태와 상관없이 32px다.
 - 그 아래 "성별 · 나이"를 `body` + `text-2`로 쓴다. 예: "암컷 · 2026년생 · 60일 미만", "수컷 · 2024년생". 모르면 "성별 미상", "나이 미상". 처음 보는 나이 형식은 공공 API 원문 그대로 둔다.
 - 정보 줄(`DetailInfo`): 라벨-값 2열 그리드(라벨 `body` `text-2`, 열 폭은 내용에 맞춤, 행 간격 `space-3`). 순서는 **발견 장소 → 보호소 → 공고 번호 → 공고 기간 → 종료 사유 → 특이사항**이고 값이 없는 줄은 뺀다. 주소·전화 줄은 정보 줄에 없다(보호소 정보 시트로 옮겼다).
-  - 보호소 줄 끝에 줄 끝 작은 글자 버튼 [보호소 정보](i 아이콘, `Button variant="small-action"`)가 붙는다. 접근성 이름은 "보호소 정보 보기"다. 종료 공고이거나 주소와 전화가 모두 없으면 이 버튼은 없다.
-  - 줄 끝 작은 글자 버튼은 누르는 영역이 44×44px다. 상세의 [보호소 정보] 줄은 줄 높이 그대로다. 보호소 정보 시트의 링크 줄([지도]·[전화])은 라벨과 값 위아래에 6px씩 더한다. 이웃한 두 버튼의 44px 영역이 겹치지 않게 하려는 것이다(행 간격 12 + 줄 20 = 32 < 44).
+  - 보호소 줄 끝에 [보호소 정보](i 아이콘, `TextButton` 밑줄, (l))가 붙는다. 접근성 이름은 "보호소 정보 보기"다. 종료 공고이거나 주소와 전화가 모두 없으면 이 버튼은 없다.
+  - TextButton은 글자 `text` 600에 글자 아래 1px 밑줄, 누르면(호버 가능한 기기는 호버도) `text-2`, 누르는 영역이 44×44px다((l). 전에는 `text-2` 글자에 밑줄이 없어 라벨과 구분되지 않았다). 상세의 [보호소 정보] 줄은 줄 높이 그대로다. 보호소 정보 시트의 링크 줄([지도]·[전화])은 라벨과 값 위아래에 6px씩 더한다. 이웃한 두 버튼의 44px 영역이 겹치지 않게 하려는 것이다(행 간격 12 + 줄 20 = 32 < 44).
   - 값은 띄어쓰기에서만 줄을 바꾸고(`word-break: keep-all`), 띄어쓰기 없는 긴 값은 어디서든 끊는다(`overflow-wrap: anywhere`).
   - 종료 사유 줄은 공고 기간 뒤, 특이사항 앞이고, 특이사항과 같으면 종료 사유 한 줄만 보인다.
   - 담당자 이름은 어디에도 보이지 않는다.
 - 보호소 정보 시트(`ShelterInfo` + 아래 고정 영역 없는 `BottomSheet`):
   - 구성: 핸들(36×4, `border`) → 제목 = 보호소 이름(`card-title`) → 라벨-값 줄 **주소 <주소> [지도]** → **전화 <번호> [전화]**. 아래 고정 영역은 없다(필터 시트의 [적용하기] 같은 버튼이 없다).
   - 값이 없는 줄은 뺀다. 전화에 숫자가 없으면 줄은 두고 [전화]만 뺀다.
-  - [지도]는 새 탭으로 지도 검색, [전화]는 전화 걸기다. 둘 다 줄 끝 작은 글자 버튼이다(핀·수화기 14px).
+  - [지도]는 새 탭으로 지도 검색, [전화]는 전화 걸기다. 둘 다 `TextButton` 밑줄이다(핀·수화기 14px).
   - 접근성 이름: 시트를 여는 버튼 "보호소 정보 보기", [지도] "지도에서 주소 보기(새 탭)", [전화] "보호소에 전화", 핸들 "닫기".
   - 본문 아래 여백은 `space-6` + 아래 안전 영역이다.
   - 닫기: 바탕 탭, 핸들 탭, Esc. 아래로 끌어 닫기는 없다. 움직임 줄이기면 열림·닫힘 애니메이션이 없다.
@@ -286,7 +286,7 @@ Type scale (`fontSize`): `title` 20/28/700, `card-title` 16/24/600, `body` 14/20
 
 ## (f) 결정됐지만 아직 구현 안 됨
 
-남은 것 없음.
+- 글자 버튼을 `TextButton`으로 따로 두고 밑줄을 단다(2026-11-10, (l)).
 
 이미 구현된 것의 기록: 홈 첫인상 "부르고 답하기"(#115)는 2026-10-30에 코드에 들어갔다(PR #119~#122, main `7d5c8de`, (k)). 로딩 시머·캐릭터, 사진 로딩 시머(#111)는 2026-10-30에 코드에 들어갔다(PR #118, main `b5c822d`, (j)). 2026-10-26에 적은 8가지는 #53에서, 홈 "기타 동물" 선택지는 #86(PR #87)에서 코드에 들어갔다((g) "홈 기타 동물 선택지", Screens 01).
 
@@ -417,7 +417,7 @@ Type scale (`fontSize`): `title` 20/28/700, `card-title` 16/24/600, `body` 14/20
 | C2 | 카드 배지 "보호중 · 마감 D-N" / "보호중 · 오늘 마감", 마감 D-3 이하는 색으로만, 종료 "종료 · <결과>" | `StatusBadge`, 화면 1~2 |
 | C3 | 상세 배지는 상태만, 옆에 "공고 마감 D-N" / "오늘 마감" | `StatusBadge`(`detail`), `DeadlineText`, 화면 3~4 |
 | C4 | 카드 3줄 "공고 번호 <번호>" | `AnimalCard`, 화면 1~2 |
-| C5 | 줄 끝 작은 글자 버튼 | `Button variant="small-action"` |
+| C5 | 줄 끝 작은 글자 버튼 | `TextButton`(2026-11-10까지 `Button variant="small-action"`, (l)) |
 | C6 | 아래 고정 영역 없는 시트(보호소 정보) | `BottomSheet`(footer 없음), `ShelterInfo` |
 | S1 | 홈: 로고 가로 조합 + 한 줄 소개 | 서비스명 상수, (g) |
 | S2 | 문서 제목 "… \| 멍냥공고" | 서비스명 상수 |
@@ -480,9 +480,9 @@ EL 결정. 근거: 폰에서 첫 데이터에 2~3초 동안 회색 뼈대만 보
 | L5 | 캐릭터 움직임은 SVG + CSS(Rive 아님): 숨쉬기 2.4초, 깜빡임 약 4초, 꼬리 1.8초 | characters.md |
 | L6 | 구현에서 정해진 것: 인라인 캐릭터 SVG는 id를 뺐다(한 문서 안에서 겹치지 않게, 그림은 원본과 같음). 하이드레이션 전에 이미 실패한 사진도 `ImageOff`로 보인다. 시머와 캐릭터 등장은 CSS만 써서 하이드레이션 전에도 동작한다. 아직 받지 않은 화면 밖 사진 칸도 시머가 돈다(폰에서 버벅임·발열이 보이면 화면 가까이에서만 돌리게 고친다) | 기록만 (PR #118) |
 
-## (k) 홈 첫인상 "부르고 답하기" (2026-10-30 결정, 같은 날 구현: PR #119~#122, main `7d5c8de`. 같은 날 "언제"와 Rive 연결을 고쳐 다시 구현할 것, #115 다시 엶)
+## (k) 홈 첫인상 "부르고 답하기" (2026-10-30 결정, 구현: PR #119~#122, 고침 PR #124, main `1886fa8`, 2026-11-02 #115 닫힘)
 
-**운영에서 확인된 문제 (2026-10-30, Claude 측정)**: 운영 첫 진입(캐시 없음)에서 장면이 대체(`off`)로 넘어간다. Rive 런타임(wasm)과 `.riv`는 하이드레이션 뒤에야 요청되어(측정 1.6~4.1초에 요청 시작), 홈이 보인 뒤 0.3초 안에 준비될 수 없다. 대체로 넘어가도 첫 진입 기록이 남아 그 세션에서는 다시 돌지 않는다. 로컬 측정(0.22~0.25초에 시작)은 한계 0.3초에 아슬아슬했다. 고칠 방향(2026-10-30 EL 결정): 장면을 매 홈 진입마다 보여 주고, CSS 장면은 Rive를 기다리지 않는다. 아래 "언제", "장면의 0초와 Rive"가 고친 내용이다.
+**운영에서 확인된 문제 (2026-10-30, Claude 측정)**: 운영 첫 진입(캐시 없음)에서 장면이 대체(`off`)로 넘어간다. Rive 런타임(wasm)과 `.riv`는 하이드레이션 뒤에야 요청되어(측정 1.6~4.1초에 요청 시작), 홈이 보인 뒤 0.3초 안에 준비될 수 없다. 대체로 넘어가도 첫 진입 기록이 남아 그 세션에서는 다시 돌지 않는다. 로컬 측정(0.22~0.25초에 시작)은 한계 0.3초에 아슬아슬했다. 고칠 방향(2026-10-30 EL 결정): 장면을 매 홈 진입마다 보여 주고, CSS 장면은 Rive를 기다리지 않는다. 아래 "언제", "장면의 0초와 Rive"가 고친 내용이다. 고침은 PR #124(main `1886fa8`)로 들어갔고 운영에서 확인했다(아래 구현 순서 6단계).
 
 EL 결정. 목표는 처음 온 사람에게 좋은 첫인상을 주는 것이고, 사용성이 먼저다(장면이 도는 중에도 카드는 바로 누를 수 있다). 시안과 실제 박자는 Design 아티팩트 "냥공고 홈 · 축종 선택"의 12절 "홈 첫인상" 움직임 데모(지금과 나란히, 느리게·움직임 줄이기 미리보기)와 13절 "올려다보기" 시트에 있다. 이 절의 내용은 문서의 다른 곳(README 움직임 표, tokens.json)에는 아직 반영하지 않았다.
 
@@ -552,4 +552,20 @@ EL 결정. 목표는 처음 온 사람에게 좋은 첫인상을 주는 것이�
 | 3 | Rive 파일에 `firstVisit` 입력과 올려다보기 구간을 더한다. 인사는 그대로 | Rive 미리보기에서 true / false 두 흐름, 어느 상태에서든 `press`. **구현됨(2026-10-30, PR #121, main `ef6e1cb`)**: `lookUp` 상태(Entry에서 firstVisit이면 lookUp → greet, 아니면 greet). 시작 시점은 60fps 프레임으로 맞춰 강아지 0.917초·고양이 1.033초, 상태 전환 한 단계 때문에 실제로는 1~2프레임(17~33ms) 늦게 보인다(기존 Entry → greet와 같음). 올려다보기 전에는 깜빡임 없이 정지. false 흐름은 main과 프레임 차이 0. **코드 차이**: 강아지 잠(`sleep`) 동작이 코드에 없다(이번 단계 전부터). 강아지는 인사 → 대기에서 멈춘다 |
 | 4 | 홈 장면 조립: 첫 진입 판단(세션 저장소), Rive 준비 대기(최대 0.3초), CSS 시간표, 대체 규칙 | 첫 진입 / 두 번째 진입 / 새로고침 / Rive를 늦게 받을 때(네트워크 느리게) / 움직임 줄이기 / 장면 중 누름. **구현됨(PR #122, main `7d5c8de`)**: 상태는 `<html data-home-scene>`(`pending` / `play` / `off`), 홈 HTML 안의 작은 스크립트가 첫 페인트 전에 정하고 0.3초 대체 타이머를 건다(JS가 늦거나 실패해도 지금 화면으로 넘어감). 저장 키 `nyanggonggo:home-scene-seen`. Rive는 로드되는 순간 첫 프레임에서 시작 상태를 정하므로, 캐릭터마다 로드할 때 `firstVisit`을 넣는다. 데모의 효과 전체 곡선은 CSS 구간별 `cubic-bezier`로 정확히 옮김(차이 0.001 이하). 목록에서 먼저 들어와 헤더로 홈에 오면 그때가 첫 홈 진입이라 장면이 돈다. 두 번째 진입에서도 캐릭터 Rive는 미리 로드한다(재생은 등장 뒤) |
 | 5 | 실제 폰에서 박자 확인 | 데모 보드(12절)와 나란히 보고 어긋난 값을 기록. **아직 안 함**(2026-10-30 기록 정정: EL은 폰 확인 없이 머지했다). 운영에서 첫 진입이 거의 늘 대체로 넘어가는 문제가 있다(아래 "운영에서 확인된 문제") |
-| 6 | (2026-10-30 고침) 매 진입 장면으로 바꾸기: 세션 저장소 판단·기록과 0.3초 대기 제거, CSS 장면은 0초에 바로, 홈 HTML에서 Rive wasm·`.riv` 미리 받기, Rive 입력 이름 `firstVisit` → `withLookUp`, Rive 안의 올려다보기 대기 제거(강아지 0, 고양이 0.12초), 장면 0.92초에 두 캐릭터가 준비돼 있으면 `withLookUp = true`로 재생, 아니면 준비되는 대로 false | 운영 미리보기에서 실제 망으로: 캐시 없는 첫 방문 / 두 번째 방문 / 새로고침에서 장면과 올려다보기가 붙는 비율, 움직임 줄이기, 장면 중 누름. EL 실기기 확인 |
+| 6 | (2026-10-30 고침) 매 진입 장면으로 바꾸기: 세션 저장소 판단·기록과 0.3초 대기 제거, CSS 장면은 0초에 바로, 홈 HTML에서 Rive wasm·`.riv` 미리 받기, Rive 입력 이름 `firstVisit` → `withLookUp`, Rive 안의 올려다보기 대기 제거(강아지 0, 고양이 0.12초), 장면 0.92초에 두 캐릭터가 준비돼 있으면 `withLookUp = true`로 재생, 아니면 준비되는 대로 false | 운영 미리보기에서 실제 망으로: 캐시 없는 첫 방문 / 두 번째 방문 / 새로고침에서 장면과 올려다보기가 붙는 비율, 움직임 줄이기, 장면 중 누름. EL 실기기 확인. **구현됨(2026-11-02, PR #124, main `1886fa8`. EL이 머지 전에 실기기로 확인함, 2026-11-03에 알려 줌)**: CSS 장면은 JS 없이 첫 페인트에 시작(측정 −20~+24ms), 장면 0초는 앱이 카드 애니메이션 시작 시각으로 읽는다. 홈 HTML이 wasm·`.riv`를 미리 받아 요청 시작이 0.01~0.18초로 당겨졌다. Rive는 로드되는 순간 시작 상태를 정하므로 `withLookUp`은 각 캐릭터가 로드될 때 정해진다(0.92초 전이면 true, 뒤면 false, 일찍 로드됐는데 false로 시작해야 하면 다시 로드). 고양이 시작은 60fps 7프레임 = 0.117초. 측정(로컬 production): 캐시 있는 방문은 모든 망에서 올려다보기가 붙고, 캐시 없는 4G·느린 4G 첫 방문은 올려다보기만 빠진다(Rive 런타임 JS 청크가 마지막에 도착, 청크 미리 받기는 관찰 뒤 결정). 운영 확인: Claude Code(한국 PC) 첫 방문·재방문 모두 true, Claude(해외 클라우드) 첫 방문 false·재방문 true, 세션 저장소 쓰지 않음. Lighthouse TBT는 시뮬레이션상 218 → 1,879ms로 나빠 보이나 실제 크롬(CPU 4배)에서는 비슷(204~256 → 235~262ms) |
+
+## (l) 글자 버튼 `TextButton` (2026-11-10 결정, 구현 전)
+
+EL 결정. 근거: 상세의 [보호소 정보]가 버튼이 아니라 글자로 보였다(EL 관찰, 2026-11-10). 정의가 원인이었다: `text-2` 글자 + 14px 아이콘, 바탕·테두리·밑줄 없음이라 옆 라벨과 같은 색이고 단서는 아이콘 하나였다. WCAG 위반은 아니다(글자 대비 6.2:1, 누르는 영역 44, 접근성 이름·포커스 있음). 근거는 사용성이다: 크룩 『사용자를 생각하게 하지 마!』 3장 "클릭할 수 있는 것을 분명히", 그리고 폰에는 마우스를 올려 확인하는 단서가 없다.
+
+검토한 것: 미리보기 아티팩트 "보호소 정보 버튼 비교"에서 지금 / T1 글자+밑줄 / T2 글자+화살표 / B3 흰 알약(`surface` + `shadow-chip`, 28px)을 견줬다. B3는 상태 배지처럼 보여서 뺐다(EL). 연한 채움·얇은 테두리안은 이 시스템의 "버튼은 테두리가 아니라 그림자", "색 채움은 상태 표시에만"과 부딪혀 먼저 뺐다. 토스 TDS는 틀이 있는 `Button`(fill·weak)과 글자 바탕의 `TextButton`(clear·arrow·underline, ParagraphText를 확장)을 따로 둔다. 예전 `small-action`은 TDS로 치면 단서 없는 `TextButton variant="clear"`였다. 화살표는 "더 보기·이동"의 뜻이라 [지도]·[전화]와 어긋나서, 세 버튼 모두 밑줄로 정했다.
+
+| # | 무엇 | 반영한 곳 |
+|---|---|---|
+| T1 | `TextButton`을 Button과 별개의 컴포넌트로 둔다(TDS와 같은 구분). `Button variant="small-action"`은 없앤다 | README, `Button`, `TextButton`(새 카드), bundle.js, (b) |
+| T2 | 모양: 글자 `caption` 크기 600 `text`, 앞 아이콘 14px, 글자에만 1px 밑줄(아래 3px). variant는 TDS처럼 `underline`(이 시스템의 기본) · `arrow`(뒤에 ChevronRight 14px) · `clear`. 크기는 하나 | `TextButton`, bundle.css |
+| T3 | 상태: 누르면 글자 `text-2`, 호버 가능한 기기(`@media (hover: hover)`)는 호버도 `text-2`. 크기 변화 없음. 호버는 TDS(앱)에 없어서 흔한 방식 하나로 정했다. 앱 전체 PC 인터랙션은 #112에서 다시 볼 수 있다 | `TextButton`, bundle.css |
+| T4 | 규칙: 일반 글자 옆의 글자 버튼은 `clear`를 쓰지 않는다(이번 문제의 원인) | `TextButton`, README |
+| T5 | 바꾸지 않는 것: 누르는 영역 44×44, 줄 높이(상세 보호소 줄 20px, 시트 링크 줄 위아래 6px), 아이콘, 글자, 접근성 이름, 보이는 조건, 링크 대상 | `DetailInfo`, `ShelterInfo` |
+
+구현 메모: 코드는 지금 `features/shelter-info`의 지역 상수 `SMALL_ACTION`(`-my-3 min-h-11 min-w-11 … text-caption text-text-2`)을 `<button>`·`<a>` 세 곳에 붙인다. 공용 `shared/ui/text-button.tsx`로 옮기고, `<a>`는 공용 Button과 같은 방식(`asChild`, Radix Slot)으로 그린다. 누르는 영역 방식(`-my-3 min-h-11 min-w-11`)은 그대로 둬서 44×44를 재는 E2E가 그대로 통과해야 한다. 이번 범위 밖: 공용 Button 정리(안 쓰는 shadcn variant·size), 흰 바탕 계열(하트·공유·Chip), `ghost` [다시 시도]를 TextButton으로 옮길지. Screens 캡처 07(상세)은 구현 뒤 바꾼다.

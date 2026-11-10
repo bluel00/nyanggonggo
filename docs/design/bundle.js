@@ -40,15 +40,17 @@
     return h.apply(null, ['svg', { width: s, height: s, viewBox: '0 0 24 24', 'aria-hidden': true, fill: p.filled ? 'currentColor' : 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', style: { display: 'block', flex: 'none' } }].concat(body));
   }
 
-  /* variant small-action: the small text button at the end of a row (C5). text-2 caption + 14px icon,
-     44x44 hit area, the row height does not change. href renders a link (external: new tab). */
+  /* TextButton (C5, 2026-11-10): an action drawn as text, separate from Button (as Toss TDS). variant underline (default) | arrow | clear.
+     text 600 caption + 14px icon before the label; pressed/hover text-2; 44x44 hit area, line height unchanged.
+     href renders a link (external: new tab). */
+  function TextButton(p) {
+    var v = p.variant || 'underline';
+    var Tag = p.href ? 'a' : 'button';
+    var pr = { className: cx('cn-text-btn caption', 'cn-text-btn--' + v, p.className), 'aria-label': p['aria-label'] || p.ariaLabel, onClick: p.onClick };
+    if (p.href) { pr.href = p.href; if (p.external) { pr.target = '_blank'; pr.rel = 'noopener noreferrer'; } } else { pr.type = 'button'; pr.disabled = p.disabled; }
+    return h(Tag, pr, p.icon ? h(Icon, { name: p.icon, size: 14 }) : null, h('span', { className: 'cn-text-btn__label' }, p.children), v === 'arrow' ? h(Icon, { name: 'chevron-right', size: 14 }) : null);
+  }
   function Button(p) {
-    if (p.variant === 'small-action') {
-      var Tag = p.href ? 'a' : 'button';
-      var pr = { className: cx('cn-small-action caption', p.className), 'aria-label': p['aria-label'] || p.ariaLabel, onClick: p.onClick };
-      if (p.href) { pr.href = p.href; if (p.external) { pr.target = '_blank'; pr.rel = 'noopener noreferrer'; } } else { pr.type = 'button'; pr.disabled = p.disabled; }
-      return h(Tag, pr, p.icon ? h(Icon, { name: p.icon, size: 14 }) : null, p.children);
-    }
     return h('button', { type: p.type || 'button', className: cx('cn-btn card-title', 'cn-btn--' + (p.variant || 'primary'), p.block && 'cn-btn--block', p.className), disabled: p.disabled, 'aria-label': p['aria-label'] || p.ariaLabel, onClick: p.onClick }, p.children);
   }
   /* Share actions in the detail CTA bar (2026-10-27, canvas board "상세 하단 바 · 다른 앱으로 공유", draft 2).
@@ -185,7 +187,7 @@
 
   /* Detail info rows (widgets/animal-detail in the app). Order: 발견 장소 → 보호소 → 공고 번호 → 공고 기간 → 종료 사유 → 특이사항;
      empty values are left out. 주소 / 전화 are not here: they are in the shelter info sheet (ShelterInfo).
-     The 보호소 row ends in [보호소 정보] (small-action, info icon) unless the notice is ended or has neither address nor phone.
+     The 보호소 row ends in [보호소 정보] (TextButton underline, info icon) unless the notice is ended or has neither address nor phone.
      Ended: 종료 사유 shown, 특이사항 dropped when it equals 종료 사유. The person in charge is never shown. */
   function detailRows(a) {
     var ended = a.status === 'ended';
@@ -215,7 +217,7 @@
       return h('div', { key: r[0], className: cx('cn-info__row', act && 'cn-info__row--action') },
         h('dt', { className: 'body' }, r[0]),
         h('dd', { className: 'body' }, h('span', { className: 'cn-info__val' }, r[1]),
-          act ? h(Button, { variant: 'small-action', icon: act.icon, href: act.href, external: act.external, 'aria-label': act.aria,
+          act ? h(TextButton, { icon: act.icon, href: act.href, external: act.external, 'aria-label': act.aria,
             onClick: act.kind === 'shelter-info' ? onAction : undefined }, act.label) : null));
     }));
   }
@@ -300,7 +302,7 @@
 
   window.CatNotice = {
     SERVICE_NAME: SERVICE_NAME, SERVICE_TAGLINE: SERVICE_TAGLINE, MOCK_ANIMALS: MOCK_ANIMALS, mockPhoto: mockPhoto, badgeVariant: badgeVariant,
-    Icon: Icon, Button: Button, ShareButton: ShareButton, FavoriteButton: FavoriteButton, StatusBadge: StatusBadge, AnimalCard: AnimalCard,
+    Icon: Icon, Button: Button, TextButton: TextButton, ShareButton: ShareButton, FavoriteButton: FavoriteButton, StatusBadge: StatusBadge, AnimalCard: AnimalCard,
     Chip: Chip, Segmented: Segmented, Radio: Radio, Select: Select, BottomSheet: BottomSheet, SkeletonCard: SkeletonCard, Toast: Toast,
     FilterButton: FilterButton, DetailInfo: DetailInfo, badgeText: badgeText, detailRows: detailRows,
     DeadlineText: DeadlineText, ShelterInfo: ShelterInfo, shelterRows: shelterRows, cardDeadlineText: cardDeadlineText,

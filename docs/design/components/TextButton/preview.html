@@ -1,0 +1,12 @@
+<!-- @dsCard group="Actions" height=260 subtitle="text actions: underline (default) · arrow · clear · pressed (text-2) · in a row" -->
+<div id="r" class="cn-root" style="padding:16px;background:var(--bg)"></div>
+<script>
+var N=window.CatNotice,h=React.createElement,S=function(t){return h('div',{style:{font:'12px var(--font-sans)',color:'var(--text-2)',margin:'0 0 6px'}},t)};
+var Row=function(p){return h('div',{style:{display:'flex',gap:24,alignItems:'center',flexWrap:'wrap',marginBottom:16}},p.children)};
+var Col=function(t,c){return h('div',null,S(t),c)};
+function App(){return h('div',null,
+ h(Row,null,Col('underline · 보호소 정보',h(N.TextButton,{icon:'info','aria-label':'보호소 정보 보기'},'보호소 정보')),Col('underline · 지도',h(N.TextButton,{icon:'map-pin',href:'#',external:true,'aria-label':'지도에서 주소 보기(새 탭)'},'지도')),Col('underline · 전화',h(N.TextButton,{icon:'phone',href:'#','aria-label':'보호소에 전화'},'전화'))),
+ h(Row,null,Col('arrow',h(N.TextButton,{variant:'arrow'},'더 보기')),Col('clear (only where the context reads as tappable)',h(N.TextButton,{variant:'clear'},'더 보기')),Col('pressed',h(N.TextButton,{icon:'info',className:'cn-pressed'},'보호소 정보'))),
+ S('in a detail row'),h(N.DetailInfo,{animal:N.MOCK_ANIMALS[0],onShelterInfo:function(){}}))}
+ReactDOM.createRoot(document.getElementById('r')).render(h(App));
+</script>
