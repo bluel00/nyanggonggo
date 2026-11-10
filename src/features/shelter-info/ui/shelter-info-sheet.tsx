@@ -4,14 +4,10 @@ import { Info, MapPin, Phone, type LucideIcon } from "lucide-react";
 import { DETAIL_ROW_ACTION_COPY, type Animal } from "@/entities/animal";
 import { cn } from "@/shared/lib/utils";
 import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "@/shared/ui/sheet";
+import { TextButton } from "@/shared/ui/text-button";
 import { SHELTER_CONTACT_LINK_COPY, shelterContactRows, type ShelterContactAction } from "../model/shelter-contact";
 
-/**
- * 줄 끝 작은 글자 버튼·링크 모양(이슈 #3): 채운 버튼이 아니라 보조 글자색 + 작은 아이콘이다. 누르는 영역은 44×44px이고,
- * 위아래 음수 여백으로 줄 높이(20px)는 그대로 둔다. 상세 보호소 줄의 [보호소 정보]와 시트의 [지도]·[전화]가 같은 모양이다.
- */
-const SMALL_ACTION =
-  "-my-3 inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-0.5 rounded-sm text-caption text-text-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+// 상세 보호소 줄의 [보호소 정보]와 시트의 [지도]·[전화]는 같은 글자 버튼(TextButton 밑줄, handoff (l), #127)이다
 
 const LINK_ICON: Record<ShelterContactAction, { icon: LucideIcon; newTab: boolean }> = {
   map: { icon: MapPin, newTab: true },
@@ -35,10 +31,9 @@ export function ShelterInfoSheet({ animal }: { animal: Animal }) {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <button type="button" aria-label={label} data-slot="shelter-info-button" className={SMALL_ACTION}>
-          <Info aria-hidden className="size-3.5" />
+        <TextButton aria-label={label} data-slot="shelter-info-button" icon={<Info aria-hidden />}>
           {text}
-        </button>
+        </TextButton>
       </SheetTrigger>
       <SheetContent side="bottom" showCloseButton={false} aria-describedby={undefined} data-slot="shelter-info-sheet">
         {/* 머리(핸들·제목) / 내용. 아래 고정 영역은 두지 않는다 */}
@@ -77,9 +72,10 @@ function ContactLink({ action, href }: { action: ShelterContactAction; href: str
   const { icon: Icon, newTab } = LINK_ICON[action];
   const { text, label } = SHELTER_CONTACT_LINK_COPY[action];
   return (
-    <a href={href} aria-label={label} data-slot="contact-link" {...(newTab ? { target: "_blank", rel: "noopener" } : {})} className={SMALL_ACTION}>
-      <Icon aria-hidden className="size-3.5" />
-      {text}
-    </a>
+    <TextButton asChild icon={<Icon aria-hidden />}>
+      <a href={href} aria-label={label} data-slot="contact-link" {...(newTab ? { target: "_blank", rel: "noopener" } : {})}>
+        {text}
+      </a>
+    </TextButton>
   );
 }

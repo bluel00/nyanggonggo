@@ -182,7 +182,7 @@ describe("AnimalDetail", () => {
     const terms = (container: HTMLElement) => [...container.querySelectorAll("dt")].map((dt) => dt.textContent);
     const openSheet = () => fireEvent.click(screen.getByRole("button", { name: "보호소 정보 보기" }));
 
-    it("정보 줄에 주소·전화가 없고, 보호소 줄 끝에 [보호소 정보](작은 글자, 44px)", async () => {
+    it("정보 줄에 주소·전화가 없고, 보호소 줄 끝에 [보호소 정보](글자 버튼 밑줄, 44px)", async () => {
       fetchMock.mockResolvedValue(Response.json(contactWire({ specialMarkText: "가상 특이사항" })));
       const { container } = renderDetail();
       await screen.findByRole("heading");
@@ -192,9 +192,12 @@ describe("AnimalDetail", () => {
       const button = screen.getByRole("button", { name: "보호소 정보 보기" });
       expect(button.textContent).toBe("보호소 정보");
       expect(button.closest("dd")?.textContent).toContain("제2동물보호센터");
-      expect(button.className).toContain("text-text-2");
-      expect(button.className).toContain("text-caption");
-      expect(button.className.split(" ")).toEqual(expect.arrayContaining(["min-h-11", "min-w-11"]));
+      // 옆 라벨(text-2)과 구분되게 글자는 text 600 + 밑줄(handoff (l), #127)
+      const classes = button.className.split(" ");
+      expect(classes).toEqual(expect.arrayContaining(["text-caption", "font-semibold", "text-text"]));
+      expect(classes).not.toContain("text-text-2");
+      expect(button.getAttribute("data-variant")).toBe("underline");
+      expect(classes).toEqual(expect.arrayContaining(["min-h-11", "min-w-11"]));
     });
 
     it("버튼을 누르면 시트: 제목은 보호소 이름, 주소 + [지도](새 탭), 전화 + [전화](tel: 숫자만), 값은 그냥 글자", async () => {
