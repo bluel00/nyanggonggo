@@ -1,10 +1,11 @@
-<!-- @dsCard group="Actions" height=230 subtitle="apply (적용하기 only) · primary · primary pressed (primary-pressed). Text actions: see TextButton" -->
+<!-- @dsCard group="Actions" height=310 subtitle="apply (적용하기 only) · primary · surface (default and compact size). Text actions: see TextButton" -->
 <div id="r" class="cn-root" style="padding:16px;background:var(--surface)"></div>
 <script>
 var N=window.CatNotice,h=React.createElement,S=function(t){return h('div',{style:{font:'12px var(--font-sans)',color:'var(--text-2)',margin:'0 0 6px'}},t)};
 var Row=function(p){return h('div',{style:{display:'flex',gap:12,alignItems:'center',flexWrap:'wrap',marginBottom:16}},p.children)};
 var Col=function(t,c,w){return h('div',{style:{width:w||'auto'}},S(t),c)};
 function App(){return h('div',null,h(Row,null,Col("apply",h(N.Button,{variant:"apply"},"적용하기")),Col("apply pressed",h(N.Button,{variant:"apply",className:"cn-pressed"},"적용하기")),Col("apply disabled",h(N.Button,{variant:"apply",disabled:true},"적용하기")),Col("apply block",h(N.Button,{variant:"apply",block:true},"적용하기"),300)),
- h(Row,null,Col("primary (다시 시도)",h(N.Button,null,"다시 시도")),Col("primary pressed",h(N.Button,{className:"cn-pressed"},"다시 시도"))))}
+ h(Row,null,Col("primary (다시 시도)",h(N.Button,null,"다시 시도")),Col("primary pressed",h(N.Button,{className:"cn-pressed"},"다시 시도"))),
+ h(Row,null,Col("surface",h(N.Button,{variant:"surface"},"다른 앱으로 공유")),Col("surface · compact (with icon)",h(N.Button,{variant:"surface",size:"compact"},h(N.Icon,{name:"share",size:18}),"다른 앱으로 공유")),Col("surface compact pressed",h(N.Button,{variant:"surface",size:"compact",className:"cn-pressed"},h(N.Icon,{name:"share",size:18}),"다른 앱으로 공유")),Col("surface compact disabled",h(N.Button,{variant:"surface",size:"compact",disabled:true},h(N.Icon,{name:"link",size:18}),"링크 복사"))))}
 ReactDOM.createRoot(document.getElementById('r')).render(h(App));
 </script>

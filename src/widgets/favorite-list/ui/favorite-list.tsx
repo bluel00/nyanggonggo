@@ -10,6 +10,7 @@ import { BackButton, useGoBack } from "@/shared/ui/back-button";
 import { Button } from "@/shared/ui/button";
 import { ScreenHeader } from "@/shared/ui/screen-shell";
 import { SkeletonCard } from "@/shared/ui/skeleton-card";
+import { TextButton } from "@/shared/ui/text-button";
 import { routes } from "@/shared/config/routes";
 
 const subscribeNothing = () => () => {};
@@ -60,18 +61,12 @@ export function FavoriteList() {
     const failedIds =
       ids.length > 0 && !query.isPlaceholderData ? (query.data?.failedIds ?? []).filter((id) => ids.includes(id)) : [];
     const partialError = failedIds.length > 0 && animals.length > 0 && (
-      // 디자인 미정: 목록 위 한 줄 문구와 텍스트 버튼
-      <div role="status" className="flex items-center justify-between gap-2 px-page">
+      // 목록 위 한 줄 문구와 글자 버튼(handoff (m) B4). 글자 버튼은 줄 높이를 늘리지 않으므로 줄이 44px(min-h-touch)를 잡는다
+      <div role="status" className="flex min-h-touch items-center justify-between gap-2 px-page">
         <p className="text-body text-text-2">{ANIMAL_COPY.favoritesPartialError}</p>
-        <Button
-          variant="ghost"
-          size="touch"
-          className="-mr-3 px-3"
-          disabled={retry.isPending}
-          onClick={() => retry.mutate({ ids, failedIds })}
-        >
+        <TextButton disabled={retry.isPending} onClick={() => retry.mutate({ ids, failedIds })}>
           다시 시도
-        </Button>
+        </TextButton>
       </div>
     );
     body =
