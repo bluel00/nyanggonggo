@@ -9,10 +9,14 @@
 .cn-btn--block{width:100%}
 .cn-btn:disabled{background:var(--disabled-bg);color:var(--text-disabled);cursor:not-allowed}
 .cn-btn--share{background:var(--kakao);color:var(--on-kakao);flex:1 1 auto;min-width:0;padding:0 var(--space-2);white-space:nowrap}
-/* Second share button (ShareButton variant="other"): white pill like FavoriteButton, as wide as its content. */
-.cn-btn--share-other{flex:none;gap:6px;padding:0 var(--space-3);background:var(--surface);color:var(--text);box-shadow:var(--shadow-control);font-size:14px;line-height:20px;font-weight:600;white-space:nowrap}
-.cn-btn--share-other:active:not(:disabled),.cn-btn--share-other.cn-pressed{background:var(--bg)}
-.cn-btn--share-other:disabled{background:var(--disabled-bg);box-shadow:none}
+/* Button variant surface (2026-11-11, handoff (m)): the quiet secondary look. White surface + shadow-control, no outline; pressed ground bg. A look only: no feature lives here. */
+.cn-btn--surface{background:var(--surface);color:var(--text);box-shadow:var(--shadow-control)}
+.cn-btn--surface:active:not(:disabled),.cn-btn--surface.cn-pressed{background:var(--bg)}
+.cn-btn--surface:disabled{background:var(--disabled-bg);box-shadow:none}
+/* Button size compact: 44 tall, space-3 side padding, 14/20 600 label, 6px gap (18px icon). */
+.cn-btn.cn-btn--compact{gap:6px;padding:0 var(--space-3);font-size:14px;line-height:20px;font-weight:600}
+/* Second share button (ShareButton variant="other") = Button surface + compact; only its place in the bar is its own: as wide as its content. */
+.cn-btn--share-other{flex:none;white-space:nowrap}
 .cn-btn--share:active:not(:disabled){filter:brightness(.95)}
 .cn-btn--apply{background:linear-gradient(135deg,var(--apply-from),var(--apply-to));color:var(--on-apply);box-shadow:var(--shadow-apply)}
 .cn-btn--apply:disabled{box-shadow:none}

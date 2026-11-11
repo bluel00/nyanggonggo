@@ -2,7 +2,9 @@
 
 이 폴더의 다른 파일은 디자인 시스템 "멍냥공고"의 사본이라 고치지 않는다. 싱크 기록만 여기에 적는다.
 
-- 마지막 싱크: 2026-11-10, 디자인 시스템 판 1794284705-f8e8, 기준 코드 1886fa8 (#127 글자 버튼 `TextButton`, handoff (l))
+- 마지막 싱크: 2026-11-11, 디자인 시스템 판 1794363963-e5d4, 기준 코드 6443f1e (#126 버튼 계열 정리, handoff (m))
+  - 바뀐 파일: handoff.md, README.md, bundle.css, bundle.js, Button README·preview.html, ShareButton README, TextButton README. 새 파일 없음. tokens.json은 바뀌지 않아 tokens.css도 그대로다.
+- 이전 싱크: 2026-11-10, 디자인 시스템 판 1794284705-f8e8, 기준 코드 1886fa8 (#127 글자 버튼 `TextButton`, handoff (l))
   - 바뀐 파일: handoff.md, README.md, tokens.json, bundle.css, bundle.js, Button README·preview.html, DetailInfo README, Icon README, ShelterInfo README·preview.html. 새 파일: `components/TextButton/README.md`, `components/TextButton/preview.html`.
   - tokens.json은 `text-2`의 usage 설명만 바뀌어 tokens.css는 그대로다.
 - 이전 싱크: 2026-11-02, 디자인 시스템 판 1793350550-9882, 기준 코드 7d5c8de (#115 다시 엶: 매 진입 장면, CSS 장면은 Rive를 기다리지 않음, withLookUp, handoff (k) 구현 순서 6단계)

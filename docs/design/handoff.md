@@ -95,7 +95,7 @@ Type scale (`fontSize`): `title` 20/28/700, `card-title` 16/24/600, `body` 14/20
 
 | 레이어 | 컴포넌트 | 비고 |
 |---|---|---|
-| `shared/ui` | Button, `TextButton`((l), 구현 전), Chip, Segmented, `RadioOption`, `NativeSelect`, `Sheet`(Radix Dialog), `Toaster`/`showToast`(sonner), SkeletonCard, `BackButton`, `ScreenShell`/`ScreenHeader`, `DisplayText`, `StackLayer`, `AppShell`, `ViewTransition`, `Logo`(`src/shared/ui/logo.tsx`. 크기로 변형을 고름: 24 이하 tile-small, 25~55 tile, 56 이상 line, 조합 mark / lockup) | 도메인 모름. Icon 컴포넌트는 없고 lucide 아이콘을 바로 쓴다(이 디자인 시스템의 `Icon`은 자리표시). 토큰은 위 매핑만 사용 |
+| `shared/ui` | Button, `TextButton`((l)), Chip, Segmented, `RadioOption`, `NativeSelect`, `Sheet`(Radix Dialog), `Toaster`/`showToast`(sonner), SkeletonCard, `BackButton`, `ScreenShell`/`ScreenHeader`, `DisplayText`, `StackLayer`, `AppShell`, `ViewTransition`, `Logo`(`src/shared/ui/logo.tsx`. 크기로 변형을 고름: 24 이하 tile-small, 25~55 tile, 56 이상 line, 조합 mark / lockup) | 도메인 모름. Icon 컴포넌트는 없고 lucide 아이콘을 바로 쓴다(이 디자인 시스템의 `Icon`은 자리표시). 토큰은 위 매핑만 사용 |
 | `entities/animal` | AnimalCard, StatusBadge, `getStatusVariant(animal, now)`, 문구 `statusBadgeText` · `cardDeadlineText` · `detailDeadlineText` · `deadlineDateText` · `statusShareText`, 상세 줄 `detailRows` | Domain `Animal`만 props로 받는다. AnimalCard는 `action`(ReactNode)만 받고 관심은 모른다. 마감 D-3 이하(`nearDeadline`) 판정은 domain 쪽 |
 | `features/animal-filter` | 필터 시트 조립, 목록 헤더 필터 버튼 | 시트: 축종 Segmented(3) + 지역 Select 2개(시/도, 시/군/구) + 보호 상태 Chip + 성별 Chip + 정렬 Radio. 머리 / 스크롤 내용 / 고정 아래 영역(적용하기, `shadow-bar`). 값은 URL search params를 읽고, [적용하기]에서만 `router.replace`. 시트 안 draft state는 "적용 전 임시 값"이라 허용, 닫히면 버림 |
 | `features/animal-favorite` | FavoriteButton(관심), 목록 헤더 관심 링크, localStorage 훅 | 저장은 id만. 위젯이 카드의 `action` 자리에 넣는다 |
@@ -112,7 +112,7 @@ Type scale (`fontSize`): `title` 20/28/700, `card-title` 16/24/600, `body` 14/20
 
 | 디자인 시스템 | 코드 | 코드 위치 |
 |---|---|---|
-| `TextButton` (2026-11-10 전에는 `Button variant="small-action"`) | 지금은 `SMALL_ACTION` 클래스 상수를 붙인 `<button>`·`<a>`. (l) 구현으로 공용 `TextButton`이 된다(구현 전) | 지금 `src/features/shelter-info/ui/shelter-info-sheet.tsx` |
+| `TextButton` (2026-11-10 전에는 `Button variant="small-action"`) | `TextButton`. 링크는 `<a>`를 `asChild`로 넘긴다(Button과 같은 방식) | `src/shared/ui/text-button.tsx` (PR #128) |
 | `Button variant="icon"` (목록 헤더 하트) | `next/link` `Link`, 이름 "관심 공고" | `favorites-link.tsx` |
 | `DeadlineText` | `<span data-slot="d-day">`, 문구는 `detailDeadlineText` | `animal-detail.tsx`, `status-text.ts` |
 | `BottomSheet` | `Sheet` (Radix Dialog, shadcn) | `sheet.tsx` |
@@ -121,7 +121,7 @@ Type scale (`fontSize`): `title` 20/28/700, `card-title` 16/24/600, `body` 14/20
 | `Radio` | `RadioOption` | `src/shared/ui` |
 | `Icon` | 컴포넌트 없음, lucide 바로 씀 | — |
 | `FavoriteButton onPhoto` (카드 사진 위), `calm` (종료 카드) | `FavoriteButton variant="overlay"`, `still` (움직이지 않는 카드) | `features/animal-favorite` |
-| `ShareButton variant="other"` (`canShare`), `Icon` `share` · `link` | `ShareSheetButton`(#94, PR #95). 아이콘은 lucide Share2 · Link | `features/animal-share` |
+| `ShareButton variant="other"` (`canShare`), `Icon` `share` · `link` | `ShareSheetButton`(#94, PR #95). 아이콘은 lucide Share2 · Link. (m) 구현 뒤에는 안에서 공용 `Button variant="surface"`를 쓴다 | `features/animal-share` |
 
 ## (c) 구현 시 주의할 점
 
@@ -216,7 +216,7 @@ Type scale (`fontSize`): `title` 20/28/700, `card-title` 16/24/600, `body` 14/20
 - 하트 이름: "관심 공고에 담기" / "관심 공고에서 빼기". 토스트: "관심 공고에 담았어요" / "관심 공고에서 뺐어요". 목록 헤더 하트 링크 이름: "관심 공고".
 - 빈 상태: "아직 관심 공고가 없어요" / "하트를 눌러 관심 공고에 담아 보세요" 중앙 정렬, 버튼 없음, 이모지 없음. 축종이 섞이므로 축종 중립 문구다. localStorage에 id만 저장하며 종료된 공고도 카드로 남는다.
 - 전부 실패: "지금은 관심 공고를 불러오지 못했어요"(`card-title`) + Primary [다시 시도].
-- 일부 실패: 받은 카드는 그대로 두고, 목록 위 한 줄에 "일부 공고를 불러오지 못했어요"(왼쪽)와 글자 버튼 [다시 시도](오른쪽). 다시 시도는 실패한 공고만 다시 받는다(Screens 09). 코드 주석은 "디자인 미정"이다.
+- 일부 실패: 받은 카드는 그대로 두고, 목록 위 한 줄에 "일부 공고를 불러오지 못했어요"(왼쪽)와 글자 버튼 [다시 시도](오른쪽, `TextButton` 밑줄, 아이콘 없음. 2026-11-11 결정 (m), 구현 전. 지금 코드는 단서 없는 16px 글자 `Button variant="ghost"`). 줄의 높이와 위아래 간격은 지금 그대로 두고, 누르는 영역 44×44. 다시 시도는 실패한 공고만 다시 받는다(Screens 09는 예전 모습).
 
 화면 6 (상태 화면)
 - 로딩: 첫 로딩은 `SkeletonCard` 3개, 다음 페이지를 받는 동안에는 목록 끝에 1개를 둔다. 목록 끝 문구는 없다.
@@ -286,7 +286,9 @@ Type scale (`fontSize`): `title` 20/28/700, `card-title` 16/24/600, `body` 14/20
 
 ## (f) 결정됐지만 아직 구현 안 됨
 
-- 글자 버튼을 `TextButton`으로 따로 두고 밑줄을 단다(2026-11-10, (l)).
+- 버튼 계열 정리(2026-11-11, (m), #126): Button `surface` variant와 `compact` 크기, 관심 목록 일부 실패 [다시 시도]를 TextButton으로, 안 쓰는 variant·크기 지우기.
+
+글자 버튼 `TextButton`(l)은 2026-11-10에 코드에 들어갔다(PR #128, main `6443f1e`).
 
 이미 구현된 것의 기록: 홈 첫인상 "부르고 답하기"(#115)는 2026-10-30에 코드에 들어갔다(PR #119~#122, main `7d5c8de`, (k)). 로딩 시머·캐릭터, 사진 로딩 시머(#111)는 2026-10-30에 코드에 들어갔다(PR #118, main `b5c822d`, (j)). 2026-10-26에 적은 8가지는 #53에서, 홈 "기타 동물" 선택지는 #86(PR #87)에서 코드에 들어갔다((g) "홈 기타 동물 선택지", Screens 01).
 
@@ -554,7 +556,7 @@ EL 결정. 목표는 처음 온 사람에게 좋은 첫인상을 주는 것이�
 | 5 | 실제 폰에서 박자 확인 | 데모 보드(12절)와 나란히 보고 어긋난 값을 기록. **아직 안 함**(2026-10-30 기록 정정: EL은 폰 확인 없이 머지했다). 운영에서 첫 진입이 거의 늘 대체로 넘어가는 문제가 있다(아래 "운영에서 확인된 문제") |
 | 6 | (2026-10-30 고침) 매 진입 장면으로 바꾸기: 세션 저장소 판단·기록과 0.3초 대기 제거, CSS 장면은 0초에 바로, 홈 HTML에서 Rive wasm·`.riv` 미리 받기, Rive 입력 이름 `firstVisit` → `withLookUp`, Rive 안의 올려다보기 대기 제거(강아지 0, 고양이 0.12초), 장면 0.92초에 두 캐릭터가 준비돼 있으면 `withLookUp = true`로 재생, 아니면 준비되는 대로 false | 운영 미리보기에서 실제 망으로: 캐시 없는 첫 방문 / 두 번째 방문 / 새로고침에서 장면과 올려다보기가 붙는 비율, 움직임 줄이기, 장면 중 누름. EL 실기기 확인. **구현됨(2026-11-02, PR #124, main `1886fa8`. EL이 머지 전에 실기기로 확인함, 2026-11-03에 알려 줌)**: CSS 장면은 JS 없이 첫 페인트에 시작(측정 −20~+24ms), 장면 0초는 앱이 카드 애니메이션 시작 시각으로 읽는다. 홈 HTML이 wasm·`.riv`를 미리 받아 요청 시작이 0.01~0.18초로 당겨졌다. Rive는 로드되는 순간 시작 상태를 정하므로 `withLookUp`은 각 캐릭터가 로드될 때 정해진다(0.92초 전이면 true, 뒤면 false, 일찍 로드됐는데 false로 시작해야 하면 다시 로드). 고양이 시작은 60fps 7프레임 = 0.117초. 측정(로컬 production): 캐시 있는 방문은 모든 망에서 올려다보기가 붙고, 캐시 없는 4G·느린 4G 첫 방문은 올려다보기만 빠진다(Rive 런타임 JS 청크가 마지막에 도착, 청크 미리 받기는 관찰 뒤 결정). 운영 확인: Claude Code(한국 PC) 첫 방문·재방문 모두 true, Claude(해외 클라우드) 첫 방문 false·재방문 true, 세션 저장소 쓰지 않음. Lighthouse TBT는 시뮬레이션상 218 → 1,879ms로 나빠 보이나 실제 크롬(CPU 4배)에서는 비슷(204~256 → 235~262ms) |
 
-## (l) 글자 버튼 `TextButton` (2026-11-10 결정, 구현 전)
+## (l) 글자 버튼 `TextButton` (2026-11-10 결정, 구현: PR #128, main `6443f1e`, #127 닫힘)
 
 EL 결정. 근거: 상세의 [보호소 정보]가 버튼이 아니라 글자로 보였다(EL 관찰, 2026-11-10). 정의가 원인이었다: `text-2` 글자 + 14px 아이콘, 바탕·테두리·밑줄 없음이라 옆 라벨과 같은 색이고 단서는 아이콘 하나였다. WCAG 위반은 아니다(글자 대비 6.2:1, 누르는 영역 44, 접근성 이름·포커스 있음). 근거는 사용성이다: 크룩 『사용자를 생각하게 하지 마!』 3장 "클릭할 수 있는 것을 분명히", 그리고 폰에는 마우스를 올려 확인하는 단서가 없다.
 
@@ -569,3 +571,22 @@ EL 결정. 근거: 상세의 [보호소 정보]가 버튼이 아니라 글자로
 | T5 | 바꾸지 않는 것: 누르는 영역 44×44, 줄 높이(상세 보호소 줄 20px, 시트 링크 줄 위아래 6px), 아이콘, 글자, 접근성 이름, 보이는 조건, 링크 대상 | `DetailInfo`, `ShelterInfo` |
 
 구현 메모: 코드는 지금 `features/shelter-info`의 지역 상수 `SMALL_ACTION`(`-my-3 min-h-11 min-w-11 … text-caption text-text-2`)을 `<button>`·`<a>` 세 곳에 붙인다. 공용 `shared/ui/text-button.tsx`로 옮기고, `<a>`는 공용 Button과 같은 방식(`asChild`, Radix Slot)으로 그린다. 누르는 영역 방식(`-my-3 min-h-11 min-w-11`)은 그대로 둬서 44×44를 재는 E2E가 그대로 통과해야 한다. 이번 범위 밖: 공용 Button 정리(안 쓰는 shadcn variant·size), 흰 바탕 계열(하트·공유·Chip), `ghost` [다시 시도]를 TextButton으로 옮길지. Screens 캡처 07(상세)은 구현 뒤 바꾼다.
+
+**구현됨(2026-11-10, PR #128, main `6443f1e`)**: 공용 `src/shared/ui/text-button.tsx`, 세 곳을 바꾸고 `SMALL_ACTION`을 지웠다. 링크는 `asChild`(radix-ui Slot, `Slottable`로 아이콘·글자·화살표를 넘긴 `<a>` 안에 둠), 아이콘은 `icon` prop(크기는 TextButton이 정함), `whitespace-nowrap`. 호버는 Tailwind v4(4.3.3)의 `hover:`가 이미 `@media (hover: hover)` 안이라 따로 두지 않았다. glossary에 "글자 버튼"(`TextButton`). 기존 E2E(누르는 영역 44×44) 고치지 않고 통과. 운영 확인(Claude Code, 390×844): 글자 `rgb(43,33,27)` = `text`, 600, 글자 span에만 1px 밑줄(아래 3px), 아이콘 밑줄 없음, [보호소 정보] 상자 높이 44, [지도]·[전화] 44×44. EL 미리보기 실기기 확인("잘 됨"), 운영 반영 확인(2026-11-10). 누를 때 옅어지는지는 따로 확인하지 않았다. Screens 캡처 07은 아직 예전 모습이다.
+
+## (m) 버튼 계열 정리 (2026-11-11 결정, #126, 구현 전)
+
+EL 결정. 화면 문제에서 나온 일이 아니라 코드와 이름의 정리다. 2026-11-10 조사(코드): 공용 Button의 variant 9개 중 4개(primary, apply, overlay, ghost), 크기는 touch · icon-touch · icon-sm만 쓰고 나머지 shadcn 기본값은 정의만 있었다. "다른 앱으로 공유"는 평범한 동작 버튼인데 Button을 쓰지 않고 포커스·누름·비활성 처리를 직접 적고 있었다.
+
+기준(토스 Frontend Fundamentals 모의고사 해설 후기들에서 뽑음): 이름과 인터페이스만 보고 예측할 수 있게 한다. 기존 코드가 아니라 바라는 사용 모습에서 출발한다. 쓸지도 몰라서 미리 만들지 않는다. 호출하는 쪽이 몰라도 되는 구현은 안에 둔다. 묶는 근거는 재사용 횟수가 아니라 그 컴포넌트가 책임지는 개념에 맞는지다(EL).
+
+규칙: **틀이 있는 동작은 `Button`**(모양 = `variant`, 치수 = `size`), **글자로 그린 동작은 `TextButton`**, **상태를 가진 컨트롤(Chip 선택, FavoriteButton 토글)은 자기 컴포넌트**.
+
+| # | 무엇 | 반영한 곳 |
+|---|---|---|
+| B1 | Button `surface` variant: `surface` + `shadow-control`, 테두리 없음, 글자 `text`, 누르면 바탕 `bg`, 비활성 `disabled-bg`에 그림자 없음. 모양만 정의한다. 공유 기능을 위한 조건이나 예외를 Button 안에 두지 않는다(생기면 다시 검토, EL) | `Button`, bundle.css·bundle.js, README |
+| B2 | Button `compact` 크기: 높이 44, 좌우 `space-3`, 글자 14/20 600, 아이콘 18px, 간격 6px. 폭이 빠듯한 바에서 쓴다 | `Button`, bundle.css·bundle.js |
+| B3 | 두 번째 공유 버튼(`ShareSheetButton`)은 `Button variant="surface"` + `compact`를 쓴다. 보이는 모습은 전과 같다 | `ShareButton`, README, (b) 이름 표 |
+| B4 | 관심 목록 일부 실패의 [다시 시도]는 `TextButton`(밑줄). 16px 단서 없는 글자 → 12/16 600 밑줄. 줄의 높이·간격은 그대로 | 화면 5, `TextButton`, README |
+| B5 | 코드에서 지우는 것: 쓰지 않는 Button variant(default, outline, secondary, destructive, link)와 크기(default, xs, sm, lg, icon, icon-xs, icon-lg), 그리고 화면에 나온 적 없는 시트 닫기 X(ghost + icon-sm, 두 시트 모두 `showCloseButton=false`). B4까지 하면 `ghost`도 쓰는 곳이 없어 지운다. CSS 변수(shadcn 별칭)는 지우지 않는다: 쓰는 곳이 없어지면 (a) "코드 전용"에 표시만 한다 | (a)는 구현 보고를 받고 고친다 |
+| B6 | 그대로 두는 것: Chip(선택), FavoriteButton(토글·하트 움직임), 카카오 ShareButton(브랜드 전용, 누름 효과가 다름), 필터 버튼(Chip). 파일마다 반복되는 포커스·누름 클래스 묶음은 이번에 묶지 않는다 | — |

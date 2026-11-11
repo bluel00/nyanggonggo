@@ -51,18 +51,18 @@
     return h(Tag, pr, p.icon ? h(Icon, { name: p.icon, size: 14 }) : null, h('span', { className: 'cn-text-btn__label' }, p.children), v === 'arrow' ? h(Icon, { name: 'chevron-right', size: 14 }) : null);
   }
   function Button(p) {
-    return h('button', { type: p.type || 'button', className: cx('cn-btn card-title', 'cn-btn--' + (p.variant || 'primary'), p.block && 'cn-btn--block', p.className), disabled: p.disabled, 'aria-label': p['aria-label'] || p.ariaLabel, onClick: p.onClick }, p.children);
+    return h('button', { type: p.type || 'button', className: cx('cn-btn card-title', 'cn-btn--' + (p.variant || 'primary'), p.size === 'compact' && 'cn-btn--compact', p.block && 'cn-btn--block', p.className), disabled: p.disabled, 'aria-label': p['aria-label'] || p.ariaLabel, onClick: p.onClick }, p.children);
   }
   /* Share actions in the detail CTA bar (2026-10-27, canvas board "상세 하단 바 · 다른 앱으로 공유", draft 2).
      Default: Kakao Yellow primary, takes the remaining width.
-     variant 'other': the second share button, a white pill as wide as its content (14px label + 18px icon).
+     variant 'other': the second share button = Button variant surface at the compact size (14px label + 18px icon), as wide as its content.
        canShare true (default): "다른 앱으로 공유" + share icon, opens the OS share sheet (Web Share).
        canShare false (share sheet unavailable, some desktop browsers): "링크 복사" + link icon; the caller copies the link and shows Toast "링크가 복사됐어요".
      The visible label is the accessible name. */
   function ShareButton(p) {
     if (p.variant === 'other') {
       var copy = p.canShare === false;
-      return h('button', { type: 'button', className: cx('cn-btn cn-btn--share-other', p.className), disabled: p.disabled, onClick: p.onClick },
+      return h('button', { type: 'button', className: cx('cn-btn cn-btn--surface cn-btn--compact cn-btn--share-other', p.className), disabled: p.disabled, onClick: p.onClick },
         h(Icon, { name: copy ? 'link' : 'share', size: 18 }), h('span', null, copy ? '링크 복사' : '다른 앱으로 공유'));
     }
     return h('button', { type: 'button', className: cx('cn-btn card-title cn-btn--share', p.className), disabled: p.disabled, onClick: p.onClick }, h(ChatIcon), p.children || '카카오톡 공유');
