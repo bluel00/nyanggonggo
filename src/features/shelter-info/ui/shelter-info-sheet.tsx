@@ -35,7 +35,7 @@ export function ShelterInfoSheet({ animal }: { animal: Animal }) {
           {text}
         </TextButton>
       </SheetTrigger>
-      <SheetContent side="bottom" showCloseButton={false} aria-describedby={undefined} data-slot="shelter-info-sheet">
+      <SheetContent side="bottom" aria-describedby={undefined} data-slot="shelter-info-sheet">
         {/* 머리(핸들·제목) / 내용. 아래 고정 영역은 두지 않는다 */}
         <div className="shrink-0 px-4">
           <SheetClose asChild>
