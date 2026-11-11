@@ -21,10 +21,15 @@ const buttonVariants = cva(
         /** 필터 시트의 적용하기만(bundle.css .cn-btn--apply): 복숭아색 그라데이션 pill + shadow-apply. size="touch"와 함께 쓴다 */
         apply:
           "rounded-pill bg-linear-135 from-apply-from to-apply-to text-on-apply shadow-apply transition-transform duration-press ease-out active:not-disabled:scale-press focus-visible:border-transparent focus-visible:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:shadow-none disabled:opacity-50",
+        /** 조용한 두 번째 동작(bundle.css .cn-btn--surface): 흰 surface + shadow-control, 테두리 없음. 누르면 바탕 bg, 비활성은 disabled-bg에 그림자 없음 */
+        surface:
+          "rounded-pill border-0 bg-surface text-text shadow-control transition-transform duration-press ease-out active:not-disabled:scale-press active:not-disabled:bg-bg focus-visible:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:bg-disabled-bg disabled:text-disabled-text disabled:opacity-100 disabled:shadow-none",
       },
       size: {
         /** 44px 터치 높이, 좌우 24px, card-title 글자(bundle.css .cn-btn) */
         touch: "min-h-touch gap-1 px-6 text-card-title",
+        /** 폭이 빠듯한 바에서 쓰는 44px 높이(디자인 시스템 크기 `compact`, bundle.css .cn-btn--compact): 좌우 12px, 글자 14/20 600, 아이콘 18px, 간격 6px */
+        "compact-touch": "min-h-touch gap-1.5 px-3 text-body font-semibold [&_svg:not([class*='size-'])]:size-[18px]",
         /** 44x44 아이콘 버튼 */
         "icon-touch": "size-touch [&_svg:not([class*='size-'])]:size-[22px]",
       },

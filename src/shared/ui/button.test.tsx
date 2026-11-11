@@ -62,6 +62,28 @@ describe("Button (handoff (m), #126)", () => {
     );
   });
 
+  it("surface: 흰 surface + shadow-control, 테두리 없음, 글자 text. 누르면 bg, 비활성은 disabled-bg에 그림자 없음", () => {
+    render(<Button variant="surface">더 보기</Button>);
+    const button = screen.getByRole("button", { name: "더 보기" });
+    expect(button.getAttribute("data-variant")).toBe("surface");
+    expect(classes(button)).toEqual(
+      expect.arrayContaining([
+        "rounded-pill",
+        "border-0",
+        "bg-surface",
+        "text-text",
+        "shadow-control",
+        "active:not-disabled:scale-press",
+        "active:not-disabled:bg-bg",
+        "disabled:bg-disabled-bg",
+        "disabled:shadow-none",
+        ...FOCUS,
+      ]),
+    );
+    // 공통의 1px 투명 테두리를 두지 않는다(폭이 내용 + 좌우 여백 그대로)
+    expect(classes(button)).not.toContain("border");
+  });
+
   it("size touch: 높이 44, 좌우 24, card-title 글자", () => {
     render(<Button size="touch">확인</Button>);
     const button = screen.getByRole("button");
@@ -75,6 +97,22 @@ describe("Button (handoff (m), #126)", () => {
     expect(classes(button)).toEqual(expect.arrayContaining(["size-touch", "[&_svg:not([class*='size-'])]:size-[22px]"]));
     expect(classes(button)).not.toContain("[&_svg:not([class*='size-'])]:size-4");
     expect(button.getAttribute("data-size")).toBe("icon-touch");
+  });
+
+  it("size compact-touch(디자인 시스템 compact): 높이 44, 좌우 12, 글자 14/20 600, 아이콘 18px, 간격 6px", () => {
+    render(
+      <Button variant="surface" size="compact-touch">
+        <svg data-testid="icon" aria-hidden />
+        더 보기
+      </Button>,
+    );
+    const button = screen.getByRole("button", { name: "더 보기" });
+    expect(button.getAttribute("data-size")).toBe("compact-touch");
+    expect(classes(button)).toEqual(
+      expect.arrayContaining(["min-h-touch", "px-3", "gap-1.5", "text-body", "font-semibold", "[&_svg:not([class*='size-'])]:size-[18px]"]),
+    );
+    // 공통의 글자 크기·굵기·아이콘 크기와 섞이지 않는다
+    for (const dropped of ["text-sm", "font-medium", "[&_svg:not([class*='size-'])]:size-4"]) expect(classes(button)).not.toContain(dropped);
   });
 
   it("지운 shadcn variant·크기는 타입에 없다", () => {
