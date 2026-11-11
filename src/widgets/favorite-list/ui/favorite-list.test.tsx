@@ -107,7 +107,12 @@ describe("FavoriteList", () => {
       const { container } = renderList(["3", "2", "1"]);
       expect(await screen.findByText("일부 공고를 불러오지 못했어요")).toBeTruthy();
       expect(cardTitles(container)).toEqual(["지역3", "지역1"]);
-      expect(screen.getByRole("button", { name: "다시 시도" })).toBeTruthy();
+      // 글자 버튼(밑줄)이고, 줄이 44px를 잡는다(handoff (m) B4)
+      const retry = screen.getByRole("button", { name: "다시 시도" });
+      expect(retry.getAttribute("data-slot")).toBe("text-button");
+      expect(retry.getAttribute("data-variant")).toBe("underline");
+      expect(retry.querySelector("svg")).toBeNull();
+      expect(retry.parentElement!.className.split(" ")).toContain("min-h-touch");
       expect(JSON.parse(localStorage.getItem(FAVORITES_STORAGE_KEY)!)).toEqual(["3", "2", "1"]);
     });
 
