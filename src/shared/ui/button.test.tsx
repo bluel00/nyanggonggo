@@ -27,7 +27,7 @@ describe("Button (handoff (m), #126)", () => {
         "rounded-pill",
         "bg-primary",
         "text-primary-foreground",
-        "active:not-disabled:scale-press",
+        "motion-safe:active:not-disabled:scale-press",
         "active:not-disabled:bg-primary-pressed",
         "disabled:bg-disabled-bg",
         "disabled:text-disabled-text",
@@ -47,7 +47,7 @@ describe("Button (handoff (m), #126)", () => {
         "to-apply-to",
         "text-on-apply",
         "shadow-apply",
-        "active:not-disabled:scale-press",
+        "motion-safe:active:not-disabled:scale-press",
         "disabled:shadow-none",
         "disabled:opacity-50",
         ...FOCUS,
@@ -58,7 +58,7 @@ describe("Button (handoff (m), #126)", () => {
   it("overlay: photo-pill 원, 누르면 bg", () => {
     render(<Button variant="overlay" size="icon-touch" aria-label="닫기" />);
     expect(classes(screen.getByRole("button", { name: "닫기" }))).toEqual(
-      expect.arrayContaining(["rounded-pill", "bg-photo-pill", "text-text", "active:not-disabled:scale-press", "active:not-disabled:bg-bg", ...FOCUS]),
+      expect.arrayContaining(["rounded-pill", "bg-photo-pill", "text-text", "motion-safe:active:not-disabled:scale-press", "active:not-disabled:bg-bg", ...FOCUS]),
     );
   });
 
@@ -73,7 +73,7 @@ describe("Button (handoff (m), #126)", () => {
         "bg-surface",
         "text-text",
         "shadow-control",
-        "active:not-disabled:scale-press",
+        "motion-safe:active:not-disabled:scale-press",
         "active:not-disabled:bg-bg",
         "disabled:bg-disabled-bg",
         "disabled:shadow-none",
@@ -82,6 +82,21 @@ describe("Button (handoff (m), #126)", () => {
     );
     // 공통의 1px 투명 테두리를 두지 않는다(폭이 내용 + 좌우 여백 그대로)
     expect(classes(button)).not.toContain("border");
+  });
+
+  it("누름은 모든 variant에서 줄어들기만 한다: 내려가지 않고, 움직임 줄이기면 줄어들지 않는다(motion-safe). 바탕색은 남는다(B9)", () => {
+    for (const variant of ["primary", "apply", "overlay", "surface"] as const) {
+      render(<Button variant={variant}>{variant}</Button>);
+      const list = classes(screen.getByRole("button", { name: variant }));
+      expect(list, variant).toEqual(expect.arrayContaining(["motion-safe:active:not-disabled:scale-press", "transition-[scale]", "duration-press", "ease-out"]));
+      // 움직임 줄이기에서도 걸리는 줄어들기, 1px 내려가기는 없다
+      expect(list, variant).not.toContain("active:not-disabled:scale-press");
+      expect(list.filter((name) => name.includes("translate")), variant).toEqual([]);
+    }
+    // 누르는 동안의 바탕색은 motion-safe와 관계없이 걸린다
+    expect(classes(screen.getByRole("button", { name: "primary" }))).toContain("active:not-disabled:bg-primary-pressed");
+    expect(classes(screen.getByRole("button", { name: "overlay" }))).toContain("active:not-disabled:bg-bg");
+    expect(classes(screen.getByRole("button", { name: "surface" }))).toContain("active:not-disabled:bg-bg");
   });
 
   it("size touch: 높이 44, 좌우 24, card-title 글자", () => {
