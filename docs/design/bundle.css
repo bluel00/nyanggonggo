@@ -2,7 +2,9 @@
 .cn-root *,.cn-root *::before,.cn-root *::after{box-sizing:border-box}
 .cn-column{position:relative;width:100%;max-width:var(--column-max);margin:0 auto;background:linear-gradient(180deg,var(--bg) 0%,var(--bg-end) 100%);overflow:hidden}
 .cn-btn{appearance:none;border:0;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:var(--space-1);min-height:var(--touch);padding:0 var(--space-6);border-radius:var(--radius-pill);font-family:inherit;transition:transform var(--press-duration) var(--ease-out)}
+/* Pressed: scale only (no shift), and nothing when the person asks for reduced motion. Pressed ground colours are not motion and stay. */
 .cn-btn:active:not(:disabled){transform:scale(var(--press-scale))}
+@media (prefers-reduced-motion:reduce){.cn-btn:active:not(:disabled),.cn-btn.cn-pressed{transform:none}}
 .cn-btn:focus-visible,.cn-chip:focus-visible,.cn-seg button:focus-visible,.cn-radio:focus-visible,.cn-select select:focus-visible,.cn-card:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 .cn-btn--primary{background:var(--text);color:var(--on-text)}
 .cn-btn--primary:active:not(:disabled){background:var(--primary-pressed)}
@@ -132,8 +134,11 @@
 .cn-text-btn::after{content:"";position:absolute;left:50%;top:50%;width:var(--touch);height:var(--touch);transform:translate(-50%,-50%)}
 .cn-text-btn:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px;border-radius:4px}
 .cn-text-btn--underline .cn-text-btn__label{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
-.cn-text-btn:active,.cn-text-btn.cn-pressed{color:var(--text-2);transform:none}
-@media (hover:hover){.cn-text-btn:hover{color:var(--text-2)}}
+.cn-text-btn:active:not(:disabled),.cn-text-btn.cn-pressed{color:var(--text-2);transform:none}
+@media (hover:hover){.cn-text-btn:hover:not(:disabled){color:var(--text-2)}}
+/* Sizes follow the type styles: caption 12/16 (default), body 14/20. Disabled: text-disabled, underline stays. */
+.cn-text-btn.cn-text-btn--body{font-size:14px;line-height:20px}
+.cn-text-btn:disabled{color:var(--text-disabled);cursor:not-allowed}
 .cn-deadline--protected{color:var(--status-protected-text)}
 .cn-deadline--near-deadline{color:var(--status-near-deadline-text)}
 .cn-card__no{margin:2px 0 0;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

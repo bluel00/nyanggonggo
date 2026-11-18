@@ -7,6 +7,6 @@
 - `icon` is a transparent 44x44 header button (the heart link "관심 공고" that opens /favorites).
 - Text actions with no container ([보호소 정보], [지도], [전화]) are not a Button variant: they are `TextButton` (2026-11-10; this was `variant="small-action"`).
 
-Sizes: the default is 44 tall with `space-6` side padding and a `card-title` (16/600) label. `compact` (2026-11-11) is 44 tall with `space-3` side padding, a 14/20 600 label, an 18px icon and a 6px gap, for a bar where width is tight. Icon-only buttons (`overlay`, `icon`) are 44×44.
+Sizes: the default (`touch` in the code) is 44 tall with `space-6` side padding and a `card-title` label, 16px at weight 600 (not 500). `compact` (2026-11-11; `compact-touch` in the code, where every 44-tall size ends in `touch`) is 44 tall with `space-3` side padding, a 14/20 600 label, an 18px icon and a 6px gap, for a bar where width is tight. Icon-only buttons (`overlay`, `icon`; `icon-touch` in the code) are 44×44.
 
-Pressed: scale `press-scale` in `press-duration`. Use one apply or primary per surface; no other fills, since colour points stay for status. An icon-only Button must carry `aria-label`.
+Pressed: scale `press-scale` in `press-duration` and nothing else: the button does not shift down, and with reduced motion it does not scale at all. The pressed ground colours (`primary-pressed`, `bg`) are colour, not motion, and stay. This holds for every variant. Use one apply or primary per surface; no other fills, since colour points stay for status. An icon-only Button must carry `aria-label`.

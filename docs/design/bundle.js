@@ -41,12 +41,13 @@
   }
 
   /* TextButton (C5, 2026-11-10): an action drawn as text, separate from Button (as Toss TDS). variant underline (default) | arrow | clear.
+     size caption (default, 12/16) | body (14/20); disabled: text-disabled (2026-11-11).
      text 600 caption + 14px icon before the label; pressed/hover text-2; 44x44 hit area, line height unchanged.
      href renders a link (external: new tab). */
   function TextButton(p) {
     var v = p.variant || 'underline';
     var Tag = p.href ? 'a' : 'button';
-    var pr = { className: cx('cn-text-btn caption', 'cn-text-btn--' + v, p.className), 'aria-label': p['aria-label'] || p.ariaLabel, onClick: p.onClick };
+    var pr = { className: cx('cn-text-btn caption', 'cn-text-btn--' + v, p.size === 'body' && 'cn-text-btn--body', p.className), 'aria-label': p['aria-label'] || p.ariaLabel, onClick: p.onClick };
     if (p.href) { pr.href = p.href; if (p.external) { pr.target = '_blank'; pr.rel = 'noopener noreferrer'; } } else { pr.type = 'button'; pr.disabled = p.disabled; }
     return h(Tag, pr, p.icon ? h(Icon, { name: p.icon, size: 14 }) : null, h('span', { className: 'cn-text-btn__label' }, p.children), v === 'arrow' ? h(Icon, { name: 'chevron-right', size: 14 }) : null);
   }

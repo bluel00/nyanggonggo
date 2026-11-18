@@ -216,7 +216,7 @@ Type scale (`fontSize`): `title` 20/28/700, `card-title` 16/24/600, `body` 14/20
 - 하트 이름: "관심 공고에 담기" / "관심 공고에서 빼기". 토스트: "관심 공고에 담았어요" / "관심 공고에서 뺐어요". 목록 헤더 하트 링크 이름: "관심 공고".
 - 빈 상태: "아직 관심 공고가 없어요" / "하트를 눌러 관심 공고에 담아 보세요" 중앙 정렬, 버튼 없음, 이모지 없음. 축종이 섞이므로 축종 중립 문구다. localStorage에 id만 저장하며 종료된 공고도 카드로 남는다.
 - 전부 실패: "지금은 관심 공고를 불러오지 못했어요"(`card-title`) + Primary [다시 시도].
-- 일부 실패: 받은 카드는 그대로 두고, 목록 위 한 줄에 "일부 공고를 불러오지 못했어요"(왼쪽)와 글자 버튼 [다시 시도](오른쪽, `TextButton` 밑줄, 아이콘 없음. 2026-11-11 결정 (m), 구현 전. 지금 코드는 단서 없는 16px 글자 `Button variant="ghost"`). 줄의 높이와 위아래 간격은 지금 그대로 두고, 누르는 영역 44×44. 다시 시도는 실패한 공고만 다시 받는다(Screens 09는 예전 모습).
+- 일부 실패: 받은 카드는 그대로 두고, 목록 위 한 줄에 "일부 공고를 불러오지 못했어요"(왼쪽)와 글자 버튼 [다시 시도](오른쪽, `TextButton` 밑줄, 아이콘 없음, `body` 크기 14/20 600. 다시 받는 동안은 비활성: `text-disabled`. 2026-11-11 결정 (m). 운영 코드는 단서 없는 16px 글자 `Button variant="ghost"`). 줄의 높이와 위아래 간격은 지금 그대로 두고, 누르는 영역 44×44. 다시 시도는 실패한 공고만 다시 받는다(Screens 09는 예전 모습).
 
 화면 6 (상태 화면)
 - 로딩: 첫 로딩은 `SkeletonCard` 3개, 다음 페이지를 받는 동안에는 목록 끝에 1개를 둔다. 목록 끝 문구는 없다.
@@ -574,7 +574,7 @@ EL 결정. 근거: 상세의 [보호소 정보]가 버튼이 아니라 글자로
 
 **구현됨(2026-11-10, PR #128, main `6443f1e`)**: 공용 `src/shared/ui/text-button.tsx`, 세 곳을 바꾸고 `SMALL_ACTION`을 지웠다. 링크는 `asChild`(radix-ui Slot, `Slottable`로 아이콘·글자·화살표를 넘긴 `<a>` 안에 둠), 아이콘은 `icon` prop(크기는 TextButton이 정함), `whitespace-nowrap`. 호버는 Tailwind v4(4.3.3)의 `hover:`가 이미 `@media (hover: hover)` 안이라 따로 두지 않았다. glossary에 "글자 버튼"(`TextButton`). 기존 E2E(누르는 영역 44×44) 고치지 않고 통과. 운영 확인(Claude Code, 390×844): 글자 `rgb(43,33,27)` = `text`, 600, 글자 span에만 1px 밑줄(아래 3px), 아이콘 밑줄 없음, [보호소 정보] 상자 높이 44, [지도]·[전화] 44×44. EL 미리보기 실기기 확인("잘 됨"), 운영 반영 확인(2026-11-10). 누를 때 옅어지는지는 따로 확인하지 않았다. Screens 캡처 07은 아직 예전 모습이다.
 
-## (m) 버튼 계열 정리 (2026-11-11 결정, #126, 구현 전)
+## (m) 버튼 계열 정리 (2026-11-11 결정, #126, PR #130 진행 중)
 
 EL 결정. 화면 문제에서 나온 일이 아니라 코드와 이름의 정리다. 2026-11-10 조사(코드): 공용 Button의 variant 9개 중 4개(primary, apply, overlay, ghost), 크기는 touch · icon-touch · icon-sm만 쓰고 나머지 shadcn 기본값은 정의만 있었다. "다른 앱으로 공유"는 평범한 동작 버튼인데 Button을 쓰지 않고 포커스·누름·비활성 처리를 직접 적고 있었다.
 
@@ -590,3 +590,9 @@ EL 결정. 화면 문제에서 나온 일이 아니라 코드와 이름의 정�
 | B4 | 관심 목록 일부 실패의 [다시 시도]는 `TextButton`(밑줄). 16px 단서 없는 글자 → 12/16 600 밑줄. 줄의 높이·간격은 그대로 | 화면 5, `TextButton`, README |
 | B5 | 코드에서 지우는 것: 쓰지 않는 Button variant(default, outline, secondary, destructive, link)와 크기(default, xs, sm, lg, icon, icon-xs, icon-lg), 그리고 화면에 나온 적 없는 시트 닫기 X(ghost + icon-sm, 두 시트 모두 `showCloseButton=false`). B4까지 하면 `ghost`도 쓰는 곳이 없어 지운다. CSS 변수(shadcn 별칭)는 지우지 않는다: 쓰는 곳이 없어지면 (a) "코드 전용"에 표시만 한다 | (a)는 구현 보고를 받고 고친다 |
 | B6 | 그대로 두는 것: Chip(선택), FavoriteButton(토글·하트 움직임), 카카오 ShareButton(브랜드 전용, 누름 효과가 다름), 필터 버튼(Chip). 파일마다 반복되는 포커스·누름 클래스 묶음은 이번에 묶지 않는다 | — |
+| B7 | TextButton `size`: `caption`(12/16, 기본. 보호소 정보·지도·전화는 그대로) · `body`(14/20). 이름은 글자 스타일에서 따온다. 일부 실패 [다시 시도]는 `body`(왼쪽 안내와 같은 크기). B4의 12px를 14px로 고친다 | `TextButton`, bundle.css·bundle.js, 화면 5 |
+| B8 | TextButton 비활성 모양(`<button>`만): 글자·아이콘 `text-disabled`, 밑줄 유지, 누름·호버 변화 없음. [다시 시도]가 다시 받는 동안 쓴다(운영에서는 50% 투명이었다) | `TextButton`, bundle.css |
+| B9 | Button 누름은 모든 variant에서 `press-scale`로 줄어들기만 한다. 1px 내려가지 않고, 움직임 줄이기면 줄어들지도 않는다. 누르는 동안의 바탕색(`primary-pressed`, `bg`)은 색이라 남긴다. 운영 코드는 primary·apply·overlay가 1px 내려가고 움직임 줄이기에서도 줄어들었다(원칙 "움직임 줄이기면 누름 효과 없음"과 어긋남) | `Button`, bundle.css, README |
+| B10 | Button `touch` 크기의 글자는 16px 굵기 600(`card-title`). 코드가 500이면 600으로 맞춘다(구현에서 재서 확인) | `Button` |
+
+경과: 2026-11-11 Claude가 최종 설계안을 EL에게 확인받기 전에 구현 프롬프트를 줘서 PR #130이 먼저 열렸다(머지 안 함). 그 구현에서 B7~B10이 드러났고(공유 버튼 누름이 Button 방식을 따라가며 달라짐, TextButton 비활성 모양 없음, [다시 시도] 12px, `touch` 굵기 500 추정), 미리보기 아티팩트 "버튼 계열 정리 설계안"으로 EL 승인을 받은 뒤 PR을 고친다. 코드 이름: 크기 `compact` = `compact-touch`.
