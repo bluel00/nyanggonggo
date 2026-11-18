@@ -99,11 +99,13 @@ describe("Button (handoff (m), #126)", () => {
     expect(classes(screen.getByRole("button", { name: "surface" }))).toContain("active:not-disabled:bg-bg");
   });
 
-  it("size touch: 높이 44, 좌우 24, card-title 글자", () => {
+  it("size touch: 높이 44, 좌우 24, card-title 글자(16/24, 굵기 600)", () => {
     render(<Button size="touch">확인</Button>);
     const button = screen.getByRole("button");
-    expect(classes(button)).toEqual(expect.arrayContaining(["min-h-touch", "px-6", "gap-1", "text-card-title"]));
+    expect(classes(button)).toEqual(expect.arrayContaining(["min-h-touch", "px-6", "gap-1", "text-card-title", "font-semibold"]));
+    // 공통의 글자 크기·굵기(500)와 섞이지 않는다(B10)
     expect(classes(button)).not.toContain("text-sm");
+    expect(classes(button)).not.toContain("font-medium");
   });
 
   it("size icon-touch: 44×44, 아이콘 22px", () => {

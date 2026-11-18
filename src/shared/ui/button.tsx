@@ -28,8 +28,8 @@ const buttonVariants = cva(
           "rounded-pill border-0 bg-surface text-text shadow-control transition-[scale] duration-press ease-out motion-safe:active:not-disabled:scale-press active:not-disabled:bg-bg focus-visible:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:bg-disabled-bg disabled:text-disabled-text disabled:opacity-100 disabled:shadow-none",
       },
       size: {
-        /** 44px 터치 높이, 좌우 24px, card-title 글자(bundle.css .cn-btn) */
-        touch: "min-h-touch gap-1 px-6 text-card-title",
+        /** 44px 터치 높이, 좌우 24px, card-title 글자 16/24 600(bundle.css .cn-btn). 굵기는 공통의 font-medium(500)이 이기지 않게 여기서 정한다(B10) */
+        touch: "min-h-touch gap-1 px-6 text-card-title font-semibold",
         /** 폭이 빠듯한 바에서 쓰는 44px 높이(디자인 시스템 크기 `compact`, bundle.css .cn-btn--compact): 좌우 12px, 글자 14/20 600, 아이콘 18px, 간격 6px */
         "compact-touch": "min-h-touch gap-1.5 px-3 text-body font-semibold [&_svg:not([class*='size-'])]:size-[18px]",
         /** 44x44 아이콘 버튼 */
