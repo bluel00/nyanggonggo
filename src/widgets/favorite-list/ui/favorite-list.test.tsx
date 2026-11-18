@@ -107,7 +107,15 @@ describe("FavoriteList", () => {
       const { container } = renderList(["3", "2", "1"]);
       expect(await screen.findByText("일부 공고를 불러오지 못했어요")).toBeTruthy();
       expect(cardTitles(container)).toEqual(["지역3", "지역1"]);
-      expect(screen.getByRole("button", { name: "다시 시도" })).toBeTruthy();
+      // 글자 버튼(밑줄, body 크기)이고, 줄이 44px를 잡는다(handoff (m) B4·B7)
+      const retry = screen.getByRole("button", { name: "다시 시도" });
+      expect(retry.getAttribute("data-slot")).toBe("text-button");
+      expect(retry.getAttribute("data-variant")).toBe("underline");
+      expect(retry.getAttribute("data-size")).toBe("body");
+      expect(retry.className.split(" ")).toContain("text-body");
+      expect(retry.hasAttribute("disabled")).toBe(false);
+      expect(retry.querySelector("svg")).toBeNull();
+      expect(retry.parentElement!.className.split(" ")).toContain("min-h-touch");
       expect(JSON.parse(localStorage.getItem(FAVORITES_STORAGE_KEY)!)).toEqual(["3", "2", "1"]);
     });
 
@@ -121,6 +129,25 @@ describe("FavoriteList", () => {
       expect(requestedIds()).toEqual(["3,2,1", "2"]);
       expect(cardTitles(container)).toEqual(["지역3", "지역2", "지역1"]);
       expect(screen.queryByText("일부 공고를 불러오지 못했어요")).toBeNull();
+    });
+
+    it("다시 받는 동안 [다시 시도]는 비활성이고(글자 버튼의 비활성 모양), 끝나면 풀린다", async () => {
+      failing = new Set(["2"]);
+      renderList(["3", "2", "1"]);
+      await screen.findByText("일부 공고를 불러오지 못했어요");
+      // 다시 받는 응답을 테스트가 쥐고 있는다
+      let respond!: (response: Response) => void;
+      fetchMock.mockImplementationOnce(() => new Promise<Response>((resolve) => (respond = resolve)));
+      fireEvent.click(screen.getByRole("button", { name: "다시 시도" }));
+      await waitFor(() => expect(screen.getByRole("button", { name: "다시 시도" }).hasAttribute("disabled")).toBe(true));
+      const retry = screen.getByRole("button", { name: "다시 시도" });
+      expect(retry.getAttribute("data-slot")).toBe("text-button");
+      expect(retry.className.split(" ")).toContain("disabled:text-disabled-text");
+      // 대기 중에 다시 눌러도 요청이 늘지 않는다
+      fireEvent.click(retry);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      respond(Response.json({ items: [], failedIds: ["2"] }));
+      await waitFor(() => expect(screen.getByRole("button", { name: "다시 시도" }).hasAttribute("disabled")).toBe(false));
     });
 
     it("다시 시도가 또 실패하면 카드와 줄을 그대로 둔다", async () => {

@@ -96,7 +96,6 @@ export function AnimalFilterSheet({ filter }: { filter: AnimalListFilter }) {
       </SheetTrigger>
       <SheetContent
         side="bottom"
-        showCloseButton={false}
         aria-describedby={undefined}
         className="overflow-hidden"
       >
