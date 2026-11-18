@@ -61,10 +61,11 @@ export function FavoriteList() {
     const failedIds =
       ids.length > 0 && !query.isPlaceholderData ? (query.data?.failedIds ?? []).filter((id) => ids.includes(id)) : [];
     const partialError = failedIds.length > 0 && animals.length > 0 && (
-      // 목록 위 한 줄 문구와 글자 버튼(handoff (m) B4). 글자 버튼은 줄 높이를 늘리지 않으므로 줄이 44px(min-h-touch)를 잡는다
+      // 목록 위 한 줄 문구와 글자 버튼(handoff (m) B4·B7). 왼쪽 안내와 같은 body 크기이고, 다시 받는 동안은 비활성 모양이다.
+      // 글자 버튼은 줄 높이를 늘리지 않으므로 줄이 44px(min-h-touch)를 잡는다
       <div role="status" className="flex min-h-touch items-center justify-between gap-2 px-page">
         <p className="text-body text-text-2">{ANIMAL_COPY.favoritesPartialError}</p>
-        <TextButton disabled={retry.isPending} onClick={() => retry.mutate({ ids, failedIds })}>
+        <TextButton size="body" disabled={retry.isPending} onClick={() => retry.mutate({ ids, failedIds })}>
           다시 시도
         </TextButton>
       </div>
